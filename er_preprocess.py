@@ -157,24 +157,6 @@ def prepare_warnings(er):
     }
 
 
-def build_freeze_dict(freeze_str):
-
-    freeze_strs = [
-        "rhythms",
-        "initial_pattern",
-        "super_pattern",
-        "complete_pattern",
-    ]
-    freeze_dict = {i: False for i in freeze_strs}
-
-    for test_str in freeze_strs:
-        freeze_dict[test_str] = True
-        if freeze_str == test_str:
-            return freeze_dict
-
-    return {i: False for i in freeze_strs}
-
-
 def preprocess_temper_pitch_materials(er):
     """Tempers pitch materials as necessary.
     """
@@ -737,8 +719,6 @@ def preprocess_settings(
     if random_settings:
         randomize = er_randomize.ERRandomize(er)
         randomize.apply(er)
-
-    er.freeze = build_freeze_dict(er.freeze)
 
     process_np_arrays(er)
 

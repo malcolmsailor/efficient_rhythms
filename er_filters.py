@@ -6,18 +6,13 @@ import math
 import random
 
 import er_misc_funcs
-import er_pickle
 import er_prob_funcs
 import er_notes
-
-from er_pickle import CHANGER_PICKLE
 
 # QUESTION why does program change sometimes not apply to first note when
 #           changing midi files imported from logic?
 
 # TODO extend durations transformer
-# TODO fix pickling of multiple items, weird behavior when deleting pickled
-#   transformers
 # TODO add an arbitrary note attribute condition (e.g., note.velocity > 64)
 # TODO add:
 #       - random displacement transformer
@@ -26,19 +21,6 @@ from er_pickle import CHANGER_PICKLE
 #       - oscillating range transformer
 #       - abbreviate/extend score transformer
 #       - quantize transformer
-
-
-def unpickle(active_changers):
-    pickled_changers = er_pickle.read_in(
-        pickle_fname=CHANGER_PICKLE, cleanup=None
-    )
-    try:
-        i = max(active_changers)
-    except ValueError:
-        i = -1
-    for pickled_changer in pickled_changers:
-        i += 1
-        active_changers[i] = pickled_changer
 
 
 def _get_prob_funcs():

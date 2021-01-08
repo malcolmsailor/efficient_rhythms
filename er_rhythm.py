@@ -12,7 +12,6 @@ import er_cont_rhythm
 import er_midi
 import er_misc_funcs
 import er_notes
-import er_pickle
 
 
 def print_rhythm(rhythm):
@@ -655,8 +654,6 @@ def rhythms_handler(er):
             er.grid = Grid(er)
         for voice_i in range(er.num_voices):
             rhythms.append(generate_rhythm1(er, voice_i, prev_rhythms=rhythms))
-
-    er_pickle.append(rhythms)
 
     if not any(rhythms):
 

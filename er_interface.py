@@ -16,10 +16,8 @@ import er_filters
 import er_midi
 import er_misc_funcs
 import er_output_notation
-import er_pickle
-import er_prob_funcs
 
-from er_pickle import CHANGER_PICKLE2
+import er_prob_funcs
 
 
 SOUND_FONT = "/Users/Malcolm/Music/SoundFonts/GeneralUser GS 1.471/GeneralUser_GS_v1.471.sf2"
@@ -516,8 +514,8 @@ def update_prompt_for_adjusting_changers(active_changers):
     # )
     select_prompt = (
         "Enter the number corresponding to the filter or "
-        "transformer you would like to adjust, 'a'/'c'/'m'/'p' to "
-        "add/copy/move/un-pickle a filter or transformer, or "
+        "transformer you would like to adjust, 'a'/'c'/'m' to "
+        "add/copy/move a filter or transformer, or "
         "<enter> to continue: "
     )
     lines = ["", make_header(SELECT_HEADER), ""] + get_changer_strings(
@@ -546,9 +544,6 @@ def select_changer_prompt(
             return True
         if answer == "m":
             move_changer_loop(active_changers)
-            return True
-        if answer == "p":
-            er_filters.unpickle(active_changers)
             return True
         try:
             answer = int(answer) - 1
@@ -616,7 +611,6 @@ def changer_interface(super_pattern, active_changers, changer_counter):
             active_changer.apply(copied_pattern)
             print("done.")
             success = True
-            er_pickle.append(active_changer, CHANGER_PICKLE2)
         except er_filters.ChangeFuncError as err:
             print("ERROR!")
             print(

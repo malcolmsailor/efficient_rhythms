@@ -6,11 +6,9 @@ import er_choirs
 import er_interface
 import er_make
 import er_midi
-import er_pickle
 import er_preprocess
 import er_rhythm
 
-# LONGTERM freeze settings
 # MAYBE make old directory and check it when looking for files
 # TODO wait a moment when sending midi messages, see if this solves problem of first messages not sounding?
 
@@ -51,24 +49,13 @@ def main():
             SCRIPT_BASE, SCRIPT_DIR, args.r, args.settings
         )
 
-        pickled_data = er_pickle.read_in()
-
-        # Pickle order:
-        #       - er.rhythms
-        #       - initial pattern
-        #       - super pattern (does not include transpositions)
-        #       - complete pattern (includes transpositions)
-
         midi_player = er_midi.init_and_return_midi_player(
             er.tet, shell=args.midi_port
         )
 
-        # if er.freeze["rhythms"]: # TODO?
-        #     er.rhythms = pickled_data[0]
-        # else:
         er.rhythms = er_rhythm.rhythms_handler(er)
 
-        super_pattern = er_make.make_super_pattern(er, pickled_data)
+        super_pattern = er_make.make_super_pattern(er)
 
         er_make.complete_pattern(er, super_pattern)
 
@@ -79,7 +66,6 @@ def main():
         er_interface.input_loop(er, super_pattern, midi_player, fname_path)
 
     # QUESTION should this go before or after the input loop?
-    er_pickle.finish()
 
 
 if __name__ == "__main__":

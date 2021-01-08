@@ -54,7 +54,6 @@ class ERSettings:
         seed: int. Seed to pass to random number generators.
         tet: int. Specifies equal division of the octave.
             Default: 12.
-        freeze: TODO
         num_voices: int. The number of "voices" (or "parts") to be created.
             If `existing_voices` below is
             passed, then `num_voices` specifies the number of new voices to be
@@ -887,14 +886,6 @@ class ERSettings:
     seed: int = None
 
     tet: int = 12
-
-    # freeze: string.
-    #       - "rhythms"
-    #       - "initial_pattern"
-    #       - "super_pattern"
-    #       - "complete_pattern"
-    # TODO delete, I think
-    freeze: str = ""
 
     # num_voices: int. If existing_voices is employed, num_voices
     #   specifies the number of voices that will be added, not the total

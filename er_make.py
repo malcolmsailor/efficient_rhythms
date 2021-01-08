@@ -14,7 +14,6 @@ import er_exceptions
 import er_make2
 import er_misc_funcs
 import er_notes
-import er_pickle
 import er_rhythm
 import er_vl_strict_and_flex
 
@@ -958,74 +957,57 @@ def voice_lead_pattern(er, super_pattern, voice_lead_error):
     return False
 
 
-def make_super_pattern(er, pickled_data):
+def make_super_pattern(er):
     """Makes the super pattern.
     """
 
     voice_lead_error = er_exceptions.VoiceLeadingError()
 
-    if er.freeze["initial_pattern"]:
-        # QUESTION do I need to use the current values for attributes like
-        # attack_subdivision_gcd, or the frozen ones?
-        super_pattern = pickled_data[1]
-        if er.preserve_root_in_bass != "none":
-            _get_bass_root_times(er, super_pattern)
-        initial_pattern_copy = copy.copy(super_pattern)
+    while True:
+        for attempt in range(er_exceptions.NUM_SUPER_PATTERN_ATTEMPTS):
+            sys.stdout.write(f"Super pattern attempt {attempt + 1}\n")
+            sys.stdout.flush()
+            er.initial_pattern_order = er_rhythm.get_attack_order(er)
 
-        success = voice_lead_pattern(er, super_pattern, voice_lead_error)
-    else:
-        while True:
-            for attempt in range(er_exceptions.NUM_SUPER_PATTERN_ATTEMPTS):
-                sys.stdout.write(f"Super pattern attempt {attempt + 1}\n")
+            super_pattern = make_initial_pattern(er)
+
+            initial_pattern_copy = copy.copy(super_pattern)
+
+            # TODO how should voice-leading work with parallel motion?
+
+            sys.stdout.write("\nSucceeded, attempting voice-leading...  " "\n")
+            sys.stdout.flush()
+            if voice_lead_pattern(er, super_pattern, voice_lead_error):
+                sys.stdout.write(" ... success!\n")
                 sys.stdout.flush()
-                er.initial_pattern_order = er_rhythm.get_attack_order(er)
-
-                super_pattern = make_initial_pattern(er)
-
-                initial_pattern_copy = copy.copy(super_pattern)
-
-                # TODO how should voice-leading work with parallel motion?
-
-                sys.stdout.write(
-                    "\nSucceeded, attempting voice-leading...  " "\n"
-                )
-                sys.stdout.flush()
-                if voice_lead_pattern(er, super_pattern, voice_lead_error):
-                    sys.stdout.write(" ... success!\n")
-                    sys.stdout.flush()
-                    success = True
-                    break
-                sys.stdout.write(
-                    "\r"
-                    + SPINNING_LINE[0]
-                    + " "
-                    + str(voice_lead_error.temp_failure_counter)
-                )
-                sys.stdout.write(" ... failed.\n")
-                sys.stdout.flush()
-
-                success = False
-            if success:
-                breakpoint()
+                success = True
                 break
-            answer = input(
-                f"Failed after {er_exceptions.NUM_SUPER_PATTERN_ATTEMPTS}"
-                " voice-leading attempts. Try another "
-                f"{er_exceptions.NUM_SUPER_PATTERN_ATTEMPTS} attempts "
-                "(y/n)?"
+            sys.stdout.write(
+                "\r"
+                + SPINNING_LINE[0]
+                + " "
+                + str(voice_lead_error.temp_failure_counter)
             )
-            if answer != "y":
-                break
+            sys.stdout.write(" ... failed.\n")
+            sys.stdout.flush()
+
+            success = False
+        if success:
+            break
+        answer = input(
+            f"Failed after {er_exceptions.NUM_SUPER_PATTERN_ATTEMPTS}"
+            " voice-leading attempts. Try another "
+            f"{er_exceptions.NUM_SUPER_PATTERN_ATTEMPTS} attempts "
+            "(y/n)?"
+        )
+        if answer != "y":
+            break
 
     if not success:
         raise voice_lead_error
 
-    er_pickle.append(initial_pattern_copy)
-
     if er.extend_bass_range_for_roots > 0:
         transpose_roots(er, super_pattern)
-
-    er_pickle.append(super_pattern)
 
     return super_pattern
 
@@ -1212,8 +1194,6 @@ def complete_pattern(er, super_pattern):
             er.total_len,
             apply_to_existing_voices=er.existing_voices_transpose,
         )
-
-    er_pickle.append(super_pattern)
 
 
 LINE_WIDTH = er_constants.LINE_WIDTH
