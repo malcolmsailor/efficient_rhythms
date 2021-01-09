@@ -681,55 +681,6 @@ def run_verovio(super_pattern, midi_path):
     er_output_notation.write_notation(kern_path, dirname)
 
 
-def append_to_text_file(midi_path):
-    """Appends to a text file...
-    """
-
-    def _write_playback_script():
-
-        # TODO clean this up?
-        shebang = "#!/bin/sh"
-        with open(script_path, "w") as outf:
-            outf.write(f"{shebang}\n\n")
-            outf.write(f'fluidsynth "{SOUND_FONT}" "{midi_path}"\n')
-
-        subprocess.run(["chmod", "755", script_path], check=False)
-
-    def _get_text_file_name():
-        midi_dir = os.path.dirname(midi_path)
-        text_fname2 = os.path.join(midi_dir, "notes.txt")
-        text_fname1 = text_fname2.replace(os.path.expanduser("~") + os.sep, "")
-        text_fname = text_fname1.replace(os.sep, "-")
-        # TODO make portable or get rid!
-        return os.path.join(NOTE_DIR, text_fname)
-
-    def _write_path(path, outf):
-        prefix = "<file://"
-        postfix = ">\n"
-        new_path = path.replace(" ", "%20")
-        outf.write(prefix + new_path + postfix)
-
-    comment_prompt = "Enter comment to append: "
-    comment = input(comment_prompt) + "\n"
-
-    separator = "#" * 50 + "\n"
-
-    script_path = midi_path.replace(".mid", "_play")
-
-    _write_playback_script()
-
-    text_fname_path = _get_text_file_name()
-    with open(text_fname_path, "a") as outf:
-        outf.write(separator)
-        outf.write("\n")
-        outf.write(comment)
-        # LONGTERM settings_path was formerly a JSON file... replace somehow?
-        # for path in (script_path, settings_path, midi_path):
-        for path in (script_path, midi_path):
-            _write_path(path, outf)
-        outf.write("\n\n")
-
-
 def update_midi_type(er):
     """For writing voices and/or choirs to separate tracks.
     """
@@ -792,7 +743,6 @@ def input_loop(er, super_pattern, midi_player, midi_path):
         return (
             "Press:\n"
             "    'a' to apply filters and/or transformers\n"
-            "    'n' to append path and settings to text file\n"
             "    'o' to open in Sibelius\n"
             "    'v' to write to PDF using Verovio\n"
             "    'p' to print out text representation of score\n"
@@ -862,9 +812,6 @@ def input_loop(er, super_pattern, midi_player, midi_path):
 
         elif answer == "o":
             sibelius_open(current_midi_path)
-
-        elif answer == "n":
-            append_to_text_file(current_midi_path)
 
         elif answer == "v":
             run_verovio(current_pattern, current_midi_path)
