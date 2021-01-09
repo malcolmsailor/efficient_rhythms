@@ -463,7 +463,7 @@ def write_er_midi(er, super_pattern, midi_fname, reverse_tracks=True):
         # ticks_per_quarternote needs to be high enough that no note_on and note_off
         # events will end up on the same tick, because midiutil doesn't sort them
         # properly and throws an error if the note_off comes before the note_on
-        # TODO infer ticks_per_quarternote intelligently from min_dur?
+        # LONGTERM infer ticks_per_quarternote intelligently from min_dur?
         ticks_per_quarternote=3200,
     )
 
@@ -512,8 +512,9 @@ def write_er_midi(er, super_pattern, midi_fname, reverse_tracks=True):
 
 class MidiSettings:
     def __init__(self, num_tracks, tet):
+        # TODO these settings (for use with external midi files) should
+        #   be updated to use an external dict like ERSettings
         self.num_tracks = num_tracks
-        # TODO What is this stuff? Should this be configured by the global settings class?
         self.num_channels_pitch_bend_loop = 9
         self.pitch_bend_time_prop = 2 / 3
         self.note_counter = collections.Counter()
@@ -778,7 +779,6 @@ def _return_sorted_midi_tracks(in_mid):
     return out
 
 
-# TODO get this function from mal_music_funcs
 def read_midi_to_internal_data(
     in_midi_fname,
     tet=12,

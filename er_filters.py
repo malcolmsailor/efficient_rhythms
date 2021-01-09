@@ -12,9 +12,9 @@ import er_notes
 # QUESTION why does program change sometimes not apply to first note when
 #           changing midi files imported from logic?
 
-# TODO extend durations transformer
-# TODO add an arbitrary note attribute condition (e.g., note.velocity > 64)
-# TODO add:
+# LONGTERM extend durations transformer
+# LONGTERM add an arbitrary note attribute condition (e.g., note.velocity > 64)
+# LONGTERM add:
 #       - random displacement transformer
 #       - diatonic melodic inversion transformer?
 #       - insert tempo change transformer
@@ -197,7 +197,7 @@ class Changer(er_prob_funcs.AttributeAdder):
         exempt_i = er_misc_funcs.binary_search(
             self.exempt,  # pylint: disable=no-member
             mod_attack_time,
-            favor="nearest",
+            not_found="nearest",
         )
         mod_diff = min(
             abs(
@@ -241,7 +241,7 @@ class Changer(er_prob_funcs.AttributeAdder):
                 breakpoint()
             notes_to_change = []
             start_time, end_time = self.get(voice_i, "start_time", "end_time")
-            # TODO prob_func is a misnomer since it's a class!
+            # prob_func is a misnomer since it's a class!
             if "length" in vars(self.prob_func):  # pylint: disable=no-member
                 self.prob_func.length = (  # pylint: disable=no-member
                     end_time - start_time
@@ -1255,10 +1255,6 @@ class RandomOctaveTransformer(Transformer):
             self.mark_note(note)
 
 
-# TODO class DisplaceTransformer(Transformer):
-#     pretty_name = "Displace attack/release transformer"
-
-
 class TransposeTransformer(Transformer):
     pretty_name = "Transpose transformer"
 
@@ -1558,7 +1554,6 @@ class ShepherdTransformer(Transformer):
         end_time=0,
         prob_func="NullProbFunc",
         voices=(),
-        # track_pairs=(), # TODO can this be deleted?
         changer_counter=None,
     ):
         super().__init__(
@@ -1599,13 +1594,13 @@ class ShepherdTransformer(Transformer):
             attr_val_kwargs={"possible_values": ["quadratic", "linear"]},
             unique=True,
         )
-        self.add_attribute(
-            "new_tracks",
-            True,
-            "Add new tracks for doubled notes",
-            bool,
-            unique=True,
-        )
+        # self.add_attribute(
+        #     "new_tracks",
+        #     True,
+        #     "Add new tracks for doubled notes",
+        #     bool,
+        #     unique=True,
+        # ) # LONGTERM
         self.require_score = True
         self.vel_func = self.bottom_pitch = self.top_pitch = None
         self.bottom_flat_peak = self.top_flat_peak = None
@@ -1689,7 +1684,7 @@ class ShepherdTransformer(Transformer):
         voice = score.voices[voice_i]
         bottom_pitch, top_pitch = self.get(voice_i, "bottom_pitch", "top_pitch")
         if self.new_tracks:  # pylint: disable=no-member
-            # TODO
+            # LONGTERM
             pass
         for note in notes_to_change:
             self.mark_note(note)
@@ -1700,7 +1695,7 @@ class ShepherdTransformer(Transformer):
                 if pitch == note.pitch:
                     note.velocity = new_vel
                 elif self.new_tracks:  # pylint: disable=no-member
-                    # TODO
+                    # LONGTERM
                     pass
                 else:
                     new_note = copy.copy(note)
@@ -1830,7 +1825,6 @@ class TrackRandomizerTransformer(Transformer):
         end_time=0,
         prob_func="Linear",
         voices=(),
-        # track_pairs=(), # TODO can this be deleted?
         changer_counter=None,
     ):
         super().__init__(

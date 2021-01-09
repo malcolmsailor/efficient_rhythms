@@ -5,9 +5,11 @@ import os
 import er_choirs
 import er_interface
 import er_make
+import er_misc_funcs
 import er_midi
 import er_preprocess
-import er_rhythm
+
+# import er_rhythm
 
 # MAYBE make old directory and check it when looking for files
 # TODO wait a moment when sending midi messages, see if this solves problem of first messages not sounding?
@@ -45,15 +47,16 @@ def main():
         # er_interface.input_loop(None, super_pattern, midi_player, fname_path)
 
     else:
-        er, fname_path = er_preprocess.preprocess_settings(
-            SCRIPT_BASE, SCRIPT_DIR, args.r, args.settings
+        fname_path, _ = er_misc_funcs.return_fname_path(SCRIPT_BASE, SCRIPT_DIR)
+        er = er_preprocess.preprocess_settings(
+            args.settings, random_settings=args.r
         )
 
         midi_player = er_midi.init_and_return_midi_player(
             er.tet, shell=args.midi_port
         )
 
-        er.rhythms = er_rhythm.rhythms_handler(er)
+        # er.rhythms = er_rhythm.rhythms_handler(er)
 
         super_pattern = er_make.make_super_pattern(er)
 

@@ -113,7 +113,7 @@ def efficient_voice_leading(
         pitch-class, rather than Python multisets). But I haven't
         yet tried it.
         """
-        # TODO try multisets
+        # LONGTERM try multisets somehow?
         nonlocal best_sum
         nonlocal best_vl_indices
         if not in_indices:

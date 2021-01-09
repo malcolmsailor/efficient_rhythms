@@ -27,16 +27,17 @@ def notify_user_of_unusual_settings(er):
     def print_(text):
         print(er_misc_funcs.add_line_breaks(text))
 
-    # TODO update these messages so as not to say "er."
     if er.len_to_force_chord_tone == 0 and er.scale_chord_tone_prob_by_dur:
         raise SettingsError(
-            "If er.scale_chord_tone_prob_by_dur is True, then "
-            "er.len_to_force_chord_tone must be non-zero."
+            "If 'scale_chord_tone_prob_by_dur' is True, then "
+            "'len_to_force_chord_tone' must be non-zero."
         )
+    if len(er.voice_ranges) < er.num_voices:
+        raise SettingsError("len(voice_ranges) < num_voices")
     if er.scale_short_chord_tones_down and er.force_non_chord_tones:
         print_(
-            "Warning: er.scale_short_chord_tones_down and "
-            "er.force_non_chord_tones are both true. Strange results may occur, "
+            "Warning: 'scale_short_chord_tones_down' and "
+            "'force_non_chord_tones' are both true. Strange results may occur, "
             "particularly if there are many short notes."
         )
     if (
@@ -44,42 +45,42 @@ def notify_user_of_unusual_settings(er):
         and er.scale_chord_tone_prob_by_dur
     ):
         print(
-            "Notice: er.chord_tones_sync_attack_in_all_voices and "
-            "er.scale_chord_tone_prob_by_dur are both true. Long notes in some "
+            "Notice: 'chord_tones_sync_attack_in_all_voices' and "
+            "'scale_chord_tone_prob_by_dur' are both true. Long notes in some "
             "voices may be non chord tones."
         )
     if er.chord_tone_selection != er.voice_lead_chord_tones:
         print_(
-            f"Notice: er.chord_tone_selection is {er.chord_tone_selection} "
-            f"and er.voice_lead_chord_tones is {er.voice_lead_chord_tones}"
+            f"Notice: 'chord_tone_selection' is {er.chord_tone_selection} "
+            f"and 'voice_lead_chord_tones' is {er.voice_lead_chord_tones}"
         )
 
     if er.logic_type_pitch_bend:
         if er.tet == 12:
-            print("Notice: er.logic_type_pitch_bend is True and 12-tet.")
+            print("Notice: 'logic_type_pitch_bend' is True and 12-tet.")
         else:
             if not er.voices_separate_tracks and er.num_voices > 1:
                 warnings.warn(
-                    "er.logic_type_pitch_bend and "
-                    "not er.voices_separate_tracks"
+                    "'logic_type_pitch_bend' and "
+                    "not 'voices_separate_tracks'"
                 )
             if not er.choirs_separate_tracks and er.num_choirs > 1:
                 warnings.warn(
-                    "er.logic_type_pitch_bend and "
-                    "not er.choirs_separate_tracks"
+                    "'logic_type_pitch_bend' and "
+                    "not 'choirs_separate_tracks'"
                 )
             if er.choirs_separate_channels and er.num_choirs > 1:
                 warnings.warn(
-                    "er.logic_type_pitch_bend and "
-                    "er.choirs_separate_channels\n"
-                    "   Ignoring er.choirs_separate_channels..."
+                    "'logic_type_pitch_bend' and "
+                    "'choirs_separate_channels'\n"
+                    "   Ignoring 'choirs_separate_channels'..."
                 )
 
     if er.parallel_voice_leading and er.vl_maintain_consonance:
         print_(
-            "Notice: er.parallel_voice_leading is not compatible with "
+            "Notice: 'parallel_voice_leading' is not compatible with "
             "checking voice-leadings for consonance. Ignoring "
-            "er.vl_maintain_consonance"
+            "'vl_maintain_consonance'"
         )
 
     soft_loop_max_alt_conflicts = []
@@ -141,7 +142,7 @@ def notify_user_of_unusual_settings(er):
         warnings.warn(
             er_misc_funcs.add_line_breaks(
                 "Max interval of 1 (i.e., a 2nd) in at least "
-                "one voice and er.chord_tone_selection is true. "
+                "one voice and 'chord_tone_selection' is true. "
                 "This is likely to lead to excess repeated notes."
             )
         )
@@ -202,12 +203,8 @@ def preprocess_temper_pitch_materials(er):
             len(interval_list)
         ):
             if interval_list[i] < 0:
-                # TODO why are there *two* minus signs? I think the second one
-                #   may be in error
-                interval_list[i] = -(
-                    er_tuning.temper_pitch_materials(
-                        -(interval_list[i]), tet=er.tet
-                    )
+                interval_list[i] = er_tuning.temper_pitch_materials(
+                    (interval_list[i]), tet=er.tet
                 )
 
     er.extend_bass_range_for_roots = er_tuning.temper_pitch_materials(
@@ -361,16 +358,14 @@ def process_np_arrays(er):
             return out
         return item
 
-    # TODO this does not work at the moment!
     for setting, value in vars(er).items():
         setattr(er, setting, _np_array_to_list(value))
-        # vars(er)[setting] = _np_array_to_list(value)
 
 
 def process_choir_settings(er):
     """Prepares the choir settings."""
     if not er.choirs:
-        raise SettingsError("er.choirs cannot be empty")
+        raise SettingsError("'choirs' cannot be empty")
     if not er.randomly_distribute_between_choirs:
         if not er.choir_assignments:
             er.choir_assignments = [0 for _ in range(er.num_voices)]
@@ -399,8 +394,8 @@ def process_choir_settings(er):
                 )
                 if num_choir_segments % 1 != 0:
                     warnings.warn(
-                        f"\ner.length_choir_loop ({er.length_choir_loop}) / "
-                        "er.length_choir_segments "
+                        f"\n'length_choir_loop' ({er.length_choir_loop}) / "
+                        "'length_choir_segments' "
                         f"({er.length_choir_segments}) "
                         "is not a whole number. Rounding..."
                     )
@@ -470,7 +465,7 @@ def fill_rhythm_lists_by_voice(er):
     parts.
     """
 
-    # TODO make this more sensible!
+    # LONGTERM make this more sensible!
     er.rhythm_lists_by_voice = [
         er.pattern_len,
         er.rhythm_len,
@@ -494,12 +489,12 @@ def chord_tone_and_root_toggle(er):
 
     er.chord_tone_selection = False
     er.chord_tones_no_diss_treatment = [False for i in range(er.num_voices)]
-    # er.force_chord_tone_at_global_start = "false"
-    # er.force_chord_tone_at_start_of_each_harmony = "false"
     er.force_chord_tone = ["none" for i in range(er.num_voices)]
     er.force_root_in_bass = "none"
-    er.max_interval_for_non_chord_tones = [0 for i in range(er.num_voices)]
-    er.min_interval_for_non_chord_tones = [0 for i in range(er.num_voices)]
+    # er.max_interval_for_non_chord_tones = [0 for i in range(er.num_voices)]
+    # er.min_interval_for_non_chord_tones = [0 for i in range(er.num_voices)]
+    ex.max_interval_for_non_chord_tones = er.max_interval
+    ex.min_interval_for_non_chord_tones = er.max_interval
     er.voice_lead_chord_tones = False
     er.preserve_root_in_bass = "none"
     er.extend_bass_range_for_roots = 0
@@ -558,10 +553,10 @@ def rhythm_preprocessing(er):
 
     if er.rhythms_specified_in_midi:
         return
-    # TODO warning if er.rhythmic_unison and er.rhythmic_quasi_unison conflict
+    # LONGTERM warning if er.rhythmic_unison and er.rhythmic_quasi_unison conflict
     if isinstance(er.rhythmic_quasi_unison, list):
         er.rhythmic_quasi_unison = er_misc_funcs.remove_non_existing_voices(
-            er.rhythmic_quasi_unison, er.num_voices, "er.rhythmic_quasi_unison"
+            er.rhythmic_quasi_unison, er.num_voices, "rhythmic_quasi_unison"
         )
         _rhythmic_relations_process(er.rhythmic_quasi_unison)
     elif er.rhythmic_quasi_unison and not er.rhythmic_unison:
@@ -575,7 +570,7 @@ def rhythm_preprocessing(er):
 
     if isinstance(er.hocketing, list):
         er.hocketing = er_misc_funcs.remove_non_existing_voices(
-            er.hocketing, er.num_voices, "er.hocketing"
+            er.hocketing, er.num_voices, "hocketing"
         )
         _rhythmic_relations_process(er.hocketing)
     elif er.hocketing and not er.rhythmic_unison:
@@ -587,7 +582,7 @@ def rhythm_preprocessing(er):
 
     if isinstance(er.rhythmic_unison, list):
         er.rhythmic_unison = er_misc_funcs.remove_non_existing_voices(
-            er.rhythmic_unison, er.num_voices, "er.rhythmic_unison"
+            er.rhythmic_unison, er.num_voices, "rhythmic_unison"
         )
         _rhythmic_relations_process(er.rhythmic_unison)
     elif er.rhythmic_unison:
@@ -701,16 +696,13 @@ def cum_mod_lists(er):
             ]
 
 
-def preprocess_settings(
-    script_name, script_dir, random_settings, user_settings_path,
-):
+def preprocess_settings(user_settings, random_settings=False):
 
-    fname_path, _ = er_misc_funcs.return_fname_path(script_name, script_dir)
-    if user_settings_path is None:
+    if user_settings is None:
         user_settings = {}
-    else:
-        print(f"Reading settings from {user_settings_path}")
-        with open(user_settings_path, "r", encoding="utf-8") as inf:
+    elif isinstance(user_settings, str):
+        print(f"Reading settings from {user_settings}")
+        with open(user_settings, "r", encoding="utf-8") as inf:
             user_settings = eval(inf.read())
     er = er_settings.ERSettings(**user_settings)
 
@@ -719,6 +711,11 @@ def preprocess_settings(
     if random_settings:
         randomize = er_randomize.ERRandomize(er)
         randomize.apply(er)
+
+    if er.max_interval_for_non_chord_tones is None:
+        er.max_interval_for_non_chord_tones = er.max_interval
+    if er.min_interval_for_non_chord_tones is None:
+        er.min_interval_for_non_chord_tones = er.min_interval
 
     process_np_arrays(er)
 
@@ -761,7 +758,7 @@ def preprocess_settings(
             random.randrange(0, er.tet) for i in range(er.num_harmonies)
         ]
 
-    if er.num_harmonies < 0:  # TODO shouldn't this be <= 0?
+    if er.num_harmonies <= 0:
         er.num_harmonies = len(er.root_pcs)
 
     # if (er.interval_cycle and er.interval_cycle[0] # not sure why er.interval_cycle[0] condition
@@ -979,20 +976,6 @@ def preprocess_settings(
     ###################################################################
     # Process consonances.
 
-    # If consonances list is empty, generate list of consonances from
-    # consonances constants:
-    # TODO delete
-    # if not er.consonances:
-    #     er.consonances = CONSONANCES
-
-    # if er.no_imperfect_consonances:
-    #     for octave in [j * er.tet for j in range(num_octaves_in_range)]:
-    #         for consonance in IMPERFECT_CONSONANCES:
-    #             try:
-    #                 er.consonances.remove(octave + consonance)
-    #             except ValueError:
-    #                 continue
-
     if er.invert_consonances:
         er.consonances = [i for i in range(er.tet) if i not in er.consonances]
 
@@ -1054,15 +1037,8 @@ def preprocess_settings(
 
     cum_mod_lists(er)
 
-    return er, fname_path
+    return er
 
-
-# Constants
-
-# TODO move to er_constants?
-# CONSONANCES = [1.0, 3 / 2, 4 / 3, 5 / 4, 6 / 5, 8 / 5, 10 / 6]
-# PERFECT_CONSONANCES = [1.0, 3 / 2, 4 / 3]
-# IMPERFECT_CONSONANCES = [5 / 4, 6 / 5, 8 / 5, 10 / 6]
 
 # Constants for accessing er.pattern_voice_leading_order
 

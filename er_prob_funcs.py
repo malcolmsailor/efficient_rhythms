@@ -664,7 +664,7 @@ class Accumulating(Static):
     """Accumulating probability function class.
     """
 
-    # TODO: accommodate this to continuously varying rhythms somehow?
+    # LONGTERM: accommodate this to continuously varying rhythms somehow?
     def __init__(self, prob=0.05, decreasing=True, acc_modulo=8):
         super().__init__(prob=prob)
         self.pretty_name = "Accumulating"
@@ -715,7 +715,6 @@ class Accumulating(Static):
 # class Accumulating2(ProbFunc):
 #     """Accumulating probability function class.
 #     """
-#     # TODO: accommodate this to continuously varying rhythms somehow?
 #     def __init__(self, prob=0.05, sub_prob_type="static", decreasing=True,
 #                  acc_modulo=8):
 #         super().__init__(prob=prob)
@@ -810,7 +809,6 @@ def linear(x, min_prob, max_prob, length, decreasing=False):
 
 def linear_decreasing(x, min_prob, max_prob, length):
     return linear(x, min_prob, max_prob, length, decreasing=True)
-    # TODO add decreasing flag to mediator
 
 
 def quadratic(x, min_prob, max_prob, length, decreasing=False):

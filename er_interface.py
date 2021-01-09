@@ -23,7 +23,7 @@ import er_prob_funcs
 SOUND_FONT = "/Users/Malcolm/Music/SoundFonts/GeneralUser GS 1.471/GeneralUser_GS_v1.471.sf2"
 NOTE_DIR = "/Users/Malcolm/Google Drive/Notes/"
 
-LINE_WIDTH = 79
+LINE_WIDTH = os.get_terminal_size().columns
 SELECT_HEADER = "Active filters and transformers"
 FILTERS_HEADER = "Filters"
 TRANSFORMERS_HEADER = "Transformers"
@@ -61,10 +61,11 @@ def parse_cmd_line_args():
     )
     parser.add_argument(
         "-d",
-        help="Maximum denominator for attack/durations",
+        help="Maximum denominator for attack/durations for midi file specified "
+        "with -f",
         default=0,
         type=int,
-    )  # TODO why is this a command line argument and not in settings?
+    )
     parser.add_argument(
         "-s",
         "--settings",
@@ -507,11 +508,6 @@ def copy_changer_loop(active_changers):
 
 
 def update_prompt_for_adjusting_changers(active_changers):
-    # TODO unused---remove?
-    # select_prompt_empty = (
-    #     "Enter 'a' to add a new filter or transformer, "
-    #     "or <enter> to continue: "
-    # )
     select_prompt = (
         "Enter the number corresponding to the filter or "
         "transformer you would like to adjust, 'a'/'c'/'m' to "
@@ -691,7 +687,8 @@ def append_to_text_file(midi_path):
 
     def _write_playback_script():
 
-        shebang = "#!/bin/bash"
+        # TODO clean this up?
+        shebang = "#!/bin/sh"
         with open(script_path, "w") as outf:
             outf.write(f"{shebang}\n\n")
             outf.write(f'fluidsynth "{SOUND_FONT}" "{midi_path}"\n')
@@ -703,6 +700,7 @@ def append_to_text_file(midi_path):
         text_fname2 = os.path.join(midi_dir, "notes.txt")
         text_fname1 = text_fname2.replace(os.path.expanduser("~") + os.sep, "")
         text_fname = text_fname1.replace(os.sep, "-")
+        # TODO make portable or get rid!
         return os.path.join(NOTE_DIR, text_fname)
 
     def _write_path(path, outf):
@@ -725,7 +723,7 @@ def append_to_text_file(midi_path):
         outf.write(separator)
         outf.write("\n")
         outf.write(comment)
-        # TODO settings_path was formerly a JSON file... replace somehow?
+        # LONGTERM settings_path was formerly a JSON file... replace somehow?
         # for path in (script_path, settings_path, midi_path):
         for path in (script_path, midi_path):
             _write_path(path, outf)

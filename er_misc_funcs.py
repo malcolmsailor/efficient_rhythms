@@ -310,43 +310,123 @@ def set_seed(seed):
     return seed
 
 
-def binary_search(num_list, num, favor="upper"):
-    """Returns the index to the item.
+def binary_search(num_list, num, not_found="none"):
+    """Performs a binary search on a sorted list of numbers, returns index.
+
+    Only works properly if the list is sorted, but does not check whether it is
+    or not, this is up to the caller.
 
     Arguments:
-        favor: str controlling behavior if item is not in list.
-            - "upper": upper index is returned
-            - "lower": lower index is returned
-            - otherwise: index to nearest item is returned.
+        num_list: a sorted list of numbers.
+        num: a number to search for.
+        not_found: string. Controls what happens if the number is not in the
+            list.
+            - "none": None is returned.
+            - "upper", "force_upper": upper index is returned
+            - "lower", "force_lower": lower index is returned
+            - "nearest": index to nearest item is returned
+            If num is larger than all numbers in num_list,
+                if "upper", "lower", "force_lower", or "nearest":
+                    index to the last item of the list is returned.
+                if "force_upper":
+                    index to the next item past the end of the list is returned.
+            If num is smaller than all numbers in num_list,
+                if "upper", "force_upper", "lower", or "nearest":
+                    0 is returned.
+                if "force_lower":
+                    -1 is returned.
+            Default: None.
+
+    returns:
+        None if len(num_list) is 0
+        None if num is not in num_list and not_found is "none"
+        Integer index to item, or perhaps nearest item (depending on
+            "not_found" keyword argument).
     """
-    lower_i = 0
-    upper_i = len(num_list)
+    if not_found not in (
+        "none",
+        "upper",
+        "force_upper",
+        "lower",
+        "force_lower",
+        "nearest",
+    ):
+        raise ValueError(
+            f"{not_found} is not a recognized value for argument " "'not_found'"
+        )
+    lower_i, upper_i = 0, len(num_list)
     if upper_i == 0:
         return None
-    if upper_i == 1:
-        return lower_i
+    if num < num_list[0]:
+        if not_found == "none":
+            return None
+        if not_found == "force_lower":
+            return -1
+        return 0
+    if num > num_list[upper_i - 1]:
+        if not_found == "none":
+            return None
+        if not_found == "force_upper":
+            return upper_i
+        return upper_i - 1
+
     while True:
-        i = (lower_i + upper_i) // 2
-        n = num_list[i]
+        mid_i = (lower_i + upper_i) // 2
+        n = num_list[mid_i]
         if n == num:
-            return i
-        if upper_i - lower_i == 1:
-            if favor == "upper":
+            return mid_i
+        if mid_i == lower_i:
+            if not_found == "none":
+                return None
+            if not_found in ("upper", "force_upper"):
                 return upper_i
-            if favor == "lower":
+            if not_found in ("lower", "force_lower"):
                 return lower_i
-            try:
-                if num_list[upper_i] - num < num - num_list[lower_i]:
-                    return upper_i
-            except IndexError:
-                if upper_i >= len(num_list):
-                    return lower_i
-                return upper_i
-            return lower_i
+            return lower_i + (num_list[upper_i] - num < num - n)
+
         if n > num:
-            upper_i = i
-        elif n < num:
-            lower_i = i
+            upper_i = mid_i
+        else:
+            lower_i = mid_i
+
+
+# def binary_search(num_list, num, favor="upper"):
+#     """Returns the index to the item.
+#
+#     Arguments:
+#         favor: str controlling behavior if item is not in list.
+#             - "upper": upper index is returned
+#             - "lower": lower index is returned
+#             - otherwise: index to nearest item is returned.
+#     """
+#     lower_i = 0
+#     upper_i = len(num_list)
+#     if upper_i == 0:
+#         return None
+#     if upper_i == 1:
+#         return lower_i
+#     while True:
+#         i = (lower_i + upper_i) // 2
+#         n = num_list[i]
+#         if n == num:
+#             return i
+#         if upper_i - lower_i == 1:
+#             if favor == "upper":
+#                 return upper_i
+#             if favor == "lower":
+#                 return lower_i
+#             try:
+#                 if num_list[upper_i] - num < num - num_list[lower_i]:
+#                     return upper_i
+#             except IndexError:
+#                 if upper_i >= len(num_list):
+#                     return lower_i
+#                 return upper_i
+#             return lower_i
+#         if n > num:
+#             upper_i = i
+#         elif n < num:
+#             lower_i = i
 
 
 def return_fname_path(script_name, script_dir):
@@ -395,46 +475,53 @@ def return_fname_path(script_name, script_dir):
     return fname_path, fname_dir
 
 
-def get_prev_voice_indices(er, voice_i, during_pattern_voice_leading=None):
-    """Returns the indices of the voices that have already been constructed,
-    as well as for previously existing voices.
+def get_prev_voice_indices(score, start_time, dur):
+    return score.get_sounding_voices(start_time, dur)
 
-    If during_pattern_voice_leading, pass attack_time.
-    """
 
-    if during_pattern_voice_leading is None:
-        return (
-            er.voice_order[: er.voice_order.index(voice_i)]
-            + er.existing_voices_indices
-        )
-
-    # Get all voices that have already been written whose end times
-    # are later than the attack time.
-
-    attack_time = during_pattern_voice_leading
-
-    voice_lens = {voice_i: 0 for voice_i in er.voice_order}
-
-    active_voice_i = end_time = -1
-
-    order_i = 0
-    while active_voice_i != voice_i or end_time < attack_time:
-        try:
-            vl_item = er.pattern_voice_leading_order[order_i]
-            end_time = vl_item.end_time
-            active_voice_i = vl_item.voice_i
-        except IndexError:
-            break
-        voice_lens[active_voice_i] = end_time
-        order_i += 1
-
-    prev_voice_indices = []
-
-    for other_voice_i, end_time in voice_lens.items():
-        if other_voice_i != voice_i and end_time > attack_time:
-            prev_voice_indices.append(other_voice_i)
-
-    return prev_voice_indices + er.existing_voices_indices
+# def get_prev_voice_indices(er, voice_i, during_pattern_voice_leading=None):
+#     """Returns the indices of the voices that have already been constructed,
+#     as well as for previously existing voices.
+#
+#     If during_pattern_voice_leading, pass attack_time.
+#     """
+#
+#     # QUESTION This seems to omit the case where a voice later in the voice
+#     #   order was attacked earlier but has a dur that overlaps with the current
+#     #   attack time... is that ok?
+#     if during_pattern_voice_leading is None:
+#         return (
+#             er.voice_order[: er.voice_order.index(voice_i)]
+#             + er.existing_voices_indices
+#         )
+#
+#     # Get all voices that have already been written whose end times
+#     # are later than the attack time.
+#
+#     attack_time = during_pattern_voice_leading
+#
+#     voice_lens = {voice_i: 0 for voice_i in er.voice_order}
+#
+#     active_voice_i = end_time = -1
+#
+#     order_i = 0
+#     while active_voice_i != voice_i or end_time < attack_time:
+#         try:
+#             vl_item = er.pattern_voice_leading_order[order_i]
+#             end_time = vl_item.end_time
+#             active_voice_i = vl_item.voice_i
+#         except IndexError:
+#             break
+#         voice_lens[active_voice_i] = end_time
+#         order_i += 1
+#
+#     prev_voice_indices = []
+#
+#     for other_voice_i, end_time in voice_lens.items():
+#         if other_voice_i != voice_i and end_time > attack_time:
+#             prev_voice_indices.append(other_voice_i)
+#
+#     return prev_voice_indices + er.existing_voices_indices
 
 
 def get_all_pitches_in_range(pcset, boundary_pitches, tet=12):

@@ -109,10 +109,11 @@ class ERSettings:
             Default: 128
         voice_ranges: a sequence of 2-tuples. Each tuple is of form (lowest_note, highest_note).
             (See the note above on specifying pitches.) er_constants.py provides
-            a number of useful values for this purpose.
-            TODO What if this list is not in order?
-            TODO what if this list is too short?
-            Default: AUTHENTIC_OCTAVES * OCTAVE3 * F
+            a number of useful values for this purpose. The sequence must
+            be at least `num_voices` length. (If it is longer, excess items
+            will be ignored.) It is not enforced that the list be in ascending
+            order but I haven't extensively tested what happens if it is not.
+            Default: CONTIGUOUS_OCTAVES * OCTAVE3 * C
         voice_order_str: string. If "reverse", voices will be generated from
             highest to lowest. Otherwise, they are generated from lowest to
             highest.
@@ -153,6 +154,18 @@ class ERSettings:
             to Python's Fraction type. This parameter sets the maximum
             denominator allowed in the conversion.
             Default: 8192
+        initial_pattern_attempts: integer. Number of attempts to make at
+            constructing initial pattern before giving up or asking whether
+            to make more attempts.
+            Default: 50
+        voice_leading_attempts: integer. Number of attempts to make at
+            constructing voice-leading pattern before giving up or asking whether
+            to make more attempts.
+            Default: 50
+        ask_for_more_attempts: bool. If True, if `initial_leading_attempts` or
+            `voice_leading_attempts` are made without success, script will
+            prompt user whether to try again.
+            Default: False
 
         Scale and chord settings
         ========================
@@ -184,13 +197,20 @@ class ERSettings:
             `[4, 7, 0]`, respectively (assuming `tet = 12`). (In music-theoretic
             terms, the chords will be a D major triad followed by a first-
             inversion C major triad.)
-            # TODO what if shorter than num_harmonies
+            If `root_pcs` is shorter than `num_harmonies`, it is looped through
+            until the necessary length is obtained.
             If not passed or an empty list, `num_harmonies` roots will be
             generated randomly.
             Note that if `interval_cycle` below is non-empty, all items in this
             list past the first are ignored.
-        interval_cycle: number, or list of numbers.
-            # TODO what exactly does this do?
+        interval_cycle: number, or sequence of numbers. Specifies a root-pc
+            interval cycle beginning on the first pitch-class of `root_pcs` (or
+            on a randomly chosen pitch-class, if `root_pcs` is not passed).
+            For example, if `root_pcs = [0]`, and
+                - `interval_cycle = 3`, the root pitch-classes will be 0, 3,
+                    6...
+                - `interval_cycle = [3, -2]`, the root pitch-classes will be
+                    0, 3, 1, 4, 2...
         scales: a sequence of sequences of numbers. Each subsequence specifies
             a scale. Scales should always be specified starting from pitch-class
             0; they will then be transposed to the appropriate pitch-classes
@@ -281,10 +301,21 @@ class ERSettings:
                 - if 0, then the motion is either upwards or downwards,
                     depending on which is shorter.
             Default: 0
-
-        voice_lead_chord_tones: bool. TODO what does this do?
-            Default: True
-
+        voice_lead_chord_tones: bool. If True, then chord-tones on each harmony
+            are voice-led to chord-tones on the next harmony, and
+            non-chord-tones to non-chord-tones. So, if moving from a C major
+            chord to an F major chord, the pitch-class C will be mapped to
+            one of the pitch-classes (F, A, C), the pitch-class E will be mapped
+            to one of the two remaining pitch-classes of the F major chord,
+            and the pitch-class G will be mapped to the remaining pitch-class
+            of the F major chord. A similar mapping will be made among the
+            non-chord tones of the scale.
+            Setting this parameter to True will greatly reduce the script's
+            ability to find voice-leading solutions (especially in combination
+            with `allow_flexible_voice_leading = False`). Note also that it will
+            often lead to at least some relatively large voice-leading
+            motions.
+            Default: False
         preserve_root_in_bass: string. Controls whether the occurrences
             of the root in the bass are "preserved" when voice-leading the
             initial pattern to subsequent harmonies. For example, if the first
@@ -293,6 +324,8 @@ class ERSettings:
             second chord, preserving the root, or should it be voice-led to a C
             (which would be more efficient, in the sense of moving a smaller
             interval, a unison, rather than a fourth or fifth).
+            Note that if this settings is not "none", otherwise forbidden
+            intervals may occur.
             Possible values:
                 - "lowest": only the lowest sounding occurrences of
                     the root on each harmony are preserved (so if, e.g.,
@@ -303,7 +336,7 @@ class ERSettings:
                 - "all": all occurrences of the root of each harmony
                     are preserved.
                 - "none": the root is voice-led like any other pitch.
-            Default: "lowest"
+            Default: "none"
         extend_bass_range_for_roots: number. If non-zero, permits transposition
             of the root lower than the normal range of the bass voice, in order
             to maintain the root as the lowest sounding pitch during a given
@@ -311,8 +344,7 @@ class ERSettings:
             of the root during a given harmony are not the lowest sounding pitch
             during that harmony, then they will be transposed an octave
             downwards, provided that this transposition lies within this
-            extended range. TODO allow transposition by multiple octaves if
-            necessary.
+            extended range.
             Default: 0.
         constrain_voice_leading_to_ranges: bool. If False, then after the
             initial pattern is complete, the voices may exceed their ranges, if
@@ -322,35 +354,46 @@ class ERSettings:
             to ascend to G-sharp, rather than enforcing a less-efficient
             voice-leading).
             Default: False
-        allow_flexible_voice_leading: bool. TODO document better
-            Default: True
+        allow_flexible_voice_leading: bool. If True, then the voice-leading
+            (i.e., the mapping of pitches from one harmony to the next) will
+            be allowed to change mid-harmony. (So that, for example, the pitch
+            C5 might at first be mapped to D5 by the initial voice-leading, but
+            after the script reaches an impasse, a new voice-leading will
+            be chosen, which might map C5 to B4.) Setting to True will greatly
+            expand the script's ability to find voice-leading solutions;
+            however, it may tend to destroy the audible sense of "pattern".
+            Default: False
         vl_maintain_consonance: bool. If False, then after the initial pattern
             is complete, voice-leadings will not be checked for consonance.
-            TODO refer to appropriate settings
+            (See the settings under "Consonance and dissonance settings" below.)
             Default: True
         vl_maintain_limit_intervals: bool. If False, then after the initial pattern
             is complete, voice-leadings will be allowed to exceed limit intervals.
-            TODO refer to appropriate settings
+            (See settings `max_interval`, `max_interval_for_non_chord_tones`,
+            `min_interval`, `min_interval_for_non_chord_tones`.)
             Default: True
         vl_maintain_forbidden_intervals: bool. If False, then after the initial pattern
             is complete, voice-leadings will be permitted to contain forbidden intervals.
-            TODO refer to appropriate settings
+            (See `forbidden_interval_classes`, `forbidden_interval_modulo`.)
             Default: True
 
         Chord-tone settings
         ===================
 
         chord_tone_and_root_disable: bool. If True, disables all chord-tone and root
-            specific behaviour.
+            specific behaviour. Specifically, disables `chord_tone_selection`,
+            `chord_tones_no_diss_treatment`, `force_chord_tone`,
+            `force_root_in_bass`, `max_interval_for_non_chord_tones`,
+            `min_interval_for_non_chord_tones`, `voice_lead_chord_tones`,
+            `preserve_root_in_bass`, `extend_bass_range_for_roots`
             Default: False
         chord_tone_selection: boolean. If True, then the script will select whether
-            each note should be assigned a chord-tone according to some probabilistic
+            each note should be assigned a chord-tone according to a probabilistic
             function (some of whose parameters can be set below).
                 - Note that not all chord tone behaviour is controlled
                     by this setting, however. Some settings (such as those
                     that begin "force_chord_tone") apply regardless. To disable
-                    all chord tone behaviour, use chord_tone_and_root_disable.
-                    # TODO clarify this note?
+                    all chord tone behavior entirely, use `chord_tone_and_root_disable`.
             Default: True
         chord_tone_prob_func: string. If chord_tone_selection is True, then the
             probability of the next note being a nonchord tone falls following
@@ -373,6 +416,7 @@ class ERSettings:
             immediately following another chord tone.
             See `max_n_between_chord_tones` for an example.
             Default: 0.25
+        # TODO rename force_non_chord_tones to something like prefer_non_chord_tones
         force_non_chord_tones: boolean. If True, then if the chord-tone
             probability function returns false, the pitch is forced to be
             a non-chord tone. Otherwise it is selected from the entire scale
@@ -386,10 +430,33 @@ class ERSettings:
                 and vice versa.
                 TODO move this note to a better spot?
 
-        len_to_force_chord_tone: int. Default: 2 TODO
-        scale_chord_tone_prob_by_dur: bool. Default: True TODO
-        scale_chord_tone_neutral_dur: number. Default: 0.5 TODO
-        scale_short_chord_tones_down: bool. Default: True TODO
+        len_to_force_chord_tone: int. If `chord_tone_selection` is True,
+            then notes of this value or longer will be forced to be chord
+            tones. To disable, set to 0.
+            Default: 1
+        scale_chord_tone_prob_by_dur: bool. If True, and `chord_tone_selection`
+            is True, then the probability of
+            a note being a chord-tone is scaled by the duration of that note,
+            so that longer notes are more likely to be chord-tones.
+            Specifically, the probability of a note being a chord tone is
+            linearly interpolated between what it would have been otherwise and
+            1, according to where the duration lies in the range set by
+            `scale_chord_tone_neutral_dur` and `len_to_force_chord_tone`.
+            (Whether the probability of notes shorter than
+            `scale_chord_tone_neutral_dur` is reduced depends upon
+            `scale_short_chord_tones_down`.)
+            Thus if this setting is True, then
+            `len_to_force_chord_tone` must have a non-zero value.
+            Default: True
+        scale_chord_tone_neutral_dur: number. If `scale_chord_tone_prob_by_dur`
+            is True, then this setting determines the note duration where
+            chord-tone probability is left unchanged; notes of duration
+            longer than this will have their chord-tone probability increased,
+            and notes shorter will have their chord-tone probability decreased
+            if `scale_short_chord_tones_down` is True.
+            Default: 0.5
+        scale_short_chord_tones_down: bool. See `scale_chord_tone_prob_by_dur`
+            and `scale_chord_tone_neutral_dur`. Default: False
         chord_tone_before_rests: number, or list of numbers. If chord_tone_selection is true,
             then rests of this length or greater will always be preceded by a
             chord tone. To disable, assign a value of 0.
@@ -400,7 +467,7 @@ class ERSettings:
             treatment. (However, dissonances sounding *against* these chord
             tones are still subject to the rules of dissonance treatment.)
             If a list, is interpreted as applying to voices in a modular manner.
-            Default: True
+            Default: False
         force_chord_tone: string. Possible values:
             "global_first_beat": forces chord tone on attacks on the global
                first beat (i.e., the first beat of the entire piece). Note,
@@ -418,7 +485,9 @@ class ERSettings:
               in each voice.
             "none": does not force any chord tones.
             Default: "none"
-        chord_tones_sync_attack_in_all_voices: bool. TODO
+        chord_tones_sync_attack_in_all_voices: bool. If True, then chord-tone
+            selection will be synchronized between all simultaneously attacked
+            voices.
             Default: False
         force_root_in_bass: string. Possible values are listed below; they work
             in the same way as for `force_chord_string` above.
@@ -457,24 +526,32 @@ class ERSettings:
           negative, indicates a specific interval (in which case it can be a
           float to indicate a just interval which will be tempered in
           pre-processing).
+          max_interval sets an inclusive bound (so if `max_interval = -5`,
+          an interval of 5 semitones is allowed, but 6 is not).
+          TODO does this depend on whether there is a rest prior to the note?
           Default: -OCTAVE
         max_interval_for_non_chord_tones: number, or list of numbers. (See note on "modular" lists.)
           Works in the same way as max_interval, but only applies to
           non-chord tones. If given a value of 1, can be used to apply a
           sort of primitive dissonance treatment. It can, however, also
           be given a value *larger* than max_interval, for unusual effects.
-          Default: -OCTAVE
+            min_interval sets an inclusive bound (so if `min_interval = -3`,
+            an interval of 3 semitones is allowed, but 2 is not).
+            If not passed, is assigned the value of `max_interval`.
         min_interval: number, or list of numbers. (See note on "modular" lists.) Works like max_interval, but
             specifies a minimum, rather than a maximum, interval.
             Default: 0
         min_interval_for_non_chord_tones: number, or list of numbers. (See note on "modular" lists.) Works like max_interval_for_non_chord_tones, but
             specifies a minimum, rather than a maximum, interval.
-            Default: 0
+            If not passed, is assigned the value of `min_interval`.
         force_repeated_notes: bool. TODO
             Default: False
         max_repeated_notes: integer. Sets the maximum allowed number of repeated
             pitches in a single voice. If `force_repeated_notes` is True, this
-            parameter is ignored.
+            parameter is ignored. "One repeated note" means two notes with the
+            same pitch in a row.
+            Warning: for now, only applies to the initial pattern, not to
+            the subsequent voice-leading (LONGTERM: fix)
             Default: 1
         max_alternations: integer, or sequence of integers (understood in a modular
             manner). Specifies the
@@ -489,8 +566,8 @@ class ERSettings:
             repeated in a loop of the specified length. (However, at each harmony change, the loop
             will be adjusted to fit the new harmony.)
         hard_pitch_loop: boolean. If True, then after the initial loop of each voice
-            is constructed, pitch constraint parameters such as `consonance` (TODO is this actually a
-            parameter) and `max_interval` will be ignored and the pitches will
+            is constructed, pitch constraint parameters such as `consonances`
+            and `max_interval` will be ignored and the pitches will
             continue to be looped "no matter what." If False, then a "soft" pitch
             loop is constructed, where a new pitch is chosen each time a pitch fails
             to pass the pitch constraint parameters.
@@ -523,7 +600,7 @@ class ERSettings:
           this list (interpreted as harmonic intervals) will be entirely avoided,
           regardless of consonance settings, at least in the initial pattern.
           Whether this setting persists after the initial pattern depends on
-          the value of `vl_maintain_consonance`
+          the value of `vl_maintain_consonance`.
         forbidden_interval_modulo: TODO
         exclude_augmented_triad: boolean. Because all the pairwise intervals of
           the 12-tet augmented triad are consonant, if we want to avoid it, we
@@ -986,7 +1063,7 @@ class ERSettings:
 
     voice_ranges: typing.Sequence[
         typing.Tuple[numbers.Number, numbers.Number]
-    ] = er_constants.AUTHENTIC_OCTAVES * er_constants.OCTAVE3 * er_constants.F
+    ] = er_constants.CONTIGUOUS_OCTAVES * er_constants.OCTAVE3 * er_constants.C
 
     # voice_order_str: if "reverse", then the voices will be generated
     #   from highest to lowest. Otherwise, they are generated from
@@ -1066,7 +1143,7 @@ class ERSettings:
     #   place the pitch bend message. Should probably be more than half
     #   to avoid bending the release of the previous pitch.
 
-    logic_type_pitch_bend: bool = True  # TODO doc this and following params
+    logic_type_pitch_bend: bool = False  # TODO doc this and following params
     num_channels_pitch_bend_loop: int = 9
     pitch_bend_time_prop: numbers.Number = 2 / 3
 
@@ -1097,7 +1174,7 @@ class ERSettings:
     parallel_voice_leading: bool = False
     parallel_direction: int = 0
 
-    voice_lead_chord_tones: bool = True
+    voice_lead_chord_tones: bool = False
 
     # preserve_root_in_bass: string. Controls whether the appearances
     #   of the root in the bass are preserved when voice-leading the
@@ -1111,14 +1188,17 @@ class ERSettings:
     #       - "all": all occurrences of the root of each harmony
     #           are preserved.
     #       - "none": the root is voice-led like any other pitch.
+    # LONGTERM address fact that otherwise forbidden intervals can occur
+    #   if this setting is not "none"
 
-    preserve_root_in_bass: str = "lowest"
+    preserve_root_in_bass: str = "none"
 
     # extend_bass_range_for_roots: numb If the lowest octave of the
     #   root sounding in the bass voice is not the lowest pitch during
     #   that harmony, it will be transposed an octave downwards, if this
     #   octave transposition lies within this extended range. To disable
     #   this behaviour set to 0.
+    # LONGTERM allow transposition by multiple octaves if necessary.
 
     extend_bass_range_for_roots: numbers.Number = 0
 
@@ -1135,9 +1215,10 @@ class ERSettings:
     #   in the middle of the harmony.
 
     constrain_voice_leading_to_ranges: bool = False
-    allow_flexible_voice_leading: bool = True
+    allow_flexible_voice_leading: bool = False
     vl_maintain_consonance: bool = True
     vl_maintain_limit_intervals: bool = True
+    # TODO maintain max_repeated_notes
     # TODO warning if vl_maintain_limit_intervals and polyphonic voice
     vl_maintain_forbidden_intervals: bool = True
 
@@ -1197,10 +1278,10 @@ class ERSettings:
     #   may occur if this parameter is true and so is force_non_chord_tones.)
     #
 
-    len_to_force_chord_tone: int = 2
+    len_to_force_chord_tone: int = 1
     scale_chord_tone_prob_by_dur: bool = True
     scale_chord_tone_neutral_dur: numbers.Number = 0.5
-    scale_short_chord_tones_down: bool = True
+    scale_short_chord_tones_down: bool = False
 
     # chord_tone_before_rests: numb If chord_tone_selection is true,
     #   then rests of this length or greater will always be preceded by a
@@ -1210,7 +1291,7 @@ class ERSettings:
         numbers.Number, typing.Sequence[numbers.Number]
     ] = 0.26
 
-    # TODO what about chord tone *after* rests?
+    # LONGTERM what about chord tone *after* rests?
 
     # chord_tones_no_diss_treatment: boolean, or list of booleans. If
     #   true, then chord tones are exempted from the conditions of dissonance
@@ -1219,7 +1300,7 @@ class ERSettings:
 
     chord_tones_no_diss_treatment: typing.Union[
         bool, typing.Sequence[bool]
-    ] = True
+    ] = False
 
     # force_chord_tone: string. Possible values:
     #       "global_first_beat": forces chord tone on attacks on the global
@@ -1299,13 +1380,13 @@ class ERSettings:
     ] = -er_constants.OCTAVE
     max_interval_for_non_chord_tones: typing.Union[
         numbers.Number, typing.Sequence[numbers.Number]
-    ] = -er_constants.OCTAVE
+    ] = None  # TODO doc
     min_interval: typing.Union[
         numbers.Number, typing.Sequence[numbers.Number]
     ] = 0
     min_interval_for_non_chord_tones: typing.Union[
         numbers.Number, typing.Sequence[numbers.Number]
-    ] = 0
+    ] = None  # TODO doc
 
     # force_repeated_notes: boolean.
     # max_repeated_notes: integ If force_repeated_notes is true,
@@ -1394,8 +1475,9 @@ class ERSettings:
     #   vl_maintain_consonance)
     # forbidden_interval_modulo: works same as consonance_modulo.
 
+    # TODO default
     forbidden_interval_classes: typing.Sequence[numbers.Number] = (0,)
-    forbidden_interval_modulo = [2]
+    forbidden_interval_modulo = [0]
 
     # exclude_augmented_triad: because all the pairwise intervals of
     #   the 12-tet augmented triad are consonant, we need to explicitly
@@ -1634,7 +1716,7 @@ class ERSettings:
         er_constants.GUITAR,
     )
     choir_assignments: typing.Sequence[int] = None
-    randomly_distribute_between_choirs: bool = False  # TODO doc
+    randomly_distribute_between_choirs: bool = False
 
     # length_choir_segments: sets the duration for each random choir
     #   assignment. If negative, each voice is permanently assigned to
@@ -1714,6 +1796,10 @@ class ERSettings:
     #       (use a dict)
 
     reset_to_original_voicing: typing.Sequence[int] = ()  # TODO doc
+
+    initial_pattern_attempts: int = 50
+    voice_leading_attempts: int = 50
+    ask_for_more_attempts: bool = False
 
     ###################################################################
     # Randomization settings

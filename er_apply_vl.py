@@ -18,7 +18,7 @@ def apply_voice_leading(
     voice_lead_error,
 ):
     # MAYBE something about the number of arguments for this function?
-    # TODO use PossibleNote class
+    # LONGTERM use PossibleNote class
 
     def _try_to_force_root():
         root = er_make2.get_root_to_force2(er, voice_i, new_harmony_i)
@@ -33,7 +33,7 @@ def apply_voice_leading(
 
     if (
         first_note
-        and (not er.bass_in_existing_voice)
+        and not er.bass_in_existing_voice
         and voice_i == 0
         and er.force_root_in_bass in ("first_beat", "first_note")
     ):
@@ -60,7 +60,7 @@ def apply_voice_leading(
                 return new_note, None
 
     other_voices = er_misc_funcs.get_prev_voice_indices(
-        er, voice_i, during_pattern_voice_leading=new_attack_time
+        super_pattern, new_attack_time, new_dur
     )
 
     prev_pitch = prev_note.pitch

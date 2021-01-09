@@ -16,8 +16,6 @@ import er_tuning
 DEFAULT_VELOCITY = 96
 DEFAULT_CHOIR = 0
 
-# TODO use mal_music_funcs/note_classes instead
-
 
 class Note:
     """Stores a note.
@@ -164,28 +162,11 @@ class Rhythm(RhythmicDict):
         else:
             self.full = False
 
-    # def _get_offsets(self, max_super_pattern_len):
-    #     raise NotImplementedError()
-    #     self.offsets = (  # pylint: disable=unreachable,attribute-defined-outside-init
-    #         []
-    #     )
-    #     # TODO write this function (What is this supposed to do and why?)
-
     def get_attack_time_and_dur(self, rhythm_i):
-        # try:
         offset = (rhythm_i // self.total_num_notes) * self.total_rhythm_len
-        # except AttributeError:
-        #     self._get_total_num_notes()
-        #     offset = (rhythm_i // self.total_num_notes) * self.total_rhythm_len
-        # try:
         attack_time, dur = self.attack_times_and_durs[
             rhythm_i % self.total_num_notes
         ]
-        # except AttributeError:
-        #     self.make_attack_and_dur_lists()
-        #     attack_time, dur = self.attack_times_and_durs[
-        #         rhythm_i % self.total_num_notes
-        #     ]
         return attack_time + offset, dur
 
 
@@ -365,6 +346,7 @@ class Voice(collections.UserDict):
         self.range = voice_range
         self.sort_up_to_date = 0
         self.reversed_up_to_date = -1
+        self.reversed_voice = None
 
     def __iter__(self):
         for attack_time in self.data:
@@ -375,18 +357,18 @@ class Voice(collections.UserDict):
 
     def __reversed__(self):
         if self.reversed_up_to_date != self.sort_up_to_date:
-            reversed_voice = dict(
+            self.reversed_voice = dict(
                 sorted(self.data.items(), key=lambda x: x[0], reverse=True)
             )
-            for attack_time in reversed_voice:
-                reversed_voice[attack_time].sort(
+            for attack_time in self.reversed_voice:
+                self.reversed_voice[attack_time].sort(
                     key=lambda x: x.dur, reverse=True
                 )
             self.reversed_up_to_date = self.sort_up_to_date
-        for attack_time in reversed_voice:
+        for attack_time in self.reversed_voice:
             # notes = sorted(
             #     self.data[attack_time], key=lambda x: x.dur, reverse=True)
-            for note_object in reversed_voice[attack_time]:
+            for note_object in self.reversed_voice[attack_time]:
                 yield note_object
 
     def __str__(self):
@@ -588,6 +570,7 @@ class Voice(collections.UserDict):
         self.update_sort()
         self.sort_up_to_date += 1
 
+    # TODO test (I changed binary_search)
     def get_sounding_pitches(
         self, attack_time, dur=0, min_attack_time=0, min_dur=0
     ):
@@ -595,7 +578,9 @@ class Voice(collections.UserDict):
         sounding_pitches = set()
         end_time = attack_time + dur
         times = list(self.data.keys())
-        i = er_misc_funcs.binary_search(times, end_time)
+        i = er_misc_funcs.binary_search(
+            times, end_time, not_found="force_upper"
+        )
         while i is not None:
             try:
                 time = times[i]
@@ -641,46 +626,60 @@ class Voice(collections.UserDict):
         returned instead. Or, if stop_at_rest is True, then instead of any
         pitches earlier than the first rest, -1 will be returned in place.
         """
+        return [
+            note.pitch if note is not None else -1
+            for note in self.get_prev_n_notes(
+                n,
+                time,
+                min_attack_time=min_attack_time,
+                stop_at_rest=stop_at_rest,
+                include_start_time=include_start_time,
+            )
+        ]
 
-        attack_times = list(self.data.keys())
-        i = er_misc_funcs.binary_search(attack_times, time)
-        pitches = []
-        if n <= 0:
-            return pitches
-        while i is not None:
-            i -= 1
-            if i < 0:
-                break
-            attack_time = attack_times[i]
-            if attack_time == time and not include_start_time:
-                continue
-
-            notes = self.data[attack_time]
-            break_out = False
-            last_attack_time = -1  # We want last_attack_time to be smaller
-            # than note.attack_time + note.dur at least
-            # once.
-            for note in reversed(notes):
-                if note.attack_time < min_attack_time:
-                    break_out = True
-                    break
-                if (
-                    stop_at_rest
-                    and note.attack_time + note.dur < last_attack_time
-                ):
-                    break_out = True
-                    break
-                pitches.insert(0, note.pitch)
-                last_attack_time = note.attack_time
-                if len(pitches) == n:
-                    break_out = True
-                    break
-            if break_out:
-                break
-
-        for i in range(n - len(pitches)):
-            pitches.insert(0, -1)
-        return pitches
+        # attack_times = list(self.data.keys())
+        # i = er_misc_funcs.binary_search(attack_times, time)
+        # pitches = []
+        # if n <= 0:
+        #     return pitches
+        # if i is not None and include_start_time:
+        #     i += 1
+        # while i is not None:
+        #     i -= 1
+        #     if i < 0:
+        #         break
+        #     attack_time = attack_times[i]
+        #     if attack_time == time and not include_start_time:
+        #         continue
+        #
+        #     notes = self.data[attack_time]
+        #     break_out = False
+        #     last_attack_time = -1  # We want last_attack_time to be smaller
+        #     # than note.attack_time + note.dur at least
+        #     # once.
+        #     # Later: do we actually? Don't we want it to break if there is a
+        #     # rest immediately preceding the initial attack time?
+        #     for note in reversed(notes):
+        #         if note.attack_time < min_attack_time:
+        #             break_out = True
+        #             break
+        #         if (
+        #             stop_at_rest
+        #             and note.attack_time + note.dur < last_attack_time
+        #         ):
+        #             break_out = True
+        #             break
+        #         pitches.insert(0, note.pitch)
+        #         last_attack_time = note.attack_time
+        #         if len(pitches) == n:
+        #             break_out = True
+        #             break
+        #     if break_out:
+        #         break
+        #
+        # for i in range(n - len(pitches)):
+        #     pitches.insert(0, -1)
+        # return pitches
 
     def get_prev_pitch(self, time, min_attack_time=0, stop_at_rest=False):
         """Returns previous pitch from voice."""
@@ -709,49 +708,96 @@ class Voice(collections.UserDict):
         stop_at_rest=False,
         include_start_time=False,
     ):
-        """Like get_prev_n_pitches, but returns Note objects.
-
-        If notes are attacked earlier than min_attack_time, None will be
-        returned instead. Or, if stop_at_rest is True, then instead of any
-        pitches earlier than the first rest, None will be returned instead.
-        """
-
         attack_times = list(self.data.keys())
-        i = er_misc_funcs.binary_search(attack_times, time)
+        start_i = er_misc_funcs.binary_search(
+            attack_times, time, not_found="force_lower"
+        )
+        if start_i is None:
+            return [None for _ in range(n)]
+
         out_notes = []
-        if n <= 0:
-            return out_notes
-        while i is not None:
-            i -= 1
-            if i < 0:
-                break
-            attack_time = attack_times[i]
-            if attack_time == time and not include_start_time:
-                continue
+        last_attack_time = time
+        i_iter = iter(range(start_i, -1, -1))
+        try:
+            while n:
+                i = next(i_iter)
+                attack_time = attack_times[i]
+                if attack_time == time and not include_start_time:
+                    continue
+                if attack_time < min_attack_time:
+                    break
+                notes = self.data[attack_time]
+                for note in reversed(notes):
+                    if (
+                        stop_at_rest
+                        and note.attack_time + note.dur < last_attack_time
+                    ):
+                        # Is there any reason not to use the built-in
+                        # StopIteration for this purpose?
+                        raise StopIteration
+                    out_notes.insert(0, note)
+                    n -= 1
+                    last_attack_time = note.attack_time
+        except StopIteration:
+            pass
 
-            notes = self.data[attack_time]
-            break_out = False
-            for note in reversed(notes):
-                if note.attack_time < min_attack_time:
-                    break_out = True
-                    break
-                if (
-                    stop_at_rest
-                    and note.attack_time + note.dur < last_attack_time
-                ):
-                    break_out = True
-                    break
-                out_notes.insert(0, note)
-                last_attack_time = note.attack_time
-                if len(out_notes) == n:
-                    break_out = True
-                    break
-            if break_out:
-                break
-
-        for _ in range(n - len(out_notes)):
+        for _ in range(n, 0, -1):
             out_notes.insert(0, None)
         return out_notes
+
+    # def get_prev_n_notes2(
+    #     self,
+    #     n,
+    #     time,
+    #     min_attack_time=0,
+    #     stop_at_rest=False,
+    #     include_start_time=False,
+    # ):
+    #     """Like get_prev_n_pitches, but returns Note objects.
+    #
+    #     If notes are attacked earlier than min_attack_time, None will be
+    #     returned instead. Or, if stop_at_rest is True, then instead of any
+    #     pitches earlier than the first rest, None will be returned instead.
+    #     """
+    #
+    #     attack_times = list(self.data.keys())
+    #     i = er_misc_funcs.binary_search(attack_times, time)
+    #     out_notes = []
+    #     if n <= 0:
+    #         return out_notes
+    #     if i is not None and include_start_time:
+    #         i += 1
+    #     while i is not None:
+    #         i -= 1
+    #         if i < 0:
+    #             break
+    #         attack_time = attack_times[i]
+    #         if attack_time == time and not include_start_time:
+    #             continue
+    #
+    #         notes = self.data[attack_time]
+    #         break_out = False
+    #         for note in reversed(notes):
+    #             if note.attack_time < min_attack_time:
+    #                 break_out = True
+    #                 break
+    #             if (
+    #                 stop_at_rest
+    #                 and note.attack_time + note.dur < last_attack_time
+    #             ):
+    #                 break_out = True
+    #                 break
+    #             out_notes.insert(0, note)
+    #             last_attack_time = note.attack_time
+    #             if len(out_notes) == n:
+    #                 break_out = True
+    #                 break
+    #         if break_out:
+    #             break
+    #
+    #     for _ in range(n - len(out_notes)):
+    #         out_notes.insert(0, None)
+    #     return out_notes
 
     def get_prev_note(self, time, min_attack_time=0, stop_at_rest=False):
         """Returns previous Note from voice."""
@@ -1112,7 +1158,7 @@ class Score:
         of score. If end_time is not specified, passage moved continues to
         end of score. If neither are specified, entire score is moved.
         """
-        # TODO add parameter to overwrite existing music when displacing
+        # LONGTERM add parameter to overwrite existing music when displacing
         if displacement == 0:
             return
         if apply_to_existing_voices:
@@ -1123,7 +1169,7 @@ class Score:
             voice.displace_passage(displacement, start_time, end_time)
 
         for msg in self.meta_messages:
-            # TODO don't move tempo changes past beginning of passage
+            # LONGTERM don't move tempo changes past beginning of passage
             if start_time and msg.time < start_time:
                 continue
             if end_time and msg.time >= end_time:
@@ -1138,7 +1184,7 @@ class Score:
         If end time is 0, then removes until the end of the Score.
         """
         # TODO debug, etc.
-        # TODO what to do about overlapping durations?
+        # LONGTERM what to do about overlapping durations?
 
         if apply_to_existing_voices:
             voice_lists = (self.voices, self.existing_voices)
@@ -1172,7 +1218,7 @@ class Score:
             voice.repeat_passage(
                 original_start_time, original_end_time, repeat_start_time
             )
-        # TODO handle meta messages?
+        # LONGTERM handle meta messages?
 
     def transpose(
         self, interval, start_time, end_time, apply_to_existing_voices=False
@@ -1243,6 +1289,23 @@ class Score:
             except KeyError:
                 return harmony_i
         return harmony_i
+
+    def get_sounding_voices(
+        self, attack_time, dur=0, min_attack_time=0, min_dur=0
+    ):
+        """Get voices sounding at attack_time (if dur==0) or between
+        attack_time and attack_time + dur.
+        """
+        out = []
+        for voice_i in self.all_voice_is:
+            if self.voices[voice_i].get_sounding_pitches(
+                attack_time,
+                dur=dur,
+                min_attack_time=min_attack_time,
+                min_dur=min_dur,
+            ):
+                out.append(voice_i)
+        return out
 
     def get_sounding_pitches(
         self, attack_time, dur=0, voices="all", min_attack_time=0, min_dur=0

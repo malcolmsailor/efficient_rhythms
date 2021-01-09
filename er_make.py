@@ -17,9 +17,6 @@ import er_notes
 import er_rhythm
 import er_vl_strict_and_flex
 
-# import er_voice_leadings
-# from er_make import er_vl_strict
-
 
 class PossibleNoteError(Exception):
     pass
@@ -40,7 +37,8 @@ class PossibleNote:
         self.harmony_i = super_pattern.get_harmony_i(self.attack_time)
 
 
-# TODO it appears this function is never called
+# it appears this function is never called
+# TODO check whether this function should be called somewhere?
 # def _force_root(er, super_pattern, poss_note):
 #     root = get_root_to_force(er, poss_note)
 #     if root is not None:
@@ -139,7 +137,7 @@ def _force_parallel_motion(er, super_pattern, poss_note):
 
         return follower_pitch
 
-    # TODO I'm not sure whether "global" parallel motion of this
+    # LONGTERM I'm not sure whether "global" parallel motion of this
     #       type of parallel motion is coherent... mull this over!
 
     if motion_type == "global":
@@ -259,7 +257,7 @@ def _choose_whether_chord_tone(er, super_pattern, poss_note):
 
     if er.chord_tones_sync_attack_in_all_voices:
         prev_voices = er_misc_funcs.get_prev_voice_indices(
-            er, poss_note.voice_i
+            super_pattern, poss_note.attack_time, poss_note.dur,
         )
         if prev_voices:
             if _check_other_voices_for_chord_tones(
@@ -284,9 +282,7 @@ def _choose_whether_chord_tone(er, super_pattern, poss_note):
         er, super_pattern, poss_note.attack_time, poss_note.voice_i
     )
 
-    # TODO chord tone probability influenced by length of note,
-    #      perhaps also metric position
-    # INTERNET fit probability function
+    # LONGTERM chord tone probability influenced by metric position
 
     if random.random() < _chord_tone_probability():
         return True
@@ -436,14 +432,17 @@ def _within_limit_intervals(er, super_pattern, available_pitches, poss_note):
         er, poss_note.voice_i, chord_tone
     )
 
-    return er_make2.check_melodic_intervals(
-        er,
-        available_pitches,
-        prev_pitch,
-        max_interval,
-        min_interval,
-        poss_note.harmony_i,
-    )
+    return [
+        er_make2.check_melodic_intervals(
+            er,
+            sub_available_pitches,
+            prev_pitch,
+            max_interval,
+            min_interval,
+            poss_note.harmony_i,
+        )
+        for sub_available_pitches in available_pitches
+    ]
 
 
 def _remove_parallels(er, super_pattern, available_pitches, poss_note):
@@ -452,7 +451,9 @@ def _remove_parallels(er, super_pattern, available_pitches, poss_note):
     prev_pitch = super_pattern.get_prev_pitch(
         poss_note.attack_time, poss_note.voice_i
     )
-    other_voices = er_misc_funcs.get_prev_voice_indices(er, poss_note.voice_i)
+    other_voices = er_misc_funcs.get_prev_voice_indices(
+        super_pattern, poss_note.attack_time, poss_note.dur
+    )
     other_voices_dict = {}
 
     for other_voice in other_voices:
@@ -480,10 +481,10 @@ def _remove_parallels(er, super_pattern, available_pitches, poss_note):
         for available_pitch in available_pitches.copy():
             interval = available_pitch - other_pitch
             if prev_interval % er.tet == interval % er.tet:
+
                 if er.antiparallels or np.sign(prev_interval) == np.sign(
                     interval
                 ):
-                    # print(f"removing {available_pitch}")
                     available_pitches.remove(available_pitch)
 
 
@@ -721,7 +722,9 @@ def _attempt_initial_pattern(
         and (not er.bass_in_existing_voice)
         and _check_whether_to_force_root(er, super_pattern, poss_note)
     ):
-        forced_root = er_make2.get_root_to_force(er, poss_note)
+        forced_root = er_make2.get_root_to_force(
+            er, poss_note.voice_i, poss_note.harmony_i
+        )
         if forced_root:
             poss_note.voice.add_note(
                 forced_root, poss_note.attack_time, poss_note.dur
@@ -778,6 +781,7 @@ def _attempt_initial_pattern(
     available_pitches = _within_limit_intervals(
         er, super_pattern, available_pitches, poss_note
     )
+
     if er_misc_funcs.empty_nested(available_pitches):
         available_pitch_error.exceeding_max_interval += 1
         return False
@@ -860,30 +864,45 @@ def make_initial_pattern(er):
 
     available_pitch_error = er_exceptions.AvailablePitchMaterialsError(er)
 
-    for attempt in range(er_exceptions.NUM_BASIC_ATTEMPTS):
-        # QUESTION is it possible to "backspace" to previous line
-        # (so that "Initial pattern attempt" doesn't have to take a new line
-        #   every time)?
-        super_pattern = er_notes.Score(
-            num_voices=er.num_voices,
-            tet=er.tet,
-            harmony_len=er.harmony_len,
-            total_len=er.total_len,
-            ranges=er.voice_ranges,
-            time_sig=er.time_sig,
-            existing_score=er.existing_score,
-        )
-        initial_str = f"\rInitial pattern attempt {attempt + 1}"
-        sys.stdout.write(
-            initial_str + " " * (LINE_WIDTH - len(initial_str)) + "\n"
-        )
-        sys.stdout.flush()
-        if _attempt_initial_pattern(er, super_pattern, available_pitch_error):
-            # sys.stdout.write("\n... success!\n")
-            # sys.stdout.flush()
-            success = True
+    for rep in itertools.count(start=1):
+        for attempt in range(er.initial_pattern_attempts):
+            # QUESTION is it possible to "backspace" to previous line
+            # (so that "Initial pattern attempt" doesn't have to take a new line
+            #   every time)?
+            er.rhythms = er_rhythm.rhythms_handler(er)
+            er.initial_pattern_order = er_rhythm.get_attack_order(er)
+            super_pattern = er_notes.Score(
+                num_voices=er.num_voices,
+                tet=er.tet,
+                harmony_len=er.harmony_len,
+                total_len=er.total_len,
+                ranges=er.voice_ranges,
+                time_sig=er.time_sig,
+                existing_score=er.existing_score,
+            )
+            initial_str = f"\rInitial pattern attempt {attempt + 1}"
+            sys.stdout.write(
+                initial_str + " " * (LINE_WIDTH - len(initial_str)) + "\n"
+            )
+            sys.stdout.flush()
+            if _attempt_initial_pattern(
+                er, super_pattern, available_pitch_error
+            ):
+                # sys.stdout.write("\n... success!\n")
+                # sys.stdout.flush()
+                success = True
+                break
+            success = False
+        if success or not er.ask_for_more_attempts:
             break
-        success = False
+        answer = input(
+            f"\nFailed after {rep * er.initial_pattern_attempts}"
+            " initial pattern attempts. Try another "
+            f"{er.initial_pattern_attempts} attempts "
+            "(y/n)?"
+        )
+        if answer != "y":
+            break
 
     if not success:
         sys.stdout.write("\n")
@@ -938,10 +957,13 @@ def voice_lead_pattern(er, super_pattern, voice_lead_error):
 
     voice_lead_error.reset_temp_counter()
 
-    # if er_vl_strict.voice_lead_pattern_strictly(
-    #         er, super_pattern, voice_lead_error,
-    #         pattern_voice_leading_i=er.num_voices):
-    #     return True
+    if er_vl_strict_and_flex.voice_lead_pattern_strictly(
+        er,
+        super_pattern,
+        voice_lead_error,
+        pattern_voice_leading_i=er.num_voices,
+    ):
+        return True
 
     if (
         er.allow_flexible_voice_leading
@@ -961,19 +983,16 @@ def make_super_pattern(er):
     """Makes the super pattern.
     """
 
-    voice_lead_error = er_exceptions.VoiceLeadingError()
+    voice_lead_error = er_exceptions.VoiceLeadingError(er)
 
-    while True:
-        for attempt in range(er_exceptions.NUM_SUPER_PATTERN_ATTEMPTS):
+    for rep in itertools.count(start=1):
+        for attempt in range(er.voice_leading_attempts):
             sys.stdout.write(f"Super pattern attempt {attempt + 1}\n")
             sys.stdout.flush()
-            er.initial_pattern_order = er_rhythm.get_attack_order(er)
 
             super_pattern = make_initial_pattern(er)
 
             initial_pattern_copy = copy.copy(super_pattern)
-
-            # TODO how should voice-leading work with parallel motion?
 
             sys.stdout.write("\nSucceeded, attempting voice-leading...  " "\n")
             sys.stdout.flush()
@@ -992,12 +1011,12 @@ def make_super_pattern(er):
             sys.stdout.flush()
 
             success = False
-        if success:
+        if success or not er.ask_for_more_attempts:
             break
         answer = input(
-            f"Failed after {er_exceptions.NUM_SUPER_PATTERN_ATTEMPTS}"
+            f"Failed after {rep * er.voice_leading_attempts}"
             " voice-leading attempts. Try another "
-            f"{er_exceptions.NUM_SUPER_PATTERN_ATTEMPTS} attempts "
+            f"{er.voice_leading_attempts} attempts "
             "(y/n)?"
         )
         if answer != "y":
@@ -1196,8 +1215,8 @@ def complete_pattern(er, super_pattern):
         )
 
 
-LINE_WIDTH = er_constants.LINE_WIDTH
-SPINNING_LINE = er_constants.SPINNING_LINE
+LINE_WIDTH = os.get_terminal_size().columns
+SPINNING_LINE = "|/-\\"
 
 # Constants for accessing voice ranges
 

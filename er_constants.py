@@ -341,9 +341,3 @@ TELEPHONE_RING = 124
 HELICOPTER = 125
 APPLAUSE = 126
 GUNSHOT = 127
-
-
-# Misc. internal constants
-
-LINE_WIDTH = 79  # TODO remove?
-SPINNING_LINE = "|/-\\"  # TODO move elsewhere

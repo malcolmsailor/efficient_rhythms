@@ -15,8 +15,6 @@ def voice_lead_pattern_flexibly(
     the middle of a pattern if it runs into a problem.
     """
 
-    print("flexibly")
-
     # sys.stdout.write("\b" + SPINNING_LINE[
     #     pattern_voice_leading_i % len(SPINNING_LINE)])
     sys.stdout.write(
@@ -320,4 +318,4 @@ def voice_lead_pattern_strictly(
     return False
 
 
-SPINNING_LINE = er_constants.SPINNING_LINE
+SPINNING_LINE = "|/-\\"

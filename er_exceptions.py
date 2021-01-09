@@ -1,8 +1,5 @@
 import collections
 
-NUM_BASIC_ATTEMPTS = 50
-NUM_SUPER_PATTERN_ATTEMPTS = 20
-
 
 class UnableToChoosePitchError(Exception):
     def __init__(self):
@@ -49,6 +46,7 @@ class AvailablePitchMaterialsError(Exception):
         self.excess_alternations = 0
         self.excess_repeated_notes = 0
         self.pitch_loop_just_one_pitch = 0
+        self.num_attempts = er.initial_pattern_attempts
 
     def __str__(self):
 
@@ -66,7 +64,7 @@ class AvailablePitchMaterialsError(Exception):
             "        Excess repeated notes:         {:3}\n"
             "        Pitch loop just one pitch:     {:3}\n"
             "".format(
-                NUM_BASIC_ATTEMPTS,
+                self.num_attempts,
                 self.no_available_pcs,
                 self.no_available_pitches,
                 self.exceeding_max_interval,
@@ -123,12 +121,13 @@ class VoiceLeadFailureCounter:
 
 
 class VoiceLeadingError(Exception):
-    def __init__(self):
+    def __init__(self, er):
         super().__init__()
         self.total_failures = 0
         self.harmony_counter = collections.Counter()
         self.temp_failure_counter = VoiceLeadFailureCounter()
         self.total_failure_counter = VoiceLeadFailureCounter()
+        self.num_attempts = er.voice_leading_attempts
 
     def reset_temp_counter(self):
         total_vars = vars(self.total_failure_counter)
@@ -151,7 +150,7 @@ class VoiceLeadingError(Exception):
             "Total voice-leading failures: {}\n"
             "{}\n"
             "{}".format(
-                NUM_SUPER_PATTERN_ATTEMPTS,
+                self.num_attempts,
                 self.total_failures,
                 str(self.total_failure_counter),
                 counter_str,

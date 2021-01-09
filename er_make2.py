@@ -4,24 +4,24 @@ import er_misc_funcs
 
 # TODO rename this module?
 
-def get_root_to_force(er, poss_note):
-    root_pc = er.get(poss_note.harmony_i, "pc_chords")[0]
-    root_pitches = er_misc_funcs.get_all_pitches_in_range(
-        root_pc, er.voice_ranges[poss_note.voice_i], er.tet
-    )
-    if not root_pitches:
-        if er.already_warned["force_root"][poss_note.harmony_i] == 0:
-            warnings.warn(
-                f"Unable to force root in bass on harmony {poss_note.harmony_i}.\n"
-                "Try increasing voice range."
-            )
-            er.already_warned["force_root"][poss_note.harmony_i] += 1
-        return None
-    return min(root_pitches)
 
-def get_root_to_force2(er, voice_i, harmony_i):
-    # TODO this function only exists because er_apply_vl does not
-    #   use poss_note yet. Implement that and then use get_root_to_force()
+# def get_root_to_force(er, poss_note):
+#     root_pc = er.get(poss_note.harmony_i, "pc_chords")[0]
+#     root_pitches = er_misc_funcs.get_all_pitches_in_range(
+#         root_pc, er.voice_ranges[poss_note.voice_i], er.tet
+#     )
+#     if not root_pitches:
+#         if er.already_warned["force_root"][poss_note.harmony_i] == 0:
+#             warnings.warn(
+#                 f"Unable to force root in bass on harmony {poss_note.harmony_i}.\n"
+#                 "Try increasing voice range."
+#             )
+#             er.already_warned["force_root"][poss_note.harmony_i] += 1
+#         return None
+#     return min(root_pitches)
+
+
+def get_root_to_force(er, voice_i, harmony_i):
     root_pc = er.get(harmony_i, "pc_chords")[0]
     root_pitches = er_misc_funcs.get_all_pitches_in_range(
         root_pc, er.voice_ranges[voice_i], er.tet
@@ -36,6 +36,7 @@ def get_root_to_force2(er, voice_i, harmony_i):
         return None
     return min(root_pitches)
 
+
 def get_repeated_pitch(poss_note, min_attack_time=0):
     prev_pitch = poss_note.voice.get_prev_pitch(
         poss_note.attack_time, min_attack_time=min_attack_time
@@ -44,10 +45,11 @@ def get_repeated_pitch(poss_note, min_attack_time=0):
         return None
     return prev_pitch
 
+
 def check_harmonic_intervals(
     er, super_pattern, pitch, attack_time, dur, voice_i, other_voices="all"
 ):
-    # TODO poss_note
+    # LONGTERM poss_note
 
     other_pitches = super_pattern.get_all_pitches_sounding_during_duration(
         attack_time, dur, voices=other_voices
@@ -73,6 +75,7 @@ def check_harmonic_intervals(
 
     return True
 
+
 def check_if_chord_tone(er, super_pattern, attack_time, pitch):
 
     harmony_i = super_pattern.get_harmony_i(attack_time)
@@ -82,10 +85,11 @@ def check_if_chord_tone(er, super_pattern, attack_time, pitch):
 
     return False
 
+
 def check_consonance(er, super_pattern, pitch, attack_time, dur, voice_i):
     """Checks whether the given pitch fulfills the consonance parameters.
     """
-    # TODO use possible note class (but first update voice-leading functions.)
+    # LONGTERM use possible note class (but first update voice-leading functions.)
 
     if er.consonance_treatment == "none":
         return True
@@ -93,7 +97,6 @@ def check_consonance(er, super_pattern, pitch, attack_time, dur, voice_i):
     consonance_modulo, min_dur = er.get(
         voice_i, "consonance_modulo", "min_dur_for_cons_treatment"
     )
-
     if (
         consonance_modulo != [0,]
         and er_misc_funcs.check_modulo(attack_time, consonance_modulo) != 0
@@ -137,6 +140,7 @@ def check_consonance(er, super_pattern, pitch, attack_time, dur, voice_i):
         permit_doublings=er.chord_permit_doublings,
     )
 
+
 def get_limiting_intervals(er, voice_i, chord_tone=False):
     if er.get(voice_i, "max_interval_for_non_chord_tones") and not chord_tone:
         max_interval = er.get(voice_i, "max_interval_for_non_chord_tones")
@@ -149,12 +153,22 @@ def get_limiting_intervals(er, voice_i, chord_tone=False):
         min_interval = er.get(voice_i, "min_interval")
     return max_interval, min_interval
 
+
 def check_melodic_intervals(
     er, new_p, prev_pitch, max_interval, min_interval, harmony_i
 ):
     """
-    Can be passed an int or a list/tuple of ints. Returns a list (perhaps
-    empty).
+    Args:
+        new_p: an int, or a sequence of ints.
+        prev_pitch: int.
+        max_interval, min_interval: numbers. See ERSettings documentation
+            for more detail.
+        harmony_i: int.
+
+    Returns:
+        a list (possibly empty) of the pitch or pitches from new_p that are
+        within the range specified by max_interval and min_interval
+
     """
 
     # max_rest_dur = er.get(
@@ -166,7 +180,7 @@ def check_melodic_intervals(
                 sub_item for sub_item in item if _sub_check_mel_ints(sub_item)
             ]
         if max_interval < 0:
-            if abs(item - prev_pitch) > abs(max_interval):
+            if abs(item - prev_pitch) > -max_interval:
                 return None
         elif max_interval > 0:
             generic_interval = er_misc_funcs.get_generic_interval(
@@ -177,7 +191,7 @@ def check_melodic_intervals(
         if min_interval == 0:
             return item
         if min_interval < 0:
-            if abs(item - prev_pitch) >= abs(min_interval):
+            if abs(item - prev_pitch) >= -min_interval:
                 return item
         elif min_interval > 0:
             try:
