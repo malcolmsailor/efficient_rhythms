@@ -628,45 +628,8 @@ def changer_interface(super_pattern, active_changers, changer_counter):
     return copied_pattern, active_changers
 
 
-def sibelius_open(midi_path):
-    """Opens with Sibelius (but only in macOS).
-
-    If it finds more than one Sibelius application it uses the most recently
-    accessed one.
-    """
-
-    def _find_sibelius_path():
-        if sys.platform != "darwin":
-            print(
-                er_misc_funcs.add_line_breaks(
-                    "We don't seem to be in macOS. Sorry, this script is "
-                    "not smart enough to open Sibelius outside of macOS.",
-                    indent_type="none",
-                )
-            )
-            input("    Press <enter> to continue...")
-            return None
-        applications_dir = "/Applications"
-        sib_files = [
-            app
-            for app in os.scandir(applications_dir)
-            if app.name.startswith("Sibelius")
-        ]
-        if not sib_files:
-            input(
-                "Can't find Sibelius, sorry." "    Press <enter> to continue..."
-            )
-            return None
-        sib_files.sort(key=lambda file: file.stat().st_atime, reverse=True)
-        sibelius_app = sib_files[0].name
-        sibelius_path = os.path.join(applications_dir, sibelius_app)
-        return sibelius_path
-
-    sibelius_path = _find_sibelius_path()
-    if not sibelius_path:
-        return
-
-    subprocess.run(["open", "-a", sibelius_path, midi_path], check=False)
+def mac_open(midi_path):
+    subprocess.run(["open", midi_path], check=False)
 
 
 def run_verovio(super_pattern, midi_path):
@@ -743,8 +706,12 @@ def input_loop(er, super_pattern, midi_player, midi_path):
         return (
             "Press:\n"
             "    'a' to apply filters and/or transformers\n"
-            "    'o' to open in Sibelius\n"
-            "    'v' to write to PDF using Verovio\n"
+            + (
+                "    'o' to open with macOS 'open' command\n"
+                if sys.platform == "darwin"
+                else ""
+            )
+            + "    'v' to write to PDF using Verovio\n"
             "    'p' to print out text representation of score\n"
             "    'b' to enter a breakpoint (for debugging)\n"
             "{}"
@@ -811,7 +778,7 @@ def input_loop(er, super_pattern, midi_player, midi_path):
             er_midi.write_er_midi(er, current_pattern, current_midi_path)
 
         elif answer == "o":
-            sibelius_open(current_midi_path)
+            mac_open(current_midi_path)
 
         elif answer == "v":
             run_verovio(current_pattern, current_midi_path)
