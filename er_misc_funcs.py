@@ -34,16 +34,36 @@ def check_modulo(n, mod):
 
 
 def add_line_breaks(
-    in_str, line_width=79, indent_type="hanging", indent_width=4, align="left"
+    in_str,
+    line_width=None,
+    indent_type="hanging",
+    indent_width=4,
+    indent_char=" ",
+    align="left",
+    join=True,
+    fill=False,
+    force_breaks=True,
+    preserve_trailing_ws=True,
 ):
     """Adds line breaks to a string for printing in the shell.
 
     Keyword args:
-        line_width: int. Default 79.
+        line_width: int. If None, taken from os.get_terminal_size().
         indent_type: str. "hanging", "leading", "all", or "none". Default
             "hanging".
         indent_width: int.
+        indent_char: Char to use for indentation. Default = " ".
         align: str. "left", "center", or "right".
+        join: boolean. If true, return a single string joined by new lines.
+            If false, returns a list of strings.
+        fill: boolean. If true, all lines will be filled to the full length
+            with space characters.
+        force_breaks: whether to break words in the event that a single word
+            is longer than one line.
+        preserve_trailing_ws: whether to preserve trailing whitespace
+            at the end of `in_str`. Even if True, will not add trailing
+            whitespace to the last line if that leads to it being more
+            than one line long. Default: True
 
     """
 
@@ -55,8 +75,17 @@ def add_line_breaks(
             before = math.ceil((current_line_width - len(line)) / 2)
             after = math.floor((current_line_width - len(line)) / 2)
             return before * " " + line + after * " "
+        elif align == "left" and fill:
+            return line + (current_line_width - len(line)) * " "
         return line
 
+    if preserve_trailing_ws:
+        for i in range(len(in_str) - 1, -1, -1):
+            if not in_str[i].isspace():
+                break
+        trailing_ws = in_str[i + 1 :]
+    if line_width is None:
+        line_width = os.get_terminal_size().columns
     lines = []
     start_line_i = 0
     last_whitespace_i = 0
@@ -80,18 +109,18 @@ def add_line_breaks(
             )
             start_line_i = char_i + 1
             line_i += 1
-        if (
-            char_i - start_line_i > current_line_width
-            and last_whitespace_i > start_line_i
-        ):
+        if char_i - start_line_i >= current_line_width:
+            if last_whitespace_i > start_line_i:
+                line_break_i = last_whitespace_i
+            elif force_breaks:
+                line_break_i = char_i
             line = align_line(
-                in_str[start_line_i:last_whitespace_i],
-                current_line_width,
-                align,
+                in_str[start_line_i:line_break_i], current_line_width, align
             )
             lines.append(line)
-            start_line_i = last_whitespace_i + 1
+            start_line_i = line_break_i + 1
             line_i += 1
+
     line = align_line(in_str[start_line_i:], current_line_width, align)
     lines.append(line)
     spacing_to_add = indent_width // 2 if align == "center" else indent_width
@@ -100,11 +129,91 @@ def add_line_breaks(
             lines[0],
         ]
         for line in lines[1:]:
-            temp_lines.append(spacing_to_add * " " + line)
+            temp_lines.append(spacing_to_add * indent_char + line)
         lines = temp_lines
     if indent_type in ("leading", "all"):
-        lines[0] = spacing_to_add * " " + lines[0]
-    return "\n".join(lines)
+        lines[0] = spacing_to_add * indent_char + lines[0]
+    if preserve_trailing_ws and len(lines[-1]) + len(trailing_ws) < line_width:
+        lines[-1] = lines[-1] + trailing_ws
+    if join:
+        return "\n".join(lines)
+    return lines
+
+
+# def add_line_breaks(
+#     in_str, line_width=None, indent_type="hanging", indent_width=4, align="left"
+# ):
+#     """Adds line breaks to a string for printing in the shell.
+#
+#     Keyword args:
+#         line_width: int. Default None (a call to os.get_terminal_size is made).
+#         indent_type: str. "hanging", "leading", "all", or "none". Default
+#             "hanging".
+#         indent_width: int.
+#         align: str. "left", "center", or "right".
+#
+#     """
+#
+#     def align_line(line, current_line_width, align):
+#         line = line.strip()
+#         if align == "right":
+#             return (current_line_width - len(line)) * " " + line
+#         if align == "center":
+#             before = math.ceil((current_line_width - len(line)) / 2)
+#             after = math.floor((current_line_width - len(line)) / 2)
+#             return before * " " + line + after * " "
+#         return line
+#
+#     if line_width is None:
+#         line_width = os.get_terminal_size().columns
+#     lines = []
+#     start_line_i = 0
+#     last_whitespace_i = 0
+#     line_i = 0
+#     if indent_type in ("leading", "all"):
+#         current_line_width = line_width - indent_width
+#     else:
+#         current_line_width = line_width
+#     for char_i, char in enumerate(in_str):
+#         if indent_type in ("hanging", "all") and line_i > 0:
+#             current_line_width = line_width - indent_width
+#         elif indent_type == "leading" and line_i > 0:
+#             current_line_width = line_width
+#         if char.isspace():
+#             last_whitespace_i = char_i
+#         if char == "\n":
+#             lines.append(
+#                 align_line(
+#                     in_str[start_line_i:char_i], current_line_width, align
+#                 )
+#             )
+#             start_line_i = char_i + 1
+#             line_i += 1
+#         if (
+#             char_i - start_line_i > current_line_width
+#             and last_whitespace_i > start_line_i
+#         ):
+#             line = align_line(
+#                 in_str[start_line_i:last_whitespace_i],
+#                 current_line_width,
+#                 align,
+#             )
+#             lines.append(line)
+#             start_line_i = last_whitespace_i + 1
+#             line_i += 1
+#     line = align_line(in_str[start_line_i:], current_line_width, align)
+#     lines.append(line)
+#     spacing_to_add = indent_width // 2 if align == "center" else indent_width
+#     if indent_type in ("hanging", "all"):
+#         temp_lines = [
+#             lines[0],
+#         ]
+#         for line in lines[1:]:
+#             temp_lines.append(spacing_to_add * " " + line)
+#         lines = temp_lines
+#     if indent_type in ("leading", "all"):
+#         lines[0] = spacing_to_add * " " + lines[0]
+#     return "\n".join(lines)
 
 
 def no_empty_lists(item):
@@ -934,17 +1043,3 @@ def generic_transpose(
     if apply_to_existing_voices:
         for voice in score.existing_voices:
             _apply_generic_transpose(voice)
-
-
-if __name__ == "__main__":
-    check_modulo(7, [1, 1, 2])
-    # x = [[(0, 1, 5), (2, 3, 4)], (0, 4, 3)]
-    # b = remove_non_existing_voices(x, 4, "test_voice")
-    # print(b)
-    # while True:
-    #     list_of_chords = [[60, 67, 75], [60, 68, 75]]
-    #     a = str(input(": "))
-    #     print(add_line_breaks(a, indent_type="all",
-    #                           indent_width=12, align="right"))
-# line_width=79, indent_type="hanging",
-#                     indent_width=4, align="left"):

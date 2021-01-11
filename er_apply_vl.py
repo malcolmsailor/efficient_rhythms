@@ -21,7 +21,7 @@ def apply_voice_leading(
     # LONGTERM use PossibleNote class
 
     def _try_to_force_root():
-        root = er_make2.get_root_to_force2(er, voice_i, new_harmony_i)
+        root = er_make2.get_root_to_force(er, voice_i, new_harmony_i)
         if root is not None:
             new_pitch = root
             new_note = er_notes.Note(new_pitch, new_attack_time, new_dur)

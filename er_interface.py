@@ -37,15 +37,17 @@ def parse_cmd_line_args():
         )
     )
     parser.add_argument(
-        "-f", help="path to a midi file to be filtered and" "/or transformed"
+        "-i",
+        "--input-midi",
+        help="path to a midi file to be filtered and" "/or transformed",
     )
-    parser.add_argument(
-        "-t",
-        "--tet",
-        help="TET of input midi file specified with -m",
-        default=12,
-        type=int,
-    )
+    # parser.add_argument(
+    #     "-t",
+    #     "--tet",
+    #     help="TET of input midi file specified with -m",
+    #     default=12,
+    #     type=int,
+    # )
     parser.add_argument(
         "-m",
         "--midi-port",
@@ -54,22 +56,23 @@ def parse_cmd_line_args():
         action="store_false",
     )
     parser.add_argument("-r", help="randomize settings", action="store_true")
-    parser.add_argument(
-        "-ts",
-        help="Time signature to use with midi file "
-        "specified with -f, format m/n",
-    )
-    parser.add_argument(
-        "-d",
-        help="Maximum denominator for attack/durations for midi file specified "
-        "with -f",
-        default=0,
-        type=int,
-    )
+    # parser.add_argument(
+    #     "-ts",
+    #     help="Time signature to use with midi file "
+    #     "specified with -f, format m/n",
+    # )
+    # parser.add_argument(
+    #     "-d",
+    #     help="Maximum denominator for attack/durations for midi file specified "
+    #     "with -f",
+    #     default=0,
+    #     type=int,
+    # )
     parser.add_argument(
         "-s",
         "--settings",
         help="path to settings file containing a Python dictionary",
+        default=None,
     )
     args = parser.parse_args()
 
@@ -386,7 +389,7 @@ def add_changer_loop(changer_dict, active_changers, score, changer_counter):
         if answer.isdigit():
             if int(answer) in changer_dict:
                 break
-        elif answer == "x":
+        elif answer in ("x", ""):
             return
         answer = input(
             er_misc_funcs.add_line_breaks(
@@ -514,10 +517,19 @@ def update_prompt_for_adjusting_changers(active_changers):
         "add/copy/move a filter or transformer, or "
         "<enter> to continue: "
     )
+    empty_select_prompt = (
+        "Enter 'a' to add a filter or transformer, or <enter> to return to the "
+        "main prompt: "
+    )
     lines = ["", make_header(SELECT_HEADER), ""] + get_changer_strings(
         active_changers
     )
-    lines += ["", er_misc_funcs.add_line_breaks(select_prompt)]
+    lines += [
+        "",
+        er_misc_funcs.add_line_breaks(
+            select_prompt if active_changers else empty_select_prompt
+        ),
+    ]
     return "\n".join(lines)
 
 
@@ -665,12 +677,6 @@ def update_midi_type(er):
     def update_midi_type_param(param_i):
         name = params[param_i][1]
         setattr(er, name, bool(getattr(er, name)))
-        # val = vars(er)[name]
-        # if val:
-        #     val = False
-        # else:
-        #     val = True
-        # vars(er)[name] = val
 
     update_prompt = er_misc_funcs.add_line_breaks(
         "Enter the number corresponding to the parameter you "
@@ -698,7 +704,7 @@ def update_midi_type(er):
         print(prompt_str)
 
 
-def input_loop(er, super_pattern, midi_player, midi_path):
+def input_loop(er, super_pattern, midi_player, midi_path, midi_settings=None):
     """Run the user input loop for efficient_rhythms.py
     """
 
@@ -724,7 +730,7 @@ def input_loop(er, super_pattern, midi_player, midi_path):
                 else "",
                 "'s' to stop playback"
                 if playback_on
-                else "'<enter>' to resume playback",
+                else "'<enter>' to play again",
             )
         )
 
@@ -758,6 +764,7 @@ def input_loop(er, super_pattern, midi_player, midi_path):
                 super_pattern, active_changers, changer_counter
             )
             if changed_pattern is not None and active_changers:
+                # LONGTERM allow specification of transformers from external settings files
                 changer_midi_i += 1
                 changed_midi_path = get_changed_midi_path(midi_path)
                 if er:
@@ -765,7 +772,9 @@ def input_loop(er, super_pattern, midi_player, midi_path):
                         er, changed_pattern, changed_midi_path
                     )
                 else:
-                    er_midi.write_midi(changed_pattern, changed_midi_path)
+                    er_midi.write_midi(
+                        changed_pattern, changed_midi_path, midi_settings
+                    )
                 current_midi_path = changed_midi_path
                 current_pattern = changed_pattern
             else:

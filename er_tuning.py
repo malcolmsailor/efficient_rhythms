@@ -11,7 +11,7 @@ ALPHABET = "fcgdaeb"
 
 SIZE_OF_SEMITONE = 4096
 
-# TODO is this function ever used?
+
 def finetune_pitch_bend_tuple(
     pitch_bend_tuple, fine_tune, size_of_semitone=SIZE_OF_SEMITONE
 ):
@@ -91,6 +91,11 @@ def approximate_just_interval(rational, tet):
     """Approximates given rational in given equal temperament.
     """
 
+    if rational < 0:
+        sign = -1
+        rational = -rational
+    else:
+        sign = 1
     if rational < 1:
         lower_power_of_two = 0
         while 2 ** lower_power_of_two > rational:
@@ -115,15 +120,15 @@ def approximate_just_interval(rational, tet):
             if (
                 max(rational, upper_interval) / min(rational, upper_interval)
             ) < comma:
-                return upper_power
-            return lower_power
+                return sign * upper_power
+            return sign * lower_power
 
         middle = (upper_power + lower_power) // 2
         middle_interval = 2 ** (middle / tet)
         if (
             max(rational, middle_interval) / min(rational, middle_interval)
         ) < comma:
-            return middle
+            return sign * middle
 
         if rational > middle_interval:
             lower_power = middle

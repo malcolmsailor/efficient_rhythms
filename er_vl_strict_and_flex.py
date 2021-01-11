@@ -1,6 +1,5 @@
 import sys
 
-import er_constants
 import er_exceptions
 import er_notes
 import er_voice_leadings
@@ -15,8 +14,6 @@ def voice_lead_pattern_flexibly(
     the middle of a pattern if it runs into a problem.
     """
 
-    # sys.stdout.write("\b" + SPINNING_LINE[
-    #     pattern_voice_leading_i % len(SPINNING_LINE)])
     sys.stdout.write(
         "\r"
         + SPINNING_LINE[pattern_voice_leading_i % len(SPINNING_LINE)]
@@ -32,24 +29,8 @@ def voice_lead_pattern_flexibly(
         # voice-leadings.
         return True
 
-    if er.truncate_patterns:
-        # TODO implement truncate patterns
-        raise NotImplementedError("You haven't implemented this yet, Malcolm!")
-        # er.truncate_patterns poses a problem here because when the
-        # previous pattern was truncated, we can not voice-lead from it to
-        # a full pattern.
-        # truncate_len = max(er.pattern_len)
-        # offset = start_time % truncate_len
-        # if offset == 0:
-        #     offset = truncate_len
-
-    offset = vl_item.end_rhythm_i - vl_item.start_rhythm_i
-
     voice = super_pattern.voices[vl_item.voice_i]
     rhythm = er.rhythms[vl_item.voice_i]
-
-    prev_start_rhythm_i = vl_item.start_rhythm_i - offset
-    # prev_end_rhythm_i = vl_item.end_rhythm_i - offset
 
     prev_harmony_end_time = new_harmony_end_time = -1
 
@@ -59,7 +40,7 @@ def voice_lead_pattern_flexibly(
     rhythm_i = vl_item.start_rhythm_i
     for prev_note_i, prev_note in enumerate(voice):
         prev_attack_time = prev_note.attack_time
-        if prev_note_i < prev_start_rhythm_i:
+        if prev_note_i < vl_item.prev_start_rhythm_i:
             continue
         if prev_attack_time >= vl_item.end_time:
             break
@@ -157,9 +138,6 @@ def voice_lead_pattern_strictly(
     sys.stdout.write(
         "\b" + SPINNING_LINE[pattern_voice_leading_i % len(SPINNING_LINE)]
     )
-    # sys.stdout.write(
-    #     "\r" + SPINNING_LINE[pattern_voice_leading_i % len(SPINNING_LINE)]
-    #     + " " + str(voice_lead_error.temp_failure_counter))
     sys.stdout.flush()
 
     try:
@@ -174,34 +152,18 @@ def voice_lead_pattern_strictly(
 
     new_attack_time = vl_item.start_time
 
-    # # TODO update truncate to work with rhythm_i algorithm
-    if er.truncate_patterns:
-        raise NotImplementedError("You haven't implemented this yet, Malcolm!")
-        # truncate_len = max(er.pattern_len)
-        # offset = vl_item.start_time % truncate_len
-        # if offset == 0:
-        #     offset = truncate_len
-
-    offset = vl_item.end_rhythm_i - vl_item.start_rhythm_i
-    # print(offset)
-    # print(er.num_notes_by_pattern[vl_item.voice_i])
-    # breakpoint()
-
-    prev_start_rhythm_i = vl_item.start_rhythm_i - offset
-    prev_end_rhythm_i = vl_item.end_rhythm_i - offset
-
     new_notes = er_notes.Voice()
     success_rhythm_i = vl_item.start_rhythm_i
 
     # In the event that the voice is empty, skip this loop.
-
     if voice:
 
-        prev_attack_time = rhythm.get_attack_time_and_dur(prev_start_rhythm_i)[
-            0
-        ]
+        prev_attack_time = rhythm.get_attack_time_and_dur(
+            vl_item.prev_start_rhythm_i
+        )[0]
 
         while True:
+            # This loop updates the harmony
             new_harmony_i = super_pattern.get_harmony_i(new_attack_time)
             new_harmony_times = super_pattern.get_harmony_times(new_harmony_i)
 
@@ -228,11 +190,11 @@ def voice_lead_pattern_strictly(
                         rhythm_i
                     )
 
-                    if prev_note_i < prev_start_rhythm_i:
+                    if prev_note_i < vl_item.prev_start_rhythm_i:
                         continue
                     if prev_attack_time < prev_harmony_times.start_time:
                         continue
-                    if prev_note_i >= prev_end_rhythm_i:
+                    if prev_note_i >= vl_item.prev_end_rhythm_i:
                         break
                     if prev_attack_time >= prev_harmony_times.end_time:
                         break
@@ -290,7 +252,7 @@ def voice_lead_pattern_strictly(
             if (
                 rhythm_i >= vl_item.end_rhythm_i
                 or new_attack_time >= er.total_len
-                or prev_note_i >= prev_end_rhythm_i
+                or prev_note_i >= vl_item.prev_end_rhythm_i
             ):
                 break
 

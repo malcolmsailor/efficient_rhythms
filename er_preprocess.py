@@ -7,6 +7,7 @@ import fractions
 import math
 import numbers
 import random
+import typing
 import warnings
 
 import numpy as np
@@ -17,6 +18,7 @@ import er_misc_funcs
 import er_randomize
 import er_settings
 import er_tuning
+import er_voice_leadings
 
 
 class SettingsError(Exception):
@@ -27,6 +29,17 @@ def notify_user_of_unusual_settings(er):
     def print_(text):
         print(er_misc_funcs.add_line_breaks(text))
 
+    if er.cont_rhythms != "none" and (
+        len(set(er.pattern_len)) != 1
+        or len(set(er.rhythm_len)) != 1
+        or er.pattern_len != er.rhythm_len
+    ):
+        # LONGTERM implement this
+        raise NotImplementedError(
+            "'cont_rhythms' is not implemented unless 'pattern_len' and "
+            "'rhythm_len' have the same, unique value"
+        )
+
     if er.len_to_force_chord_tone == 0 and er.scale_chord_tone_prob_by_dur:
         raise SettingsError(
             "If 'scale_chord_tone_prob_by_dur' is True, then "
@@ -34,10 +47,10 @@ def notify_user_of_unusual_settings(er):
         )
     if len(er.voice_ranges) < er.num_voices:
         raise SettingsError("len(voice_ranges) < num_voices")
-    if er.scale_short_chord_tones_down and er.force_non_chord_tones:
+    if er.scale_short_chord_tones_down and er.try_to_force_non_chord_tones:
         print_(
             "Warning: 'scale_short_chord_tones_down' and "
-            "'force_non_chord_tones' are both true. Strange results may occur, "
+            "'try_to_force_non_chord_tones' are both true. Strange results may occur, "
             "particularly if there are many short notes."
         )
     if (
@@ -173,9 +186,6 @@ def preprocess_temper_pitch_materials(er):
         er.forbidden_interval_classes,
         er.prohibit_parallels,
         er.transpose_intervals,
-        # CONSONANCES,
-        # PERFECT_CONSONANCES,
-        # IMPERFECT_CONSONANCES,
     )
 
     for pitch_material in pitch_material_lists:
@@ -221,7 +231,6 @@ def rhythmic_values_to_fractions(er):
         "attack_subdivision",
         "sub_subdivisions",
         "dur_subdivision",
-        # "min_dur", # this is done sperately in "_min_dur_process()" below
         "obligatory_attacks",
         "obligatory_attacks_modulo",
         "length_choir_segments",
@@ -267,7 +276,7 @@ def ensure_lists_or_tuples(er):
         "min_interval_for_non_chord_tones",
         "max_alternations",
         "vary_rhythm_consistently",
-        "num_vars",
+        "num_cont_rhythm_vars",
         "cont_var_increment",
         "interval_cycle",
         "force_chord_tone",
@@ -277,7 +286,7 @@ def ensure_lists_or_tuples(er):
     for prop in to_list:
         if getattr(er, prop) is None:
             continue
-        if not isinstance(getattr(er, prop), (list, tuple)):
+        if not isinstance(getattr(er, prop), typing.Sequence):
             setattr(er, prop, [getattr(er, prop)])
 
     to_list_of_iters = [
@@ -413,7 +422,7 @@ def process_choir_settings(er):
             er.choir_programs.append(choir)
         else:
             sub_choirs, split_points = choir
-            if not isinstance(split_points, (list, tuple)):
+            if not isinstance(split_points, typing.Sequence):
                 split_points = [
                     split_points,
                 ]
@@ -436,11 +445,17 @@ def process_parallel_motion(er):
     class ParallelMotionInfo:
         def __init__(self, leader_i, motion_type):
             self.leader_i = leader_i
-            self.motion_type = motion_type
+            # LONGTERM implement "global" parallel motion
+            # (that's why this translation to a string is here, so eventually
+            # force_parallel_motion in ERSettings can be specified by a
+            # string with minimum fuss)
+            self.motion_type = "within_harmonies" if motion_type else "false"
 
-    if isinstance(er.force_parallel_motion, str):
+    if isinstance(er.force_parallel_motion, bool):
         er.force_parallel_motion = {
-            tuple(er.voice_order): er.force_parallel_motion
+            tuple(er.voice_order): (
+                "within_harmonies" if er.force_parallel_motion else "false"
+            )
         }
 
     er.parallel_motion_leaders = {}
@@ -491,10 +506,8 @@ def chord_tone_and_root_toggle(er):
     er.chord_tones_no_diss_treatment = [False for i in range(er.num_voices)]
     er.force_chord_tone = ["none" for i in range(er.num_voices)]
     er.force_root_in_bass = "none"
-    # er.max_interval_for_non_chord_tones = [0 for i in range(er.num_voices)]
-    # er.min_interval_for_non_chord_tones = [0 for i in range(er.num_voices)]
-    ex.max_interval_for_non_chord_tones = er.max_interval
-    ex.min_interval_for_non_chord_tones = er.max_interval
+    er.max_interval_for_non_chord_tones = er.max_interval
+    er.min_interval_for_non_chord_tones = er.max_interval
     er.voice_lead_chord_tones = False
     er.preserve_root_in_bass = "none"
     er.extend_bass_range_for_roots = 0
@@ -539,9 +552,7 @@ def rhythm_preprocessing(er):
         attack_div = er.attack_subdivision[voice_i]
         sub_subdiv = er.sub_subdiv_props[voice_i]
         num_div = int(rhythm_len / attack_div * len(sub_subdiv))
-        if isinstance(density, float):
-            num_notes = min(round(density * num_div), num_div)
-        elif isinstance(density, int):
+        if isinstance(density, int):
             if density > num_div:
                 print(
                     f"Notice: voice {voice_i} attack density of {density} "
@@ -549,12 +560,15 @@ def rhythm_preprocessing(er):
                     f"Reducing to {num_div}."
                 )
             num_notes = min(density, num_div)
+        else:
+            # if isinstance(density, float):
+            num_notes = min(round(density * num_div), num_div)
         er.num_notes[voice_i] = num_notes
 
     if er.rhythms_specified_in_midi:
         return
     # LONGTERM warning if er.rhythmic_unison and er.rhythmic_quasi_unison conflict
-    if isinstance(er.rhythmic_quasi_unison, list):
+    if isinstance(er.rhythmic_quasi_unison, typing.Sequence):
         er.rhythmic_quasi_unison = er_misc_funcs.remove_non_existing_voices(
             er.rhythmic_quasi_unison, er.num_voices, "rhythmic_quasi_unison"
         )
@@ -568,7 +582,7 @@ def rhythm_preprocessing(er):
         er.rhythmic_quasi_unison
     )
 
-    if isinstance(er.hocketing, list):
+    if isinstance(er.hocketing, typing.Sequence):
         er.hocketing = er_misc_funcs.remove_non_existing_voices(
             er.hocketing, er.num_voices, "hocketing"
         )
@@ -580,7 +594,7 @@ def rhythm_preprocessing(er):
 
     er.hocketing_followers = _hocketing_dict_process(er.hocketing)
 
-    if isinstance(er.rhythmic_unison, list):
+    if isinstance(er.rhythmic_unison, typing.Sequence):
         er.rhythmic_unison = er_misc_funcs.remove_non_existing_voices(
             er.rhythmic_unison, er.num_voices, "rhythmic_unison"
         )
@@ -607,63 +621,50 @@ def rhythm_preprocessing(er):
 
 def process_pattern_voice_leading_order(er):
     """Adds er.pattern_voice_leading_order to ERSettings object.
-
-    er.pattern_voice_leading_order is used to voice-lead each pattern. It
-    consists of tuples of form (voice_i, start_time, pattern_len),
-    sorted by start_time, then by descending pattern_len, then by voice_i
-    (following er.voice_order)
-
-    After building the rhythms, I replace these tuples with 4-tuples of form
-    (voice_i, start_time, pattern_len, (start_rhythm_i, end_rhythm_i)).
-    (See er_rhythm.py)
     """
 
     # QUESTION put parallel voices immediately after their leader in voice
     #       order? or put them after all other voices? or setting to control
     #       this?
 
-    class VoiceLeadingOrderItem:
-        def __init__(
-            self,
-            voice_i,
-            start_time,
-            end_time,
-            start_rhythm_i=None,
-            end_rhythm_i=None,
-        ):
-            self.voice_i = voice_i
-            self.start_time = start_time
-            self.end_time = end_time
-            self.start_rhythm_i = start_rhythm_i
-            self.end_rhythm_i = end_rhythm_i
-
     er.pattern_voice_leading_order = []
 
     if er.truncate_patterns:
         truncate_len = max(er.pattern_len)
-
-        for voice_i in er.voice_order:
-            start_time = 0
+    voice_offset = 0
+    for voice_i in er.voice_order:
+        pattern_i = 0
+        start_time = 0
+        pattern_len = er.pattern_len[voice_i]
+        if er.truncate_patterns:
             next_truncate = truncate_len
-            pattern_len = er.pattern_len[voice_i]
-            while start_time < er.super_pattern_len:
+            n_since_prev_pattern = math.ceil(truncate_len / pattern_len)
+        else:
+            n_since_prev_pattern = 1
+        while start_time < er.super_pattern_len:
+            end_time = start_time + pattern_len
+            if er.truncate_patterns:
                 if start_time == next_truncate:
                     next_truncate += truncate_len
-                end_time = min(start_time + pattern_len, next_truncate)
-                er.pattern_voice_leading_order.append(
-                    VoiceLeadingOrderItem(voice_i, start_time, end_time)
+                end_time = min(end_time, next_truncate)
+            if pattern_i == 0:
+                prev_item = None
+            else:
+                if pattern_i < n_since_prev_pattern:
+                    prev_pattern_i = pattern_i - 1
+                else:
+                    prev_pattern_i = pattern_i - n_since_prev_pattern
+                prev_item = er.pattern_voice_leading_order[
+                    prev_pattern_i + voice_offset
+                ]
+            er.pattern_voice_leading_order.append(
+                er_voice_leadings.VoiceLeadingOrderItem(
+                    voice_i, start_time, end_time, prev_item=prev_item,
                 )
-                start_time = end_time
-    else:
-        for voice_i in er.voice_order:
-            start_time = 0
-            pattern_len = er.pattern_len[voice_i]
-            while start_time < er.super_pattern_len:
-                end_time = start_time + pattern_len
-                er.pattern_voice_leading_order.append(
-                    VoiceLeadingOrderItem(voice_i, start_time, end_time)
-                )
-                start_time = end_time
+            )
+            start_time = end_time
+            pattern_i += 1
+        voice_offset += pattern_i
 
     er.pattern_voice_leading_order.sort(key=lambda x: x.end_time, reverse=True)
     er.pattern_voice_leading_order.sort(key=lambda x: x.start_time)
@@ -672,11 +673,13 @@ def process_pattern_voice_leading_order(er):
 def num_cont_vars(er):
     new_num_vars = []
     for voice_i in range(er.num_voices):
-        num_vars, pattern_len = er.get(voice_i, "num_vars", "pattern_len")
-        if num_vars < 0:
-            num_vars = math.ceil(er.total_len / pattern_len)
-        new_num_vars.append(num_vars)
-    er.num_vars = new_num_vars
+        num_cont_rhythm_vars, pattern_len = er.get(
+            voice_i, "num_cont_rhythm_vars", "pattern_len"
+        )
+        if num_cont_rhythm_vars < 0:
+            num_cont_rhythm_vars = math.ceil(er.total_len / pattern_len)
+        new_num_vars.append(num_cont_rhythm_vars)
+    er.num_cont_rhythm_vars = new_num_vars
 
 
 def cum_mod_lists(er):
@@ -686,26 +689,25 @@ def cum_mod_lists(er):
     ]
 
     for param in cum_mod_params:
-        # for list_i, list_ in enumerate(vars(er)[param]):
-        #     vars(er)[param][list_i] = [
-        #         sum(list_[: i + 1]) for i in range(len(list_))
-        #     ]
         for list_i, list_ in enumerate(getattr(er, param)):
             getattr(er, param)[list_i] = [
                 sum(list_[: i + 1]) for i in range(len(list_))
             ]
 
 
-def preprocess_settings(user_settings, random_settings=False):
-
+def read_in_settings(user_settings, settings_class):
     if user_settings is None:
         user_settings = {}
     elif isinstance(user_settings, str):
         print(f"Reading settings from {user_settings}")
         with open(user_settings, "r", encoding="utf-8") as inf:
             user_settings = eval(inf.read())
-    er = er_settings.ERSettings(**user_settings)
+    return settings_class(**user_settings)
 
+
+def preprocess_settings(user_settings, random_settings=False):
+
+    er = read_in_settings(user_settings, er_settings.ERSettings)
     er.seed = er_misc_funcs.set_seed(er.seed)
 
     if random_settings:
@@ -884,7 +886,9 @@ def preprocess_settings(user_settings, random_settings=False):
     # Process rhythmic settings.
 
     def _process_rhythm_list(rhythm_list, replace_negative_with_random=False):
-        if not isinstance(rhythm_list, (list, tuple)):
+        if not isinstance(rhythm_list, typing.Sequence) or isinstance(
+            rhythm_list, str
+        ):
             item = rhythm_list
             if replace_negative_with_random and item < 0:
                 rhythm_list = [random.random() for i in range(er.num_voices)]
@@ -913,12 +917,19 @@ def preprocess_settings(user_settings, random_settings=False):
             )
 
     def _min_dur_process(er):
-        if isinstance(er.min_dur, (list, tuple)):
+        if isinstance(er.min_dur, typing.Sequence):
             for min_dur_i, min_dur in enumerate(er.min_dur):
-                if isinstance(min_dur, int):
-                    er.min_dur[min_dur_i] = er.tempo[0] / 60 * (0.001 * min_dur)
-        else:
-            er.min_dur = er.tempo[0] / 60 * (0.001 * er.min_dur)
+                if min_dur <= 0:
+                    er.min_dur[min_dur_i] = er.get(
+                        min_dur_i, "attack_subdivision"
+                    )
+                # QUESTION what is this? Is it for continuous rhythms?
+                # if isinstance(min_dur, int):
+                # er.min_dur[min_dur_i] = er.tempo[0] / 60 * (0.001 * min_dur)
+        elif er.min_dur <= 0:
+            er.min_dur = er.get(0, "attack_subdivision")
+            # QUESTION what is this? Is it for continuous rhythms?
+            # er.min_dur = er.tempo[0] / 60 * (0.001 * er.min_dur)
         er.min_dur = er_misc_funcs.convert_to_fractions(er.min_dur)
 
     er.attack_density = _process_rhythm_list(
@@ -1005,7 +1016,9 @@ def preprocess_settings(user_settings, random_settings=False):
         er.existing_score = None
         er.existing_voices_indices = []
 
-    er.control_log_base = 10 ** (er.control_coefficient * 0.1)
+    er.control_log_base = 10 ** (
+        er.prefer_small_melodic_intervals_coefficient * 0.1
+    )
 
     def _return_voice_order(er):
         out = list(range(er.num_voices))

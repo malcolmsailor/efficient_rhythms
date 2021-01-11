@@ -80,7 +80,7 @@ def fill_continuous_durs(rhythm):
 def vary_continuous_attacks(rhythm, apply_to_durs=True):
 
     # def _vary_continuous_attacks_randomly(rhythm, i, apply_to_durs=True):
-    def _vary_continuous_attacks_randomly(rhythm, i):  # TODO apply_to_durs?
+    def _vary_continuous_attacks_randomly(rhythm, i):  # LONGTERM apply_to_durs?
         deltas = np.random.randint(0, RANDOM_CARD, rhythm.num_notes)
         deltas = deltas / deltas.sum() * rhythm.increment
         deltas = deltas - deltas.mean()
@@ -88,7 +88,7 @@ def vary_continuous_attacks(rhythm, apply_to_durs=True):
         rhythm.rel_attacks[i + 1] = apply_min_dur_to_rel_attacks(
             attacks, rhythm
         )
-        # TODO vary durations
+        # LONGTERM vary durations
 
     def _vary_continuous_attacks_consistently(rhythm, i, apply_to_durs=True):
         def _update_deltas():
@@ -96,8 +96,7 @@ def vary_continuous_attacks(rhythm, apply_to_durs=True):
             deltas2 = deltas / deltas.sum()
             deltas3 = deltas2 - deltas2.mean()
             if abs(deltas3).sum() == 0:
-                breakpoint()
-                # TODO investigate and fix whatever it is that results in
+                # LONGTERM investigate and fix whatever it is that results in
                 #   this condition. Returning 0 is a kludge.
                 rhythm.deltas = np.zeros(rhythm.num_notes)
                 return
@@ -131,7 +130,7 @@ def vary_continuous_attacks(rhythm, apply_to_durs=True):
                     indices, deltas2 - deltas2[indices].mean(), 0
                 )
                 if abs(deltas3).sum() == 0:
-                    # TODO investigate and fix whatever it is that results in
+                    # LONGTERM investigate and fix whatever it is that results in
                     #   this condition. Returning 0 is a kludge.
                     rhythm.deltas = np.zeros(rhythm.num_notes)
                     return
@@ -161,7 +160,7 @@ def vary_continuous_attacks(rhythm, apply_to_durs=True):
                 rhythm.durs[i + 1] += deltas2
                 remaining_durs = rhythm.rel_attacks[i + 1] - rhythm.durs[i + 1]
 
-    for i in range(rhythm.num_vars - 1):
+    for i in range(rhythm.num_cont_rhythm_vars - 1):
         if rhythm.full:
             rhythm.rel_attacks[i + 1] = rhythm.rel_attacks[i]
         elif rhythm.vary_rhythm_consistently:
@@ -180,8 +179,8 @@ def truncate_or_extend(rhythm):
         min_j = (
             math.ceil(rhythm.pattern_len / rhythm.rhythm_len) * rhythm.num_notes
         )
-        temp_rel_attacks = np.zeros((rhythm.num_vars, min_j))
-        temp_durs = np.zeros((rhythm.num_vars, min_j))
+        temp_rel_attacks = np.zeros((rhythm.num_cont_rhythm_vars, min_j))
+        temp_durs = np.zeros((rhythm.num_cont_rhythm_vars, min_j))
         for var_i, var in enumerate(rhythm.rel_attacks):
             temp_rel_attacks[var_i, : rhythm.num_notes] = var
             temp_durs[var_i, : rhythm.num_notes] = rhythm.durs[var_i]

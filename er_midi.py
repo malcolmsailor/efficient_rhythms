@@ -14,6 +14,7 @@ import mido
 import pygame
 
 import er_choirs
+import er_midi_settings
 import er_notes
 import er_tuning
 
@@ -126,7 +127,7 @@ def init_and_return_midi_player(tet, shell=False):
 
         pygame.mixer.init()
         return "pygame"
-    raise NotImplementedError  # TODO
+    raise NotImplementedError  # INTERNET_TODO
     return "self"  # pylint: disable=unreachable
 
 
@@ -327,7 +328,7 @@ def add_er_voice(er, voice_i, voice, mf, force_choir=None):
                 track,
                 channel,
                 velocity,
-                # note.finetune, # TODO what is this? It seems to be unimplemented
+                # note.finetune, # what is this? It seems to be unimplemented
             )
         else:
             prev_time_on_channel = er.pitch_bend_time_dict[track][
@@ -368,7 +369,7 @@ def write_track_names(
     track_name_base = _return_track_name_base(midi_fname, abbr=abbr_track_names)
     adjust = 0 if zero_origin else 1
 
-    if isinstance(settings_obj, MidiSettings):
+    if isinstance(settings_obj, er_midi_settings.MidiSettings):
         for track_i in range(settings_obj.num_tracks):
             track_name = track_name_base + f"_voice{track_i + adjust}"
             _add_track_name(track_i, track_name)
@@ -507,23 +508,10 @@ def write_er_midi(er, super_pattern, midi_fname, reverse_tracks=True):
             )
 
     with open(midi_fname, "wb") as outf:
-        mf.writeFile(outf)
-
-
-class MidiSettings:
-    def __init__(self, num_tracks, tet):
-        # TODO these settings (for use with external midi files) should
-        #   be updated to use an external dict like ERSettings
-        self.num_tracks = num_tracks
-        self.num_channels_pitch_bend_loop = 9
-        self.pitch_bend_time_prop = 2 / 3
-        self.note_counter = collections.Counter()
-        self.tet = tet
-        self.pitch_bend_time_dict = {
-            track_i: [0 for i in range(self.num_channels_pitch_bend_loop)]
-            for track_i in range(self.num_tracks)
-        }
-        self.pitch_bend_tuple_dict = er_tuning.return_pitch_bend_tuple_dict(tet)
+        try:
+            mf.writeFile(outf)
+        except:
+            breakpoint()
 
 
 def write_meta_messages(super_pattern, mf):
@@ -617,27 +605,10 @@ def add_track(track_i, track, midi_settings, mf):
             )
 
 
-def write_midi(super_pattern, midi_fname, abbr_track_names=True):
+def write_midi(super_pattern, midi_fname, midi_settings, abbr_track_names=True):
     """Write a midi file, without an associated ERSettings class (e.g.,
     if processing an external midi file).
     """
-
-    midi_settings = MidiSettings(
-        num_tracks=super_pattern.num_voices, tet=super_pattern.tet
-    )
-    # tet = super_pattern.tet
-
-    # If the file is in 12 tet and features no finetuning then these steps are
-    # not necessary but for the moment it seems like more effort than it's
-    # worth to check:
-    # midi_settings.tet = tet
-    # midi_settings.pitch_bend_time_dict = {
-    #     track_i: [0 for i in range(midi_settings.num_channels_pitch_bend_loop)]
-    #     for track_i in range(midi_settings.num_tracks)
-    # }
-    # midi_settings.pitch_bend_tuple_dict = er_tuning.return_pitch_bend_tuple_dict(
-    #     tet
-    # )
 
     mf = midiutil.MidiFile.MIDIFile(
         midi_settings.num_tracks, adjust_origin=True

@@ -4,12 +4,12 @@ import bisect
 import copy
 import itertools
 import math
+import os
 import random
 import sys
 
 import numpy as np
 
-import er_constants
 import er_exceptions
 import er_make2
 import er_misc_funcs
@@ -38,7 +38,6 @@ class PossibleNote:
 
 
 # it appears this function is never called
-# TODO check whether this function should be called somewhere?
 # def _force_root(er, super_pattern, poss_note):
 #     root = get_root_to_force(er, poss_note)
 #     if root is not None:
@@ -272,7 +271,7 @@ def _choose_whether_chord_tone(er, super_pattern, poss_note):
             # syncing in all voices? Where the absence of a chord tone
             # in other voices doesn't force the absence of a chord tone
             # in this voice? (Although non-chord tones are only forced
-            # if er.force_non_chord_tones.) In that case one would probably
+            # if er.try_to_force_non_chord_tones.) In that case one would probably
             # have to use only one voice as the "leader" to determine whether
             # to have chord_tones. (Although this may be effectively what
             # happens already.)
@@ -332,7 +331,7 @@ def _get_available_pcs(er, super_pattern, poss_note, include_if_possible=None):
 
     if chord_tone:
         out = [pc_chord[:], pc_non_chord]
-    elif er.chord_tone_selection and er.force_non_chord_tones:
+    elif er.chord_tone_selection and er.try_to_force_non_chord_tones:
         out = [pc_non_chord, pc_chord[:]]
     else:
         return [
@@ -578,7 +577,7 @@ def _choose_pitch(
 ):
     if choose_first and choose_first in available_pitches:
         pitch = choose_first
-    elif er.control_melodic_intervals:
+    elif er.prefer_small_melodic_intervals:
         pitch = _apply_melodic_control(
             er, super_pattern, available_pitches, poss_note
         )
@@ -992,8 +991,6 @@ def make_super_pattern(er):
 
             super_pattern = make_initial_pattern(er)
 
-            initial_pattern_copy = copy.copy(super_pattern)
-
             sys.stdout.write("\nSucceeded, attempting voice-leading...  " "\n")
             sys.stdout.flush()
             if voice_lead_pattern(er, super_pattern, voice_lead_error):
@@ -1041,7 +1038,7 @@ def repeat_super_pattern(er, super_pattern, apply_to_existing_voices=False):
         apply_to_existing_voices=apply_to_existing_voices,
     )
 
-    if not er.super_pattern_reps_cont_var:
+    if er.cont_rhythms == "none" or not er.super_pattern_reps_cont_var:
         repetition_start_time = er.super_pattern_len
         for repetition in range(1, er.num_reps_super_pattern):
             super_pattern.repeat_passage(
@@ -1119,10 +1116,11 @@ def apply_specific_transpositions(
                 (1, -1)
             )
 
-        if transpose_interval > er.cumulative_max_transpose_interval:
-            transpose_interval -= er.tet
-        elif transpose_interval < er.negative_max:
-            transpose_interval += er.tet
+        if er.cumulative_max_transpose_interval != 0:
+            if transpose_interval > er.cumulative_max_transpose_interval:
+                transpose_interval -= er.tet
+            elif transpose_interval < er.negative_max:
+                transpose_interval += er.tet
 
         transpose_i += 1
         start_time = end_time

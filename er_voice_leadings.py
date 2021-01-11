@@ -3,6 +3,54 @@ import numpy as np
 import er_exceptions
 
 
+class VoiceLeadingOrderItem:
+    def __init__(
+        self,
+        voice_i,
+        start_time,
+        end_time,
+        start_rhythm_i=None,
+        end_rhythm_i=None,
+        prev_item=None,
+    ):
+        self.voice_i = voice_i
+        self.start_time = start_time
+        self.end_time = end_time
+        self.start_rhythm_i = start_rhythm_i
+        self.end_rhythm_i = end_rhythm_i
+        # prev_item should point to the item from which the present
+        # item should be voice-led, or, if it is at the beginning,
+        # to None
+        self.prev_item = prev_item
+
+    def __repr__(self):
+        return (
+            f"{self.__class__.__name__}(voice_i={self.voice_i}, "
+            f"start_time={self.start_time}, end_time={self.end_time}, "
+            f"start_rhythm_i={self.start_rhythm_i}, "
+            f"end_rhythm_i={self.end_rhythm_i}, prev_item="
+            + (
+                "None)"
+                if self.prev_item is None
+                else f"<starts at {self.prev_item.start_time}>)"
+            )
+        )
+
+    @property
+    def prev_start_rhythm_i(self):
+        # Will raise an exception if prev_item is None
+        return self.prev_item.start_rhythm_i
+
+    @property
+    def prev_end_rhythm_i(self):
+        # Will raise an exception if prev_item is None
+        return (
+            self.prev_item.start_rhythm_i
+            + self.end_rhythm_i
+            - self.start_rhythm_i
+        )
+
+
 def parallel_voice_leading(
     source_pc_scale,
     dest_pc_scale,
@@ -130,8 +178,7 @@ def efficient_voice_leading(
                 chord2_pc = chord2[chord2_index]
                 displacement = abs(chord2_pc - chord1_pc)
                 if displacement in exclude_motions[chord1_index]:
-                    # TODO double check this is working
-                    #      possibly expand to include combinations of
+                    #      MAYBE expand to include combinations of
                     #       multiple voice leading motions
                     continue
                 if displacement > tet // 2:

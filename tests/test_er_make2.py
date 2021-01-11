@@ -6,13 +6,17 @@ sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 )
 
-import er_make2
-import er_notes
-import er_preprocess
+import er_make2  # pylint: disable=wrong-import-position
+import er_notes  # pylint: disable=wrong-import-position
+import er_preprocess  # pylint: disable=wrong-import-position
 
 
 def test_check_harmonic_intervals():
-    settingsdict = {"num_voices": 2, "tet": 12}
+    settingsdict = {
+        "num_voices": 2,
+        "tet": 12,
+        "forbidden_interval_classes": [0,],
+    }
     er = er_preprocess.preprocess_settings(settingsdict)
 
     # voice, pitch, attack, dur, evaluates_to
@@ -30,7 +34,7 @@ def test_check_harmonic_intervals():
     ]
     for notes in (notes1, notes2):
         score = er_notes.Score(num_voices=er.num_voices, tet=er.tet)
-        for (v, p, a, d, b) in notes:
+        for (v, p, a, d, b) in notes:  # pylint: disable=invalid-name
             try:
                 assert (
                     er_make2.check_harmonic_intervals(er, score, p, a, d, v)

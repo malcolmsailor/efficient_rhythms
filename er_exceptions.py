@@ -156,8 +156,3 @@ class VoiceLeadingError(Exception):
                 counter_str,
             )
         )
-
-
-if __name__ == "__main__":
-    a = VoiceLeadingError()
-    a.reset_temp_counter()

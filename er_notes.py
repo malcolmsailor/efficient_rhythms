@@ -64,250 +64,254 @@ class Note:
         return out
 
 
-class RhythmicDict(collections.UserDict):
-    def __init__(self):
-        super().__init__()
-        # self.attack_times = self.attack_times_and_durs = None
-
-    def __str__(self):
-        strings = []
-        strings.append("#" * 51)
-        for attack_time, dur in self.items():
-            strings.append(
-                "Attack:{:>10.6}  Duration:{:>10.6}"
-                "".format(float(attack_time), float(dur))
-            )
-        strings.append("\n")
-        return "\n".join(strings)[:-2]
-
-    # def make_attack_and_dur_lists(self):
-    #     self.attack_times = list(self.keys())
-    #     self.attack_times_and_durs = list(self.items())
-
-    # LONGTERM attack_times and attack_times_and_durs assume that
-    #   the contents will no longer be changed after their first access.
-    #   Is there a way to enforce this?
-    @functools.cached_property
-    def attack_times(self):
-        return list(self.keys())
-
-    @functools.cached_property
-    def attack_times_and_durs(self):
-        return list(self.items())
-
-
-class Rhythm(RhythmicDict):
-    @functools.cached_property
-    def total_num_notes(self):
-        # TODO check whether this works with truncate
-        out = self.num_notes
-        running_length = self.rhythm_len
-        while running_length < self.total_rhythm_len:
-            break_out = False
-            if running_length + self.rhythm_len <= self.total_rhythm_len:
-                running_length += self.rhythm_len
-                out += self.num_notes
-            else:
-                for attack_time in self:
-                    if running_length + attack_time >= self.total_rhythm_len:
-                        break_out = True
-                        break
-                    out += 1
-            if break_out:
-                break
-        return out
-
-    def __init__(self, er, voice_i):
-        super().__init__()
-        self.voice_i = voice_i
-        (
-            self.num_notes,
-            self.rhythm_len,
-            self.pattern_len,
-            self.min_dur,
-            self.dur_density,
-        ) = er.get(
-            voice_i,
-            "num_notes",
-            "rhythm_len",
-            "pattern_len",
-            "min_dur",
-            "dur_density",
-        )
-        self.total_rhythm_len = self.pattern_len
-        if er.truncate_patterns:
-            max_len = max(er.pattern_len)
-            self.truncate_len = max_len % self.pattern_len
-        else:
-            self.truncate_len = 0
-        # self.total_num_notes is overwritten in ContinuousRhythm and used
-        # in get_attack_time_and_dur
-        # self.total_num_notes = self.num_notes
-
-        # self._get_offsets(er.max_super_pattern_len)
-        self._check_min_dur()
-
-    def _check_min_dur(self):
-        if self.rhythm_len < self.min_dur * self.num_notes:
-            new_min_dur = er_misc_funcs.convert_to_fractions(
-                self.rhythm_len / self.num_notes
-            )
-            print(
-                f"Notice: min_dur too long in voice {self.voice_i} rhythm; "
-                f"reducing from {self.min_dur} to {new_min_dur}."
-            )
-            self.min_dur = new_min_dur
-        if self.rhythm_len <= self.min_dur * self.num_notes:
-            self.full = True
-        else:
-            self.full = False
-
-    def get_attack_time_and_dur(self, rhythm_i):
-        offset = (rhythm_i // self.total_num_notes) * self.total_rhythm_len
-        attack_time, dur = self.attack_times_and_durs[
-            rhythm_i % self.total_num_notes
-        ]
-        return attack_time + offset, dur
-
-
-class ContinuousRhythmicObject(RhythmicDict):
-    """Used as a base for ContinuousRhythm and Grid objects."""
-
-    # def round(self, precision=4):
-    def round(self):
-        try:
-            self.pattern_len
-        except AttributeError:
-            # Grid object does not have pattern_len attribute.
-            adj_len = self.rhythm_len  # pylint: disable=no-member
-        else:
-            if (
-                self.rhythm_len < self.pattern_len
-                and self.pattern_len % self.rhythm_len != 0
-            ):
-                adj_len = self.pattern_len
-            else:
-                adj_len = self.rhythm_len
-        for var in self.rel_attacks:  # pylint: disable=no-member
-            for j, dur in enumerate(var):
-                var[j] = round(dur, 4)
-            var[j] += adj_len - var.sum()
-        try:
-            self.durs  # pylint: disable=no-member
-        except AttributeError:
-            # Grid object does not have .durs attribute.
-            return
-        for var in self.durs:  # pylint: disable=no-member
-            for j, dur in enumerate(var):
-                var[j] = round(dur, 4)
-
-    # def round_to_frac(self, max_denominator=10000):
-    #     # This function doesn't work because fractions are not a valid
-    #     # datatype for np arrays.
-    #     try:
-    #         self.pattern_len
-    #     except AttributeError:
-    #         # Grid object does not have .pattern_len attribute.
-    #         adj_len = self.rhythm_len
-    #     else:
-    #         if (self.rhythm_len < self.pattern_len and
-    #                 self.pattern_len % self.rhythm_len != 0):
-    #             adj_len = self.pattern_len
-    #         else:
-    #             adj_len = self.rhythm_len
-    #     for var_i, var in enumerate(self.rel_attacks):
-    #         for j, dur in enumerate(var):
-    #             var[j] = fractions.Fraction(dur).limit_denominator(
-    #                 max_denominator=max_denominator)
-    #         var[j] += adj_len - var.sum()
-    #     try:
-    #         self.durs
-    #     except AttributeError:
-    #         # Grid object does not have .durs attribute.
-    #         return
-    #     for var_i, var in enumerate(self.durs):
-    #         for j, dur in enumerate(var):
-    #             var[j] = fractions.Fraction(dur).limit_denominator(
-    #                 max_denominator=max_denominator)
-
-    def rel_attacks_to_rhythm(
-        self, offset=0, first_var_only=False, comma=fractions.Fraction(1, 5000)
-    ):
-
-        if first_var_only:
-            # For use with Grid
-            rel_attacks = self.rel_attacks[0]  # pylint: disable=no-member
-        else:
-            rel_attacks = self.rel_attacks.reshape(  # pylint: disable=no-member
-                -1
-            )
-
-        try:
-            durs = self.durs.reshape(-1)
-        except AttributeError:
-            # Grid does not have durs attribute.
-            durs = rel_attacks
-
-        for i, rel_attack in enumerate(rel_attacks):
-            frac_rel_attack = fractions.Fraction(rel_attack).limit_denominator(
-                max_denominator=100000
-            )
-            frac_dur = fractions.Fraction(durs[i]).limit_denominator(
-                max_denominator=100000
-            )
-            if frac_rel_attack == 0:
-                continue
-            self[offset] = frac_dur
-            offset += frac_rel_attack
-            # if rel_attack == 0:
-            #     continue
-            # self[offset] = durs[i]
-            # offset += rel_attack
-
-        try:
-            self.attack_times
-        except AttributeError:
-            self.make_attack_and_dur_lists()
-        for attack_i, attack_time in enumerate(self.attack_times[:-1]):
-            overlap = (
-                attack_time
-                + self[attack_time]
-                - self.attack_times[attack_i + 1]
-            )
-            if overlap > comma:
-                warnings.warn("Unexpectedly long overlap in rhythm")
-            if overlap > 0:
-                self[attack_time] = (
-                    self.attack_times[attack_i + 1] - attack_time
-                )
-
-
-class ContinuousRhythm(Rhythm, ContinuousRhythmicObject):
-    def __init__(self, er, voice_i):
-        super().__init__(er, voice_i)
-
-        (
-            self.cont_var_increment,
-            self.num_vars,
-            self.vary_rhythm_consistently,
-        ) = er.get(
-            voice_i,
-            "cont_var_increment",
-            "num_vars",
-            "vary_rhythm_consistently",
-        )
-        self.increment = self.rhythm_len * self.cont_var_increment
-        self.rel_attacks = np.zeros((self.num_vars, self.num_notes))
-        self.durs = np.full_like(self.rel_attacks, self.min_dur)
-        self.deltas = None
-        if (
-            self.rhythm_len < self.pattern_len
-            and self.pattern_len % self.rhythm_len != 0
-        ):
-            self.total_rhythm_len = self.pattern_len * self.num_vars
-        else:
-            self.total_rhythm_len = self.rhythm_len * self.num_vars
-        self.total_num_notes = self.num_notes * self.num_vars
+# class RhythmicDict(collections.UserDict):
+#     def __str__(self):
+#         strings = []
+#         strings.append("#" * 51)
+#         for attack_time, dur in self.items():
+#             strings.append(
+#                 "Attack:{:>10.6}  Duration:{:>10.6}"
+#                 "".format(float(attack_time), float(dur))
+#             )
+#         strings.append("\n")
+#         return "\n".join(strings)[:-2]
+#
+#     # def make_attack_and_dur_lists(self):
+#     #     self.attack_times = list(self.keys())
+#     #     self.attack_times_and_durs = list(self.items())
+#
+#     # LONGTERM attack_times and attack_times_and_durs assume that
+#     #   the contents will no longer be changed after their first access.
+#     #   Is there a way to enforce this?
+#     @functools.cached_property
+#     def attack_times(self):
+#         return list(self.keys())
+#
+#     @functools.cached_property
+#     def attack_times_and_durs(self):
+#         return list(self.items())
+#
+#
+# class Rhythm(RhythmicDict):
+#     @functools.cached_property
+#     def total_num_notes(self):
+#         # LONGTERM check whether this works with truncate
+#         out = self.num_notes
+#         running_length = self.rhythm_len
+#         while running_length < self.total_rhythm_len:
+#             break_out = False
+#             if running_length + self.rhythm_len <= self.total_rhythm_len:
+#                 running_length += self.rhythm_len
+#                 out += self.num_notes
+#             else:
+#                 for attack_time in self:
+#                     if running_length + attack_time >= self.total_rhythm_len:
+#                         break_out = True
+#                         break
+#                     out += 1
+#             if break_out:
+#                 break
+#         return out
+#
+#     def __init__(self, er, voice_i):
+#         super().__init__()
+#         self.voice_i = voice_i
+#         (
+#             self.num_notes,
+#             self.rhythm_len,
+#             self.pattern_len,
+#             self.min_dur,
+#             self.dur_density,
+#         ) = er.get(
+#             voice_i,
+#             "num_notes",
+#             "rhythm_len",
+#             "pattern_len",
+#             "min_dur",
+#             "dur_density",
+#         )
+#         self.total_rhythm_len = self.pattern_len
+#         if er.truncate_patterns:
+#             # max_len = max(er.pattern_len)
+#             # self.truncate_len = max_len % self.pattern_len
+#             self.truncate_len = max(er.pattern_len)
+#             self.n_per_truncate = math.ceil(
+#                 self.truncate_len / self.pattern_len
+#             )
+#         else:
+#             self.truncate_len = 0
+#         # self.total_num_notes is overwritten in ContinuousRhythm and used
+#         # in get_attack_time_and_dur
+#         # self.total_num_notes = self.num_notes
+#
+#         # self._get_offsets(er.max_super_pattern_len)
+#         self._check_min_dur()
+#
+#     def _check_min_dur(self):
+#         if self.rhythm_len < self.min_dur * self.num_notes:
+#             new_min_dur = er_misc_funcs.convert_to_fractions(
+#                 self.rhythm_len / self.num_notes
+#             )
+#             print(
+#                 f"Notice: min_dur too long in voice {self.voice_i} rhythm; "
+#                 f"reducing from {self.min_dur} to {new_min_dur}."
+#             )
+#             self.min_dur = new_min_dur
+#         if self.rhythm_len <= self.min_dur * self.num_notes:
+#             print(
+#                 "Notice: 'cont_rhythms' will have no effect in voice "
+#                 f"{self.voice_i} because "
+#                 "'min_dur' is the maximum value compatible with "
+#                 "'rhythm_len', 'attack_subdivision', and 'sub_subdivisions'. "
+#                 "To allow 'cont_rhythms' to have an effect, reduce 'min_dur' "
+#                 f"to less than {self.min_dur}"
+#             )
+#             self.full = True
+#         else:
+#             self.full = False
+#
+#     def get_attack_time_and_dur(self, rhythm_i):
+#         offset = (rhythm_i // self.total_num_notes) * self.total_rhythm_len
+#         attack_time, dur = self.attack_times_and_durs[
+#             rhythm_i % self.total_num_notes
+#         ]
+#         return attack_time + offset, dur
+#
+#
+# class ContinuousRhythmicObject(RhythmicDict):
+#     """Used as a base for ContinuousRhythm and Grid objects."""
+#
+#     # def round(self, precision=4):
+#     def round(self):
+#         try:
+#             self.pattern_len
+#         except AttributeError:
+#             # Grid object does not have pattern_len attribute.
+#             adj_len = self.rhythm_len  # pylint: disable=no-member
+#         else:
+#             if (
+#                 self.rhythm_len < self.pattern_len
+#                 and self.pattern_len % self.rhythm_len != 0
+#             ):
+#                 adj_len = self.pattern_len
+#             else:
+#                 adj_len = self.rhythm_len
+#         for var in self.rel_attacks:  # pylint: disable=no-member
+#             for j, dur in enumerate(var):
+#                 var[j] = round(dur, 4)
+#             var[j] += adj_len - var.sum()
+#         try:
+#             self.durs  # pylint: disable=no-member
+#         except AttributeError:
+#             # Grid object does not have .durs attribute.
+#             return
+#         for var in self.durs:  # pylint: disable=no-member
+#             for j, dur in enumerate(var):
+#                 var[j] = round(dur, 4)
+#
+#     # def round_to_frac(self, max_denominator=10000):
+#     #     # This function doesn't work because fractions are not a valid
+#     #     # datatype for np arrays.
+#     #     try:
+#     #         self.pattern_len
+#     #     except AttributeError:
+#     #         # Grid object does not have .pattern_len attribute.
+#     #         adj_len = self.rhythm_len
+#     #     else:
+#     #         if (self.rhythm_len < self.pattern_len and
+#     #                 self.pattern_len % self.rhythm_len != 0):
+#     #             adj_len = self.pattern_len
+#     #         else:
+#     #             adj_len = self.rhythm_len
+#     #     for var_i, var in enumerate(self.rel_attacks):
+#     #         for j, dur in enumerate(var):
+#     #             var[j] = fractions.Fraction(dur).limit_denominator(
+#     #                 max_denominator=max_denominator)
+#     #         var[j] += adj_len - var.sum()
+#     #     try:
+#     #         self.durs
+#     #     except AttributeError:
+#     #         # Grid object does not have .durs attribute.
+#     #         return
+#     #     for var_i, var in enumerate(self.durs):
+#     #         for j, dur in enumerate(var):
+#     #             var[j] = fractions.Fraction(dur).limit_denominator(
+#     #                 max_denominator=max_denominator)
+#
+#     def rel_attacks_to_rhythm(
+#         self, offset=0, first_var_only=False, comma=fractions.Fraction(1, 5000)
+#     ):
+#
+#         if first_var_only:
+#             # For use with Grid
+#             rel_attacks = self.rel_attacks[0]  # pylint: disable=no-member
+#         else:
+#             rel_attacks = self.rel_attacks.reshape(  # pylint: disable=no-member
+#                 -1
+#             )
+#
+#         try:
+#             durs = self.durs.reshape(-1)
+#         except AttributeError:
+#             # Grid does not have durs attribute.
+#             durs = rel_attacks
+#
+#         for i, rel_attack in enumerate(rel_attacks):
+#             frac_rel_attack = fractions.Fraction(rel_attack).limit_denominator(
+#                 max_denominator=100000
+#             )
+#             frac_dur = fractions.Fraction(durs[i]).limit_denominator(
+#                 max_denominator=100000
+#             )
+#             if frac_rel_attack == 0:
+#                 continue
+#             self[offset] = frac_dur
+#             offset += frac_rel_attack
+#             # if rel_attack == 0:
+#             #     continue
+#             # self[offset] = durs[i]
+#             # offset += rel_attack
+#
+#         for attack_i, attack_time in enumerate(self.attack_times[:-1]):
+#             overlap = (
+#                 attack_time
+#                 + self[attack_time]
+#                 - self.attack_times[attack_i + 1]
+#             )
+#             if overlap > comma:
+#                 warnings.warn("Unexpectedly long overlap in rhythm")
+#             if overlap > 0:
+#                 self[attack_time] = (
+#                     self.attack_times[attack_i + 1] - attack_time
+#                 )
+#
+#
+# class ContinuousRhythm(Rhythm, ContinuousRhythmicObject):
+#     def __init__(self, er, voice_i):
+#         super().__init__(er, voice_i)
+#
+#         (
+#             self.cont_var_increment,
+#             self.num_cont_rhythm_vars,
+#             self.vary_rhythm_consistently,
+#         ) = er.get(
+#             voice_i,
+#             "cont_var_increment",
+#             "num_cont_rhythm_vars",
+#             "vary_rhythm_consistently",
+#         )
+#         self.increment = self.rhythm_len * self.cont_var_increment
+#         self.rel_attacks = np.zeros((self.num_cont_rhythm_vars, self.num_notes))
+#         self.durs = np.full_like(self.rel_attacks, self.min_dur)
+#         self.deltas = None
+#         if (
+#             self.rhythm_len < self.pattern_len
+#             and self.pattern_len % self.rhythm_len != 0
+#         ):
+#             self.total_rhythm_len = self.pattern_len * self.num_cont_rhythm_vars
+#         else:
+#             self.total_rhythm_len = self.rhythm_len * self.num_cont_rhythm_vars
+#         self.total_num_notes = self.num_notes * self.num_cont_rhythm_vars
 
 
 class Voice(collections.UserDict):
@@ -570,7 +574,6 @@ class Voice(collections.UserDict):
         self.update_sort()
         self.sort_up_to_date += 1
 
-    # TODO test (I changed binary_search)
     def get_sounding_pitches(
         self, attack_time, dur=0, min_attack_time=0, min_dur=0
     ):
@@ -1183,7 +1186,6 @@ class Score:
 
         If end time is 0, then removes until the end of the Score.
         """
-        # TODO debug, etc.
         # LONGTERM what to do about overlapping durations?
 
         if apply_to_existing_voices:
@@ -1314,7 +1316,6 @@ class Score:
         sounding_pitches = set()
 
         if voices == "all":
-            # voices = [voice_i for voice_i in range(self.num_voices)]
             voices = self.all_voice_is
 
         for voice_i in voices:

@@ -2,24 +2,6 @@ import warnings
 
 import er_misc_funcs
 
-# TODO rename this module?
-
-
-# def get_root_to_force(er, poss_note):
-#     root_pc = er.get(poss_note.harmony_i, "pc_chords")[0]
-#     root_pitches = er_misc_funcs.get_all_pitches_in_range(
-#         root_pc, er.voice_ranges[poss_note.voice_i], er.tet
-#     )
-#     if not root_pitches:
-#         if er.already_warned["force_root"][poss_note.harmony_i] == 0:
-#             warnings.warn(
-#                 f"Unable to force root in bass on harmony {poss_note.harmony_i}.\n"
-#                 "Try increasing voice range."
-#             )
-#             er.already_warned["force_root"][poss_note.harmony_i] += 1
-#         return None
-#     return min(root_pitches)
-
 
 def get_root_to_force(er, voice_i, harmony_i):
     root_pc = er.get(harmony_i, "pc_chords")[0]

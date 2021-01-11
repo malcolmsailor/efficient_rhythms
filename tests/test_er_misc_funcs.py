@@ -2,7 +2,7 @@ import os
 import sys
 import traceback
 
-# TODO install hypothesis, uncomment
+# INTERNET_TODO install hypothesis, uncomment
 # import hypothesis
 # import hypothesis.strategies as st
 
@@ -10,9 +10,9 @@ sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 )
 
-import er_misc_funcs
-import er_notes
-import er_preprocess
+import er_misc_funcs  # pylint: disable=wrong-import-position
+import er_notes  # pylint: disable=wrong-import-position
+import er_preprocess  # pylint: disable=wrong-import-position
 
 
 def test_check_modulo():
@@ -28,28 +28,20 @@ def test_check_interval_class():
     given_pitch = 60
     other_pitches = [55, 64, 71]
     for ic in (5, 7, 4, 8, 11, 1):
-        assert (
-            er_misc_funcs.check_interval_class(ic, given_pitch, other_pitches)
-            == True
+        assert er_misc_funcs.check_interval_class(
+            ic, given_pitch, other_pitches
         ), f"er_misc_funcs.check_interval_class({ic}, {given_pitch}, {other_pitches}) != True"
     for ic in (2, 3, 6, 9, 10, 0, 12):
-        assert (
-            er_misc_funcs.check_interval_class(ic, given_pitch, other_pitches)
-            == False
+        assert not er_misc_funcs.check_interval_class(
+            ic, given_pitch, other_pitches
         ), f"er_misc_funcs.check_interval_class({ic}, {given_pitch}, {other_pitches}) != False"
     for ic in (5, 8, 4, 9, 11, 2):
-        assert (
-            er_misc_funcs.check_interval_class(
-                ic, given_pitch, other_pitches, tet=13
-            )
-            == True
+        assert er_misc_funcs.check_interval_class(
+            ic, given_pitch, other_pitches, tet=13
         ), f"er_misc_funcs.check_interval_class({ic}, {given_pitch}, {other_pitches}, tet=13) != True"
     for ic in (0, 1, 3, 6, 7, 10, 12, 13):
-        assert (
-            er_misc_funcs.check_interval_class(
-                ic, given_pitch, other_pitches, tet=13
-            )
-            == False
+        assert not er_misc_funcs.check_interval_class(
+            ic, given_pitch, other_pitches, tet=13
         ), f"er_misc_funcs.check_interval_class({ic}, {given_pitch}, {other_pitches}, tet=13) != False"
 
 
@@ -72,7 +64,7 @@ def test_get_prev_voice_indices():
     ]
     for notes in (notes1, notes2):
         score = er_notes.Score(num_voices=er.num_voices, tet=er.tet)
-        for (v, p, a, d, l) in notes:
+        for (v, p, a, d, l) in notes:  # pylint: disable=invalid-name
             try:
                 assert (
                     er_misc_funcs.get_prev_voice_indices(score, a, d) == l
@@ -87,7 +79,7 @@ def test_get_prev_voice_indices():
             score.add_note(v, p, a, d)
 
 
-# TODO install hypothesis, uncomment
+# INTERNET_TODO install hypothesis, uncomment
 # @hypothesis.given(list_and_item(),)
 # def test_binary_search(tup):
 #     list_, item = tup

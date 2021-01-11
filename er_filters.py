@@ -1327,7 +1327,6 @@ class TransposeTransformer(Transformer):
             display_if={"trans_type": ("Cumulative", "Random")},
         )
         self._count_dict = collections.Counter()
-        self.rand_trans = None
 
     def standard(self, voice, notes_to_change):
         voice_i = voice.voice_i
@@ -1384,7 +1383,7 @@ class TransposeTransformer(Transformer):
             voice.update_sort()
 
     def build_rand_trans(self):
-        self.rand_trans = []
+        self.rand_trans = []  # pylint: disable=attribute-defined-outside-init
         length = (
             1
             if not self.by_voice  # pylint: disable=no-member
@@ -1423,6 +1422,7 @@ class TransposeTransformer(Transformer):
             self.build_rand_trans()
         voice_i = voice.voice_i
         rand_trans = self.rand_trans[voice_i % len(self.rand_trans)]
+        preserve = self.get(voice_i, "preserve")
         for note in notes_to_change:
             seg_i = self.get_seg_i(voice_i, note)
             transpose = rand_trans[seg_i % len(rand_trans)]
@@ -1436,7 +1436,7 @@ class TransposeTransformer(Transformer):
             else:
                 note.pitch += transpose
                 self.mark_note(note)
-        if preserve:  # TODO preserve is undefined!
+        if preserve:
             voice.update_sort()
 
     def change_func(self, voice, notes_to_change):
