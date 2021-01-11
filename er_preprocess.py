@@ -15,7 +15,6 @@ import numpy as np
 import er_choirs
 import er_midi
 import er_misc_funcs
-import er_randomize
 import er_settings
 import er_tuning
 import er_voice_leadings
@@ -705,14 +704,10 @@ def read_in_settings(user_settings, settings_class):
     return settings_class(**user_settings)
 
 
-def preprocess_settings(user_settings, random_settings=False):
+def preprocess_settings(user_settings):
 
     er = read_in_settings(user_settings, er_settings.ERSettings)
     er.seed = er_misc_funcs.set_seed(er.seed)
-
-    if random_settings:
-        randomize = er_randomize.ERRandomize(er)
-        randomize.apply(er)
 
     if er.max_interval_for_non_chord_tones is None:
         er.max_interval_for_non_chord_tones = er.max_interval

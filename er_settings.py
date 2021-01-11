@@ -1910,17 +1910,5 @@ class ERSettings:
     voice_leading_attempts: int = 50
     ask_for_more_attempts: bool = False
 
-    ###################################################################
-    # Randomization settings
-
-    exclude_from_randomization = [
-        "pattern_len",
-        "harmony_len",
-        # "interval_cycle",
-        "truncate_patterns",
-        # "chords",
-        "tempo",
-    ]  # TODO doc ?
-
     # End of settings
     ###################################################################

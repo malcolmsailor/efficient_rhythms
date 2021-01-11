@@ -55,7 +55,6 @@ def parse_cmd_line_args():
         "rather than using in-shell midi player",
         action="store_false",
     )
-    parser.add_argument("-r", help="randomize settings", action="store_true")
     # parser.add_argument(
     #     "-ts",
     #     help="Time signature to use with midi file "
