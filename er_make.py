@@ -613,6 +613,7 @@ def _choose_from_pitches(
 ):
     result = ""
     failure_count = er_exceptions.UnableToChoosePitchError()
+    incoming_available_pitches = available_pitches
     while result != "success":
         if not available_pitches:
             raise failure_count
@@ -767,14 +768,14 @@ def _attempt_initial_pattern(
     )
 
     if er_misc_funcs.empty_nested(available_pcs):
-        available_pitch_error.no_available_pcs += 1
+        available_pitch_error.no_available_pcs()
         return False
 
     available_pitches = _get_available_pitches(
         er, super_pattern, available_pcs, poss_note
     )
     if er_misc_funcs.empty_nested(available_pitches):
-        available_pitch_error.no_available_pitches += 1
+        available_pitch_error.no_available_pitches()
         return False
 
     available_pitches = _within_limit_intervals(
@@ -782,7 +783,7 @@ def _attempt_initial_pattern(
     )
 
     if er_misc_funcs.empty_nested(available_pitches):
-        available_pitch_error.exceeding_max_interval += 1
+        available_pitch_error.exceeding_max_interval()
         return False
 
     if er.prohibit_parallels:
@@ -791,11 +792,11 @@ def _attempt_initial_pattern(
                 er, super_pattern, sub_available_pitches, poss_note
             )
         if er_misc_funcs.empty_nested(available_pitches):
-            available_pitch_error.forbidden_parallels += 1
+            available_pitch_error.forbidden_parallels()
             return False
 
     for sub_available_pitches in available_pitches:
-        while True:
+        while sub_available_pitches:
             try:
                 pitch = _choose_from_pitches(
                     er,
@@ -806,14 +807,15 @@ def _attempt_initial_pattern(
                 )
 
             except er_exceptions.UnableToChoosePitchError as unable_error:
-                available_pitch_error.unable_to_choose_pitch += 1
-                available_pitch_error.excess_alternations += (
+                # TODO refactor
+                available_pitch_error.unable_to_choose_pitch()
+                available_pitch_error.excess_alternations(
                     unable_error.too_many_alternations
                 )
-                available_pitch_error.excess_repeated_notes += (
+                available_pitch_error.excess_repeated_notes(
                     unable_error.too_many_repeated_notes
                 )
-                available_pitch_error.pitch_loop_just_one_pitch += (
+                available_pitch_error.pitch_loop_just_one_pitch(
                     unable_error.pitch_loop_just_one_pitch
                 )
                 break

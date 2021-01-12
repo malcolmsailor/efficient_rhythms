@@ -55,7 +55,9 @@ def main():
 
     else:
         fname_path, _ = er_misc_funcs.return_fname_path(SCRIPT_BASE, SCRIPT_DIR)
-        er = er_preprocess.preprocess_settings(args.settings)
+        er = er_preprocess.preprocess_settings(
+            args.settings, random_settings=args.random
+        )
 
         midi_player = er_midi.init_and_return_midi_player(
             er.tet, shell=args.midi_port

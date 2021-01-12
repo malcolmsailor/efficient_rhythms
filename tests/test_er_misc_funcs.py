@@ -79,6 +79,30 @@ def test_get_prev_voice_indices():
             score.add_note(v, p, a, d)
 
 
+def test_empty_nested():
+    tests = [
+        ([(), ()], True),
+        ([[], []], True),
+        (["", ""], False),
+        (((), ()), True),
+        (([], [], [""]), False),
+        ([1, 2, 3], False),
+        ([[[[[4]]]]], False),
+        ([], True),
+    ]
+    for seq, result in tests:
+        try:
+            assert (
+                er_misc_funcs.empty_nested(seq) == result
+            ), "er_misc_funcs.empty_nested(seq) != result"
+        except:  # pylint: disable=bare-except
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            traceback.print_exception(
+                exc_type, exc_value, exc_traceback, file=sys.stdout
+            )
+            breakpoint()
+
+
 # INTERNET_TODO install hypothesis, uncomment
 # @hypothesis.given(list_and_item(),)
 # def test_binary_search(tup):
@@ -112,3 +136,4 @@ if __name__ == "__main__":
     test_check_modulo()
     test_check_interval_class()
     test_get_prev_voice_indices()
+    test_empty_nested()

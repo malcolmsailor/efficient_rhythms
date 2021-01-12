@@ -141,7 +141,7 @@ class ERSettings:
             constructing voice-leading pattern before giving up or asking whether
             to make more attempts.
             Default: 50
-        ask_for_more_attempts: bool. If True, if `initial_leading_attempts` or
+        ask_for_more_attempts: bool. If True, if `initial_pattern_attempts` or
             `voice_leading_attempts` are made without success, script will
             prompt user whether to try again.
             Default: False
@@ -721,6 +721,8 @@ class ERSettings:
             `attack_density = 3`, there will be 3 attacks.
             Any negative values will be replaced by a random float between
             0.0 and 1.0.
+            Note that there will always be at least one attack in each rhythm,
+            regardless of how low `attack_density` is set.
             TODO how does attack_density work with continuous rhythms?
             Default: 0.5
         dur_density: a float from 0.0 to 1.0, or a per-voice sequence of floats.
@@ -1909,6 +1911,11 @@ class ERSettings:
     initial_pattern_attempts: int = 50
     voice_leading_attempts: int = 50
     ask_for_more_attempts: bool = False
+
+    ###################################################################
+    # Randomization settings
+
+    exclude_from_randomization: typing.Sequence[str] = ()  # TODO doc
 
     # End of settings
     ###################################################################

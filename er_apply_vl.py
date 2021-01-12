@@ -42,7 +42,9 @@ def apply_voice_leading(
             return new_note, None
 
     if er.force_repeated_notes:
-        repeated_pitch = er_make2.get_repeated_pitch(new_notes, new_attack_time)
+        repeated_pitch = er_make2.get_repeated_pitch2(
+            new_notes, new_attack_time
+        )
         if repeated_pitch is not None:
             new_pitch = repeated_pitch
             new_note = er_notes.Note(new_pitch, new_attack_time, new_dur)

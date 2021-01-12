@@ -2,34 +2,67 @@ import itertools
 import numbers
 import random
 import os
+import typing
 
 from fractions import Fraction
 
 import er_constants
 
+"""
+TODO Warnings to address:
+Notice: 'parallel_voice_leading' is not compatible with checking voice-leadings for consonance. Ignoring 'vl_maintain_consonance'
+"""
+
 
 class BaseRandomizer:
-    def __init__(self, multiple_values=0):
+    def __init__(self, multiple_values=0, conditions=None):
         self.multiple_values = multiple_values
+        self.conditions = conditions
 
     def _eval_bool(self, attr):
         value = getattr(self, attr)
-        if isinstance(value, numbers.Number):
-            no = list(itertools.repeat(0, round(100 * (1 - value))))
-            yes = list(itertools.repeat(1, round(100 * value)))
-            choices = no + yes
-        else:
-            choices = (0, 1)
-        if random.choice(choices):
-            return True
-        return False
+        if not isinstance(value, numbers.Number):
+            value = 0.5
+        return random.random() < value
+
+    def _check_conditions(self, er):
+        """If any condition evaluates to True, returns the associated value.
+
+        Doesn't evaluate subsequent conditions after evaluating a condition
+        to True.
+        """
+        if self.conditions is None:
+            return
+
+        def _do_action(obj_name, action_name, action_args):
+            if action_name == "setattr":
+                setattr(self, obj_name, action_args)
+            else:
+                obj = getattr(self, obj_name)
+                action = getattr(obj, action_name)
+                action(action_args)
+
+        for lhs, op, rhs, actions in self.conditions:
+            lhs = getattr(er, lhs)
+            if isinstance(rhs, str):
+                try:
+                    rhs = getattr(er, rhs)
+                except AttributeError:
+                    # rhs is not an attribute but a literal to compare to
+                    pass
+            op = getattr(lhs, op)
+            if op(rhs):
+                for obj, action, args in actions:
+                    _do_action(obj, action, args)
 
 
-class StrRandomizer:
-    def __init__(self, mapping):
+class StrRandomizer(BaseRandomizer):
+    def __init__(self, mapping, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.mapping = mapping
 
     def __call__(self, er):
+        self._check_conditions(er)
         choices = []
         for word, weight in self.mapping.items():
             choices += [word for i in range(int(weight * 100))]
@@ -43,57 +76,37 @@ class RandomSelecter(BaseRandomizer):
         self.max_multiple_values = max_multiple_values
 
     def __call__(self, er):
+        self._check_conditions(er)
         if self._eval_bool("multiple_values"):
             num_values = random.randrange(1, self.max_multiple_values + 1)
-            out = []
-            for _ in range(num_values):
-                out.append(random.choice(self.choices))
-            return out
+            return [random.choice(self.choices) for _ in range(num_values)]
         return random.choice(self.choices)
 
 
 class BoolRandomizer(BaseRandomizer):
-    def __init__(self, toggle, multiple_values=0):
-        super().__init__(multiple_values=multiple_values)
+    def __init__(self, toggle, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.toggle = toggle
 
     def _fetch_value(self):
-        if not self._eval_bool("toggle"):
-            return False
-        return True
+        return self._eval_bool("toggle")
 
     def __call__(self, er):
+        self._check_conditions(er)
         if self._eval_bool("multiple_values"):
-            out = []
-            for _ in range(er.num_voices):
-                out.append(self._fetch_value())
-            return out
-
+            return [self._fetch_value() for _ in range(er.num_voices)]
         return self._fetch_value()
 
 
-def _choose_within_range(min_, max_, step, illegal_values=None):
-    bottom = int(min_ / step)
-    top = int(max_ / step)
-    choices = list(range(bottom, top + 1))
-    while choices:
-        choice = random.choice(choices)
-        if step == 1:
-            out = choice
-        else:
-            out = choice * step
-        if illegal_values and out in illegal_values:
-            choices.remove(choice)
-        else:
-            return out
-
-    class NoLegalValuesError(Exception):
-        pass
-
-    raise NoLegalValuesError("Unable to choose any legal values")
-
-
 class Randomizer(BoolRandomizer):
+    """
+        conditions: a sequence of tuples of form (lhs, op, rhs, return_value),
+            where
+                - lhs and rhs are attributes of the ERSettings object
+                - op is the name of a comparison operator (e.g., "__eq__")
+                - actions TODO
+    """
+
     def __init__(
         self,
         min_,
@@ -104,7 +117,6 @@ class Randomizer(BoolRandomizer):
         spread=None,
         same_as=None,
         illegal_values=None,
-        conditions=None,
     ):
         super().__init__(toggle, multiple_values=multiple_values)
         if not min_ <= max_:
@@ -115,7 +127,6 @@ class Randomizer(BoolRandomizer):
         self.spread = spread
         self.same_as = same_as
         self.illegal_values = illegal_values
-        self.conditions = conditions
 
     def _fetch_value(self):
         # bottom = self.min_ * int(1 / self.step)
@@ -124,21 +135,12 @@ class Randomizer(BoolRandomizer):
         # if self.step == 1:
         #     return choice
         # return choice * self.step
-        return _choose_within_range(
+        return self._choose_within_range(
             self.min_, self.max_, self.step, illegal_values=self.illegal_values
         )
 
-    # TODO check conditions
-    # def _check_conditions(self, er):
-    #     """This is a null function because there's no general procedure that
-    #     works for all types of Randomizers; it should be overridden in
-    #     subclasses."""
-
     def __call__(self, er):
-        # TODO check conditions
-        if self.conditions is not None:
-            raise NotImplementedError
-            # self._check_conditions(er)
+        self._check_conditions(er)
         if not self._eval_bool("toggle"):
             return False
         if self.same_as is not None:
@@ -149,7 +151,7 @@ class Randomizer(BoolRandomizer):
             min_ = self.min_
             max_ = self.max_
             if self.spread is not None:
-                spread = _choose_within_range(*self.spread, self.step)
+                spread = self._choose_within_range(*self.spread, self.step)
             out = []
             for _ in range(er.num_voices):
                 try:
@@ -160,10 +162,31 @@ class Randomizer(BoolRandomizer):
                     max_ = min((max_, min(out) + spread))
                 except (ValueError, UnboundLocalError):
                     pass
-                out.append(_choose_within_range(min_, max_, self.step))
+                out.append(self._choose_within_range(min_, max_, self.step))
             return out
 
         return self._fetch_value()
+
+    @staticmethod
+    def _choose_within_range(min_, max_, step, illegal_values=None):
+        bottom = int(min_ / step)
+        top = int(max_ / step)
+        choices = list(range(bottom, top + 1))
+        while choices:
+            choice = random.choice(choices)
+            if step == 1:
+                out = choice
+            else:
+                out = choice * step
+            if illegal_values and out in illegal_values:
+                choices.remove(choice)
+            else:
+                return out
+
+        class NoLegalValuesError(Exception):
+            pass
+
+        raise NoLegalValuesError("Unable to choose any legal values")
 
 
 class ERRandomize:
@@ -222,17 +245,46 @@ class ERRandomize:
         )
         self.prefer_small_melodic_intervals = BoolRandomizer(0.7)
         self.force_repeated_notes = BoolRandomizer(0.1)
-        self.force_parallel_motion = StrRandomizer(
-            {"within_harmonies": 0.25, "false": 0.75}
-        )
+        self.force_parallel_motion = BoolRandomizer(0.2)
         self.consonance_treatment = StrRandomizer(
             {"all_attacks": 0.5, "all_durs": 0.25, "none": 0.25}
         )
+        # LONGTERM adjust "min_dur" if necessary so that cont_rhythms
+        #   can work, i.e., addressing this situation:
+        # Notice: 'cont_rhythms' will have no effect because 'min_dur' is the
+        # maximum value compatible with 'rhythm_len', 'attack_subdivision',
+        # and 'sub_subdivisions'. To allow 'cont_rhythms' to have an effect,
+        # reduce 'min_dur' to less than 1/6
         self.cont_rhythms = StrRandomizer(
-            {"none": 0.6, "all": 0.2, "grid": 0.2}
+            {"none": 0.6, "all": 0.2, "grid": 0.2,},
+            conditions=(
+                (
+                    "pattern_len",
+                    "__ne__",
+                    "rhythm_len",
+                    (
+                        ("mapping", "__delitem__", "all"),
+                        ("mapping", "__delitem__", "grid"),
+                    ),
+                ),
+                (
+                    "pattern_len",
+                    "__ne__",
+                    1,
+                    (
+                        ("mapping", "__delitem__", "all"),
+                        ("mapping", "__delitem__", "grid"),
+                    ),
+                ),
+            ),
         )
-        self.vary_rhythm_consistently = BoolRandomizer(0.7)
-        # TODO allow generation of tuples of voices for following properties
+        self.vary_rhythm_consistently = BoolRandomizer(
+            0.7,
+            conditions=(
+                ("cont_rhythms", "__eq__", "none", (("toggle", "setattr", 0),)),
+            ),
+        )
+        # LONGTERM allow generation of tuples of voices for following properties
         self.rhythmic_unison = BoolRandomizer(0.3)
         self.rhythmic_quasi_unison = BoolRandomizer(0.3)
         self.hocketing = BoolRandomizer(0.4)
@@ -259,13 +311,33 @@ class ERRandomize:
         )
         self.tempo = Randomizer(96, 160)
 
+    @staticmethod
+    def _print_setting(attr, val):
+        def _tuplify(item):
+            if isinstance(item, typing.Sequence) and not isinstance(item, str):
+                return tuple(_tuplify(sub_item) for sub_item in item)
+            return item
+
+        print(f'"{attr}": ', end="")
+        if isinstance(val, str):
+            print(f'"{str}",')
+        elif isinstance(val, typing.Sequence):
+            print(f"{_tuplify(val)},")
+        elif isinstance(val, numbers.Number):
+            print(f"{val:g},")
+        else:
+            print(f"{val},")
+
     def apply(self, er):
         width = os.get_terminal_size().columns
         print("#" * width)
         print("Randomized settings:")
-        for var, randomizer in vars(self).items():
-            if var in er.exclude_from_randomization:
+        for attr, randomizer in vars(self).items():
+            if attr in er.exclude_from_randomization:
                 continue
-            vars(er)[var] = randomizer(er)
-            print(var + ": ", vars(er)[var])
+            val = randomizer(er)
+            setattr(er, attr, val)
+            # TODO print in a way that can be easily copied into a dict
+            # TODO print numpy arrays as tuples
+            print(attr + ": ", val)
         print("#" * width)

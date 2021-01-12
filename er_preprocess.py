@@ -562,7 +562,7 @@ def rhythm_preprocessing(er):
         else:
             # if isinstance(density, float):
             num_notes = min(round(density * num_div), num_div)
-        er.num_notes[voice_i] = num_notes
+        er.num_notes[voice_i] = max(num_notes, 1)
 
     if er.rhythms_specified_in_midi:
         return
@@ -854,7 +854,7 @@ def preprocess_settings(user_settings):
             er.pattern_len.append(er.pattern_len[i % len(er.pattern_len)])
             i += 1
         for i, pattern_length in enumerate(er.pattern_len):
-            if er.rhythm_len[i] > pattern_length:
+            if er.rhythm_len[i] > pattern_length or er.rhythm_len[i] == 0:
                 er.rhythm_len[i] = pattern_length
 
     if er.truncate_patterns:

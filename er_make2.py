@@ -28,6 +28,16 @@ def get_repeated_pitch(poss_note, min_attack_time=0):
     return prev_pitch
 
 
+# LONGTERM consolidate this and previous function!
+def get_repeated_pitch2(voice, attack_time, min_attack_time=0):
+    prev_pitch = voice.get_prev_pitch(
+        attack_time, min_attack_time=min_attack_time
+    )
+    if prev_pitch < 0:
+        return None
+    return prev_pitch
+
+
 def check_harmonic_intervals(
     er, super_pattern, pitch, attack_time, dur, voice_i, other_voices="all"
 ):
