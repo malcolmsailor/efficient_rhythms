@@ -1,6 +1,4 @@
 """Rhythm functions for efficient_rhythms2.py.
-
-March 13 2019: begun rewrite to remove reliance on arrays of 1's and 0's.
 """
 import collections
 import fractions
@@ -11,9 +9,12 @@ import warnings
 
 import numpy as np
 
-import er_cont_rhythm
 import er_midi
 import er_misc_funcs
+
+
+RANDOM_CARD = 200
+COMMA = 10 ** -5
 
 
 class RhythmicDict(collections.UserDict):
@@ -95,6 +96,7 @@ class Rhythm(RhythmicDict):
                 self.n_patterns_per_truncate = math.ceil(
                     self.truncate_len / self.pattern_len
                 )
+            self._truncated_pattern_num_notes = None
         else:
             self.truncate_len = 0
         # self.total_num_notes is overwritten in ContinuousRhythm and used
@@ -131,7 +133,7 @@ class Rhythm(RhythmicDict):
     @functools.cached_property
     def truncated_pattern_num_notes(self):
         if not self.truncate_len:
-            raise ValueError
+            raise ValueError("This is a bug in the 'efficient_rhythms' script")
         self._truncated_pattern_num_notes = 0
         for attack_time in self:
             if (attack_time + self.min_dur) >= (
@@ -234,6 +236,137 @@ class ContinuousRhythmicObject(RhythmicDict):
     #             var[j] = fractions.Fraction(dur).limit_denominator(
     #                 max_denominator=max_denominator)
 
+    def apply_min_dur_to_rel_attacks(self, rel_attacks):
+        while True:
+            remaining = 0
+            indices = np.ones(self.num_notes)
+            for i, rel_attack in enumerate(rel_attacks):
+                if rel_attack >= self.min_dur:
+                    continue
+                indices[i] = 0
+                remaining += rel_attack - self.min_dur
+                rel_attacks[i] = self.min_dur
+            if not remaining:
+                break
+            adjust = np.where(
+                indices == 1,
+                np.random.randint(0, RANDOM_CARD, self.num_notes),
+                0,
+            )
+            if adjust.sum():
+                adjust = adjust / adjust.sum() * remaining
+            rel_attacks = rel_attacks + adjust
+        return rel_attacks
+
+    def generate_continuous_attacks(self):
+        rand_array = np.random.randint(0, RANDOM_CARD, self.num_notes)
+        attacks = rand_array / rand_array.sum() * self.rhythm_len
+        self.rel_attacks[0] = self.apply_min_dur_to_rel_attacks(attacks)
+
+    def vary_continuous_attacks(self, apply_to_durs=True):
+
+        # def _vary_continuous_attacks_randomly(self, i, apply_to_durs=True):
+        def _vary_continuous_attacks_randomly(
+            rhythm, i
+        ):  # LONGTERM apply_to_durs?
+            deltas = np.random.randint(0, RANDOM_CARD, rhythm.num_notes)
+            deltas = deltas / deltas.sum() * rhythm.increment
+            deltas = deltas - deltas.mean()
+            attacks = rhythm.rel_attacks[i] + deltas
+            rhythm.rel_attacks[i + 1] = self.apply_min_dur_to_rel_attacks(
+                attacks, rhythm
+            )
+            # LONGTERM vary durations
+
+        def _vary_continuous_attacks_consistently(
+            rhythm, i, apply_to_durs=True
+        ):
+            def _update_deltas():
+                deltas = np.random.randint(1, RANDOM_CARD, rhythm.num_notes)
+                deltas2 = deltas / deltas.sum()
+                deltas3 = deltas2 - deltas2.mean()
+                if abs(deltas3).sum() == 0:
+                    # LONGTERM investigate and fix whatever it is that results in
+                    #   this condition. Returning 0 is a kludge.
+                    rhythm.deltas = np.zeros(rhythm.num_notes)
+                    return
+                deltas4 = deltas3 / (abs(deltas3).sum() / rhythm.increment)
+                indices = np.array([True for i in range(rhythm.num_notes)])
+
+                while True:
+                    if np.all(
+                        rhythm.rel_attacks[i] + deltas4
+                        >= rhythm.min_dur - COMMA
+                    ):
+                        rhythm.deltas = deltas4
+                        return
+                    if np.all(
+                        rhythm.rel_attacks[i] + deltas4 * -1
+                        >= rhythm.min_dur - COMMA
+                    ):
+                        rhythm.deltas = deltas4 * -1
+                        return
+                    indices = np.array(
+                        [
+                            rhythm.rel_attacks[i][j] + deltas4[j]
+                            >= rhythm.min_dur - COMMA
+                            and indices[j]
+                            for j in range(rhythm.num_notes)
+                        ]
+                    )
+
+                    deltas = np.where(indices, deltas, 0)
+                    deltas2 = deltas / deltas.sum()
+                    deltas3 = np.where(
+                        indices, deltas2 - deltas2[indices].mean(), 0
+                    )
+                    if abs(deltas3).sum() == 0:
+                        # LONGTERM investigate and fix whatever it is that results in
+                        #   this condition. Returning 0 is a kludge.
+                        rhythm.deltas = np.zeros(rhythm.num_notes)
+                        return
+                    deltas4 = deltas3 / (abs(deltas3).sum() / rhythm.increment)
+
+            if rhythm.deltas is None:
+                _update_deltas()
+            elif np.any(rhythm.rel_attacks[i] + rhythm.deltas < rhythm.min_dur):
+                _update_deltas()
+
+            rhythm.rel_attacks[i + 1] = rhythm.rel_attacks[i] + rhythm.deltas
+
+            if apply_to_durs:
+                rhythm.durs[i + 1] = rhythm.durs[i]
+                remaining_durs = rhythm.rel_attacks[i + 1] - rhythm.durs[i + 1]
+                while np.any(remaining_durs < 0):
+                    negative_durs = np.where(
+                        remaining_durs < 0, remaining_durs, 0
+                    )
+                    rhythm.durs[i + 1] += negative_durs
+                    available_durs = np.where(
+                        remaining_durs > 0, remaining_durs, 0
+                    )
+                    dur_to_add = np.abs(negative_durs).sum()
+                    deltas = np.where(
+                        available_durs > 0,
+                        np.random.randint(1, RANDOM_CARD, rhythm.num_notes),
+                        0,
+                    )
+                    deltas2 = deltas / deltas.sum() * dur_to_add
+                    rhythm.durs[i + 1] += deltas2
+                    remaining_durs = (
+                        rhythm.rel_attacks[i + 1] - rhythm.durs[i + 1]
+                    )
+
+        for i in range(self.num_cont_rhythm_vars - 1):
+            if self.full:
+                self.rel_attacks[i + 1] = self.rel_attacks[i]
+            elif self.vary_rhythm_consistently:
+                _vary_continuous_attacks_consistently(
+                    self, i, apply_to_durs=apply_to_durs
+                )
+            else:
+                _vary_continuous_attacks_randomly(self, i)
+
     def rel_attacks_to_rhythm(
         self, offset=0, first_var_only=False, comma=fractions.Fraction(1, 5000)
     ):
@@ -282,6 +415,20 @@ class ContinuousRhythmicObject(RhythmicDict):
                 )
 
 
+def get_cont_rhythm(er, voice_i):
+    rhythm = ContinuousRhythm(er, voice_i)
+    if rhythm.num_notes == 0:
+        print(f"Notice: voice {voice_i} is empty.")
+        return rhythm
+    rhythm.generate_continuous_attacks()
+    rhythm.fill_continuous_durs()
+    rhythm.vary_continuous_attacks()
+    rhythm.truncate_or_extend()
+    rhythm.round()
+    rhythm.rel_attacks_to_rhythm()
+    return rhythm
+
+
 class ContinuousRhythm(Rhythm, ContinuousRhythmicObject):
     def __init__(self, er, voice_i):
         super().__init__(er, voice_i)
@@ -308,6 +455,83 @@ class ContinuousRhythm(Rhythm, ContinuousRhythmicObject):
         else:
             self.total_rhythm_len = self.rhythm_len * self.num_cont_rhythm_vars
         self.total_num_notes = self.num_notes * self.num_cont_rhythm_vars
+
+    def fill_continuous_durs(self):
+        target_total_dur = min(
+            (self.dur_density * self.rhythm_len, self.rhythm_len)
+        )
+        actual_total_dur = self.durs[0].sum()
+        available_durs = self.rel_attacks[0] - self.durs[0]
+        if not available_durs.sum():
+            return
+        available_durs_prop = available_durs / available_durs.sum()
+        missing_dur = target_total_dur - actual_total_dur
+
+        while missing_dur > 0:
+            weights = np.where(
+                available_durs > 0,
+                np.random.randint(0, RANDOM_CARD, self.num_notes),
+                0,
+            )
+            weights_2 = weights / weights.sum()
+            weights_3 = weights_2 - weights_2[available_durs > 0].mean() + 1
+            deltas = (weights_3) * (missing_dur * available_durs_prop)
+            self.durs[0] += deltas
+            overlaps = np.where(
+                self.durs[0] - self.rel_attacks[0] > 0,
+                self.durs[0] - self.rel_attacks[0],
+                0,
+            )
+            self.durs[0] -= overlaps
+            actual_total_dur = self.durs[0].sum()
+            available_durs = self.rel_attacks[0] - self.durs[0]
+            if available_durs.sum():
+                available_durs_prop = available_durs / available_durs.sum()
+                missing_dur = target_total_dur - actual_total_dur
+            else:
+                missing_dur = 0
+                # this delete statement is in place for safety, so if it the
+                # loop runs again when there are no available durations, it
+                # will throw an error
+                # That won't work because it's not persistent!
+                del available_durs_prop
+
+    def truncate_or_extend(self):
+        if (
+            self.rhythm_len < self.pattern_len
+            and self.pattern_len % self.rhythm_len != 0
+        ):
+            min_j = (
+                math.ceil(self.pattern_len / self.rhythm_len) * self.num_notes
+            )
+            temp_rel_attacks = np.zeros((self.num_cont_rhythm_vars, min_j))
+            temp_durs = np.zeros((self.num_cont_rhythm_vars, min_j))
+            for var_i, var in enumerate(self.rel_attacks):
+                temp_rel_attacks[var_i, : self.num_notes] = var
+                temp_durs[var_i, : self.num_notes] = self.durs[var_i]
+                time = self.rhythm_len
+                j = self.num_notes
+                while time < self.pattern_len:
+                    attack_dur = var[j % self.num_notes]
+                    dur = self.durs[var_i][j % self.num_notes]
+                    temp_rel_attacks[var_i, j] = min(
+                        (attack_dur, self.pattern_len - time)
+                    )
+                    temp_durs[var_i, j] = min((dur, self.pattern_len - time))
+                    time += attack_dur
+                    j += 1
+                if j < min_j:
+                    min_j = j
+            # If each repetition of the rhythm doesn't have the same number of
+            # notes, the algorithm won't work. For now we just address this
+            # by truncating to the minumum length.
+            self.rel_attacks = temp_rel_attacks[:, :min_j]
+            self.durs = temp_durs[:, :min_j]
+            # If we truncated one (or conceivably more) attacks from some
+            # rhythms, we need to add the extra duration back on to the attacks.
+            # Thus doesn't effect rhythm.durs, however.
+            for var_i, var in enumerate(self.rel_attacks):
+                var[min_j - 1] += self.pattern_len - var.sum()
 
 
 def print_rhythm(rhythm):
@@ -656,7 +880,7 @@ def generate_rhythm1(er, voice_i, prev_rhythms=()):
         return prev_rhythms[leader_i]
 
     if er.cont_rhythms == "all":
-        return er_cont_rhythm.get_rhythm(er, voice_i)
+        return get_cont_rhythm(er, voice_i)
 
     subdivision = er.attack_subdivision[voice_i]
 
@@ -886,8 +1110,8 @@ class Grid(ContinuousRhythmicObject):
 
         self.rel_attacks = np.zeros((self.num_cont_rhythm_vars, self.num_notes))
         self.deltas = None
-        er_cont_rhythm.generate_continuous_attacks(self)
-        er_cont_rhythm.vary_continuous_attacks(self, apply_to_durs=False)
+        self.generate_continuous_attacks()
+        self.vary_continuous_attacks(apply_to_durs=False)
         self.round()
         self.rel_attacks_to_rhythm(first_var_only=True)
         self.cum_attacks = self.rel_attacks.cumsum(axis=1) - self.rel_attacks
@@ -939,7 +1163,7 @@ class Grid(ContinuousRhythmicObject):
         rhythm = ContinuousRhythm(er, voice_i)
         rhythm.rel_attacks = rel_attacks
         rhythm.durs = var_durs
-        er_cont_rhythm.truncate_or_extend(rhythm)
+        rhythm.truncate_or_extend()
         rhythm.round()
         rhythm.rel_attacks_to_rhythm()
         return rhythm

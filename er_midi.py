@@ -509,10 +509,7 @@ def write_er_midi(er, super_pattern, reverse_tracks=True):
             )
 
     with open(midi_fname, "wb") as outf:
-        try:
-            mf.writeFile(outf)
-        except:
-            breakpoint()
+        mf.writeFile(outf)
 
 
 def write_meta_messages(super_pattern, mf):
