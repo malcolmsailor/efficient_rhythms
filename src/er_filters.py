@@ -5,9 +5,9 @@ import itertools
 import math
 import random
 
-import er_misc_funcs
-import er_prob_funcs
-import er_notes
+import src.er_misc_funcs as er_misc_funcs
+import src.er_prob_funcs as er_prob_funcs
+import src.er_notes as er_notes
 
 # QUESTION why does program change sometimes not apply to first note when
 #           changing midi files imported from logic?

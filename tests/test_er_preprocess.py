@@ -6,7 +6,7 @@ sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 )
 
-import er_preprocess  # pylint: disable=wrong-import-position
+import src.er_preprocess as er_preprocess  # pylint: disable=wrong-import-position
 
 
 def test_process_pattern_voice_leading_order():

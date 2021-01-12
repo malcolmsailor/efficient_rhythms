@@ -1,6 +1,6 @@
 import warnings
 
-import er_misc_funcs
+import src.er_misc_funcs as er_misc_funcs
 
 
 def get_root_to_force(er, voice_i, harmony_i):

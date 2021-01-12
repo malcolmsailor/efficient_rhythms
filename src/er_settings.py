@@ -3,7 +3,7 @@ import numbers
 import typing
 from fractions import Fraction
 
-import er_constants
+import src.er_constants as er_constants
 
 # INTERNET_TODO how to allow numpy arrays in sequence annotations?
 #   (e.g., typing.Sequence)

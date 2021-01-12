@@ -15,7 +15,7 @@ import os
 import subprocess
 from fractions import Fraction
 
-import er_tuning
+import src.er_tuning as er_tuning
 
 
 class PitchDict:

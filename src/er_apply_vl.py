@@ -1,6 +1,6 @@
-import er_make2
-import er_misc_funcs
-import er_notes
+import src.er_make2 as er_make2
+import src.er_misc_funcs as er_misc_funcs
+import src.er_notes as er_notes
 
 
 def apply_voice_leading(

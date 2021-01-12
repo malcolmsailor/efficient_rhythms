@@ -5,7 +5,7 @@ import itertools
 import random
 import warnings
 
-import er_tuning
+import src.er_tuning as er_tuning
 
 
 class ChoirError(Exception):

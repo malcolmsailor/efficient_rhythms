@@ -2,7 +2,7 @@
 
 import math
 
-import er_misc_funcs
+import src.er_misc_funcs as er_misc_funcs
 
 ALPHABET = "fcgdaeb"
 

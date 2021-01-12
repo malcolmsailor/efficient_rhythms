@@ -4,8 +4,8 @@ together with associated methods.
 import collections
 import copy
 
-import er_misc_funcs
-import er_tuning
+import src.er_misc_funcs as er_misc_funcs
+import src.er_tuning as er_tuning
 
 # constants for writing notes
 DEFAULT_VELOCITY = 96

@@ -7,10 +7,10 @@
 #     0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 # )
 #
-# import er_choirs  # pylint: disable=wrong-import-position
-# import er_exceptions  # pylint: disable=wrong-import-position
-# import er_make  # pylint: disable=wrong-import-position
-# import er_preprocess  # pylint: disable=wrong-import-position
+# import src.er_choirs as er_choirs  # pylint: disable=wrong-import-position
+# import src.er_exceptions as er_exceptions  # pylint: disable=wrong-import-position
+# import src.er_make as er_make  # pylint: disable=wrong-import-position
+# import src.er_preprocess as er_preprocess  # pylint: disable=wrong-import-position
 #
 #
 # def test_many_seeds():

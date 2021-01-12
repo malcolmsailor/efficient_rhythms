@@ -3,7 +3,7 @@ import math
 import numbers
 import random
 
-import er_misc_funcs
+import src.er_misc_funcs as er_misc_funcs
 
 
 def ensure_list(obj, attr_str):

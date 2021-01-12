@@ -1,6 +1,6 @@
 import numpy as np
 
-import er_exceptions
+import src.er_exceptions as er_exceptions
 
 
 class VoiceLeadingOrderItem:

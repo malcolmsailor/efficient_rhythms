@@ -2,13 +2,13 @@
 """
 import os
 
-import er_choirs
-import er_interface
-import er_make
-import er_misc_funcs
-import er_midi
-import er_midi_settings
-import er_preprocess
+import src.er_choirs as er_choirs
+import src.er_interface as er_interface
+import src.er_make as er_make
+import src.er_misc_funcs as er_misc_funcs
+import src.er_midi as er_midi
+import src.er_midi_settings as er_midi_settings
+import src.er_preprocess as er_preprocess
 
 # MAYBE make old directory and check it when looking for files
 # MAYBE wait a moment when sending midi messages, see if this solves

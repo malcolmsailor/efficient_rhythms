@@ -4,8 +4,8 @@ import numbers
 import os
 import typing
 
-import er_misc_funcs
-import er_tuning
+import src.er_misc_funcs as er_misc_funcs
+import src.er_tuning as er_tuning
 
 # User probably won't need to access these settings
 @dataclasses.dataclass

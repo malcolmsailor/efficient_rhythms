@@ -13,10 +13,10 @@ import midiutil
 import mido
 import pygame
 
-import er_choirs
-import er_midi_settings
-import er_notes
-import er_tuning
+import src.er_choirs as er_choirs
+import src.er_midi_settings as er_midi_settings
+import src.er_notes as er_notes
+import src.er_tuning as er_tuning
 
 # midi macros
 META_TRACK = 0

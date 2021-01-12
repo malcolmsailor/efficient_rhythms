@@ -9,8 +9,8 @@ import warnings
 
 import numpy as np
 
-import er_midi
-import er_misc_funcs
+import src.er_midi as er_midi
+import src.er_midi as er_midi
 
 
 RANDOM_CARD = 200

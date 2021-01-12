@@ -12,12 +12,12 @@ import pygame
 
 from mal_str import make_header
 
-import er_filters
-import er_midi
-import er_misc_funcs
-import er_output_notation
-import er_prob_funcs
-import er_settings
+import src.er_filters as er_filters
+import src.er_midi as er_midi
+import src.er_misc_funcs as er_misc_funcs
+import src.er_output_notation as er_output_notation
+import src.er_prob_funcs as er_prob_funcs
+import src.er_settings as er_settings
 
 
 SOUND_FONT = "/Users/Malcolm/Music/SoundFonts/GeneralUser GS 1.471/GeneralUser_GS_v1.471.sf2"

@@ -13,13 +13,13 @@ import warnings
 
 import numpy as np
 
-import er_choirs
-import er_midi
-import er_misc_funcs
-import er_randomize
-import er_settings
-import er_tuning
-import er_voice_leadings
+import src.er_choirs as er_choirs
+import src.er_midi as er_midi
+import src.er_misc_funcs as er_misc_funcs
+import src.er_randomize as er_randomize
+import src.er_settings as er_settings
+import src.er_tuning as er_tuning
+import src.er_voice_leadings as er_voice_leadings
 
 
 class SettingsError(Exception):

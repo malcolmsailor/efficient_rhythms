@@ -1,10 +1,10 @@
 import sys
 
-import er_exceptions
-import er_notes
-import er_voice_leadings
+import src.er_exceptions as er_exceptions
+import src.er_notes as er_notes
+import src.er_voice_leadings as er_voice_leadings
 
-import er_apply_vl
+import src.er_apply_vl as er_apply_vl
 
 
 def voice_lead_pattern_flexibly(

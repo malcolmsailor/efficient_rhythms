@@ -10,12 +10,12 @@ import sys
 
 import numpy as np
 
-import er_exceptions
-import er_make2
-import er_misc_funcs
-import er_notes
-import er_rhythm
-import er_vl_strict_and_flex
+import src.er_exceptions as er_exceptions
+import src.er_make2 as er_make2
+import src.er_misc_funcs as er_misc_funcs
+import src.er_notes as er_notes
+import src.er_rhythm as er_rhythm
+import src.er_vl_strict_and_flex as er_vl_strict_and_flex
 
 
 class PossibleNoteError(Exception):
