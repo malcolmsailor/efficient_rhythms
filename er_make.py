@@ -1215,7 +1215,11 @@ def complete_pattern(er, super_pattern):
         )
 
 
-LINE_WIDTH = os.get_terminal_size().columns
+try:
+    LINE_WIDTH = os.get_terminal_size().columns
+except OSError:
+    # Thrown when running pytest
+    LINE_WIDTH = 80
 SPINNING_LINE = "|/-\\"
 
 # Constants for accessing voice ranges

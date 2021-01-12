@@ -1,20 +1,17 @@
-import itertools
 import numbers
 import random
 import os
 import typing
 
-import numpy as np
-
 from fractions import Fraction
+
+import numpy as np
 
 import er_constants
 
-"""
-TODO Warnings to address:
-Notice: 'parallel_voice_leading' is not compatible with checking voice-leadings
-for consonance. Ignoring 'vl_maintain_consonance'
-"""
+# TODO Warnings to address:
+# Notice: 'parallel_voice_leading' is not compatible with checking voice-leadings
+# for consonance. Ignoring 'vl_maintain_consonance'
 
 
 class BaseRandomizer:
@@ -325,14 +322,13 @@ class ERRandomize:
         def _format_item(item):
             if isinstance(item, Fraction):
                 return f"{float(item):g}"
-            elif isinstance(item, numbers.Number):
+            if isinstance(item, numbers.Number):
                 return f"{item:g}"
-            elif isinstance(item, str):
+            if isinstance(item, str):
                 return f'"{item}"'
-            elif isinstance(item, (typing.Sequence, np.ndarray)):
+            if isinstance(item, (typing.Sequence, np.ndarray)):
                 return f"{_tuplify(item)}"
-            else:
-                return f"{item}"
+            return f"{item}"
 
         def _tuplify(item):
             if isinstance(

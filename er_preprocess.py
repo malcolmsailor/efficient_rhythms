@@ -710,12 +710,12 @@ def read_in_settings(user_settings, settings_class):
     return settings_class(**user_settings)
 
 
-def preprocess_settings(user_settings, script_path, random_settings):
+def preprocess_settings(user_settings, script_path=None, random_settings=False):
 
     er = read_in_settings(user_settings, er_settings.ERSettings)
     er.seed = er_misc_funcs.set_seed(er.seed)
 
-    if not os.path.isabs(er.output_path):
+    if not os.path.isabs(er.output_path) and script_path is not None:
         er.output_path = os.path.join(script_path, er.output_path)
 
     if not os.path.exists(os.path.dirname(er.output_path)):

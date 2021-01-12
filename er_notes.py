@@ -3,11 +3,6 @@ together with associated methods.
 """
 import collections
 import copy
-import fractions
-import functools
-import warnings
-
-import numpy as np
 
 import er_misc_funcs
 import er_tuning

@@ -76,7 +76,7 @@ def add_line_breaks(
             before = math.ceil((current_line_width - len(line)) / 2)
             after = math.floor((current_line_width - len(line)) / 2)
             return before * " " + line + after * " "
-        elif align == "left" and fill:
+        if align == "left" and fill:
             return line + (current_line_width - len(line)) * " "
         return line
 
@@ -86,7 +86,11 @@ def add_line_breaks(
                 break
         trailing_ws = in_str[i + 1 :]
     if line_width is None:
-        line_width = os.get_terminal_size().columns
+        try:
+            line_width = os.get_terminal_size().columns
+        except OSError:
+            # thrown when running pylint
+            line_width = 80
     lines = []
     start_line_i = 0
     last_whitespace_i = 0
