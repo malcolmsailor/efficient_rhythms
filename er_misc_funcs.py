@@ -6,6 +6,7 @@ import itertools
 import math
 import os
 import random
+import typing
 
 import numpy as np
 
@@ -226,21 +227,21 @@ def no_empty_lists(item):
     return True
 
 
-def empty_nested(iterable):
-    """Check if all sub-lists/tuples of a (nested) list or tuple are empty.
+def empty_nested(seq):
+    """Check if all (non-str) sub-sequences of a (nested) sequence are empty.
 
     Returns True if empty, False otherwise.
     """
 
     def _sub(item):
-        if isinstance(item, (list, tuple)):
+        if isinstance(item, typing.Sequence) and not isinstance(item, str):
             for sub_item in item:
                 if _sub(sub_item):
                     return True
             return False
         return True
 
-    if _sub(iterable):
+    if _sub(seq):
         return False
     return True
 

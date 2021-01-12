@@ -29,24 +29,60 @@ class AvailablePitchMaterialsError(Exception):
 
     def __init__(self, er):
         super().__init__()
-        self.no_available_pcs = 0
-        self.no_available_pitches = 0
+        self._no_available_pcs = 0
+        self._no_available_pitches = 0
 
-        self.exceeding_max_interval = 0
+        self._exceeding_max_interval = 0
         # max_interval_type = "generic" if er.max_interval > 0 else "specific"
         # self.max_interval_str = (
         #     f"Max {max_interval_type} interval = {er.max_interval}")
 
-        self.forbidden_parallels = 0
+        self._forbidden_parallels = 0
         self.forbidden_parallels_str = (
             f"Forbidden parallels: {er.prohibit_parallels}"
         )
 
-        self.unable_to_choose_pitch = 0
-        self.excess_alternations = 0
-        self.excess_repeated_notes = 0
-        self.pitch_loop_just_one_pitch = 0
+        self._unable_to_choose_pitch = 0
+        self._excess_alternations = 0
+        self._excess_repeated_notes = 0
+        self._pitch_loop_just_one_pitch = 0
+        self._total_count = 0
+        self._max_count = 1000  # TODO setting
         self.num_attempts = er.initial_pattern_attempts
+
+    def _update_count(self):
+        self._total_count += 1
+        if self._total_count >= self._max_count:
+            raise self
+
+    def no_available_pcs(self):
+        self._no_available_pcs += 1
+        self._update_count()
+
+    def no_available_pitches(self):
+        self._no_available_pitches += 1
+        self._update_count()
+
+    def exceeding_max_interval(self):
+        self._exceeding_max_interval += 1
+        self._update_count()
+
+    def forbidden_parallels(self):
+        self._forbidden_parallels += 1
+        self._update_count()
+
+    def unable_to_choose_pitch(self):
+        self._unable_to_choose_pitch += 1
+        self._update_count()
+
+    def excess_alternations(self, count=1):
+        self._excess_alternations += count
+
+    def excess_repeated_notes(self, count=1):
+        self._excess_repeated_notes += count
+
+    def pitch_loop_just_one_pitch(self, count=1):
+        self._pitch_loop_just_one_pitch += count
 
     def __str__(self):
 
@@ -65,16 +101,16 @@ class AvailablePitchMaterialsError(Exception):
             "        Pitch loop just one pitch:     {:3}\n"
             "".format(
                 self.num_attempts,
-                self.no_available_pcs,
-                self.no_available_pitches,
-                self.exceeding_max_interval,
+                self._no_available_pcs,
+                self._no_available_pitches,
+                self._exceeding_max_interval,
                 # self.max_interval_str,
-                self.forbidden_parallels,
+                self._forbidden_parallels,
                 self.forbidden_parallels_str,
-                self.unable_to_choose_pitch,
-                self.excess_alternations,
-                self.excess_repeated_notes,
-                self.pitch_loop_just_one_pitch,
+                self._unable_to_choose_pitch,
+                self._excess_alternations,
+                self._excess_repeated_notes,
+                self._pitch_loop_just_one_pitch,
             )
         )
 
@@ -83,13 +119,13 @@ class AvailablePitchMaterialsError(Exception):
             "No PCs:{:<3} No Ps:{:<3} Max int:{:<3} = ints:{:<3} Alts:{:<3} "
             "Reps:{:<3} Loop:{:<3}"
             "".format(
-                self.no_available_pcs,
-                self.no_available_pitches,
-                self.exceeding_max_interval,
-                self.forbidden_parallels,
-                self.excess_alternations,
-                self.excess_repeated_notes,
-                self.pitch_loop_just_one_pitch,
+                self._no_available_pcs,
+                self._no_available_pitches,
+                self._exceeding_max_interval,
+                self._forbidden_parallels,
+                self._excess_alternations,
+                self._excess_repeated_notes,
+                self._pitch_loop_just_one_pitch,
             )
         )
         return out

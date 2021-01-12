@@ -115,6 +115,7 @@ class Rhythm(RhythmicDict):
             )
             self.min_dur = new_min_dur
         if self.rhythm_len <= self.min_dur * self.num_notes:
+            # TODO move this notice outside of the initial_pattern loop
             print(
                 "Notice: 'cont_rhythms' will have no effect in voice "
                 f"{self.voice_i} because "
@@ -709,7 +710,9 @@ def generate_rhythm1(er, voice_i, prev_rhythms=()):
             leader_i=leader_i,
             leader_durs_at_attacks=leader_durs_at_attacks,
         )
-
+        if er.cont_rhythms == "grid":
+            rhythm = er.grid.return_varied_rhythm(er, attacks, voice_i)
+            return rhythm
         _add_comma(er, voice_i, attacks)
 
         _fit_rhythm_to_pattern(er, voice_i, attacks)
@@ -717,7 +720,7 @@ def generate_rhythm1(er, voice_i, prev_rhythms=()):
         rhythm = Rhythm(er, voice_i)
         rhythm.data = attacks
         return rhythm
-
+    # LONGTERM consolidate this code with above (a lot of duplication!)
     attack_list = _get_attack_list(er, voice_i, attack_positions, available)
 
     attacks, durs = _get_attack_dict_and_durs_to_next_attack(
@@ -743,6 +746,7 @@ def update_pattern_voice_leading_order(er, rhythms):
     if er.cont_rhythms != "none":
         er.num_notes_by_pattern = [
             len(rhythms[voice_i].rel_attacks[0])
+            # len(rhythms[voice_i].attack_times[0])
             for voice_i in range(er.num_voices)
         ]
         # The next lines seem a little kludgy, it would be nice to
@@ -963,7 +967,9 @@ def rhythms_handler(er):
         class EmptyRhythmsError(Exception):
             pass
 
-        raise EmptyRhythmsError("No notes in any rhythms!")
+        raise EmptyRhythmsError(
+            "No notes in any rhythms! This is a bug in the script."
+        )
 
     update_pattern_voice_leading_order(er, rhythms)
 
@@ -1019,7 +1025,3 @@ def rest_before_next_note(rhythm, attack, min_rest_len):
         return True
 
     return False
-
-
-if __name__ == "__main__":
-    generate_rhythm1(fractions.Fraction(1, 4), 4)

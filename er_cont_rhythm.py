@@ -4,7 +4,7 @@ import math
 
 import numpy as np
 
-import er_notes
+import er_rhythm  # circular import :( TODO fix
 
 RANDOM_CARD = 200
 COMMA = 10 ** -5
@@ -210,7 +210,7 @@ def truncate_or_extend(rhythm):
 
 
 def get_rhythm(er, voice_i):
-    rhythm = er_notes.ContinuousRhythm(er, voice_i)
+    rhythm = er_rhythm.ContinuousRhythm(er, voice_i)
     if rhythm.num_notes == 0:
         print(f"Notice: voice {voice_i} is empty.")
         return rhythm
