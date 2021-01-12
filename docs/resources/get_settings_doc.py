@@ -1,12 +1,12 @@
-"""Retrieve docstring from midani_settings.py and convert to settings.md
+"""Retrieve docstring from er_settings.py and convert to settings.md
 """
-# TODO update for effrhy
 import re
 import os
 
-SCRIPT_PATH = os.path.dirname((os.path.realpath(__file__)))
-OUT_PATH = os.path.join(SCRIPT_PATH, "../settings.md")
-PREAMBLE = """# Midani settings
+SCRIPT_DIR = os.path.dirname((os.path.realpath(__file__)))
+IN_PATH = os.path.join(SCRIPT_DIR, "../../er_settings.py")
+OUT_PATH = os.path.join(SCRIPT_DIR, "../settings.md")
+PREAMBLE = """# Efficient rhythms settings
 
 """
 
@@ -20,17 +20,16 @@ def get_code_block_replacement(code_block):
 
 
 def get_docstring():
-    with open(
-        os.path.join(SCRIPT_PATH, "../../src/midani_settings.py"), "r"
-    ) as inf:
+    with open(IN_PATH, "r") as inf:
         docstring = re.search(
-            r'^class Settings:\s+"""(.*?)"""',
+            r'^class ERSettings:\s+"""(.*?)"""',
             inf.read(),
             re.MULTILINE + re.DOTALL,
         )[1]
 
     kwarg_pattern = re.compile(r"^ {8}(\w+(, \w+)*):", flags=re.MULTILINE)
     docstring = re.sub(kwarg_pattern, r"- **\1**:", docstring)
+    # TODO
     # As a hack to avoid subkwarg_pattern picking up dictionary keys in
     # code-blocks, I add an extra space before the colon in these items
     # in the docstring
@@ -57,36 +56,36 @@ def get_docstring():
     return docstring
 
 
-def get_readme():
-    with open(os.path.join(SCRIPT_PATH, "../../README.md"), "r") as inf:
-        readme = re.search(
-            r"## Configuration\n(.*?)##", inf.read(), re.MULTILINE + re.DOTALL
-        )[1]
-    readme = re.sub(
-        r"^.*settings\.md.*$",
-        r"See also the general documentation in README.md\n\n## General usage",
-        readme,
-        flags=re.MULTILINE,
-    )
-    readme = re.sub(
-        r"^(.*example.*)$",
-        r"## Example\n\n\1",
-        readme,
-        count=1,
-        flags=re.MULTILINE,
-    )
-
-    return readme
+# def get_readme():
+#     with open(os.path.join(SCRIPT_DIR, "../../README.md"), "r") as inf:
+#         readme = re.search(
+#             r"## Configuration\n(.*?)##", inf.read(), re.MULTILINE + re.DOTALL
+#         )[1]
+#     readme = re.sub(
+#         r"^.*settings\.md.*$",
+#         r"See also the general documentation in README.md\n\n## General usage",
+#         readme,
+#         flags=re.MULTILINE,
+#     )
+#     readme = re.sub(
+#         r"^(.*example.*)$",
+#         r"## Example\n\n\1",
+#         readme,
+#         count=1,
+#         flags=re.MULTILINE,
+#     )
+#
+#     return readme
 
 
 def main():
-    readme = get_readme()
+    # readme = get_readme()
     docstring = get_docstring()
 
     with open(OUT_PATH, "w") as outf:
         outf.write(PREAMBLE)
-        outf.write(readme)
-        outf.write("## Detailed settings\n\n")
+        # outf.write(readme)
+        # outf.write("## Detailed settings\n\n")
         outf.write(docstring)
 
 

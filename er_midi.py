@@ -442,7 +442,7 @@ def write_tempi(er, mf, total_len):
         tempo_i += 1
 
 
-def write_er_midi(er, super_pattern, midi_fname, reverse_tracks=True):
+def write_er_midi(er, super_pattern, reverse_tracks=True):
     """Write a midi file with an ERSettings class.
     """
     time = 0
@@ -467,6 +467,7 @@ def write_er_midi(er, super_pattern, midi_fname, reverse_tracks=True):
         # LONGTERM infer ticks_per_quarternote intelligently from min_dur?
         ticks_per_quarternote=3200,
     )
+    midi_fname = er.output_path
 
     write_track_names(er, mf, midi_fname)
 
@@ -605,11 +606,11 @@ def add_track(track_i, track, midi_settings, mf):
             )
 
 
-def write_midi(super_pattern, midi_fname, midi_settings, abbr_track_names=True):
+def write_midi(super_pattern, midi_settings, abbr_track_names=True):
     """Write a midi file, without an associated ERSettings class (e.g.,
     if processing an external midi file).
     """
-
+    midi_fname = midi_settings.output_path
     mf = midiutil.MidiFile.MIDIFile(
         midi_settings.num_tracks, adjust_origin=True
     )

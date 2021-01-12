@@ -6,6 +6,7 @@ import collections
 import fractions
 import math
 import numbers
+import os
 import random
 import typing
 import warnings
@@ -709,10 +710,19 @@ def read_in_settings(user_settings, settings_class):
     return settings_class(**user_settings)
 
 
-def preprocess_settings(user_settings, random_settings=False):
+def preprocess_settings(user_settings, script_path, random_settings):
 
     er = read_in_settings(user_settings, er_settings.ERSettings)
     er.seed = er_misc_funcs.set_seed(er.seed)
+
+    if not os.path.isabs(er.output_path):
+        er.output_path = os.path.join(script_path, er.output_path)
+
+    if not os.path.exists(os.path.dirname(er.output_path)):
+        os.makedirs(os.path.dirname(er.output_path))
+
+    if not er.overwrite and os.path.exists(er.output_path):
+        er.output_path = er_misc_funcs.increment_fname(er.output_path)
 
     if random_settings:
         randomize = er_randomize.ERRandomize(er)

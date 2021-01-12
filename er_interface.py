@@ -16,8 +16,8 @@ import er_filters
 import er_midi
 import er_misc_funcs
 import er_output_notation
-
 import er_prob_funcs
+import er_settings
 
 
 SOUND_FONT = "/Users/Malcolm/Music/SoundFonts/GeneralUser GS 1.471/GeneralUser_GS_v1.471.sf2"
@@ -79,32 +79,6 @@ def parse_cmd_line_args():
     args = parser.parse_args()
 
     return args
-
-
-def get_changed_midi_path(midi_path):
-    dirname, basename = os.path.split(midi_path)
-    if not dirname:
-        dirname = os.getcwd()
-    no_ext = basename[:-4]
-    prev_fnames = []
-    for fname in os.listdir(dirname):
-        if fname.startswith(no_ext) and fname != basename:
-            prev_fnames.append(fname)
-    prev_num_strs = [
-        prev_fname[:-4].replace(no_ext + "_", "") for prev_fname in prev_fnames
-    ]
-    prev_nums = []
-    for prev_num_str in prev_num_strs:
-        try:
-            prev_nums.append(int(prev_num_str))
-        except ValueError:
-            pass
-    if prev_nums:
-        num = max(prev_nums) + 1
-    else:
-        num = 1
-    new_basename = no_ext + "_" + str(num).zfill(2) + ".mid"
-    return os.path.join(dirname, new_basename)
 
 
 def playback_midi(midi_player, breaker, midi_path):
@@ -706,7 +680,7 @@ def update_midi_type(er):
         print(prompt_str)
 
 
-def input_loop(er, super_pattern, midi_player, midi_path, midi_settings=None):
+def input_loop(er, super_pattern, midi_player):
     """Run the user input loop for efficient_rhythms.py
     """
 
@@ -728,7 +702,7 @@ def input_loop(er, super_pattern, midi_player, midi_path, midi_settings=None):
             "".format(
                 "    'c' to change writing of voices "
                 "and choirs to midi tracks\n"
-                if er
+                if isinstance(er, er_settings.ERSettings)
                 else "",
                 "'s' to stop playback"
                 if playback_on
@@ -737,6 +711,10 @@ def input_loop(er, super_pattern, midi_player, midi_path, midi_settings=None):
         )
 
     playback_on = True
+    if isinstance(er, er_settings.ERSettings) or os.path.exists(er.output_path):
+        midi_path = er.output_path
+    else:
+        midi_path = er.original_path
 
     answer = ""
 
@@ -766,25 +744,26 @@ def input_loop(er, super_pattern, midi_player, midi_path, midi_settings=None):
                 super_pattern, active_changers, changer_counter
             )
             if changed_pattern is not None and active_changers:
-                # LONGTERM allow specification of transformers from external settings files
+                # LONGTERM allow specification of transformers from external
+                #    settings files
                 changer_midi_i += 1
-                changed_midi_path = get_changed_midi_path(midi_path)
-                if er:
+                if isinstance(er, er_settings.ERSettings):
+                    current_midi_path = er_misc_funcs.get_changed_midi_path(
+                        midi_path
+                    )
                     er_midi.write_er_midi(
-                        er, changed_pattern, changed_midi_path
+                        er, changed_pattern, current_midi_path
                     )
                 else:
-                    er_midi.write_midi(
-                        changed_pattern, changed_midi_path, midi_settings
-                    )
-                current_midi_path = changed_midi_path
+                    current_midi_path = er.output_path
+                    er_midi.write_midi(changed_pattern, er)
                 current_pattern = changed_pattern
             else:
                 current_midi_path = midi_path
                 current_pattern = super_pattern
             answer = ""
 
-        if answer == "c":
+        if answer == "c" and isinstance(er, er_settings.ERSettings):
             update_midi_type(er)
             er_midi.write_er_midi(er, current_pattern, current_midi_path)
 
@@ -794,6 +773,7 @@ def input_loop(er, super_pattern, midi_player, midi_path, midi_settings=None):
         elif answer == "v":
             run_verovio(current_pattern, current_midi_path)
 
+        # TODO debug flag
         elif answer == "p":
             print(current_pattern.head())
 

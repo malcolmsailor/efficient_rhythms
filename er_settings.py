@@ -27,11 +27,22 @@ class ERSettings:
     `harmony_len`. I refer to these as "looping sequences".
 
 
-    TODO "root" below doesn't necessarily strictly mean root, in the sense of
-        a root position chord. Perhaps I should find a better word.
+    Note that "root" below doesn't strictly mean root, in music-theoretic sense.
+    See `root_pcs` below for more explanation.
 
     Keyword args:
         seed: int. Seed to pass to random number generators.
+        output_path: str. Path for output midi file. If a relative path, will
+            be created relative to the script directory. If any folder in the
+            path does not exist, it will be created.
+            Default: "output_midi/effrhy.mid"
+        overwrite: bool. If False, if a file named `output_path` already
+            exists, the pathname will be incremented with a numeric suffix
+            before the extension until it does not exist. E.g., if
+            `output_path == 'effrhy.mid'` but `effrhy.mid` already exists,
+            `effrhy_001.mid` will be created; if `effrhy_001.mid` already
+            exists, `effrhy_002.mid` will be created.
+            Default: False
         tet: int. Specifies equal division of the octave.
             Default: 12.
         num_voices: int. The number of "voices" (or "parts") to be created.
@@ -143,7 +154,7 @@ class ERSettings:
             invoked with "-r" or "--random", in which case any attribute names
             found in this list will be excluded from randomization. (Although
             note that not all attributes are randomized in any case; see the
-            documentation for more info.) TODO
+            documentation for more info.)
             Default: ()
         voice_leading_attempts: integer. Number of attempts to make at
             constructing voice-leading pattern before giving up or asking whether
@@ -229,13 +240,13 @@ class ERSettings:
         Midi settings
         =============
 
-        voices_separate_tracks: bool. If True, different "voices" in the
+        voices_separate_tracks: bool. If True, different "voices" in the score
             are written to separate tracks in the output midi file.
             Default: True
-        choirs_separate_tracks: bool. If True, different "choirs" in the
+        choirs_separate_tracks: bool. If True, different "choirs" in the score
             are written to separate tracks in the output midi file.
             Default: True
-        choirs_separate_channels: bool. If True, different "choirs" in the
+        choirs_separate_channels: bool. If True, different "choirs" in the score
             are assigned to separate channels in the output midi file (up to
             the maximum of 16 channels).
             Default: True
@@ -383,6 +394,11 @@ class ERSettings:
 
         Chord-tone settings
         ===================
+
+        Parameters that begin "force_chord_tone" (though not
+        "force_non_chord_tone") apply regardless of whether chord_tone_selection
+        is true. Other chord_tone settings modify the behaviour activated
+        by chord_tone_selection.
 
         chord_tone_and_root_disable: bool. If True, disables all chord-tone and root
             specific behaviour. Specifically, disables `chord_tone_selection`,
@@ -1059,14 +1075,6 @@ class ERSettings:
             pattern, each super pattern will feature a new sequence of
             transpositions.
 
-
-
-
-    Attributes:
-        attribute_name: attribute_description
-
-    Methods:
-        method_name: method_description
     """
 
     def get(self, i, *params):
@@ -1089,6 +1097,8 @@ class ERSettings:
 
     # LONGTERM type checking? (is there a library that will perform this automatically?)
     seed: int = None
+    output_path: str = "output_midi/effrhy.mid"
+    overwrite: bool = False
 
     tet: int = 12
 
@@ -1213,12 +1223,6 @@ class ERSettings:
 
     ###################################################################
     # Chord tones settings
-    #
-    # Parameters that begin "force_chord_tone" (though not
-    #   "force_non_chord_tone") apply regardless of whether chord_tone_selection
-    #   is true. Other chord_tone settings modify the behaviour activated
-    #   by chord_tone_selection.
-    # TODO move above note?
 
     chord_tone_and_root_disable: bool = False
     chord_tone_selection: bool = True
@@ -1270,6 +1274,7 @@ class ERSettings:
     # the subsequent voice-leading (LONGTERM: fix)
     max_repeated_notes: int = 1
     max_alternations: typing.Union[int, typing.Sequence[int]] = 2
+    # LONGTERM: prefer_alternations bool
     prohibit_parallels: typing.Sequence[numbers.Number] = (er_constants.OCTAVE,)
     antiparallels: bool = True
 
@@ -1423,6 +1428,3 @@ class ERSettings:
     # Randomization settings
 
     exclude_from_randomization: typing.Sequence[str] = ()
-
-    # End of settings
-    ###################################################################

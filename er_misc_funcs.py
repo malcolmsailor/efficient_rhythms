@@ -539,50 +539,111 @@ def binary_search(num_list, num, not_found="none"):
 #             lower_i = i
 
 
-def return_fname_path(script_name, script_dir):
-    """Construct the name of the midi file to generate (incrementing
-    the integer at the end until getting to a filename that
-    does not exist) as well as the dir within which to store it
-    (which will be of the form [script_dir]/script_name + "_midi").
-    """
+def get_changed_midi_path(midi_path):
+    root, ext = os.path.splitext(midi_path)
+    return increment_fname(root + "_00" + ext, n_digits=2)
+    # if not dirname:
+    #     dirname = os.getcwd()
 
-    script_str = os.path.splitext(script_name)[0]
+    # no_ext = os.path.splitext(basename)[0]
+    # prev_fnames = []
+    # for fname in os.listdir(dirname):
+    #     if fname.startswith(no_ext) and fname != basename:
+    #         prev_fnames.append(fname)
+    # prev_num_strs = [
+    #     prev_fname[:-4].replace(no_ext + "_", "") for prev_fname in prev_fnames
+    # ]
+    # prev_nums = []
+    # for prev_num_str in prev_num_strs:
+    #     try:
+    #         prev_nums.append(int(prev_num_str))
+    #     except ValueError:
+    #         pass
+    # if prev_nums:
+    #     num = max(prev_nums) + 1
+    # else:
+    #     num = 1
+    # new_basename = no_ext + "_" + str(num).zfill(2) + ".mid"
+    # return os.path.join(dirname, new_basename)
 
-    fname_dir = os.path.join(script_dir, script_str + "_midi")
-    if not os.path.exists(fname_dir):
-        os.mkdir(fname_dir)
-    # if the script name ends with a digit, append an underscore
-    # to visually separate the file number from the script name
-    if script_str[-1].isdigit():
-        script_str = script_str + "_"
 
-    # find the existing file with the highest number
-    max_fnum = 0
-    for existing_f in os.listdir(fname_dir):
-        if existing_f.startswith(script_str) and existing_f.endswith(".mid"):
-            digits = []
-            digits_on = False
-            for char in existing_f[len(script_str) :]:
-                if char.isdigit():
-                    digits.append(char)
-                    digits_on = True
-                elif digits_on:
-                    break
-            digits = "".join(digits)
-            try:
-                fnum = int(digits)
+def increment_fname(
+    path, n_digits=3, overwrite=False, allow_increase_n_digits=True
+):
+    def _sub(path, n_digits):
+        def _get_int_at_end_of_string(string):
+            i = 0
+            while True:
+                try:
+                    int(string[-(i + 1) :])
+                except ValueError:
+                    if i == 0:
+                        return None, string, n_digits
+                    return int(string[-i:]), string[:-i], i
+                i += 1
 
-                # fnum = int(
-                #     existing_f.replace(script_str, "").replace(".mid", ""))
-            except ValueError:
-                pass
-            if fnum > max_fnum:
-                max_fnum = fnum
+        root, ext = os.path.splitext(path)
+        count, base_str, n_digits = _get_int_at_end_of_string(root)
+        if count is None or count < 0:
+            count = 0
+        elif math.log10(count + 1) >= n_digits:
+            if allow_increase_n_digits:
+                n_digits += 1
+            else:
+                raise NotImplementedError("Too many digits to increment")
+        i_str = str(count + 1).zfill(n_digits)
+        return "".join([base_str, i_str, ext])
 
-    fname = script_str + str(max_fnum + 1).zfill(3) + ".mid"
-    fname_path = os.path.join(fname_dir, fname)
+    while True:
+        path = _sub(path, n_digits)
+        if overwrite or not os.path.exists(path):
+            return path
 
-    return fname_path, fname_dir
+
+# def return_fname_path(script_name, script_dir):
+#     """Construct the name of the midi file to generate (incrementing
+#     the integer at the end until getting to a filename that
+#     does not exist) as well as the dir within which to store it
+#     (which will be of the form [script_dir]/script_name + "_midi").
+#     """
+#
+#     script_str = os.path.splitext(script_name)[0]
+#
+#     fname_dir = os.path.join(script_dir, script_str + "_midi")
+#     if not os.path.exists(fname_dir):
+#         os.mkdir(fname_dir)
+#     # if the script name ends with a digit, append an underscore
+#     # to visually separate the file number from the script name
+#     if script_str[-1].isdigit():
+#         script_str = script_str + "_"
+#
+#     # find the existing file with the highest number
+#     max_fnum = 0
+#     for existing_f in os.listdir(fname_dir):
+#         if existing_f.startswith(script_str) and existing_f.endswith(".mid"):
+#             digits = []
+#             digits_on = False
+#             for char in existing_f[len(script_str) :]:
+#                 if char.isdigit():
+#                     digits.append(char)
+#                     digits_on = True
+#                 elif digits_on:
+#                     break
+#             digits = "".join(digits)
+#             try:
+#                 fnum = int(digits)
+#
+#                 # fnum = int(
+#                 #     existing_f.replace(script_str, "").replace(".mid", ""))
+#             except ValueError:
+#                 pass
+#             if fnum > max_fnum:
+#                 max_fnum = fnum
+#
+#     fname = script_str + str(max_fnum + 1).zfill(3) + ".mid"
+#     fname_path = os.path.join(fname_dir, fname)
+#
+#     return fname_path, fname_dir
 
 
 def get_prev_voice_indices(score, start_time, dur):

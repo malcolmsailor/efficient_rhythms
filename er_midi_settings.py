@@ -1,15 +1,20 @@
 import collections
 import dataclasses
 import numbers
+import os
 import typing
 
+import er_misc_funcs
 import er_tuning
 
-
+# User probably won't need to access these settings
 @dataclasses.dataclass
 class MidiSettings:
 
     num_tracks: int = None  # Not to be set by user, will be overwritten later
+    _output_path: str = None  # Not to be set by user, will be overwritten later
+    _original_path: str = None  # Not to be set by user, will be overwritten later
+    output_dir: str = None  #
     tet: int = 12
     time_sig: typing.Tuple[int, int] = None
     max_denominator: int = 8192
@@ -31,3 +36,28 @@ class MidiSettings:
 
     def num_tracks_from(self, score):
         self.num_tracks = score.num_voices
+
+    @property
+    def original_path(self):
+        return self._original_path
+
+    @original_path.setter
+    def original_path(self, original_path):
+        self._original_path = original_path
+        if self.output_dir is None:
+            self.output_dir = os.path.dirname(original_path)
+
+    @property
+    def output_path(self):
+        if self._output_path is None or os.path.exists(self._output_path):
+            self._output_path = er_misc_funcs.get_changed_midi_path(
+                os.path.join(
+                    self.output_dir, (os.path.basename(self._original_path)),
+                )
+            )
+        return self._output_path
+
+    # def output_path_from(self, midi_in):
+    #     self.original_path = midi_in
+    #     if self.output_dir is None:
+    #         self.output_dir = os.path.dirname(midi_in)
