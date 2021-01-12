@@ -14,7 +14,7 @@ import er_preprocess  # pylint: disable=wrong-import-position
 
 def test_many_seeds():
     num_seeds = 100
-    start_seed = 150
+    start_seed = 350
     bad_seeds = []
     excs = []
     for i in range(start_seed, start_seed + num_seeds):

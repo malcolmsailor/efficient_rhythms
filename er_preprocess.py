@@ -550,8 +550,12 @@ def rhythm_preprocessing(er):
         rhythm_len = er.rhythm_len[voice_i]
         density = er.attack_density[voice_i]
         attack_div = er.attack_subdivision[voice_i]
-        sub_subdiv = er.sub_subdiv_props[voice_i]
-        num_div = int(rhythm_len / attack_div * len(sub_subdiv))
+        len_sub_subdiv = (
+            len(er.sub_subdiv_props[voice_i])
+            if er.cont_rhythms == "none"
+            else 1
+        )
+        num_div = int(rhythm_len / attack_div * len_sub_subdiv)
         if isinstance(density, int):
             if density > num_div:
                 print(

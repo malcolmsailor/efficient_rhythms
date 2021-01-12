@@ -120,7 +120,7 @@ class Rhythm(RhythmicDict):
                 "Notice: 'cont_rhythms' will have no effect in voice "
                 f"{self.voice_i} because "
                 "'min_dur' is the maximum value compatible with "
-                "'rhythm_len', 'attack_subdivision', and 'sub_subdivisions'. "
+                "'rhythm_len' and 'attack_subdivision'. "
                 "To allow 'cont_rhythms' to have an effect, reduce 'min_dur' "
                 f"to less than {self.min_dur}"
             )
@@ -855,11 +855,7 @@ class Grid(ContinuousRhythmicObject):
         #   er_preprocess.py. It would also be possible to use num_notes instead,
         #   with a somewhat different result.
         num_divs = [
-            int(
-                er.rhythm_len[voice_i]
-                / er.attack_subdivision[voice_i]
-                * len(er.sub_subdiv_props[voice_i])
-            )
+            int(er.rhythm_len[voice_i] / er.attack_subdivision[voice_i])
             for voice_i in range(er.num_voices)
         ]
         # Although "num_notes" is perhaps not the best name for the next
@@ -880,7 +876,7 @@ class Grid(ContinuousRhythmicObject):
             print(
                 "Notice: 'cont_rhythms' will have no effect because "
                 "'min_dur' is the maximum value compatible with "
-                "'rhythm_len', 'attack_subdivision', and 'sub_subdivisions'. "
+                "'rhythm_len' and 'attack_subdivision'. "
                 "To allow 'cont_rhythms' to have an effect, reduce 'min_dur' "
                 f"to less than {self.min_dur}"
             )

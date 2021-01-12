@@ -47,7 +47,7 @@ class AvailablePitchMaterialsError(Exception):
         self._excess_repeated_notes = 0
         self._pitch_loop_just_one_pitch = 0
         self._total_count = 0
-        self._max_count = 1000  # TODO setting
+        self._max_count = er.max_available_pitch_materials_deadends
         self.num_attempts = er.initial_pattern_attempts
 
     def _update_count(self):

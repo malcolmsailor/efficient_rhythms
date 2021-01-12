@@ -5,7 +5,8 @@ from fractions import Fraction
 
 import er_constants
 
-
+# INTERNET_TODO how to allow numpy arrays in sequence annotations?
+#   (e.g., typing.Sequence)
 @dataclasses.dataclass
 class ERSettings:
     """summary
@@ -16,7 +17,7 @@ class ERSettings:
     voice. Importantly, however, it is possible to provide a sequence that is
     shorter than the number of voices. In this case, the sequence will be
     looped through as many times as is necessary. For example,
-    if `num_voices = 5`, but `len(pattern_len) = 2`, voices 0, 2, and 4 will
+    if `num_voices == 5`, but `len(pattern_len) == 2`, voices 0, 2, and 4 will
     be assigned the first value in `pattern_len`, while voices 1 and 3 will be
     assigned the second value. (The voices are zero-indexed.)
 
@@ -63,7 +64,7 @@ class ERSettings:
             length; if a sequence, sets the length for each voice individually.
             The use of `rhythm_len` is to make repeated rhythmic patterns that are
             shorter than `pattern_len`. If `rhythm_len` does not divide
-            `pattern_len` evenly (e.g., if `rhythm_len = 3` and `pattern_len = 8`),
+            `pattern_len` evenly (e.g., if `rhythm_len == 3` and `pattern_len == 8`),
             then the final repetition of `rhythm_len` will be truncated. Similarly,
             if `rhythm_len` is longer than `pattern_len`, it will be truncated; in
             this case, one may as well not pass any value of `rhythm_len`, since in
@@ -137,6 +138,13 @@ class ERSettings:
             constructing initial pattern before giving up or asking whether
             to make more attempts.
             Default: 50
+        exclude_from_randomization: sequence of strings. A list of
+            attribute names of this class. Only has an effect when the script is
+            invoked with "-r" or "--random", in which case any attribute names
+            found in this list will be excluded from randomization. (Although
+            note that not all attributes are randomized in any case; see the
+            documentation for more info.) TODO
+            Default: ()
         voice_leading_attempts: integer. Number of attempts to make at
             constructing voice-leading pattern before giving up or asking whether
             to make more attempts.
@@ -145,6 +153,11 @@ class ERSettings:
             `voice_leading_attempts` are made without success, script will
             prompt user whether to try again.
             Default: False
+        max_available_pitch_materials_deadends: integer. Sets the maximum number
+            of "deadends" the recursive algorithm for building the initial
+            pattern can reach before it will be aborted.
+            Default: 1000
+
 
         Scale and chord settings
         ========================
@@ -171,9 +184,9 @@ class ERSettings:
             Note that for chords that are not in root position, this will not
             correspond to the root in a music-theoretic sense.
             For example,
-            if `root_pcs = [2, 4]` and `chords = [[0, 4, 7], [0, 3, 8]]`, then
+            if `root_pcs == [2, 4]` and `chords == [[0, 4, 7], [0, 3, 8]]`, then
             the actually realized chords will have pitch-classes `[2, 6, 9]` and
-            `[4, 7, 0]`, respectively (assuming `tet = 12`). (In music-theoretic
+            `[4, 7, 0]`, respectively (assuming `tet == 12`). (In music-theoretic
             terms, the chords will be a D major triad followed by a first-
             inversion C major triad.)
             If `root_pcs` is shorter than `num_harmonies`, it is looped through
@@ -186,10 +199,10 @@ class ERSettings:
         interval_cycle: number, or sequence of numbers. Specifies a root-pc
             interval cycle beginning on the first pitch-class of `root_pcs` (or
             on a randomly chosen pitch-class, if `root_pcs` is not passed).
-            For example, if `root_pcs = [0]`, and
-                - `interval_cycle = 3`, the root pitch-classes will be 0, 3,
+            For example, if `root_pcs == [0]`, and
+                - `interval_cycle == 3`, the root pitch-classes will be 0, 3,
                     6...
-                - `interval_cycle = [3, -2]`, the root pitch-classes will be
+                - `interval_cycle == [3, -2]`, the root pitch-classes will be
                     0, 3, 1, 4, 2...
             (See note above on specifying pitch materials.)
         scales: a sequence of sequences of numbers. Each subsequence specifies
@@ -303,7 +316,7 @@ class ERSettings:
             non-chord tones of the scale.
             Setting this parameter to True will greatly reduce the script's
             ability to find voice-leading solutions (especially in combination
-            with `allow_flexible_voice_leading = False`). Note also that it will
+            with `allow_flexible_voice_leading == False`). Note also that it will
             often lead to at least some relatively large voice-leading
             motions.
             Default: False
@@ -512,7 +525,7 @@ class ERSettings:
           negative, indicates a specific interval (in which case it can be a
           float to indicate a just interval which will be tempered in
           pre-processing---see note above on specifying pitch materials).
-          max_interval sets an inclusive bound (so if `max_interval = -5`,
+          max_interval sets an inclusive bound (so if `max_interval == -5`,
           an interval of 5 semitones is allowed, but 6 is not). `max_interval`,
           like the other similar settings below, applies across rests.
           Default: -er_constants.OCTAVE
@@ -521,7 +534,7 @@ class ERSettings:
           non-chord tones. If given a value of 1, can be used to apply a
           sort of primitive dissonance treatment. It can, however, also
           be given a value *larger* than max_interval, for unusual effects.
-            min_interval sets an inclusive bound (so if `min_interval = -3`,
+            min_interval sets an inclusive bound (so if `min_interval == -3`,
             an interval of 3 semitones is allowed, but 2 is not).
             If not passed, is assigned the value of `max_interval`.
         min_interval: number, or a per-voice sequence of numbers. Works like `max_interval`, but
@@ -604,13 +617,13 @@ class ERSettings:
             per-voice sequence of sequences of numbers.
             If a number, only attack times that are 0 modulo this number will
             have consonance settings applied. For example, if
-            `consonance_modulo = 1`, then every quarter-note beat will have
+            `consonance_modulo == 1`, then every quarter-note beat will have
             consonance settings applied, but pitches *between* these beats
             will not.
             If a sequence of numbers, the sequence of numbers defines a loop
             of attack times at which consonance settings will be applied. The
             largest number in the sequence defines the loop length.
-            For example, if `consonance_modulo = [1, 1.5, 2]`, then consonance
+            For example, if `consonance_modulo == [1, 1.5, 2]`, then consonance
             settings will be applied at beats 0, 1, 1.5, 2, 3, 3.5, 4, 5, etc.
             If a sequence of sequence of numbers, each sub-sequence works as
             defined above, and they are applied to individual voices in a
@@ -713,17 +726,16 @@ class ERSettings:
         attack_density: a float from 0.0 to 1.0, or an int, or a per-voice
             sequence of floats and/or ints.
             Floats represent a proportion of the available attacks to be
-            filled. E.g., if `attack_density = 0.5` and there are 4 possible
+            filled. E.g., if `attack_density == 0.5` and there are 4 possible
             attack times, there will be 2 attacks. (Possible attack times are
             determined by `attack_subdivision`, `sub_subdivisions`, and
             `comma` below).
             Integers represent a literal number of attacks. E.g., if
-            `attack_density = 3`, there will be 3 attacks.
+            `attack_density == 3`, there will be 3 attacks.
             Any negative values will be replaced by a random float between
             0.0 and 1.0.
             Note that there will always be at least one attack in each rhythm,
             regardless of how low `attack_density` is set.
-            TODO how does attack_density work with continuous rhythms?
             Default: 0.5
         dur_density: a float from 0.0 to 1.0, or a per-voice sequence of floats.
             Indicates a proportion of the duration of `rhythm_len` that should
@@ -733,8 +745,14 @@ class ERSettings:
         attack_subdivision: a number, or a per-voice sequence of numbers.
             Indicates the basic "grid" on which attacks can take place,
             measured in quarter notes. For example, if
-            `attack_subdivision = 1/4`, then attacks can occur on every
+            `attack_subdivision == 1/4`, then attacks can occur on every
             sixteenth note subdivision. (But see also `sub_subdivision` below.)
+            If `cont_rhythms == "all"` or `cont_rhythms == "grid"`, then this
+            parameter no longer indicates the grid on which attacks can take
+            place, but it is still used to calculate how many attack positions
+            there should be. Thus, in the case of continuous rhythms, this
+            parameter can be thought of as indicating the average grid duration,
+            rather than the exact grid duration.
             Default: Fraction(1, 4)
         sub_subdivisions: a sequence of ints, or a per-voice sequence of sequences of ints.
             Further subdivides `attack_subdivision`, into parts defined by the
@@ -745,6 +763,7 @@ class ERSettings:
             portion of 2/9. If a sequence of sequences, each sub-sequence
             applies to an individual voice, interpreted in the looping
             per-voice manner described above.
+            Note that this parameter is ignored if `cont_rhythms != "none"`.
         dur_subdivision: a number, or a per-voice sequence of numbers.
             Indicates the "grid" on which note durations are extended (and thus
             on which releases take place), which will be measured from the
@@ -776,7 +795,7 @@ class ERSettings:
             Default: 4
         comma_position: string, int, or sequence of strings and/or ints.  If
             the `rhythm_len` is not divisible by `attack_subdivision`
-            (e.g., `rhythm_len = 3` and `attack_subdivision = 2/3`), then
+            (e.g., `rhythm_len == 3` and `attack_subdivision == 2/3`), then
             there will be a "comma" left over that the attacks do not fill. This
             setting controls the placement of any such comma. Possible values:
               - "end": comma is placed at the end of the rhythm.
@@ -924,7 +943,7 @@ class ERSettings:
             Default: (er_constants.MARIMBA, er_constants.VIBRAPHONE, er_constants.ELECTRIC_PIANO, er_constants.GUITAR,)
         choir_assignments: sequence of ints. Assigns voices to the given index
             in `choirs`. Will be looped through if necessary. For example, if
-            `choir_assignments = [1, 0]`, voice 0 will be assigned to
+            `choir_assignments == [1, 0]`, voice 0 will be assigned to
             `choirs[1]`, voice 1 will be assigned to `choirs[0]`, voice 2 (if
             it exists) will be assigned to `choirs[1]`, and so on.
             By default, or if passed an empty sequence, all voices are assigned to
@@ -1025,10 +1044,10 @@ class ERSettings:
             bound for cumulative transposition, after which segments will
             be transposed up or down an octave. The bound is inclusive. To
             disable, set to 0.
-            Thus, if `cumulative_max_transpose_interval = 6` and
-            `transpose_intervals = 3`, segments will be transposed by 3, 6, -3,
+            Thus, if `cumulative_max_transpose_interval == 6` and
+            `transpose_intervals == 3`, segments will be transposed by 3, 6, -3,
             0, 3, ... semitones. (If, on the other hand,
-            `cumulative_max_transpose_interval = 0`, segments will be transposed
+            `cumulative_max_transpose_interval == 0`, segments will be transposed
             by 3, 6, 9, 12, 15, ...)
         transpose_before_repeat: boolean. If True, then any transpositions are
             applied to the completed "super pattern" *before* repeating it;
@@ -1911,11 +1930,12 @@ class ERSettings:
     initial_pattern_attempts: int = 50
     voice_leading_attempts: int = 50
     ask_for_more_attempts: bool = False
+    max_available_pitch_materials_deadends: int = 1000
 
     ###################################################################
     # Randomization settings
 
-    exclude_from_randomization: typing.Sequence[str] = ()  # TODO doc
+    exclude_from_randomization: typing.Sequence[str] = ()
 
     # End of settings
     ###################################################################

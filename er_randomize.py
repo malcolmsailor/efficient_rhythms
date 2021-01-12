@@ -4,20 +4,25 @@ import random
 import os
 import typing
 
+import numpy as np
+
 from fractions import Fraction
 
 import er_constants
 
 """
 TODO Warnings to address:
-Notice: 'parallel_voice_leading' is not compatible with checking voice-leadings for consonance. Ignoring 'vl_maintain_consonance'
+Notice: 'parallel_voice_leading' is not compatible with checking voice-leadings
+for consonance. Ignoring 'vl_maintain_consonance'
 """
 
 
 class BaseRandomizer:
-    def __init__(self, multiple_values=0, conditions=None):
+    def __init__(self, multiple_values=0, conditions=None, actions=None):
         self.multiple_values = multiple_values
         self.conditions = conditions
+        self.actions = actions
+        self._actions_taken = []
 
     def _eval_bool(self, attr):
         value = getattr(self, attr)
@@ -42,7 +47,7 @@ class BaseRandomizer:
                 action = getattr(obj, action_name)
                 action(action_args)
 
-        for lhs, op, rhs, actions in self.conditions:
+        for lhs, op, rhs, action_indices in self.conditions:
             lhs = getattr(er, lhs)
             if isinstance(rhs, str):
                 try:
@@ -52,8 +57,11 @@ class BaseRandomizer:
                     pass
             op = getattr(lhs, op)
             if op(rhs):
-                for obj, action, args in actions:
-                    _do_action(obj, action, args)
+                for action_i in action_indices:
+                    if action_i in self._actions_taken:
+                        continue
+                    _do_action(*self.actions[action_i])
+                    self._actions_taken.append(action_i)
 
 
 class StrRandomizer(BaseRandomizer):
@@ -100,11 +108,27 @@ class BoolRandomizer(BaseRandomizer):
 
 class Randomizer(BoolRandomizer):
     """
-        conditions: a sequence of tuples of form (lhs, op, rhs, return_value),
+        conditions: a sequence of tuples of form (lhs, op, rhs, action_indices),
             where
-                - lhs and rhs are attributes of the ERSettings object
+                - lhs is an attribute of the ERSettings object
+                - rhs is an attribute of the ERSettings or a literal value
+                    (although note that if rhs is a string, it can't have the
+                    name of an attribute of ERSettings or it will evaluate
+                    to that attribute)
                 - op is the name of a comparison operator (e.g., "__eq__")
-                - actions TODO
+                - action_indices: a tuple of indices into the sequence passed as the
+                    `actions` argument. The reason for passing indices rather
+                    than the actions directly is so that multiple conditions
+                    can trigger the same actions, without the actions
+                    being taken multiple times (which, e.g., would lead to
+                    an error if an attribute is deleted twice).
+        actions: a sequence of tuples of form (obj_name, action_name,
+            action_args), where
+                - obj_name is an attribute of the Randomizer
+                - action_name is either the name of a method of lhs (e.g.,
+                    "__delitem__"), or "setattr" (in which case
+                    setattr(self, obj_name, action_args) is called)
+                - action_args is the argument to action_name
     """
 
     def __init__(
@@ -189,6 +213,9 @@ class Randomizer(BoolRandomizer):
         raise NoLegalValuesError("Unable to choose any legal values")
 
 
+# LONGTERM allow randomizers to have side-effects
+#   e.g., if cont_rhythms randomizes to "all" or "grid", reduce
+#   min_dur if necessary
 class ERRandomize:
     def __init__(self, er):
         self.num_voices = Randomizer(2, 5)
@@ -249,40 +276,21 @@ class ERRandomize:
         self.consonance_treatment = StrRandomizer(
             {"all_attacks": 0.5, "all_durs": 0.25, "none": 0.25}
         )
-        # LONGTERM adjust "min_dur" if necessary so that cont_rhythms
-        #   can work, i.e., addressing this situation:
-        # Notice: 'cont_rhythms' will have no effect because 'min_dur' is the
-        # maximum value compatible with 'rhythm_len', 'attack_subdivision',
-        # and 'sub_subdivisions'. To allow 'cont_rhythms' to have an effect,
-        # reduce 'min_dur' to less than 1/6
         self.cont_rhythms = StrRandomizer(
             {"none": 0.6, "all": 0.2, "grid": 0.2,},
             conditions=(
-                (
-                    "pattern_len",
-                    "__ne__",
-                    "rhythm_len",
-                    (
-                        ("mapping", "__delitem__", "all"),
-                        ("mapping", "__delitem__", "grid"),
-                    ),
-                ),
-                (
-                    "pattern_len",
-                    "__ne__",
-                    1,
-                    (
-                        ("mapping", "__delitem__", "all"),
-                        ("mapping", "__delitem__", "grid"),
-                    ),
-                ),
+                ("pattern_len", "__ne__", "rhythm_len", (0, 1),),
+                ("pattern_len", "__ne__", 1, (0, 1),),
+            ),
+            actions=(
+                ("mapping", "__delitem__", "all"),
+                ("mapping", "__delitem__", "grid"),
             ),
         )
         self.vary_rhythm_consistently = BoolRandomizer(
             0.7,
-            conditions=(
-                ("cont_rhythms", "__eq__", "none", (("toggle", "setattr", 0),)),
-            ),
+            conditions=(("cont_rhythms", "__eq__", "none", (0,)),),
+            actions=(("toggle", "setattr", 0),),
         )
         # LONGTERM allow generation of tuples of voices for following properties
         self.rhythmic_unison = BoolRandomizer(0.3)
@@ -313,20 +321,27 @@ class ERRandomize:
 
     @staticmethod
     def _print_setting(attr, val):
-        def _tuplify(item):
-            if isinstance(item, typing.Sequence) and not isinstance(item, str):
-                return tuple(_tuplify(sub_item) for sub_item in item)
-            return item
+        # TODO get rid of quotes around numbers!
+        def _format_item(item):
+            if isinstance(item, Fraction):
+                return f"{float(item):g}"
+            elif isinstance(item, numbers.Number):
+                return f"{item:g}"
+            elif isinstance(item, str):
+                return f'"{item}"'
+            elif isinstance(item, (typing.Sequence, np.ndarray)):
+                return f"{_tuplify(item)}"
+            else:
+                return f"{item}"
 
-        print(f'"{attr}": ', end="")
-        if isinstance(val, str):
-            print(f'"{str}",')
-        elif isinstance(val, typing.Sequence):
-            print(f"{_tuplify(val)},")
-        elif isinstance(val, numbers.Number):
-            print(f"{val:g},")
-        else:
-            print(f"{val},")
+        def _tuplify(item):
+            if isinstance(
+                item, (typing.Sequence, np.ndarray)
+            ) and not isinstance(item, str):
+                return tuple(_format_item(sub_item) for sub_item in item)
+            return _format_item(item)
+
+        print(f'"{attr}": {_format_item(val)},')
 
     def apply(self, er):
         width = os.get_terminal_size().columns
@@ -337,7 +352,5 @@ class ERRandomize:
                 continue
             val = randomizer(er)
             setattr(er, attr, val)
-            # TODO print in a way that can be easily copied into a dict
-            # TODO print numpy arrays as tuples
-            print(attr + ": ", val)
+            self._print_setting(attr, val)
         print("#" * width)

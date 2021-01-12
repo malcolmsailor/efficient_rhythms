@@ -807,7 +807,7 @@ def _attempt_initial_pattern(
                 )
 
             except er_exceptions.UnableToChoosePitchError as unable_error:
-                # TODO refactor
+                # LONGTERM refactor
                 available_pitch_error.unable_to_choose_pitch()
                 available_pitch_error.excess_alternations(
                     unable_error.too_many_alternations
