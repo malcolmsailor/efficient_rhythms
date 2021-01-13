@@ -5,7 +5,7 @@ import collections
 import copy
 
 import src.er_misc_funcs as er_misc_funcs
-import src.er_tuning as er_tuning
+import src.er_spelling as er_spelling
 
 # constants for writing notes
 DEFAULT_VELOCITY = 96
@@ -43,6 +43,7 @@ class Note:
         self.voice = voice
         # self.finetune (in cents) can be used for arbitrary tuning
         self.finetune = finetune
+        self._spelling = None
 
     def __repr__(self):
         out = (
@@ -57,6 +58,16 @@ class Note:
             )
         )
         return out
+
+    @property
+    def spelling(self):
+        """Returns None if spelling has not been explicitly set first.
+        """
+        return self._spelling
+
+    @spelling.setter
+    def spelling(self, value):
+        self._spelling = value
 
 
 # class RhythmicDict(collections.UserDict):
@@ -341,7 +352,10 @@ class Voice(collections.UserDict):
         self.max_attack_time = 0
         self.voice_i = voice_i
         self.tet = tet
-        self.speller = er_tuning.Speller(tet)
+        try:
+            self.speller = er_spelling.Speller(tet)
+        except ValueError:
+            self.speller = lambda x: x
         self.range = voice_range
         self.sort_up_to_date = 0
         self.reversed_up_to_date = -1
@@ -378,7 +392,7 @@ class Voice(collections.UserDict):
                 "Attack:{:>10.3}  Pitch:{:>5}  Duration:{:>10.3}"
                 "".format(
                     float(note.attack_time),
-                    self.speller.spell(note.pitch),
+                    self.speller(note.pitch),
                     float(note.dur),
                 )
             )
@@ -814,7 +828,7 @@ class Voice(collections.UserDict):
             include_start_time=True,
         )
 
-    def get_passage(self, passage_start_time, passage_end_time):
+    def get_passage(self, passage_start_time, passage_end_time, make_copy=True):
 
         """Returns a single voice of a given passage.
 
@@ -823,6 +837,11 @@ class Voice(collections.UserDict):
         of passage_start_time and exclusive of passage_end_time.
 
         Doesn't change the "voice" attributes of the notes.
+
+        Keyword args:
+            make_copy: if True, returns a copy of the notes in the passage. If
+                False, returns the original notes (so they can be altered in
+                place).
         """
 
         new_voice = Voice(tet=self.tet, voice_range=self.range)
@@ -834,10 +853,12 @@ class Voice(collections.UserDict):
             if attack_time >= passage_end_time:
                 break
             try:
-                new_voice[attack_time].append(copy.copy(note))
+                new_voice[attack_time].append(
+                    copy.copy(note) if make_copy else note
+                )
             except KeyError:
                 new_voice[attack_time] = [
-                    copy.copy(note),
+                    copy.copy(note) if make_copy else note,
                 ]
 
         return new_voice
@@ -1002,7 +1023,7 @@ class Score:
                         "Attack:{:>10.3}  Pitch:{:>5}  Duration:{:>10.3}"
                         "".format(
                             float(note.attack_time),
-                            self.speller.spell(note.pitch),
+                            self.speller(note.pitch),
                             float(note.dur),
                         )
                     )
@@ -1226,18 +1247,25 @@ class Score:
             for voice in self.existing_voices:
                 voice.transpose(interval, start_time, end_time)
 
-    def get_passage(self, passage_start_time, passage_end_time):
+    def get_passage(self, passage_start_time, passage_end_time, make_copy=True):
         """Returns all voices of a given passage as a Score object.
 
         Passage includes notes attacked during the given time interval,
         but not notes sounding but attacked earlier. Passage is inclusive
         of passage_start_time and exclusive of passage_end_time.
+
+        Keyword args:
+            make_copy: if True, returns a copy of the notes in the passage. If
+                False, returns the original notes (so they can be altered in
+                place).
         """
         passage = Score(
             tet=self.tet, harmony_times_dict=self.harmony_times_dict
         )
         for voice in self.voices:
-            new_voice = voice.get_passage(passage_start_time, passage_end_time)
+            new_voice = voice.get_passage(
+                passage_start_time, passage_end_time, make_copy=make_copy
+            )
             passage.add_voice(
                 new_voice, voice_i=voice.voice_i, voice_range=voice.range
             )
@@ -1255,13 +1283,17 @@ class Score:
                 and first_tempo_msg_after_passage_start is None
             ):
                 first_tempo_msg_after_passage_start = msg
-            passage.add_meta_message(copy.deepcopy(msg))
+            passage.add_meta_message(copy.deepcopy(msg) if make_copy else msg)
         if (
             first_tempo_msg_after_passage_start is None
             or first_tempo_msg_after_passage_start.time > passage_start_time
         ):
             try:
-                tempo_msg = copy.deepcopy(last_tempo_msg_before_passage_start)
+                tempo_msg = (
+                    copy.deepcopy(last_tempo_msg_before_passage_start)
+                    if make_copy
+                    else last_tempo_msg_before_passage_start
+                )
                 tempo_msg.time = passage_start_time
                 passage.add_meta_message(tempo_msg)
             except NameError:
@@ -1271,6 +1303,10 @@ class Score:
 
     def get_harmony_times(self, harmony_i):
         return self.harmony_times_dict[harmony_i]
+
+    @property
+    def harmony_times(self):
+        return self._harmony_times
 
     def get_harmony_i(self, attack_time):
         """If passed an attack time beyond the end of the harmonies, will
@@ -1405,6 +1441,7 @@ class Score:
             )
 
         self.harmony_times_dict = {}
+        harmony_times_list = []
         harmony_i = 0
         start_time = 0
         end_time = 0
@@ -1413,11 +1450,13 @@ class Score:
             self.harmony_times_dict[harmony_i] = HarmonyTimes(
                 start_time, end_time
             )
+            harmony_times_list.append((start_time, end_time))
             # self.harmony_times_dict[harmony_i] = (start_time, end_time)
             start_time = end_time
             harmony_i += 1
             if end_time > total_len:
                 break
+        self._harmony_times = tuple(harmony_times_list)
 
     @property
     def all_voice_is(self):
@@ -1445,7 +1484,10 @@ class Score:
         else:
             self.harmony_times_dict = None
         self.tet = tet
-        self.speller = er_tuning.Speller(tet)
+        try:
+            self.speller = er_spelling.Speller(tet)
+        except ValueError:
+            self.speller = lambda x: x
         self.existing_voices = []
         if existing_score:
             for voice in existing_score.voices:

@@ -76,7 +76,7 @@ def test_get_attack_time_and_dur():
             for rhythm in er.rhythms:
                 prev_attack = -10
                 for i in range(1000):
-                    attack, dur = rhythm.get_attack_time_and_dur(i)
+                    attack, _ = rhythm.get_attack_time_and_dur(i)
                     try:
                         assert attack > prev_attack, "attack <= prev_attack"
                     except:  # pylint: disable=bare-except

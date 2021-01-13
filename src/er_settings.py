@@ -607,6 +607,19 @@ class ERSettings:
             attacks, it works as follows: it takes the *last* melodic interval
             in the leader voice, and adds the same melodic interval in the
             follower voice.
+            If True, `prohibit_parallels` is nevertheless respected
+            (specifically, the harmonic interval that would result from forcing
+            parallel motion is checked for membership in `prohibit_parallels`).
+            If moving in parallel with the leader would cause the follower voice
+            to exceed the lowest pitch of its range, it will be moved up an
+            octave; conversely, if it would exceed the highest pitch of its
+            range, it will be moved down an octave. (Either operation may
+            violate `max_interval` or `max_interval_for_non_chord_tones`.) Note
+            that strange effects may result if the voice's range is less than
+            an octave.
+            Note that if the follower has a longer `pattern_len` than the
+            leader, the parallel motion will only last until the conclusion
+            of the leader pattern.
             Default: False
 
 
@@ -1280,12 +1293,10 @@ class ERSettings:
 
     #       MAYBE think about other types of parallel motion (e.g.,
     #       choosing a generic harmonic interval and maintaining it)
-    # MAYBE implement forbidden parallel intervals
     # MAYBE make force_parallel_motion interact with consonance settings better
     force_parallel_motion: typing.Union[
         bool, typing.Dict[typing.Sequence[int], bool]
     ] = False
-    # avoid_octaves_between_parallel_voices = True  # not implemented
 
     ###################################################################
     # Consonance and dissonance settings

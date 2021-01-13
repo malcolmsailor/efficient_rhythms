@@ -203,117 +203,108 @@ def temper_pitch_materials_in_place(item, tet, integers_in_12_tet=False):
     return new_pitch
 
 
-def build_spelling_dict(tet, letter_format="shell"):
-    """Provides a spelling for each pitch-class in given temperament.
-
-    The preferred spelling is determined by proceeding alternately up and down
-    in pythagorean manner from D (the central pitch of the diatonic, when
-    proceeding by 5ths).
-
-    The spelling is always normalized so that the letter C is assigned to
-    pitch_class 0.
-
-    Keyword args:
-        letter_format: either "shell" (C#, Bb, ...) or "kern" (c#, b-, ...)
-    """
-    unnormalized_dict = {}
-
-    counter = 0
-
-    fifth = approximate_just_interval(3 / 2, tet)
-
-    flat_sign = "b" if letter_format == "shell" else "-"
-
-    while len(unnormalized_dict.items()) < tet:
-
-        pitch_class = (counter * fifth) % tet
-
-        accidental = math.floor((3 + counter) / len(ALPHABET))
-        if accidental >= 0:
-            accidental = accidental * "#"
-        else:
-            accidental = -accidental * flat_sign
-
-        letter = ALPHABET[(3 + counter) % len(ALPHABET)]
-
-        if letter + accidental == "c":
-            c_pitch_class = pitch_class
-
-        if letter_format == "shell":
-            letter = letter.upper()
-
-        unnormalized_dict[pitch_class] = letter + accidental
-        if counter > 0:
-            counter = -counter
-        else:
-            counter = -counter + 1
-
-    normalized_dict = {}
-    for key in unnormalized_dict:
-        normalized_dict[(key - c_pitch_class) % tet] = unnormalized_dict[key]
-
-    return normalized_dict
-
-
-class Speller:
-    def __init__(self, tet):
-        self.tet = tet
-        self.spelling_dict = build_spelling_dict(tet)
-
-    def spell(self, item, force_pitches=False):
-        """If pitch-numbers are between 0 and tet, assumes they are
-        pitch-classes. Set force_pitches=True to change this behaviour.
-        """
-
-        def _sub(item):
-            try:
-                iter(item)
-                iterable = True
-            except TypeError:
-                iterable = False
-            if iterable:
-                out = []
-                for sub_item in item:
-                    # I don't know why pylint doesn't like the recursive call
-                    #   to spell
-                    sub_item = spell(  # pylint: disable=undefined-variable
-                        sub_item, self.tet
-                    )
-                    out.append(sub_item)
-                return out
-
-            if not isinstance(item, int) and not item is None:
-                raise TypeError(
-                    "spell() can only take iterables of integers, "
-                    "or None for rests"
-                )
-
-            if item is None:
-                return "Rest"
-
-            if item < 0:
-                return item
-
-            pitch_class = self.spelling_dict[item % self.tet]
-            if not force_pitches and 0 <= item < self.tet:
-                return pitch_class
-
-            octave = item // self.tet - 1
-            return pitch_class + str(octave)
-
-        out = _sub(item)
-
-        if isinstance(out, list):
-            out = er_misc_funcs.flatten(out)
-            out = " ".join(out)
-
-        return out
-
-
-if __name__ == "__main__":
-    pb_tups = [(60, 2000), (61, -1000)]
-    finetunes = [5000, 100000, 20, -5000, -100000, -60]
-
-    for pb_tup in pb_tups:
-        for finetune in finetunes:
-            print(pb_tup, finetune, finetune_pitch_bend_tuple(pb_tup, finetune))
+# def build_spelling_dict(tet, letter_format="shell"):
+#     """Provides a spelling for each pitch-class in given temperament.
+#
+#     The preferred spelling is determined by proceeding alternately up and down
+#     in pythagorean manner from D (the central pitch of the diatonic, when
+#     proceeding by 5ths).
+#
+#     The spelling is always normalized so that the letter C is assigned to
+#     pitch_class 0.
+#
+#     Keyword args:
+#         letter_format: either "shell" (C#, Bb, ...) or "kern" (c#, b-, ...)
+#     """
+#     unnormalized_dict = {}
+#
+#     counter = 0
+#
+#     fifth = approximate_just_interval(3 / 2, tet)
+#
+#     flat_sign = "b" if letter_format == "shell" else "-"
+#
+#     while len(unnormalized_dict.items()) < tet:
+#
+#         pitch_class = (counter * fifth) % tet
+#
+#         accidental = math.floor((3 + counter) / len(ALPHABET))
+#         if accidental >= 0:
+#             accidental = accidental * "#"
+#         else:
+#             accidental = -accidental * flat_sign
+#
+#         letter = ALPHABET[(3 + counter) % len(ALPHABET)]
+#
+#         if letter + accidental == "c":
+#             c_pitch_class = pitch_class
+#
+#         if letter_format == "shell":
+#             letter = letter.upper()
+#
+#         unnormalized_dict[pitch_class] = letter + accidental
+#         if counter > 0:
+#             counter = -counter
+#         else:
+#             counter = -counter + 1
+#
+#     normalized_dict = {}
+#     for key in unnormalized_dict:
+#         normalized_dict[(key - c_pitch_class) % tet] = unnormalized_dict[key]
+#
+#     return normalized_dict
+#
+#
+# class Speller:
+#     def __init__(self, tet):
+#         self.tet = tet
+#         self.spelling_dict = build_spelling_dict(tet)
+#
+#     def spell(self, item, force_pitches=False):
+#         """If pitch-numbers are between 0 and tet, assumes they are
+#         pitch-classes. Set force_pitches=True to change this behaviour.
+#         """
+#
+#         def _sub(item):
+#             try:
+#                 iter(item)
+#                 iterable = True
+#             except TypeError:
+#                 iterable = False
+#             if iterable:
+#                 out = []
+#                 for sub_item in item:
+#                     # I don't know why pylint doesn't like the recursive call
+#                     #   to spell
+#                     sub_item = spell(  # pylint: disable=undefined-variable
+#                         sub_item, self.tet
+#                     )
+#                     out.append(sub_item)
+#                 return out
+#
+#             if not isinstance(item, int) and not item is None:
+#                 raise TypeError(
+#                     "spell() can only take iterables of integers, "
+#                     "or None for rests"
+#                 )
+#
+#             if item is None:
+#                 return "Rest"
+#
+#             if item < 0:
+#                 return item
+#
+#             pitch_class = self.spelling_dict[item % self.tet]
+#             if not force_pitches and 0 <= item < self.tet:
+#                 return pitch_class
+#
+#             octave = item // self.tet - 1
+#             return pitch_class + str(octave)
+#
+#         out = _sub(item)
+#
+#         if isinstance(out, list):
+#             out = er_misc_funcs.flatten(out)
+#             out = " ".join(out)
+#
+#         return out

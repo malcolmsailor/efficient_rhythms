@@ -15,35 +15,7 @@ import os
 import subprocess
 from fractions import Fraction
 
-import src.er_tuning as er_tuning
-
-
-class PitchDict:
-    """For converting pitch-numbers in a given equal temperament to kern
-    letters.
-    """
-
-    def __init__(self, tet):
-        self.tet = tet
-        self.pc_dict = er_tuning.build_spelling_dict(tet, letter_format="kern")
-
-    def to_kern(self, pitch_num):
-        letter = self.pc_dict[pitch_num % self.tet]
-        if letter[0] == "c" and letter[-1] == "-":
-            pitch_num += self.tet
-        temp_num = (pitch_num % self.tet) + (self.tet * 5)
-
-        if temp_num > pitch_num:
-            letter = letter[0].upper() + letter[1:]
-            temp_num -= self.tet
-        while temp_num > pitch_num:
-            letter = letter[0] + letter
-            temp_num -= self.tet
-        while temp_num < pitch_num:
-            letter = letter[0] + letter
-            temp_num += self.tet
-
-        return letter
+import src.er_spelling as er_spelling
 
 
 def dur_to_kern(
@@ -199,7 +171,8 @@ def write_kern(super_pattern, fname):
     unbreakable_value = Fraction(1, 1)
 
     num_voices = len(super_pattern.voices)
-    voices = super_pattern.voices
+    # TODO deal with temperaments that don't work (e.g., 24)
+    speller = er_spelling.GroupSpeller(tet=super_pattern.tet)
 
     voice_ps = [[] for voice_i in range(num_voices)]
     ties = [{} for voice_i in range(num_voices)]
@@ -208,34 +181,41 @@ def write_kern(super_pattern, fname):
     numer, denom = super_pattern.time_sig
     time_sig_dur = numer * 4 / denom
 
-    for voice_i, voice in enumerate(voices):
-        for note in voice:
-            attack = note.attack_time
-            attacks.append(attack)
-
-            # add supplementary attacks for tied notes where necessary
-            # print(note.dur)
-            durs = dur_to_kern(
-                note.dur,
-                offset=attack,
-                unbreakable_value=unbreakable_value,
-                time_sig_dur=time_sig_dur,
+    for harmony_start_time, harmony_stop_time in super_pattern.harmony_times:
+        harmony = super_pattern.get_passage(
+            harmony_start_time, harmony_stop_time, make_copy=False
+        )
+        for voice_i, voice in enumerate(harmony.voices):
+            spelled = speller.pitches(
+                [note.pitch for note in voice], rests="r", letter_format="kern"
             )
-            # print(durs)
-            if len(durs) > 1:
-                ties[voice_i][attack] = (durs[0][1], note.pitch, "start")
-                for i in range(1, len(durs)):
-                    supplementary_attack = sum(
-                        [attack,] + [durs[j][0] for j in range(i)]
-                    )
-                    attacks.append(supplementary_attack)
-                    ties[voice_i][supplementary_attack] = (
-                        durs[i][1],
-                        note.pitch,
-                        "end" if i == len(durs) - 1 else "middle",
-                    )
-            if note.pitch:
-                voice_ps[voice_i].append(note.pitch)
+            voice_ps[voice_i].extend(
+                [note.pitch for note in voice if note.pitch]
+            )
+            for note, spelling in zip(voice, spelled):
+                note.spelling = spelling
+                attack = note.attack_time
+                attacks.append(attack)
+
+                # add supplementary attacks for tied notes where necessary
+                durs = dur_to_kern(
+                    note.dur,
+                    offset=attack,
+                    unbreakable_value=unbreakable_value,
+                    time_sig_dur=time_sig_dur,
+                )
+                if len(durs) > 1:
+                    ties[voice_i][attack] = (durs[0][1], note.spelling, "start")
+                    for i in range(1, len(durs)):
+                        supplementary_attack = sum(
+                            [attack,] + [durs[j][0] for j in range(i)]
+                        )
+                        attacks.append(supplementary_attack)
+                        ties[voice_i][supplementary_attack] = (
+                            durs[i][1],
+                            note.spelling,
+                            "end" if i == len(durs) - 1 else "middle",
+                        )
 
     attacks = sorted(list(set(attacks)))
 
@@ -269,8 +249,6 @@ def write_kern(super_pattern, fname):
 
     measure_counter = 0
 
-    pitch_dict = PitchDict(super_pattern.tet)
-
     for attack in attacks:
         if attack % time_sig_dur == 0:
             # write bar line
@@ -280,13 +258,7 @@ def write_kern(super_pattern, fname):
                 outkern.write(_kern_white_space(voice))
         for voice in range(num_voices):
             if attack in ties[voice]:
-                kern_dur, pitch_num, tie_status = ties[voice][attack]
-                if pitch_num is not None:
-                    kern_letter = pitch_dict.to_kern(pitch_num)
-                    # kern_letter = pitch_num_to_kern(
-                    #     pitch_num, tet=super_pattern.tet)
-                else:
-                    kern_letter = "r"
+                kern_dur, kern_letter, tie_status = ties[voice][attack]
                 if tie_status == "end":
                     outkern.write(kern_dur + kern_letter + "]")
                 elif tie_status == "start":
@@ -300,13 +272,7 @@ def write_kern(super_pattern, fname):
                         "No support for writing polyphonic voices to kern yet"
                     )
                 dur = note.dur
-                pitch_num = note.pitch
-                if pitch_num is not None:
-                    kern_letter = pitch_dict.to_kern(pitch_num)
-                    # kern_letter = pitch_num_to_kern(
-                    #     pitch_num, tet=super_pattern.tet)
-                else:
-                    kern_letter = "r"
+                kern_letter = note.spelling
                 kern_dur = dur_to_kern(dur)
                 if len(kern_dur) != 1:
                     input("Tied note seems to have gotten through!")
@@ -335,6 +301,7 @@ def write_notation(fname, fname_path):
     """
     vrv_in = fname
     vrv_out = vrv_in.replace("krn", "svg")
+    print("Writing svgs...")
     subprocess.run(
         [
             "verovio",
@@ -345,6 +312,7 @@ def write_notation(fname, fname_path):
             "--no-header",
             "--all-pages",
         ],
+        capture_output=True,
         check=False,
     )
 
@@ -378,7 +346,4 @@ def write_notation(fname, fname_path):
         # We could also delete the kern file ("fname"),
         # but for now I'm leaving it for debugging purposes.
         os.remove(file_name)
-
-
-if __name__ == "__main__":
-    print(dur_to_kern(Fraction(1, 3)))
+    os.remove(fname)

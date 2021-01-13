@@ -10,8 +10,7 @@ import warnings
 import numpy as np
 
 import src.er_midi as er_midi
-import src.er_midi as er_midi
-
+import src.er_misc_funcs as er_misc_funcs
 
 RANDOM_CARD = 200
 COMMA = 10 ** -5
@@ -274,7 +273,7 @@ class ContinuousRhythmicObject(RhythmicDict):
             deltas = deltas - deltas.mean()
             attacks = rhythm.rel_attacks[i] + deltas
             rhythm.rel_attacks[i + 1] = self.apply_min_dur_to_rel_attacks(
-                attacks, rhythm
+                attacks
             )
             # LONGTERM vary durations
 

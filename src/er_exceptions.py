@@ -1,5 +1,7 @@
 import collections
 
+import src.er_misc_funcs as er_misc_funcs
+
 
 class UnableToChoosePitchError(Exception):
     def __init__(self):
@@ -175,20 +177,44 @@ class VoiceLeadingError(Exception):
     def __str__(self):
         self.reset_temp_counter()
         counter_strs = []
-        for (prev_harmony_i, harmony_i), count in self.harmony_counter.items():
+        within = False
+        for (
+            (prev_harmony_i, harmony_i),
+            count,
+        ) in self.harmony_counter.items():
+            if prev_harmony_i == harmony_i:
+                within = True
+                counter_strs.append(
+                    er_misc_funcs.add_line_breaks(
+                        f"{count:3} failures within harmony {prev_harmony_i:2}",
+                        indent_type="all",
+                    )
+                )
+            else:
+                counter_strs.append(
+                    er_misc_funcs.add_line_breaks(
+                        f"{count:3} failures between harmony "
+                        f"{prev_harmony_i:2} and harmony {harmony_i:2}",
+                        indent_type="all",
+                    )
+                )
+        if within:
             counter_strs.append(
-                f"   {count:3} failures between harmony {prev_harmony_i:2} "
-                f"and harmony {harmony_i:2}"
+                er_misc_funcs.add_line_breaks(
+                    "Voice-leading failures within harmonies usually occur "
+                    "in conjunction with the use of different values of "
+                    "`pattern_len` "
+                    "in different voices. You might try more permissive "
+                    "settings, like `consonance_treatment = 'none'` or "
+                    "`voice_lead_chord_tones = False`",
+                    indent_type="none",
+                )
             )
         counter_str = "\n".join(counter_strs)
         return (
-            "\nUnable to voice-lead {} attempts at initial_pattern.\n"
-            "Total voice-leading failures: {}\n"
-            "{}\n"
-            "{}".format(
-                self.num_attempts,
-                self.total_failures,
-                str(self.total_failure_counter),
-                counter_str,
-            )
+            f"\nUnable to voice-lead {self.num_attempts} attempts at "
+            "initial pattern.\n"
+            f"Total voice-leading failures: {self.total_failures}\n"
+            f"{str(self.total_failure_counter)}\n"
+            f"{counter_str}"
         )

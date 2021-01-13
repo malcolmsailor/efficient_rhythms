@@ -3,6 +3,7 @@
 import argparse
 import collections
 import copy
+import math
 import os
 import subprocess
 import sys
@@ -10,6 +11,7 @@ import threading
 
 import pygame
 
+# TODO remove mal_str
 from mal_str import make_header
 
 import src.er_filters as er_filters
@@ -18,6 +20,7 @@ import src.er_misc_funcs as er_misc_funcs
 import src.er_output_notation as er_output_notation
 import src.er_prob_funcs as er_prob_funcs
 import src.er_settings as er_settings
+import src.er_tuning as er_tuning
 
 
 SOUND_FONT = "/Users/Malcolm/Music/SoundFonts/GeneralUser GS 1.471/GeneralUser_GS_v1.471.sf2"
@@ -621,6 +624,21 @@ def mac_open(midi_path):
 
 
 def run_verovio(super_pattern, midi_path):
+    fifth = er_tuning.approximate_just_interval(3 / 2, super_pattern.tet)
+    gcd = math.gcd(super_pattern.tet, fifth)
+    if gcd != 1:
+        print(
+            er_misc_funcs.add_line_breaks(
+                "Sorry, output to PDF is only implemented when the greatest "
+                "common denominator of `tet` and the equal-tempered "
+                "approximation to a just fifth in that temperament is 1. "
+                f"Currently, `tet` = {super_pattern.tet} and the fifth is "
+                f"{fifth}, so their GCD is {gcd}.",
+                indent_type="none",
+            )
+        )
+        input("Press <enter> to continue")
+        return
 
     copied_pattern = copy.deepcopy(super_pattern)
     copied_pattern.fill_with_rests(super_pattern.get_total_len())

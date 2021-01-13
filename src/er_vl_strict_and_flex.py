@@ -100,6 +100,8 @@ def voice_lead_pattern_flexibly(
                 )
                 voice_leading = voice_leader.get_next_voice_leading()
             except er_exceptions.NoMoreVoiceLeadingsError:
+                print(prev_harmony_i, new_harmony_i)
+                breakpoint()
                 voice_lead_error.total_failures += 1
                 voice_lead_error.harmony_counter[
                     (prev_harmony_i, new_harmony_i)

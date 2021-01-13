@@ -16,6 +16,7 @@ disable=too-many-instance-attributes,
     too-few-public-methods,
     too-many-public-methods,
     too-many-arguments,
+    too-many-nested-blocks,
     missing-function-docstring,
     duplicate-code,
     too-many-lines,
@@ -29,6 +30,9 @@ disable=too-many-instance-attributes,
     line-too-long,
 # Delete unsubscriptable-object when typing.Union bug is fixed in pylintrc
     unsubscriptable-object,
+# This fails on isinstance(foo, typing.Sequence)
+# INTERNET_TODO look this up
+    isinstance-second-argument-not-valid-type,
 
 
 [BASIC]
@@ -42,6 +46,7 @@ good-names=
     er,
     mf,
     pc,
+    fc,
     no,
     ic,
     op

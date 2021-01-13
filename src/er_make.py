@@ -134,6 +134,18 @@ def _force_parallel_motion(er, super_pattern, poss_note):
             er, poss_note.harmony_i, generic_interval, follower_prev_pitch
         )
 
+        min_pitch, max_pitch = get_boundary_pitches(
+            er, super_pattern, poss_note
+        )
+
+        if follower_pitch < min_pitch:
+            follower_pitch += er.tet
+        elif follower_pitch > max_pitch:
+            follower_pitch -= er.tet
+
+        if (follower_pitch - leader_pitch) % er.tet in er.prohibit_parallels:
+            return None
+
         return follower_pitch
 
     # LONGTERM I'm not sure whether "global" parallel motion of this
@@ -351,8 +363,7 @@ def _get_available_pcs(er, super_pattern, poss_note, include_if_possible=None):
     return out
 
 
-def _get_available_pitches(er, super_pattern, available_pcs, poss_note):
-
+def get_boundary_pitches(er, super_pattern, poss_note):
     min_pitch, max_pitch = er.get(poss_note.voice_i, "voice_ranges")
     if not er.get(poss_note.voice_i, "allow_voice_crossings"):
         (
@@ -368,6 +379,12 @@ def _get_available_pitches(er, super_pattern, available_pcs, poss_note):
             min_pitch = highest_pitch_below
         if lowest_pitch_above < max_pitch:
             max_pitch = lowest_pitch_above
+    return min_pitch, max_pitch
+
+
+def _get_available_pitches(er, super_pattern, available_pcs, poss_note):
+
+    min_pitch, max_pitch = get_boundary_pitches(er, super_pattern, poss_note)
 
     out = []
 
@@ -613,7 +630,6 @@ def _choose_from_pitches(
 ):
     result = ""
     failure_count = er_exceptions.UnableToChoosePitchError()
-    incoming_available_pitches = available_pitches
     while result != "success":
         if not available_pitches:
             raise failure_count
@@ -781,7 +797,6 @@ def _attempt_initial_pattern(
     available_pitches = _within_limit_intervals(
         er, super_pattern, available_pitches, poss_note
     )
-
     if er_misc_funcs.empty_nested(available_pitches):
         available_pitch_error.exceeding_max_interval()
         return False
@@ -794,7 +809,6 @@ def _attempt_initial_pattern(
         if er_misc_funcs.empty_nested(available_pitches):
             available_pitch_error.forbidden_parallels()
             return False
-
     for sub_available_pitches in available_pitches:
         while sub_available_pitches:
             try:
@@ -819,7 +833,6 @@ def _attempt_initial_pattern(
                     unable_error.pitch_loop_just_one_pitch
                 )
                 break
-
             poss_note.voice.add_note(
                 pitch, poss_note.attack_time, poss_note.dur
             )

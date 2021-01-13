@@ -5,7 +5,6 @@ import os
 import src.er_choirs as er_choirs
 import src.er_interface as er_interface
 import src.er_make as er_make
-import src.er_misc_funcs as er_misc_funcs
 import src.er_midi as er_midi
 import src.er_midi_settings as er_midi_settings
 import src.er_preprocess as er_preprocess
@@ -39,7 +38,7 @@ def main():
             midi_settings.tet, shell=args.midi_port
         )
         if super_pattern.attacks_adjusted_by != 0:
-            er_midi.write_midi(super_pattern, midi_settings, fname_path)
+            er_midi.write_midi(super_pattern, midi_settings)
         er_interface.input_loop(
             midi_settings, super_pattern, midi_player,
         )

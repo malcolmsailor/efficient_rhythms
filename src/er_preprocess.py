@@ -462,6 +462,8 @@ def process_parallel_motion(er):
     er.parallel_motion_leaders = {}
     er.parallel_motion_followers = {}
     for voice_tuple, motion_type in er.force_parallel_motion.items():
+        if motion_type == "false":
+            continue
         voices = list(voice_tuple)
         leader_i = voices.pop(0)
         er.parallel_motion_leaders[leader_i] = voices[:]
