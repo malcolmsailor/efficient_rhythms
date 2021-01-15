@@ -3,28 +3,17 @@
 import argparse
 import collections
 import copy
-import math
 import os
 import subprocess
 import sys
-import threading
-
-import pygame
-
-# TODO remove mal_str
-from mal_str import make_header
 
 import src.er_filters as er_filters
 import src.er_midi as er_midi
 import src.er_misc_funcs as er_misc_funcs
 import src.er_output_notation as er_output_notation
+import src.er_playback as er_playback
 import src.er_prob_funcs as er_prob_funcs
 import src.er_settings as er_settings
-import src.er_tuning as er_tuning
-
-
-SOUND_FONT = "/Users/Malcolm/Music/SoundFonts/GeneralUser GS 1.471/GeneralUser_GS_v1.471.sf2"
-NOTE_DIR = "/Users/Malcolm/Google Drive/Notes/"
 
 LINE_WIDTH = os.get_terminal_size().columns
 SELECT_HEADER = "Active filters and transformers"
@@ -79,34 +68,37 @@ def parse_cmd_line_args():
         help="path to settings file containing a Python dictionary",
         default=None,
     )
+    parser.add_argument(
+        "-n",
+        "--no-interface",
+        help="build midi file, but don't play it back or enter user interface",
+        action="store_true",
+    )
+    parser.add_argument(
+        "-v",
+        "--verovio-arguments",
+        help=(
+            "arguments to pass into verovio, replacing the default argument "
+            "'--all-pages'. Pass a single string, which will be split by "
+            "whitespace"
+        ),
+    )
+    parser.add_argument(
+        "--output-notation",
+        choices=("png", "pdf", "svg"),
+        help=(
+            "if passed with '--no-interface', notation in the specified file "
+            "format will be generated as well as a midi file"
+        ),
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="provide option to enter a breakpoint in user input loop",
+    )
     args = parser.parse_args()
 
     return args
-
-
-def playback_midi(midi_player, breaker, midi_path):
-    """Plays a midi file.
-    """
-    if midi_player == "pygame":
-        pygame.mixer.music.load(midi_path)
-        pygame.mixer.music.play()
-    elif midi_player == "fluidsynth":
-        subprocess.run(["fluidsynth", SOUND_FONT, midi_path], check=False)
-    elif midi_player == "self":
-        playback_thread = threading.Thread(
-            target=er_midi.playback,
-            args=[midi_path, breaker],
-            kwargs={"multi_output": False},
-        )
-        playback_thread.start()
-
-
-def stop_playback_midi(midi_player, breaker):
-    if midi_player == "pygame":
-        pygame.mixer.music.stop()
-    elif midi_player == "self":
-        breaker.break_ = True
-        breaker.reset()
 
 
 def print_path(in_path, offset=0):
@@ -117,10 +109,6 @@ def print_path(in_path, offset=0):
         if len(in_path) < LINE_WIDTH - 4 - offset:
             return ".../" + in_path
     return in_path
-
-
-# def make_header(text):
-#     return " " + text + " " + "#" * (LINE_WIDTH - len(text) - 2)
 
 
 def make_changer_prompt_line(i, attr_name, value, hint_name="", hint_value=""):
@@ -193,10 +181,14 @@ def add_to_changer_attribute_dict(
     return attribute_i
 
 
-def possible_values_prompt(lines, possible_values):
-    for pv_i, possible_value in enumerate(possible_values):
-        lines.append(make_prompt_line(pv_i + 1, possible_value))
-    lines.append("")
+def possible_values_prompt(possible_values):
+    return [
+        make_prompt_line(pv_i + 1, possible_value)
+        for (pv_i, possible_value) in enumerate(possible_values)
+    ] + [""]
+    # for pv_i, possible_value in enumerate(possible_values):
+    #     lines.append(make_prompt_line(pv_i + 1, possible_value))
+    # lines.append("")
 
 
 def update_changer_attribute(changer, attribute):
@@ -210,17 +202,13 @@ def update_changer_attribute(changer, attribute):
     else:
         obj = changer
     header_text = obj.pretty_name + ": " + obj.interface_dict[attribute]
-    lines = ["", make_header(header_text), ""]
+    lines = ["", er_misc_funcs.make_header(header_text), ""]
     validator = obj.validation_dict[attribute]
     if validator.type_ == bool and validator.unique:
         setattr(obj, attribute, bool(getattr(obj, attribute)))
-        # if vars(obj)[attribute]:
-        #     vars(obj)[attribute] = False
-        # else:
-        #     vars(obj)[attribute] = True
         return
     if validator.possible_values:
-        possible_values_prompt(lines, validator.possible_values)
+        lines.extend(possible_values_prompt(validator.possible_values))
     print("\n".join(lines))
     answer = input(er_misc_funcs.add_line_breaks(update_prompt))
     while True:
@@ -237,7 +225,6 @@ def update_changer_attribute(changer, attribute):
                 update_prob_func(obj, validated)
             else:
                 setattr(obj, attribute, validated)
-                # vars(obj)[attribute] = validated
             return
         if answer != "h":
             print("Invalid input.")
@@ -252,7 +239,7 @@ def update_adjust_changer_prompt(changer):
         "would like to adjust or toggle, 'r' to remove the "
         "filter/transformer, or <enter> to continue: "
     )
-    lines = ["", make_header(changer.pretty_name), ""]
+    lines = ["", er_misc_funcs.make_header(changer.pretty_name), ""]
     attribute_i = 1
     attribute_dict = {}
     prob_func_name = changer.interface_dict["prob_func"]
@@ -335,10 +322,10 @@ def add_changer_prompt(changer_dict):
         "Enter the number corresponding to the filter or transformer "
         "you would like to select, or <enter> to continue: "
     )
-    lines = ["", make_header(FILTERS_HEADER), ""]
+    lines = ["", er_misc_funcs.make_header(FILTERS_HEADER), ""]
     for i, changer in changer_dict.items():
         if i == -1:
-            lines += ["", make_header(TRANSFORMERS_HEADER), ""]
+            lines += ["", er_misc_funcs.make_header(TRANSFORMERS_HEADER), ""]
         else:
             lines.append(make_prompt_line(i, changer.pretty_name))
     lines += [
@@ -404,7 +391,9 @@ def update_move_changer_prompt(active_changers):
         "transformer you would like to move, or <enter> to "
         "continue: "
     )
-    lines = ["", make_header(header), ""] + get_changer_strings(active_changers)
+    lines = ["", er_misc_funcs.make_header(header), ""] + get_changer_strings(
+        active_changers
+    )
     lines += ["", er_misc_funcs.add_line_breaks(move_prompt)]
     return "\n".join(lines)
 
@@ -457,7 +446,9 @@ def update_copy_changer_prompt(active_changers):
         "transformer you would like to copy, or <enter> to "
         "continue: "
     )
-    lines = ["", make_header(header), ""] + get_changer_strings(active_changers)
+    lines = ["", er_misc_funcs.make_header(header), ""] + get_changer_strings(
+        active_changers
+    )
     lines += ["", er_misc_funcs.add_line_breaks(copy_prompt)]
     return "\n".join(lines)
 
@@ -500,9 +491,11 @@ def update_prompt_for_adjusting_changers(active_changers):
         "Enter 'a' to add a filter or transformer, or <enter> to return to the "
         "main prompt: "
     )
-    lines = ["", make_header(SELECT_HEADER), ""] + get_changer_strings(
-        active_changers
-    )
+    lines = [
+        "",
+        er_misc_funcs.make_header(SELECT_HEADER),
+        "",
+    ] + get_changer_strings(active_changers)
     lines += [
         "",
         er_misc_funcs.add_line_breaks(
@@ -623,31 +616,33 @@ def mac_open(midi_path):
     subprocess.run(["open", midi_path], check=False)
 
 
-def run_verovio(super_pattern, midi_path):
-    fifth = er_tuning.approximate_just_interval(3 / 2, super_pattern.tet)
-    gcd = math.gcd(super_pattern.tet, fifth)
-    if gcd != 1:
-        print(
-            er_misc_funcs.add_line_breaks(
-                "Sorry, output to PDF is only implemented when the greatest "
-                "common denominator of `tet` and the equal-tempered "
-                "approximation to a just fifth in that temperament is 1. "
-                f"Currently, `tet` = {super_pattern.tet} and the fifth is "
-                f"{fifth}, so their GCD is {gcd}.",
-                indent_type="none",
-            )
-        )
-        input("Press <enter> to continue")
-        return
-
-    copied_pattern = copy.deepcopy(super_pattern)
-    copied_pattern.fill_with_rests(super_pattern.get_total_len())
-
-    kern_path = midi_path.replace(".mid", ".krn")
-    dirname = os.path.dirname(kern_path)
-
-    er_output_notation.write_kern(copied_pattern, kern_path)
-    er_output_notation.write_notation(kern_path, dirname)
+def verovio_interface(super_pattern, midi_path, verovio_arguments):
+    verovio_prompt = "Enter output file type, or leave blank to cancel: "
+    lines = ["", er_misc_funcs.make_header("Output notation"), ""]
+    file_types = [".svg", ".png", ".pdf"]
+    possible_values = [
+        ".svg (requires Verovio)",
+        ".png (requires Verovio and ImageMagick)",
+        ".pdf (requires Verovio, ImageMagick, and img2pdf)",
+    ]
+    lines.extend(possible_values_prompt(possible_values))
+    print("\n".join(lines))
+    while True:
+        answer = input(er_misc_funcs.add_line_breaks(verovio_prompt))
+        if not answer:
+            print("Output notation cancelled")
+            return
+        try:
+            answer = int(answer) - 1
+        except ValueError:
+            pass
+        else:
+            if 0 <= answer < len(possible_values):
+                break
+        print("Invalid input.")
+    er_output_notation.run_verovio(
+        super_pattern, midi_path, verovio_arguments, file_types[answer]
+    )
 
 
 def update_midi_type(er):
@@ -655,7 +650,7 @@ def update_midi_type(er):
     """
 
     def _update_midi_type_prompt():
-        prompt_strs = [make_header("Midi settings")]
+        prompt_strs = [er_misc_funcs.make_header("Midi settings")]
         for param_i, (pretty_name, name) in enumerate(params):
             # val = vars(er)[name]
 
@@ -698,34 +693,42 @@ def update_midi_type(er):
         print(prompt_str)
 
 
-def input_loop(er, super_pattern, midi_player):
+def input_loop(
+    er, super_pattern, midi_player, verovio_arguments=None, debug=False
+):
     """Run the user input loop for efficient_rhythms.py
     """
 
     def get_input_prompt():
-        return (
-            "Press:\n"
-            "    'a' to apply filters and/or transformers\n"
-            + (
-                "    'o' to open with macOS 'open' command\n"
-                if sys.platform == "darwin"
-                else ""
-            )
-            + "    'v' to write to PDF using Verovio\n"
-            "    'p' to print out text representation of score\n"
-            "    'b' to enter a breakpoint (for debugging)\n"
-            "{}"
-            "    {}\n"
-            "    'q' to quit\n"
-            "".format(
-                "    'c' to change writing of voices "
-                "and choirs to midi tracks\n"
-                if isinstance(er, er_settings.ERSettings)
-                else "",
-                "'s' to stop playback"
-                if playback_on
-                else "'<enter>' to play again",
-            )
+        return "".join(
+            [
+                "Press:\n",
+                "    'a' to apply filters and/or transformers\n",
+                (
+                    "    'o' to open midi file with macOS 'open' command\n"
+                    if sys.platform == "darwin"
+                    else ""
+                ),
+                "    'v' to write notation using Verovio\n",
+                (
+                    "    'p' to print out text representation of score\n"
+                    "    'b' to enter a breakpoint (for debugging)\n"
+                    if debug
+                    else ""
+                ),
+                (
+                    "    'c' to change how 'voices' and 'choirs' are "
+                    "mapped to midi tracks and channels\n"
+                    if isinstance(er, er_settings.ERSettings)
+                    else ""
+                ),
+                (
+                    "    's' to stop playback\n"
+                    if playback_on
+                    else "'<enter>' to play again\n"
+                ),
+                "    'q' to quit\n",
+            ]
         )
 
     playback_on = True
@@ -747,12 +750,12 @@ def input_loop(er, super_pattern, midi_player):
         print("File name:", print_path(current_midi_path, offset=11))
         if answer == "":
             breaker.reset()
-            playback_midi(midi_player, breaker, current_midi_path)
+            er_playback.playback_midi(midi_player, breaker, current_midi_path)
             playback_on = True
         answer = input(get_input_prompt()).lower()
 
         if answer in ("q", "s"):
-            stop_playback_midi(midi_player, breaker)
+            er_playback.stop_playback_midi(midi_player, breaker)
             if answer == "q":
                 break
             playback_on = False
@@ -789,11 +792,12 @@ def input_loop(er, super_pattern, midi_player):
             mac_open(current_midi_path)
 
         elif answer == "v":
-            run_verovio(current_pattern, current_midi_path)
+            verovio_interface(
+                current_pattern, current_midi_path, verovio_arguments
+            )
 
-        # TODO debug flag
-        elif answer == "p":
+        elif debug and answer == "p":
             print(current_pattern.head())
 
-        elif answer == "b":
+        elif debug and answer == "b":
             breakpoint()

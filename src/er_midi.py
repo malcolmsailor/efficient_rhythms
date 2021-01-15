@@ -11,7 +11,6 @@ from multiprocessing.dummy import Pool as ThreadPool
 
 import midiutil
 import mido
-import pygame
 
 import src.er_choirs as er_choirs
 import src.er_midi_settings as er_midi_settings
@@ -29,6 +28,8 @@ NUM_CHANNELS = 16
 # pitch_bend_tuple macros
 MIDI_NUM = 0
 PITCH_BEND = 1
+
+# LONGTERM transpose notes up an octave as they voice-lead out of range
 
 
 def get_rhythms_from_midi(er):
@@ -108,27 +109,6 @@ def get_scales_and_chords_from_midi(midif, tet=12, time_sig=4):
         chords[i] = [(pitch - root) % tet for pitch in chords[i]]
 
     return (scales, chords, roots)
-
-
-def init_and_return_midi_player(tet, shell=False):
-    """Selects the midi player.
-
-    If shell is false, plays midi to virtual midi port for use with a DAW such
-    as Logic.
-
-    If shell is True, then the midi player is either pygame or fluidsynth. If
-    tet == 12, selects pygame as midi player and initializes it. Else
-    selects fluidsynth. Returns name of midi player.
-    """
-
-    if shell:
-        if tet != 12:
-            return "fluidsynth"
-
-        pygame.mixer.init()
-        return "pygame"
-    raise NotImplementedError  # INTERNET_TODO
-    return "self"  # pylint: disable=unreachable
 
 
 def get_midi_time_sig(time_sig):
@@ -236,8 +216,13 @@ def add_note_and_pitch_bend(
     velocity=DEFAULT_VELOCITY,
 ):
     """Adds simultaneous note and pitchwheel event."""
-    mf.addPitchWheelEvent(track, channel, time, pitch_bend_tuple[PITCH_BEND])
-    mf.addNote(track, channel, pitch_bend_tuple[MIDI_NUM], time, dur, velocity)
+    if 0 <= pitch_bend_tuple[MIDI_NUM] <= 127:
+        mf.addPitchWheelEvent(
+            track, channel, time, pitch_bend_tuple[PITCH_BEND]
+        )
+        mf.addNote(
+            track, channel, pitch_bend_tuple[MIDI_NUM], time, dur, velocity
+        )
 
 
 def add_note_and_pitch_bend_separately(
@@ -252,17 +237,18 @@ def add_note_and_pitch_bend_separately(
 ):
     """Adds a note and pitchwheel events at independent times.
     """
-    mf.addPitchWheelEvent(
-        track, channel, pitch_bend_time, pitch_bend_tuple[PITCH_BEND]
-    )
-    mf.addNote(
-        track,
-        channel,
-        pitch_bend_tuple[MIDI_NUM],
-        note_time,
-        note_dur,
-        velocity,
-    )
+    if 0 <= pitch_bend_tuple[MIDI_NUM] <= 127:
+        mf.addPitchWheelEvent(
+            track, channel, pitch_bend_time, pitch_bend_tuple[PITCH_BEND]
+        )
+        mf.addNote(
+            track,
+            channel,
+            pitch_bend_tuple[MIDI_NUM],
+            note_time,
+            note_dur,
+            velocity,
+        )
 
 
 def humanize(er, attack, dur, velocity, tuning=None):
@@ -305,11 +291,12 @@ def add_er_voice(er, voice_i, voice, mf, force_choir=None):
         if note.finetune != 0:
             raise NotImplementedError("note.finetune not yet implemented")
         if er.tet == 12:
-            if er.humanize:
-                attack_time, dur, velocity, _ = humanize(
-                    er, attack_time, dur, velocity
-                )
-            mf.addNote(track, channel, pitch, attack_time, dur, velocity)
+            if 0 <= pitch <= 127:
+                if er.humanize:
+                    attack_time, dur, velocity, _ = humanize(
+                        er, attack_time, dur, velocity
+                    )
+                mf.addNote(track, channel, pitch, attack_time, dur, velocity)
             continue
 
         midi_num, pitch_bend = er.pitch_bend_tuple_dict[pitch]
@@ -555,14 +542,15 @@ def add_track(track_i, track, midi_settings, mf):
 
     for note in track:
         if midi_settings.tet == 12 and no_finetuning:
-            mf.addNote(
-                track_i,
-                note.choir,
-                note.pitch,
-                note.attack_time,
-                note.dur,
-                note.velocity,
-            )
+            if 0 <= note.pitch <= 127:
+                mf.addNote(
+                    track_i,
+                    note.choir,
+                    note.pitch,
+                    note.attack_time,
+                    note.dur,
+                    note.velocity,
+                )
         else:
             channel = (
                 midi_settings.note_counter[track_i]

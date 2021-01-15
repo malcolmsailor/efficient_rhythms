@@ -18,7 +18,7 @@
                 (2.0, 2.75, "plen", "", 2),
                 (3.5, 4.0, "plen", "", 2),
             ],
-            "color_loop": 11,
+            "color_loop": 12,
         },
     },
     "brackets": [

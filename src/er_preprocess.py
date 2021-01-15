@@ -182,6 +182,7 @@ def preprocess_temper_pitch_materials(er):
         er.root_pcs,
         er.interval_cycle,
         er.voice_ranges,
+        er.hard_bounds,
         er.consonances,
         er.consonant_chords,
         er.forbidden_interval_classes,
@@ -291,6 +292,7 @@ def ensure_lists_or_tuples(er):
             setattr(er, prop, [getattr(er, prop)])
 
     to_list_of_iters = [
+        "hard_bounds",
         "scales",
         "chords",
         "obligatory_attacks",
@@ -729,6 +731,8 @@ def preprocess_settings(user_settings, script_path=None, random_settings=False):
     if random_settings:
         randomize = er_randomize.ERRandomize(er)
         randomize.apply(er)
+        # we re-set the seed in the hopes that the music will be reproducible
+        er_misc_funcs.set_seed(er.seed, print_out=False)
 
     if er.max_interval_for_non_chord_tones is None:
         er.max_interval_for_non_chord_tones = er.max_interval
@@ -1065,6 +1069,11 @@ def preprocess_settings(user_settings, script_path=None, random_settings=False):
     prepare_warnings(er)
 
     cum_mod_lists(er)
+
+    # There are a few calls to random in the preceding pre-processing functions,
+    # so we re-set the seed once more in the hopes of making files produced
+    # with the --random flag reproducible
+    er_misc_funcs.set_seed(er.seed, print_out=False)
 
     return er
 

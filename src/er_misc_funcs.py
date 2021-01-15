@@ -145,80 +145,74 @@ def add_line_breaks(
     return lines
 
 
-# def add_line_breaks(
-#     in_str, line_width=None, indent_type="hanging", indent_width=4, align="left"
-# ):
-#     """Adds line breaks to a string for printing in the shell.
-#
-#     Keyword args:
-#         line_width: int. Default None (a call to os.get_terminal_size is made).
-#         indent_type: str. "hanging", "leading", "all", or "none". Default
-#             "hanging".
-#         indent_width: int.
-#         align: str. "left", "center", or "right".
-#
-#     """
-#
-#     def align_line(line, current_line_width, align):
-#         line = line.strip()
-#         if align == "right":
-#             return (current_line_width - len(line)) * " " + line
-#         if align == "center":
-#             before = math.ceil((current_line_width - len(line)) / 2)
-#             after = math.floor((current_line_width - len(line)) / 2)
-#             return before * " " + line + after * " "
-#         return line
-#
-#     if line_width is None:
-#         line_width = os.get_terminal_size().columns
-#     lines = []
-#     start_line_i = 0
-#     last_whitespace_i = 0
-#     line_i = 0
-#     if indent_type in ("leading", "all"):
-#         current_line_width = line_width - indent_width
-#     else:
-#         current_line_width = line_width
-#     for char_i, char in enumerate(in_str):
-#         if indent_type in ("hanging", "all") and line_i > 0:
-#             current_line_width = line_width - indent_width
-#         elif indent_type == "leading" and line_i > 0:
-#             current_line_width = line_width
-#         if char.isspace():
-#             last_whitespace_i = char_i
-#         if char == "\n":
-#             lines.append(
-#                 align_line(
-#                     in_str[start_line_i:char_i], current_line_width, align
-#                 )
-#             )
-#             start_line_i = char_i + 1
-#             line_i += 1
-#         if (
-#             char_i - start_line_i > current_line_width
-#             and last_whitespace_i > start_line_i
-#         ):
-#             line = align_line(
-#                 in_str[start_line_i:last_whitespace_i],
-#                 current_line_width,
-#                 align,
-#             )
-#             lines.append(line)
-#             start_line_i = last_whitespace_i + 1
-#             line_i += 1
-#     line = align_line(in_str[start_line_i:], current_line_width, align)
-#     lines.append(line)
-#     spacing_to_add = indent_width // 2 if align == "center" else indent_width
-#     if indent_type in ("hanging", "all"):
-#         temp_lines = [
-#             lines[0],
-#         ]
-#         for line in lines[1:]:
-#             temp_lines.append(spacing_to_add * " " + line)
-#         lines = temp_lines
-#     if indent_type in ("leading", "all"):
-#         lines[0] = spacing_to_add * " " + lines[0]
-#     return "\n".join(lines)
+def make_header(
+    text, fill_char="#", space_char=" ", line_width=None, align="left", indent=2
+):
+    """Puts a string into a format suitable for a header on the prompt.
+
+    Args:
+        text: string to be formatted.
+
+    Keyword args:
+        fill_char: character to fill the line with. Default "#".
+        space_char: character that goes on either side of input string.
+            Default " ".
+        line_width: if None (default), taken from os.get_terminal_size().
+        align: either "left", "center", or "right".
+        indent: if align is either "left" or "right", number of fill characters
+            to indent by. Default 2.
+
+    Returns:
+        Formatted string.
+
+    Raises:
+        NotImplementedError if the string contains a line break.
+    """
+    if line_width is None:
+        try:
+            line_width = os.get_terminal_size().columns
+        except OSError:
+            # thrown when running pylint
+            line_width = 80
+
+    n_lines = 1
+    while len(text) > n_lines * line_width - 2:
+        n_lines += 1
+    line_width *= n_lines
+
+    if "\n" in text:
+        raise NotImplementedError("Text contains line break")
+    if align == "left":
+        return "".join(
+            [
+                fill_char * indent,
+                space_char if indent else "",
+                text,
+                space_char,
+                fill_char * (line_width - len(text) - 2 - indent),
+            ]
+        )
+    if align == "right":
+        return "".join(
+            [
+                fill_char * (line_width - len(text) - 2 - indent),
+                space_char,
+                text,
+                space_char if indent else "",
+                fill_char * indent,
+            ]
+        )
+    if align == "center":
+        return "".join(
+            [
+                fill_char * math.ceil((line_width - len(text) - 2) / 2),
+                space_char,
+                text,
+                space_char,
+                fill_char * math.floor((line_width - len(text) - 2) / 2),
+            ]
+        )
+    raise ValueError("Alignment type not recognized")
 
 
 def no_empty_lists(item):
@@ -410,13 +404,14 @@ def gcd_from_list(*numbers, min_n=2 ** (-15)):
         numbers = new_numbers
 
 
-def set_seed(seed):
+def set_seed(seed, print_out=True):
     """If seed is None, sets random seed. Otherwise sets specified seed.
     Either way, returns seed value.
     """
     if seed is None:
         seed = random.randint(0, 2 ** 32)
-    print("Seed: ", seed)
+    if print_out:
+        print("Seed: ", seed)
 
     random.seed(seed)
     np.random.seed(seed)

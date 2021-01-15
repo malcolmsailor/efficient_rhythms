@@ -45,6 +45,8 @@ class RhythmicDict(collections.UserDict):
 
 
 class Rhythm(RhythmicDict):
+    # LONGTERM provide "re-generate" method, rather than
+    #   re-initializing an entire new rhythm at each failure in er_make.py
     @functools.cached_property
     def total_num_notes(self):
         # LONGTERM check whether this works with truncate
@@ -98,11 +100,6 @@ class Rhythm(RhythmicDict):
             self._truncated_pattern_num_notes = None
         else:
             self.truncate_len = 0
-        # self.total_num_notes is overwritten in ContinuousRhythm and used
-        # in get_attack_time_and_dur
-        # self.total_num_notes = self.num_notes
-
-        # self._get_offsets(er.max_super_pattern_len)
         self._check_min_dur()
 
     def _check_min_dur(self):
@@ -116,7 +113,7 @@ class Rhythm(RhythmicDict):
             )
             self.min_dur = new_min_dur
         if self.rhythm_len <= self.min_dur * self.num_notes:
-            # TODO move this notice outside of the initial_pattern loop
+            # LONGTERM move this notice outside of the initial_pattern loop
             print(
                 "Notice: 'cont_rhythms' will have no effect in voice "
                 f"{self.voice_i} because "
@@ -135,7 +132,7 @@ class Rhythm(RhythmicDict):
             raise ValueError("This is a bug in the 'efficient_rhythms' script")
         self._truncated_pattern_num_notes = 0
         for attack_time in self:
-            if (attack_time + self.min_dur) >= (
+            if (attack_time + self.min_dur) > (
                 self.truncate_len % self.total_rhythm_len
             ):
                 break

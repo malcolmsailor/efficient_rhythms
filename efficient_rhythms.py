@@ -7,23 +7,32 @@ import src.er_interface as er_interface
 import src.er_make as er_make
 import src.er_midi as er_midi
 import src.er_midi_settings as er_midi_settings
+import src.er_output_notation as er_output_notation
+import src.er_playback as er_playback
 import src.er_preprocess as er_preprocess
 
-# MAYBE make old directory and check it when looking for files
+# MAYBE make old directory and check it when looking for files (???)
 # MAYBE wait a moment when sending midi messages, see if this solves
 #   issue of first messages sometimes not sounding?
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
-# TODO why is there a missing note in example5 when truncated?
-# TODO --silent flag that builds midi file but doesn't enter interface loop
-#   also makes Verovio
+
 def main():
 
     args = er_interface.parse_cmd_line_args()
 
     midi_in = args.input_midi
     if midi_in:
+        if args.no_interface and not args.output_notation:
+            print(
+                "Both '--input-midi' and '--no-interface' passed, and "
+                "--output-notation not passed. Nothing to do!"
+            )
+            return
+        if args.no_interface:
+            # TODO either fix output_notation or remove
+            raise NotImplementedError
         midi_in = os.path.abspath(midi_in)
         midi_settings = er_preprocess.read_in_settings(
             args.settings, er_midi_settings.MidiSettings
@@ -36,27 +45,56 @@ def main():
         )
         midi_settings.num_tracks_from(super_pattern)
         midi_settings.original_path = midi_in
-        midi_player = er_midi.init_and_return_midi_player(
-            midi_settings.tet, shell=args.midi_port
+        midi_player = er_playback.init_and_return_midi_player(
+            shell=args.midi_port
         )
         if super_pattern.attacks_adjusted_by != 0:
             er_midi.write_midi(super_pattern, midi_settings)
+        if args.no_interface:
+            er_output_notation.run_verovio(
+                super_pattern,
+                midi_settings.output_path,
+                args.verovio_arguments,
+                "." + args.output_notation,
+            )
+            return
         er_interface.input_loop(
-            midi_settings, super_pattern, midi_player,
+            midi_settings,
+            super_pattern,
+            midi_player,
+            args.verovio_arguments,
+            debug=args.debug,
         )
 
     else:
         er = er_preprocess.preprocess_settings(
             args.settings, script_path=SCRIPT_DIR, random_settings=args.random
         )
-        midi_player = er_midi.init_and_return_midi_player(
-            er.tet, shell=args.midi_port
-        )
+
         super_pattern = er_make.make_super_pattern(er)
         er_make.complete_pattern(er, super_pattern)
         er_choirs.assign_choirs(er, super_pattern)
         er_midi.write_er_midi(er, super_pattern)
-        er_interface.input_loop(er, super_pattern, midi_player)
+        if args.no_interface:
+            print(f"Output written to {er.output_path}")
+            if args.output_notation:
+                er_output_notation.run_verovio(
+                    super_pattern,
+                    er.output_path,
+                    args.verovio_arguments,
+                    "." + args.output_notation,
+                )
+            return
+        midi_player = er_playback.init_and_return_midi_player(
+            shell=args.midi_port
+        )
+        er_interface.input_loop(
+            er,
+            super_pattern,
+            midi_player,
+            args.verovio_arguments,
+            debug=args.debug,
+        )
 
 
 if __name__ == "__main__":

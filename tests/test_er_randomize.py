@@ -1,4 +1,4 @@
-# TODO How to exclude from pytest?
+# INTERNET_TODO Learn how to exclude from pytest, then uncomment.
 # import os
 # import sys
 # import traceback
@@ -21,8 +21,9 @@
 #     for i in range(start_seed, start_seed + num_seeds):
 #         user_settings = {
 #             "seed": i,
-#             "initial_pattern_attempts": 2,
-#             "voice_leading_attempts": 2,
+#             "initial_pattern_attempts": 1,
+#             "voice_leading_attempts": 1,
+#             "max_available_pitch_materials_deadends": 50,
 #         }
 #         try:
 #             er = er_preprocess.preprocess_settings(

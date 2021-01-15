@@ -99,13 +99,23 @@ class ERSettings:
         max_super_pattern_len: number. If positive, the super pattern will be
             truncated if it reaches this length.
             Default: 128
-        voice_ranges: a sequence of 2-tuples. Each tuple is of form (lowest_note, highest_note).
+        voice_ranges: a sequence of 2-tuples. Each tuple is of form
+            (lowest_note, highest_note).
             (See the note above on specifying pitches.) er_constants.py provides
             a number of useful values for this purpose. The sequence must
             be at least `num_voices` length. (If it is longer, excess items
             will be ignored.) It is not enforced that the sequence be in ascending
             order but I haven't extensively tested what happens if it is not.
+            Note that if `constrain_voice_leading_to_ranges` is False,
+            than these ranges will only be enforced for the initial pattern.
             Default: CONTIGUOUS_OCTAVES * OCTAVE3 * C
+        hard_bounds: a per-voice sequence of 2-tuples.  Each tuple is of form
+            (lowest_note, highest_note). (See the note above on specifying
+            pitches.) This setting determines a lower and upper bound that will
+            be enforced regardless of the setting of
+            `constrain_voice_leading_to_ranges`. The default values are
+            the lowest and highest notes of an 88-key piano, respectively.
+            Default: ((OCTAVE0 * A, OCTAVE8 * C))
         voice_order_str: string. If "reverse", voices will be generated from
             highest to lowest. Otherwise, they are generated from lowest to
             highest.
@@ -1167,6 +1177,14 @@ class ERSettings:
     voice_ranges: typing.Sequence[
         typing.Tuple[numbers.Number, numbers.Number]
     ] = er_constants.CONTIGUOUS_OCTAVES * er_constants.OCTAVE3 * er_constants.C
+    hard_bounds: typing.Sequence[
+        typing.Tuple[numbers.Number, numbers.Number]
+    ] = (
+        (
+            er_constants.A * er_constants.OCTAVE0,
+            er_constants.C * er_constants.OCTAVE8,
+        ),
+    )
     # MAYBE add other possible voice orders, e.g., (melody, bass, inner voices)
     voice_order_str: str = "usual"
     allow_voice_crossings: typing.Union[bool, typing.Sequence[bool]] = True

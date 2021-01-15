@@ -77,6 +77,13 @@ def apply_voice_leading(
             voice_lead_error.temp_failure_counter.out_of_range += 1
             return _fail()
 
+    # TODO should be able to move up more/less than an octave
+    hard_bounds = er.get(voice_i, "hard_bounds")
+    if new_pitch < hard_bounds[0]:
+        new_pitch += er.tet
+    elif new_pitch > hard_bounds[1]:
+        new_pitch -= er.tet
+
     if er.parallel_voice_leading:
         new_note = er_notes.Note(new_pitch, new_attack_time, new_dur)
         return new_note, (prev_pitch_index, voice_leading_interval)

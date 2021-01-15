@@ -150,12 +150,6 @@ class Randomizer(BoolRandomizer):
         self.illegal_values = illegal_values
 
     def _fetch_value(self):
-        # bottom = self.min_ * int(1 / self.step)
-        # top = self.max_ * int(1 / self.step)
-        # choice = random.randrange(bottom, top + 1)
-        # if self.step == 1:
-        #     return choice
-        # return choice * self.step
         return self._choose_within_range(
             self.min_, self.max_, self.step, illegal_values=self.illegal_values
         )
@@ -318,23 +312,35 @@ class ERRandomize:
 
     @staticmethod
     def _print_setting(attr, val):
-        # TODO get rid of quotes around numbers!
+        # Originally I wrote this function because I wanted to format floats
+        # nicely for printing. But then I got rid of the float formatting
+        # because it caused issues when copying the settings for re-use with
+        # the script. It still makes numpy arrays print like tuples which is
+        # nice though.
         def _format_item(item):
+            if isinstance(item, bool):
+                if item:
+                    return "True"
+                return "False"
             if isinstance(item, Fraction):
-                return f"{float(item):g}"
+                return f"{float(item)}"
             if isinstance(item, numbers.Number):
                 return f"{item:g}"
             if isinstance(item, str):
                 return f'"{item}"'
             if isinstance(item, (typing.Sequence, np.ndarray)):
-                return f"{_tuplify(item)}"
+                return _tuplify(item)
             return f"{item}"
 
         def _tuplify(item):
             if isinstance(
                 item, (typing.Sequence, np.ndarray)
             ) and not isinstance(item, str):
-                return tuple(_format_item(sub_item) for sub_item in item)
+                return (
+                    "("
+                    + ", ".join(_format_item(sub_item) for sub_item in item)
+                    + ")"
+                )
             return _format_item(item)
 
         print(f'"{attr}": {_format_item(val)},')
