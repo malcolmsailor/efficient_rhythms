@@ -7,7 +7,7 @@ ignore=count.py
 ignore-patterns=test_settings.*\.py,
     debug_settings.*\.py,
     example.*\.py,
-    random_setings.*\.py
+    .*random_settings.*\.py
 
 [MESSAGES CONTROL]
 
