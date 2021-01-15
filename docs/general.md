@@ -16,8 +16,37 @@ Here are some examples of things I have made using this script:
 
 ## How it works (a longer explanation)
 
-Here, the `initial_pattern` is two beats long.
+I will illustrate with the aid of a few examples.
 
+Here, the initial pattern is two beats long---i.e., `pattern_len = 2`. Each harmony, however, is four beats (`harmony_len = 4`). Thus you can see that the pattern repeats twice on each harmony before being adjusted to fit the next harmony.
+
+<!-- TODO notation; annotate -->
+![pngs/example100001.png](Example 1 piano roll)
+
+We can also set the length of the rhythm separately from the length of the pattern. Thus in the above example, `rhythm_len = 2` but `pattern_len = 4`. Thus, if you look and/or listen carefully, you'll hear that the same rhythm repeats twice on each harmony, but with different notes each time.
+
+![pngs/example200001.png](Example 2 piano roll)
+
+We aren't constrained, however, to have `pattern_len` be a whole multiple of `rhythm_len`. In the next example, `pattern_len` is still `4`, but `rhythm_len = 1.5`, so now every third time the rhythm occurs, it is truncated (this is a bit like the 3--3--2 *tresillo* pattern).
+
+![pngs/example300001.png](Example 3 piano roll)
+
+So far, we've always had the same settings in both voices. But we don't have to. In the next example, the bottom voice again has a `rhythm_len` of 1.5, but the top voice now has `rhythm_len = 2`.
+
+![pngs/example400001.png](Example 4 piano roll)
+
+We can also have different values of `pattern_len` in each voice, like in the following example. However, if we do so, the script has to work quite a bit harder...
+<!-- TODO why? -->
+
+![pngs/example500001.png](Example 5 piano roll)
+
+Above, when one pattern didn't line up with the other, we truncated it... <!-- TODO finish -->
+
+![pngs/example600001.png](Example 6 piano roll)
+
+Also, note that up until now, `harmony_len` has always been at least as long as `pattern_len`. But there's no constraint that that has to be the case.
+
+![pngs/example700001.png](Example 7 piano roll)
 
 The script works as follows:
 - an "initial_pattern" is created.

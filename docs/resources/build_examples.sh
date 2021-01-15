@@ -22,15 +22,18 @@ if [[ -z "$MIDANI" ]]
 then
     midani_not_found=1
 else
+    global_settings="${BASEDIR}"/example_midani_settings.py
     for settings in "${BASEDIR}"/example_*_midani_settings.py
     do
         # TODO how to echo command and also run it?
-        echo python3 "$MIDANI" --settings "$settings" --frames 2
-        python3 "$MIDANI" --settings "$settings" --frames 2
+        echo python3 "$MIDANI" --settings "$global_settings" "$settings" --frames 2
+        python3 "$MIDANI" --settings "$global_settings" "$settings" --frames 2
         if [[ $? -ne 0 ]]
         then
             echo Error running midani, aborting
             exit 1
+        else
+            echo ===============================================================
         fi
     done
 fi

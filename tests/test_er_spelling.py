@@ -6,7 +6,7 @@ sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 )
 
-import src.er_spelling as er_spelling   # pylint: disable=wrong-import-position
+import src.er_spelling as er_spelling  # pylint: disable=wrong-import-position
 
 
 def test_build_spelling_dict():
@@ -33,7 +33,9 @@ def test_build_spelling_dict():
 def test_build_fifth_class_spelling_dict():
     spell_dict = er_spelling.build_fifth_class_spelling_dict()
     spell_dict2 = er_spelling.build_fifth_class_spelling_dict(forward=False)
-    kern_dict = er_spelling.build_fifth_class_spelling_dict(letter_format="kern")
+    kern_dict = er_spelling.build_fifth_class_spelling_dict(
+        letter_format="kern"
+    )
     try:
         for pc, spelled in spell_dict.items():
             assert spell_dict2[spelled] == pc, "spell_dict2[spelled] != pc"
@@ -62,9 +64,9 @@ def test_build_fifth_class_spelling_dict():
 
 def test_speller():
     try:
-        sp = er_spelling.Speller(pitches=True)
-        assert sp(60) == "C4", "sp(60) " '!= "C4"'
-    except:
+        speller = er_spelling.Speller(pitches=True)
+        assert speller(60) == "C4", "speller(60) " '!= "C4"'
+    except:  # pylint: disable=bare-except
         exc_type, exc_value, exc_traceback = sys.exc_info()
         traceback.print_exception(
             exc_type, exc_value, exc_traceback, limit=5, file=sys.stdout

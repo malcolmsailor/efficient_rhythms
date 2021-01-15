@@ -1,9 +1,13 @@
 [MASTER]
 
 ignore=count.py
+
+# It appears that if ignore-patterns has a trailing comma,
+#   pytest will not run pylint
 ignore-patterns=test_settings.*\.py,
     debug_settings.*\.py,
     example.*\.py,
+    random_setings.*\.py
 
 [MESSAGES CONTROL]
 

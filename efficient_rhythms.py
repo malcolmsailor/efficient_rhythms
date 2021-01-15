@@ -17,6 +17,7 @@ SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
 # TODO why is there a missing note in example5 when truncated?
 # TODO --silent flag that builds midi file but doesn't enter interface loop
+#   also makes Verovio
 def main():
 
     args = er_interface.parse_cmd_line_args()
