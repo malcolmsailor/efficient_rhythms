@@ -15,7 +15,8 @@ import src.er_preprocess as er_preprocess
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
-
+# TODO why is there a missing note in example5 when truncated?
+# TODO --silent flag that builds midi file but doesn't enter interface loop
 def main():
 
     args = er_interface.parse_cmd_line_args()

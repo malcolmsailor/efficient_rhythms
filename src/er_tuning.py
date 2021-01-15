@@ -1,9 +1,5 @@
 """Provides tuning and spelling functions for efficient_rhythms2.py."""
 
-import math
-
-import src.er_misc_funcs as er_misc_funcs
-
 ALPHABET = "fcgdaeb"
 
 # for EastWest, SIZE_OF_SEMITONE should be 4096

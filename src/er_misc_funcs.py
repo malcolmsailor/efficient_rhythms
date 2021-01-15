@@ -1109,3 +1109,24 @@ def generic_transpose(
     if apply_to_existing_voices:
         for voice in score.existing_voices:
             _apply_generic_transpose(voice)
+
+
+def nested_method(method):
+    """Decorator to extend method arbitrarily deep/nested list-likes.
+
+    Same as `nested` decorator, but passes "self" as first argument.
+
+    If iter() succeeds on the first argument to func, returns a list
+    (with nested lists replicating the structure of the argument). Otherwise
+    returns a single item of the return type of func.
+    """
+
+    def f(self, item, *args, **kwargs):
+        if isinstance(item, typing.Sequence) and not isinstance(item, str):
+            out = []
+            for sub_item in item:
+                out.append(f(self, sub_item, *args, **kwargs))
+            return out
+        return method(self, item, *args, **kwargs)
+
+    return f

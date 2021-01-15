@@ -1,4 +1,23 @@
-## General functioning
+# Efficient rhythms
+
+I wrote this script for use as a tool in musical composition. The basic way that it works goes as follows:
+
+- first, the script generates an initial rhythm
+- next, the script creates an "initial pattern" by filling the first occurrence of this rhythm with pitches
+- finally, the script repeats the initial pattern over any subsequent harmonies, transforming (or "voice-leading", in musical parlance) the pattern as necessary to fit the new harmonies. The voice-leading is "efficient", in the sense of moving the voices as little as possible.
+
+There are many parameters governing each step in this process. The name of the script comes from the fact that it begins with a **rhythm** and then voice-leads it **efficiently**.
+
+Here are some examples of things I have made using this script:
+
+<!-- TODO -->
+
+(It isn't really intended to produce stand-alone compositions all by itself.)
+
+## How it works (a longer explanation)
+
+Here, the `initial_pattern` is two beats long.
+
 
 The script works as follows:
 - an "initial_pattern" is created.
