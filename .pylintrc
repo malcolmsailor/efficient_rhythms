@@ -1,13 +1,15 @@
 [MASTER]
 
-ignore=count.py,favorites
+# INTERNET_TODO I can't get ignore-patterns or ignore to work on directories :(
+ignore=rapid_random_invention_like.py,
+    rapid_random_notes.py
 
 # It appears that if ignore-patterns has a trailing comma,
 #   pytest will not run pylint
 ignore-patterns=test_settings.*\.py,
     debug_settings.*\.py,
     example.*\.py,
-    .*random_settings.*\.py,
+    .*random_settings.*\.py
 
 
 [MESSAGES CONTROL]

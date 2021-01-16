@@ -77,7 +77,7 @@ def apply_voice_leading(
             voice_lead_error.temp_failure_counter.out_of_range += 1
             return _fail()
 
-    # TODO should be able to move up more/less than an octave
+    # LONGTERM should be able to move up more/less than an octave
     hard_bounds = er.get(voice_i, "hard_bounds")
     if new_pitch < hard_bounds[0]:
         new_pitch += er.tet

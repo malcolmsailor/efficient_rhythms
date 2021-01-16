@@ -1,5 +1,5 @@
 # like example5.py, but truncate_patterns is False.
-# Also raised root pc to for the downward voice-leading.
+# Also raised root pc to 7 because of the downward voice-leading.
 {
     "seed": 2,
     "pattern_len": [1.5, 4],

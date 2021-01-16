@@ -1,0 +1,210 @@
+<h1 id="efficient-rhythms">Efficient rhythms</h1>
+<!-- TODO format images -->
+<p>This script is a tool for musical composition. Here are a few examples of things I have made using it:</p>
+<!-- TODO -->
+<p>The gist of how it works goes as follows:</p>
+<ul class="incremental">
+<li>first it makes an initial <strong>rhythmic</strong> pattern.</li>
+<li>then it fills the rhythm with pitches.</li>
+<li>finally, it repeats the pattern, adjusting it <strong>efficiently</strong> to fit any chord changes (hence “efficient rhythms”).</li>
+</ul>
+<p>After it’s finished, you can listen to the results as a midi file. The script also provides a few tools (see <a href="#filters-and-transformers">Filters and Transformers</a>) for reshaping the results.</p>
+<!-- The name of the script comes from the fact that it begins with a **rhythm** and then transforms (or "voice-leads", in musical parlance) it **efficiently** over new chord changes. -->
+<p>To quickly try the script out, you can run:</p>
+<p><code>python3 efficient_rhythms.py --settings examples/example1.py</code></p>
+<p>You can also try running it with randomized settings, although be prepared for strange results:</p>
+<p><code>python3 efficient_rhythms.py --random</code></p>
+<!-- TODO maybe delete the next paragraph or move it after the following exposition -->
+<p>The script provides very many settings that allow you to control the results. Full documentation is available in <a href="settings.html"><code>settings.html</code></a>. But a gentler introduction is provided in the next section.</p>
+<h2 id="how-it-works-a-longer-explanation">How it works (a longer explanation)</h2>
+<p>The basic settings that control the script are</p>
+<ul class="incremental">
+<li><code>rhythm_len</code>: the length of the basic rhythm</li>
+<li><code>pattern_len</code>: the length of the initial pattern</li>
+<li><code>harmony_len</code>: the length of each harmony (i.e., chord)</li>
+</ul>
+<p>For example, in example 1, the initial pattern is two beats long—i.e., <code>pattern_len = 2</code>. Each harmony, however, is four beats (<code>harmony_len = 4</code>). Thus you can see that the pattern repeats twice on each harmony before being adjusted to fit the next harmony.</p>
+<!-- TODO annotate notated examples -->
+<p><img src="resources/svgs/example1.svg" class="notation" alt="Example 1 notation" /> <img src="resources/pngs/example100001.png" class="piano_roll" alt="Example 1 piano roll" /> <!-- TODO caption with path --></p>
+<!-- TODO link to midani -->
+<p>Note that in example 1, we didn’t specify <code>rhythm_len</code> at all. We didn’t have to, because whenever <code>rhythm_len</code> is not set explicitly, it is implicitly assigned the value of <code>pattern_len</code>. In example 2, in contrast, <code>rhythm_len = 2</code> but <code>pattern_len = 4</code>. Thus, if you look and/or listen carefully, you’ll find that the same rhythm repeats twice on each harmony, but with different notes each time—the entire pattern of pitches takes four beats to repeat, and by the time it does, its pitches are somewhat different, having been adjusted to the new harmony.<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p>
+<p><img src="resources/svgs/example2.svg" class="notation" alt="Example 2 notation" /> <img src="resources/pngs/example200001.png" class="piano_roll" alt="Example 2 piano roll" /></p>
+<p>We aren’t constrained, however, to have <code>pattern_len</code> be a whole multiple of <code>rhythm_len</code>. In example 3, <code>pattern_len</code> is still <code>4</code>, but <code>rhythm_len = 1.5</code>, so now every third time the rhythm occurs, it is truncated (a bit like a 3–3–2 <em>tresillo</em> pattern).</p>
+<p><img src="resources/svgs/example3.svg" class="notation" alt="Example 3 notation" /> <img src="resources/pngs/example300001.png" class="piano_roll" alt="Example 3 piano roll" /></p>
+<p>Up until now, we’ve always specified the same settings in both voices. But we need not do so! In the next example, the bottom voice again has <code>rhythm_len = 1.5</code>, but the top voice now has <code>rhythm_len = 2</code>.</p>
+<p><img src="resources/svgs/example4.svg" class="notation" alt="Example 4 notation" /> <img src="resources/pngs/example400001.png" class="piano_roll" alt="Example 4 piano roll" /></p>
+<p>We can also have different values of <code>pattern_len</code> in each voice, as in example 5. However, if we do so, the script has to work quite a bit harder to find a solution.<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> To help it do so, I made its task a little easier by changing <a href="settings.html#consonance_treatment"><code>consonance_treatment</code></a> from <code>"all_attacks"</code> to <code>"none"</code>. (Thus whereas in the previous examples, the simultaneously attacked notes all formed intervals like 3rds and fifths, in example 5, there are also dissonances like 7ths and 9ths.)</p>
+<p><img src="resources/svgs/example5.svg" class="notation" alt="Example 5 notation" /> <img src="resources/pngs/example500001.png" class="piano_roll" alt="Example 5 piano roll" /></p>
+<p>Up until now, whenever one pattern or rhythm didn’t line up with the other, we have truncated the shorter one, so that their next repetitions began together. But the script doesn’t require us to do so. In example 6, I have changed <a href="settings.html#truncate_patterns"><code>truncate_patterns</code></a> to <code>False</code>. Thus, the 1.5-beat pattern in the lower part is no longer truncated after 4 beats. Instead, it is displaced relative to both the 4-beat upper pattern, as well as the 4-beat harmony changes. (The two patterns finally come into sync after 12 beats, the least-common-multiple of 1.5 and 4.)</p>
+<p><img src="resources/svgs/example6.svg" class="notation" alt="Example 6 notation" /> <img src="resources/pngs/example600001.png" class="piano_roll" alt="Example 6 piano roll" /></p>
+<p>Another feature of all the examples up until now is that <code>harmony_len</code> has always been at least as long as <code>pattern_len</code>. But this doesn’t have to be the case either! In example 7, I’ve set <code>harmony_len = 2</code> but <code>pattern_len = 4</code> so that each pattern covers two harmonies.</p>
+<p><img src="resources/svgs/example7.svg" class="notation" alt="Example 7 notation" /> <img src="resources/pngs/example700001.png" class="piano_roll" alt="Example 7 piano roll" /></p>
+<p>If you’re interested in exploring the script further, some next steps could be:</p>
+<ul class="incremental">
+<li>tinkering with the example settings in <code>examples/</code></li>
+<li>running the script with <code>--random</code></li>
+<li>checking out the documentation in <a href="settings.html"><code>settings.html</code></a></li>
+</ul>
+<h2 id="filters-and-transformers">Filters and transformers</h2>
+<p>TODO!</p>
+<h2 id="randomization">Randomization</h2>
+<p>If the script is invoked with the “–random” or “-r” flag, then many settings will be randomly varied. The randomized settings will then be printed out so you can inspect them.</p>
+<p>The parameters of the randomization (i.e., the possible values that each setting can receive and their respective probabilities) are hard-coded into the script. A longterm to-do is to allow the user to specify the parameters of randomization in the same way that other settings are specified. There is, however, a setting available to exclude specific settings from randomization: <code>exclude_from_randomization</code>.</p>
+<p>These are the settings that by default are randomized:</p>
+<!-- Update dynamically? -->
+<pre><code>num_voices
+pattern_len
+rhythm_len
+pitch_loop
+harmony_len
+truncate_patterns
+voice_order_str
+interval_cycle
+chords
+parallel_voice_leading
+voice_lead_chord_tones
+preserve_root_in_bass
+chord_tone_and_root_disable
+chord_tone_selection
+force_chord_tone
+chord_tones_sync_attack_in_all_voices
+force_root_in_bass
+prefer_small_melodic_intervals
+force_repeated_notes
+force_parallel_motion
+consonance_treatment
+cont_rhythms
+vary_rhythm_consistently
+rhythmic_unison
+rhythmic_quasi_unison
+hocketing
+attack_density
+dur_density
+attack_subdivision
+randomly_distribute_between_choirs
+length_choir_segments
+tempo</code></pre>
+<p>These are the settings that are not randomized (although note that it is possible to specify that some of these settings, such as <code>root_pcs</code>, be individually randomized):</p>
+<pre><code>tet
+num_reps_super_pattern
+existing_voices
+existing_voices_offset
+bass_in_existing_voice
+existing_voices_repeat
+existing_voices_transpose
+existing_voices_erase_choirs
+existing_voices_max_denominator
+num_harmonies
+hard_pitch_loop
+time_sig
+max_super_pattern_len
+voice_ranges
+allow_voice_crossings
+scales_and_chords_specified_in_midi
+root_pcs
+scales
+voices_separate_tracks
+choirs_separate_tracks
+choirs_separate_channels
+write_program_changes
+humanize
+humanize_attack
+humanize_dur
+humanize_velocity
+humanize_tuning
+logic_type_pitch_bend
+num_channels_pitch_bend_loop
+pitch_bend_time_prop
+integers_in_12_tet
+parallel_direction
+extend_bass_range_for_roots
+constrain_voice_leading_to_ranges
+allow_flexible_voice_leading
+vl_maintain_consonance
+vl_maintain_limit_intervals
+vl_maintain_forbidden_intervals
+chord_tone_prob_func
+max_n_between_chord_tones
+min_prob_chord_tone
+try_to_force_non_chord_tones
+len_to_force_chord_tone
+scale_chord_tone_prob_by_dur
+scale_chord_tone_neutral_dur
+scale_short_chord_tones_down
+chord_tone_before_rests
+chord_tones_no_diss_treatment
+prefer_small_melodic_intervals_coefficient
+unison_weighted_as
+max_interval
+max_interval_for_non_chord_tones
+min_interval
+min_interval_for_non_chord_tones
+max_repeated_notes
+max_alternations
+prohibit_parallels
+antiparallels
+consonance_type
+consonance_modulo
+min_dur_for_cons_treatment
+forbidden_interval_classes
+forbidden_interval_modulo
+exclude_augmented_triad
+consonances
+invert_consonances
+consonant_chords
+chord_octave_equi_type
+chord_permit_doublings
+rhythmic_quasi_unison_constrain
+num_cont_rhythm_vars
+cont_var_increment
+super_pattern_reps_cont_var
+rhythms_specified_in_midi
+rhythms_in_midi_reverse_voices
+sub_subdivisions
+dur_subdivision
+min_dur
+obligatory_attacks
+obligatory_attacks_modulo
+comma_position
+overlap
+choirs
+choir_assignments
+length_choir_loop
+choir_segments_dovetail
+max_consec_seg_from_same_choir
+all_voices_from_different_choirs
+each_choir_combination_only_once
+transpose
+transpose_type
+transpose_len
+transpose_intervals
+cumulative_max_transpose_interval
+transpose_before_repeat
+tempo_len
+tempo_bounds
+initial_pattern_attempts
+voice_leading_attempts
+ask_for_more_attempts
+max_available_pitch_materials_deadends
+exclude_from_randomization</code></pre>
+<h1 id="help-my-script-is-failing">Help, my script is failing!</h1>
+<p>A list of “permissive” settings.</p>
+<p>If the script is failing with your supplied settings, consider applying some of the following settings to increase the size of the search space:</p>
+<pre><code>constrain_voice_leading_to_ranges = False
+allow_flexible_voice_leading = True
+vl_maintain_consonance = False
+vl_maintain_limit_intervals = False
+vl_maintain_forbidden_intervals = False</code></pre>
+<p>TODO</p>
+<!-- TODO ? (It isn't really intended to produce stand-alone compositions all by itself.) -->
+<!-- cuts
+- first, the script generates an initial rhythm
+- next, the script creates an "initial pattern" by filling the first occurrence of this rhythm with pitches
+- finally, the script repeats the initial pattern over any subsequent harmonies, transforming (or "voice-leading", in musical parlance) the pattern as necessary to fit the new harmonies. The voice-leading is "efficient", in the sense of moving the voices as little as possible. -->
+<section class="footnotes" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1" role="doc-endnote"><p>The music-theoretically fastidious among you may have observed that these examples contain plentiful parallel fifths (for example, the first two sixteenth-notes in example 2). If desired, this could be avoided by including <code>7</code> in the argument <code>prohibit_parallels</code>.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2" role="doc-endnote"><p>If the algorithm were a little smarter, it wouldn’t have to work nearly so hard to cope with voices of different <code>pattern_len</code>. So this is a longterm to-do.<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>

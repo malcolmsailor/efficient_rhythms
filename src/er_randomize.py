@@ -13,7 +13,7 @@ import src.er_constants as er_constants
 # Notice: 'parallel_voice_leading' is not compatible with checking voice-leadings
 # for consonance. Ignoring 'vl_maintain_consonance'
 
-
+# TODO print message when randomized settings fail
 class BaseRandomizer:
     def __init__(self, multiple_values=0, conditions=None, actions=None):
         self.multiple_values = multiple_values

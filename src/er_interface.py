@@ -20,6 +20,10 @@ SELECT_HEADER = "Active filters and transformers"
 FILTERS_HEADER = "Filters"
 TRANSFORMERS_HEADER = "Transformers"
 
+# TODO bold headers
+# TODO two-column table for filter/transformer selection
+# TODO fix filter paths!
+
 
 def parse_cmd_line_args():
     parser = argparse.ArgumentParser(

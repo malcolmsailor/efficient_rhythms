@@ -9,9 +9,22 @@ import src.er_constants as er_constants
 #   (e.g., typing.Sequence)
 @dataclasses.dataclass
 class ERSettings:
-    """summary
+    """Stores the settings that control the script's behavior.
 
-    Note on "per-voice sequences" and other "looping sequences":
+    Hyperlinked, formatted markdown and HTML versions automatically generated
+    from the following  documentation is available in `docs/settings.md` and
+    `docs/settings.html`.  For most usage cases it is probably better to consult
+    this documentation  there.
+
+    The many settings below control the behavior of this script. The recommended
+    way of using the script is to store the desired settings as a Python
+    dictionary in a file and then pass the file into the script with the
+    `--settings` flag. For examples, see the files in the `examples/` directory.
+    For a high-level overview of the script, see # TODO
+
+    Note on "per-voice sequences" and other "looping sequences"
+    ===========================================================
+
     Many arguments below can take "per-voice sequences" as arguments. These are
     sequences (e.g., tuples or lists) that assign a different setting to each
     voice. Importantly, however, it is possible to provide a sequence that is
@@ -26,15 +39,72 @@ class ERSettings:
     sequence are not applied to voices, but to something else. An example is
     `harmony_len`. I refer to these as "looping sequences".
 
+    Note on specifying pitches and intervals
+    ========================================
+
+    In general, pitches can be specified either as integers, or as other numeric
+    types (e.g., floats). **If you don't care about tuning or temperament, just
+    specify all intervals as integers** (e.g., one semitone = `1`). Otherwise,
+    read on:
+
+    - integers specify equal-tempered intervals. For example, in 12-tet (the
+    usual temperament employed in Western music), an interval of `7`
+    corresponds to a perfect fifth. How exactly integers function in
+    other temperaments depends on the setting `integers_in_12_tet`;
+    see its documentation below for details.
+
+    - other numeric types are interpreted as just intervals, and
+    then approximated in the specified equal-division-of-the-octave
+    temperament (the default being 12). Thus an interval of 1.5 (which
+    in tuning theory is more often specified as a ratio of 3:2)
+    corresponds to a perfect fifth. If `tet = 12`, this will be approximated
+    as 7 semitones (7/12ths of an octave). If `tet = 31`, on the other
+    hand, this will be approximated as 18/31sts of an octave.
+
+    "Generic" and "specific" intervals
+    ==================================
+
+    In the settings below, I sometimes use the terms "generic" or "specific" in
+    reference to intervals. These terms come from academic music theory (e.g.,
+    Clough and Myerson 1985).
+
+    A "generic" interval defines an interval with respect to some reference
+    scale, by counting the number of scale steps the interval contains.  They
+    might also be called "scalar" intervals (using "scalar" in a completely
+    different sense from its linear algebra meaning).  "Specific" intervals
+    define intervals "absolutely", by simply counting the number of semitones
+    the interval comprises, irrespective of any reference scale.
+
+    In typical musical usage, "thirds", "fifths", and the like refer to generic
+    intervals: a third is the distance between any pitch in a scale and the
+    pitch two steps above or below it. (It would be more practical to call a
+    "third" a "second" but, unfortunately, this usage has now been established
+    for many centuries!) Depending on the structure of the scale, and the
+    location of the interval within it, the exact pitch distance connoted by one
+    and the same generic interval may vary. For instance, in the C major scale,
+    the third from C to E is 4 semitones, but the third from D to F is 3
+    semitones. To distinguish these cases, music theory has developed an armory
+    of interval "qualities" like "major", "minor", "diminished", and so on.  A
+    generic interval together with a quality, like "minor third", is somewhat
+    like a specific interval, but it is not quite the same thing, because there
+    can be more than one generic interval + quality that correspond to one
+    specific interval. For example, both "minor thirds" and "augmented seconds"
+    comprise 3 semitones. (Thus, the mapping from generic intervals with
+    qualities to specific intervals is onto but not one-to-one.)
 
     Note that "root" below doesn't strictly mean root, in music-theoretic sense.
-    See `root_pcs` below for more explanation.
+    See `root_pcs` below for more explanation. # TODO complete this note
 
     Keyword args:
-        seed: int. Seed to pass to random number generators.
+
+        General settings
+        ================
+
+        seed: int. Seed for random number generation.
         output_path: str. Path for output midi file. If a relative path, will
             be created relative to the script directory. If any folder in the
             path does not exist, it will be created.
+            # TODO don't create relative to script directory
             Default: "output_midi/effrhy.mid"
         overwrite: bool. If False, if a file named `output_path` already
             exists, the pathname will be incremented with a numeric suffix
@@ -44,85 +114,87 @@ class ERSettings:
             exists, `effrhy_002.mid` will be created.
             Default: False
         tet: int. Specifies equal division of the octave.
-            Default: 12.
+            Default: 12
         num_voices: int. The number of "voices" (or "parts") to be created.
-            If `existing_voices` below is
-            passed, then `num_voices` specifies the number of new voices to be
-            added, not the total number of voices (including those found
-            in the provided midi file).
-            Default: 3.
+            If `existing_voices` below is passed, then `num_voices` specifies
+            the number of *new* voices to be added, and doesn't include the
+            `existing_voices` taken from the provided midi file.
+            Default: 3
         num_reps_super_pattern: int. Number of times to repeat the complete
             "super pattern".
             Default: 2
-        pattern_len: a number, or a per-voice sequence of numbers (see the note above). Indicates the
-            length of the
-            "basic pattern" in beats. If a single number, all voices have the same
-            length; if a sequence, sets the length for each voice individually.
-            If `pattern_len` is 0 or negative, it will be assigned the length of
-            the complete harmonic progression (determined by `harmony_len` and
-            `num_harmonies`)
+        pattern_len: a number, or a per-voice sequence of numbers. Indicates the
+            length of the "basic pattern" in beats. If a single number, all
+            voices have the same length; if a sequence, sets the length for each
+            voice individually.  If `pattern_len` is 0 or negative, it will be
+            assigned the length of the complete harmonic progression (determined
+            by `harmony_len` and `num_harmonies`)
+
             If `cont_rhythms != "none"`, then this argument must consist of
             a single number.
             Default: 0
-        truncate_patterns: bool. If True, then any values in `pattern_len` which
-            are not factors of the maximum value in `pattern_len` will be
-            truncated at the maximum value.
+        truncate_patterns: bool. If True, then repetitions of any values in
+            `pattern_len` which are not factors of the maximum value in
+            `pattern_len` will be truncated at the maximum value. For example,
+            if voice 0 has `pattern_len = 3` and voice 1 has `pattern_len = 5`,
+            every second repetition of the pattern in voice 0 will be truncated
+            after two beats.
             Default: False
-        rhythm_len: a number, or a per-voice sequence of numbers. Indicates the length of the
-            rhythmic pattern to be generated. If not passed, then will be
-            assigned the value of `pattern_len`. If a single number, all voices
-            have the same
-            length; if a sequence, sets the length for each voice individually.
-            The use of `rhythm_len` is to make repeated rhythmic patterns that are
-            shorter than `pattern_len`. If `rhythm_len` does not divide
-            `pattern_len` evenly (e.g., if `rhythm_len == 3` and `pattern_len == 8`),
-            then the final repetition of `rhythm_len` will be truncated. Similarly,
-            if `rhythm_len` is longer than `pattern_len`, it will be truncated; in
-            this case, one may as well not pass any value of `rhythm_len`, since in
-            the absence of a value, `rhythm_len` is assigned the value of
-            `pattern_len`.
+        rhythm_len: a number, or a per-voice sequence of numbers. Indicates the
+            length of the rhythmic pattern to be generated. If not passed, then
+            will be assigned the value of `pattern_len`. If a single number, all
+            voices have the same length; if a sequence, sets the length for each
+            voice individually.  The use of `rhythm_len` is to make repeated
+            rhythmic patterns that are shorter than `pattern_len`. If
+            `rhythm_len` does not divide `pattern_len` evenly (e.g., if
+            `rhythm_len == 3` and `pattern_len == 8`), then the final repetition
+            of `rhythm_len` will be truncated. Similarly, if `rhythm_len` is
+            longer than `pattern_len`, it will be truncated; in this case, one
+            may as well not pass any value of `rhythm_len`, since in the absence
+            of a value, `rhythm_len` is assigned the value of `pattern_len`.
+
             If `cont_rhythms != "none"`, then this argument must consist of
             a single number, which must be the same as the value of
             `pattern_len`.
-        num_harmonies: int. The number of harmonies in the pattern. If passed a
-            non-positive value,
-            then will be assigned the length of `root_pcs`.
+        num_harmonies: int. The number of harmonies in the pattern. If a
+            non-positive value is passed, the length of `root_pcs` will be
+            assigned to this setting.
             Default: 4
-        harmony_len: a number, or a looping sequence of numbers (see above). If a sequence of numbers, the
-            harmonies will cycle through the sequence until `num_harmonies` is
-            reached. So, for instance, the first harmony will have the length
-            of the first number in the sequence, the second harmony of the second,
-            and so on. (Unlike
-            `pattern_len` or `rhythm_len`, there is no way of assigning
-            different harmony_lengths to different voices.)
+        harmony_len: a number, or a looping sequence of numbers (see above).
+            If a sequence of numbers, the harmonies will cycle through the
+            sequence until `num_harmonies` is reached. That is, the first
+            harmony will have the length of the first number in the sequence,
+            the second harmony of the second, and so on. (Unlike `pattern_len`
+            or `rhythm_len`, there is no way of assigning different
+            harmony_lengths to different voices.)
             Default: 4
         max_super_pattern_len: number. If positive, the super pattern will be
             truncated if it reaches this length.
             Default: 128
         voice_ranges: a sequence of 2-tuples. Each tuple is of form
-            (lowest_note, highest_note).
-            (See the note above on specifying pitches.) er_constants.py provides
-            a number of useful values for this purpose. The sequence must
-            be at least `num_voices` length. (If it is longer, excess items
-            will be ignored.) It is not enforced that the sequence be in ascending
-            order but I haven't extensively tested what happens if it is not.
-            Note that if `constrain_voice_leading_to_ranges` is False,
-            than these ranges will only be enforced for the initial pattern.
+            (lowest_note, highest_note). (See the note above on specifying
+            pitches and intervals.) `er_constants.py` provides a number of
+            useful values for this purpose. The sequence must be at least
+            `num_voices` length. (If it is longer, excess items will be
+            ignored.) It is not enforced that the sequence be in ascending order
+            but I haven't extensively tested what happens if it is not.  Note
+            that if `constrain_voice_leading_to_ranges` is False, than these
+            ranges will only be enforced for the initial pattern.
             Default: CONTIGUOUS_OCTAVES * OCTAVE3 * C
         hard_bounds: a per-voice sequence of 2-tuples.  Each tuple is of form
             (lowest_note, highest_note). (See the note above on specifying
-            pitches.) This setting determines a lower and upper bound that will
-            be enforced regardless of the setting of
-            `constrain_voice_leading_to_ranges`. The default values are
-            the lowest and highest notes of an 88-key piano, respectively.
+            pitches and intervals.) This setting determines a lower and upper
+            bound that will be enforced regardless of the setting of
+            `constrain_voice_leading_to_ranges`. The default values are the
+            lowest and highest notes of an 88-key piano, respectively.
             Default: ((OCTAVE0 * A, OCTAVE8 * C))
         voice_order_str: string. If "reverse", voices will be generated from
             highest to lowest. Otherwise, they are generated from lowest to
             highest.
             Default: "usual"
-        allow_voice_crossings: bool, or a per-voice sequence of bools. This could be
-            used, for example, to forbid voice-crossings in the bass voice,
-            but not in the other voices.
+        allow_voice_crossings: bool, or a per-voice sequence of bools. This
+            could be used, for example, to forbid voice-crossings in the bass
+            voice, but not in the other voices.
             Default: True
         time_sig: an optional tuple of form (int, int). The integers are the
             numerator and denominator of a time signature, respectively. The
@@ -132,9 +204,9 @@ class ERSettings:
             from the other settings.
             Default: None
         existing_voices: string. The path to a midi file that contains some
-            pre-existing music to which new voices should be added. Settings such
-            as `scales` or `chords` are not inferred from the midi file and must
-            be set explicitly by the user.
+            pre-existing music to which new voices should be added. Settings
+            such as `scales` or `chords` are not inferred from the midi file and
+            must be set explicitly by the user.
         existing_voices_offset: number. Used to set the beat at which the
             voices in `existing_voices` should begin. Has no effect if
             `existing_voices` is not passed.
@@ -147,8 +219,7 @@ class ERSettings:
             together with the new voices.
             Default: True
         existing_voices_transpose: boolean. If True, then any existing voices
-            will be transposed according to the transposition settings below,
-            according to the transposition settings below.
+            will be transposed according to the "transposition settings" below.
             Default: True
         existing_voices_max_denominator: integer. In order to avoid rounding
             errors and the like, the rhythms in `existing_voices` are converted
@@ -167,8 +238,8 @@ class ERSettings:
             documentation for more info.)
             Default: ()
         voice_leading_attempts: integer. Number of attempts to make at
-            constructing voice-leading pattern before giving up or asking whether
-            to make more attempts.
+            constructing voice-leading pattern before giving up or asking
+            whether to make more attempts.
             Default: 50
         ask_for_more_attempts: bool. If True, if `initial_pattern_attempts` or
             `voice_leading_attempts` are made without success, script will
@@ -185,8 +256,9 @@ class ERSettings:
 
         scales_and_chords_specified_in_midi: string. If passed, specifies a
             midi file in a specific format, described below, from which the
-            settings `root_pcs`, `scales`, and `chords` below should be inferred (in which case any explicit
-            values for these settings are ignored).
+            settings `root_pcs`, `scales`, and `chords` below should be inferred
+            (in which case any explicit values for these settings are ignored).
+
             The midi file should consist of two tracks. `scales` are inferred
             from the first track, and `chords` and `root_pcs` are inferred
             from the second track (`root_pcs` are simply the lowest sounding
@@ -196,6 +268,7 @@ class ERSettings:
             `examples/scales_and_chords_specified_in_midi_example.mid`.
             Note that the rhythm of the harmonic changes is set through the
             `harmony_len` parameter above.
+
             You must ensure that chords and scales are consistent (that is,
             that the chords do not contain pitch-classes that do not belong to
             the  scales; i.e., that the scales are supersets of the chords),
@@ -204,19 +277,23 @@ class ERSettings:
             will correspond to `0` in each item of `scales` and `chords`.
             Note that for chords that are not in root position, this will not
             correspond to the root in a music-theoretic sense.
-            For example,
-            if `root_pcs == [2, 4]` and `chords == [[0, 4, 7], [0, 3, 8]]`, then
-            the actually realized chords will have pitch-classes `[2, 6, 9]` and
-            `[4, 7, 0]`, respectively (assuming `tet == 12`). (In music-theoretic
-            terms, the chords will be a D major triad followed by a first-
-            inversion C major triad.)
+
+            For example, if `root_pcs == [2, 4]` and `chords == [[0, 4, 7], [0,
+            3, 8]]`, then the actually realized chords will have pitch-classes
+            `[2, 6, 9]` and `[4, 7, 0]`, respectively (assuming `tet == 12`).
+            (In music-theoretic terms, the chords will be a D major triad
+            followed by a first- inversion C major triad.)
+
             If `root_pcs` is shorter than `num_harmonies`, it is looped through
             until the necessary length is obtained.
-            If not passed or an empty sequence, `num_harmonies` roots will be
-            generated randomly.
+
+            If not passed, or passed an empty sequence, `num_harmonies` roots
+            will be generated randomly.
+
             Note that if `interval_cycle` below is non-empty, all items in this
             sequence past the first are ignored.
-            (See note above on specifying pitch materials.)
+
+            (See the note above on specifying pitches and intervals.)
         interval_cycle: number, or sequence of numbers. Specifies a root-pc
             interval cycle beginning on the first pitch-class of `root_pcs` (or
             on a randomly chosen pitch-class, if `root_pcs` is not passed).
@@ -225,26 +302,32 @@ class ERSettings:
                     6...
                 - `interval_cycle == [3, -2]`, the root pitch-classes will be
                     0, 3, 1, 4, 2...
-            (See note above on specifying pitch materials.)
+            (See the note above on specifying pitches and intervals.)
         scales: a sequence of sequences of numbers. Each subsequence specifies
             a scale. Scales should always be specified starting from pitch-class
             0; they will then be transposed to the appropriate pitch-classes
             according to the settings `root_pcs` or `interval_cycle`.
+
             If `root_pcs` has fewer items than `scales`, then the excess items
             in `scales` will be ignored.
+
             If `root_pcs` has more items than `scales`, then `scales` will be
             looped through.
-            (See note above on specifying pitch materials.)
+
+            (See the note above on specifying pitches and intervals.)
             Default: [er_constants.DIATONIC_SCALE]
         chords: a sequence of sequences of numbers. Each subsequence specifies
             a chord. Scales should always be specified starting from pitch-class
             0; they will then be transposed to the appropriate pitch-classes
             according to the settings `root_pcs` or `interval_cycle`.
+
             If `root_pcs` has fewer items than `chords`, then the excess items
             in `chords` will be ignored.
+
             If `root_pcs` has more items than `chords`, then `chords` will be
             looped through.
-            (See note above on specifying pitch materials.)
+
+            (See the note above on specifying pitches and intervals.)
             Default: [er_constants.MAJOR_TRIAD]
 
         Midi settings
@@ -266,7 +349,7 @@ class ERSettings:
             Default: True
         humanize: bool. Whether to apply "humanization" to various parameters
             according to the various "humanize" settings below.
-            Default: True.
+            Default: True
         humanize_attack: float. Randomly varies attack times within +- this
             amount, in quarter notes.
             Default: 0.0
@@ -299,6 +382,7 @@ class ERSettings:
             the notes (and their associated pitch-bend events) of each voice
             loop through a number of different channels (set by
             `num_channels_pitch_bend_loop`).
+
             I have not used these midi files with any other DAWs so I don't
             know whether this setting is helpful with e.g., ProTools.
             Default: False
@@ -329,17 +413,19 @@ class ERSettings:
         voice_lead_chord_tones: bool. If True, then chord-tones on each harmony
             are voice-led to chord-tones on the next harmony, and
             non-chord-tones to non-chord-tones. So, if moving from a C major
-            chord to an F major chord, the pitch-class C will be mapped to
-            one of the pitch-classes (F, A, C), the pitch-class E will be mapped
-            to one of the two remaining pitch-classes of the F major chord,
-            and the pitch-class G will be mapped to the remaining pitch-class
-            of the F major chord. A similar mapping will be made among the
-            non-chord tones of the scale.
+            chord to an F major chord, the pitch-class C will be mapped to one
+            of the pitch-classes (F, A, C), the pitch-class E will be mapped to
+            one of the two remaining pitch-classes of the F major chord, and the
+            pitch-class G will be mapped to the remaining pitch-class of the F
+            major chord. A similar mapping will be made among the non-chord
+            tones of the scale.
+
             Setting this parameter to True will greatly reduce the script's
             ability to find voice-leading solutions (especially in combination
-            with `allow_flexible_voice_leading == False`). Note also that it will
-            often lead to at least some relatively large voice-leading
+            with `allow_flexible_voice_leading == False`). Note also that it
+            will often lead to at least some relatively large voice-leading
             motions.
+
             Default: False
         preserve_root_in_bass: string. Controls whether the occurrences
             of the root in the bass are "preserved" when voice-leading the
@@ -349,18 +435,20 @@ class ERSettings:
             second chord, preserving the root, or should it be voice-led to a C
             (which would be more efficient, in the sense of moving a smaller
             interval, a unison, rather than a fourth or fifth).
+
             Note that if this settings is not "none", otherwise forbidden
             intervals may occur.
+
             Possible values:
-                - "lowest": only the lowest sounding occurrences of
+                "lowest": only the lowest sounding occurrences of
                     the root on each harmony are preserved (so if, e.g.,
                     C2 and C3 both occur, only C2 will
                     be preserved when voice-led to the next chord, while
                     C3 will proceed by efficient voice-leading like all
                     other pitches).
-                - "all": all occurrences of the root of each harmony
+                "all": all occurrences of the root of each harmony
                     are preserved.
-                - "none": the root is voice-led like any other pitch.
+                "none": the root is voice-led like any other pitch.
             Default: "none"
         extend_bass_range_for_roots: number. If non-zero, permits transposition
             of the root lower than the normal range of the bass voice, in order
@@ -370,7 +458,7 @@ class ERSettings:
             during that harmony, then they will be transposed an octave
             downwards, provided that this transposition lies within this
             extended range.
-            Default: 0.
+            Default: 0
         constrain_voice_leading_to_ranges: bool. If False, then after the
             initial pattern is complete, the voices may exceed their ranges, if
             the most efficient voice-leading requires it. (For example, if
@@ -392,47 +480,51 @@ class ERSettings:
             is complete, voice-leadings will not be checked for consonance.
             (See the settings under "Consonance and dissonance settings" below.)
             Default: True
-        vl_maintain_limit_intervals: bool. If False, then after the initial pattern
-            is complete, voice-leadings will be allowed to exceed limit intervals.
-            (See settings `max_interval`, `max_interval_for_non_chord_tones`,
-            `min_interval`, `min_interval_for_non_chord_tones`.)
+        vl_maintain_limit_intervals: bool. If False, then after the initial
+            pattern is complete, voice-leadings will be allowed to exceed limit
+            intervals.  (See settings `max_interval`,
+            `max_interval_for_non_chord_tones`, `min_interval`,
+            `min_interval_for_non_chord_tones`.)
             Default: True
-        vl_maintain_forbidden_intervals: bool. If False, then after the initial pattern
-            is complete, voice-leadings will be permitted to contain forbidden intervals.
-            (See `forbidden_interval_classes`, `forbidden_interval_modulo`.)
+        vl_maintain_forbidden_intervals: bool. If False, then after the initial
+            pattern is complete, voice-leadings will be permitted to contain
+            forbidden intervals.  (See `forbidden_interval_classes`,
+            `forbidden_interval_modulo`.)
             Default: True
 
         Chord-tone settings
         ===================
 
         Parameters that begin "force_chord_tone" (though not
-        "force_non_chord_tone") apply regardless of whether chord_tone_selection
-        is true. Other chord_tone settings modify the behaviour activated
-        by chord_tone_selection.
+        "force_non_chord_tone") apply regardless of whether
+        `chord_tone_selection` is true. Other chord tone settings modify the
+        behaviour activated by `chord_tone_selection`.
 
-        chord_tone_and_root_disable: bool. If True, disables all chord-tone and root
-            specific behaviour. Specifically, disables `chord_tone_selection`,
-            `chord_tones_no_diss_treatment`, `force_chord_tone`,
-            `force_root_in_bass`, `max_interval_for_non_chord_tones`,
+        chord_tone_and_root_disable: bool. If True, disables all chord-tone and
+            root specific behaviour. Specifically, disables
+            `chord_tone_selection`, `chord_tones_no_diss_treatment`,
+            `force_chord_tone`, `force_root_in_bass`,
+            `max_interval_for_non_chord_tones`,
             `min_interval_for_non_chord_tones`, `voice_lead_chord_tones`,
             `preserve_root_in_bass`, `extend_bass_range_for_roots`
             Default: False
-        chord_tone_selection: boolean. If True, then the script will select whether
-            each note should be assigned a chord-tone according to a probabilistic
-            function (some of whose parameters can be set below). Note that
-            even if this setting is True, however, and a particular note
-            is assigned to be a chord-tone, if all chord-tones fail to satisfy
-            the various conditions (e.g., `max_interval`, etc.), the
+        chord_tone_selection: boolean. If True, then the script will select
+            whether each note should be assigned a chord-tone according to a
+            probabilistic function (some of whose parameters can be set below).
+            Note that even if this setting is True, however, and a particular
+            note is assigned to be a chord-tone, if all chord-tones fail to
+            satisfy the various conditions (e.g., `max_interval`, etc.), the
             algorithm will try to find a non-chord-tone that works.
                 - Note that not all chord tone behaviour is controlled
                     by this setting, however. Some settings (such as those
                     that begin "force_chord_tone") apply regardless. To disable
-                    all chord tone behavior entirely, use `chord_tone_and_root_disable`.
+                    all chord tone behavior entirely, use
+                    `chord_tone_and_root_disable`.
             Default: True
-        chord_tone_prob_func: string. If chord_tone_selection is True, then the
-            probability of the next note being a nonchord tone falls following
-            each nonchord tone. This parameter controls how it falls. It can take
-            the following values:
+        chord_tone_prob_func: string. If `chord_tone_selection` is True, then
+            the probability of the next note being a nonchord tone falls
+            following each nonchord tone. This parameter controls how it falls.
+            It can take the following values:
                 "quadratic"
                 "linear"
             Default: "linear"
@@ -443,12 +535,14 @@ class ERSettings:
             `max_n_between_chord_tones` is 2,
                 - after a chord tone, the probability of a chord tone will be
                     0.5
-                - after one non-chord tone, the probability of a chord tone will be 0.75
-                - after two non-chord tones, the probability of a chord tone will be 1
-            Default: 4.
+                - after one non-chord tone, the probability of a chord tone will
+                    be 0.75
+                - after two non-chord tones, the probability of a chord tone
+                    will be 1
+            Default: 4
         min_prob_chord_tone: float. Sets the probability of a chord tone
-            immediately following another chord tone.
-            See `max_n_between_chord_tones` for an example.
+            immediately following another chord tone. See
+            `max_n_between_chord_tones` for an example.
             Default: 0.25
         try_to_force_non_chord_tones: boolean. If True, then if the chord-tone
             probability function returns false, the script will try to force
@@ -462,17 +556,15 @@ class ERSettings:
             tones. To disable, set to 0.
             Default: 1
         scale_chord_tone_prob_by_dur: bool. If True, and `chord_tone_selection`
-            is True, then the probability of
-            a note being a chord-tone is scaled by the duration of that note,
-            so that longer notes are more likely to be chord-tones.
-            Specifically, the probability of a note being a chord tone is
-            linearly interpolated between what it would have been otherwise and
-            1, according to where the duration lies in the range set by
-            `scale_chord_tone_neutral_dur` and `len_to_force_chord_tone`.
+            is True, then the probability of a note being a chord-tone is scaled
+            by the duration of that note, so that longer notes are more likely
+            to be chord-tones.  Specifically, the probability of a note being a
+            chord tone is linearly interpolated between what it would have been
+            otherwise and 1, according to where the duration lies in the range
+            set by `scale_chord_tone_neutral_dur` and `len_to_force_chord_tone`.
             (Whether the probability of notes shorter than
             `scale_chord_tone_neutral_dur` is reduced depends upon
-            `scale_short_chord_tones_down`.)
-            Thus if this setting is True, then
+            `scale_short_chord_tones_down`.) Thus if this setting is True, then
             `len_to_force_chord_tone` must have a non-zero value.
             Default: True
         scale_chord_tone_neutral_dur: number. If `scale_chord_tone_prob_by_dur`
@@ -483,32 +575,37 @@ class ERSettings:
             if `scale_short_chord_tones_down` is True.
             Default: 0.5
         scale_short_chord_tones_down: bool. See `scale_chord_tone_prob_by_dur`
-            and `scale_chord_tone_neutral_dur`. Default: False
-        chord_tone_before_rests: a number, or a per-voice sequence of numbers. If chord_tone_selection is true,
-            then rests of this length or greater will always be preceded by a
-            chord tone. To disable, assign a value of 0.
+            and `scale_chord_tone_neutral_dur`.
+            Default: False
+        chord_tone_before_rests: a number, or a per-voice sequence of numbers.
+            If chord_tone_selection is true, then rests of this length or
+            greater will always be preceded by a chord tone. To disable, assign
+            a value of 0.
             Default: 0.26
-        chord_tones_no_diss_treatment: boolean, or a per-voice sequence of booleans. If
-            true, then chord tones are exempted from the conditions of dissonance
-            treatment. (However, dissonances sounding *against* these chord
-            tones are still subject to the rules of dissonance treatment.)
+        chord_tones_no_diss_treatment: boolean, or a per-voice sequence of
+            booleans. If true, then chord tones are exempted from the conditions
+            of dissonance treatment. (However, dissonances sounding *against*
+            these chord tones are still subject to the rules of dissonance
+            treatment.)
             Default: False
         force_chord_tone: string. Possible values:
-            "global_first_beat": forces chord tone on attacks on the global
-               first beat (i.e., the first beat of the entire piece). Note,
-               however, that this does not ensure that there will be an attack
-               on the global first beat, and this parameter has no effect on
-               notes that sound *after* the first beat. (Compare "global_first_note".)
-            "global_first_note": forces chord tones on the first note to
-              sound in each voice.
-            "first_beat": forces chord tones on attacks on the first beat
-              of each harmony of the initial pattern. Note, however, that this
-              does not ensure that there will be an attack on the first beat of
-              each harmony, and this parameter has no effect on notes that sound
-              *after* the first beat of each harmony. (Compare "first_note".)
-            "first_note": forces chord tones on the first note of each harmony
-              in each voice.
-            "none": does not force any chord tones.
+                "global_first_beat": forces chord tone on attacks on the global
+                    first beat (i.e., the first beat of the entire piece). Note,
+                    however, that this does not ensure that there will be an
+                    attack on the global first beat, and this parameter has no
+                    effect on notes that sound *after* the first beat. (Compare
+                    "global_first_note".)
+                "global_first_note": forces chord tones on the first note to
+                    sound in each voice.
+                "first_beat": forces chord tones on attacks on the first beat
+                    of each harmony of the initial pattern. Note, however, that
+                    this does not ensure that there will be an attack on the
+                    first beat of each harmony, and this parameter has no effect
+                    on notes that sound *after* the first beat of each harmony.
+                    (Compare "first_note".)
+                "first_note": forces chord tones on the first note of each
+                    harmony in each voice.
+                "none": does not force any chord tones.
             Default: "none"
         chord_tones_sync_attack_in_all_voices: bool. If True, then chord-tone
             selection will be synchronized between all simultaneously attacked
@@ -516,11 +613,11 @@ class ERSettings:
             Default: False
         force_root_in_bass: string. Possible values are listed below; they work
             in the same way as for `force_chord_string` above.
-                  - "first_beat"
-                  - "first_note"
-                  - "global_first_beat"
-                  - "global_first_note"
-                  - "none"
+                "first_beat"
+                "first_note"
+                "global_first_beat"
+                "global_first_note"
+                "none"
             Default: "none"
 
         Melody settings
@@ -531,44 +628,51 @@ class ERSettings:
               of each voice.
               LONGTERM how, exactly? Make documentation more explicit?
             Default: True
-        prefer_small_melodic_intervals_coefficient: number. If `prefer_small_melodic_intervals` is true,
-          then `prefer_small_melodic_intervals_coefficient` adjusts how strong the weighting
-          towards smaller intervals is. It can take any value > 0; greater
-          values mean larger intervals are relatively more likely. A good
-          range of values is 0 - 10.
-          Default: 1
+        prefer_small_melodic_intervals_coefficient: number. If
+            `prefer_small_melodic_intervals` is true, then
+            `prefer_small_melodic_intervals_coefficient` adjusts how strong the
+            weighting towards smaller intervals is. It can take any value > 0;
+            greater values mean larger intervals are relatively more likely. A
+            good range of values is 0 - 10.
+            Default: 1
         unison_weighted_as: int. If prefer_small_melodic_intervals is true, then
-          we have to tell the algorithm how to weight melodic unisons,
-          because we usually don't want them to be the most common melodic
-          interval. Unisons will be weighted the same as whichever generic
-          interval this variable is assigned to.
-          (If you *DO* want unisons to be the most common melodic interval,
-          set to GENERIC_UNISON -- you can't use UNISON because that's
-          a just interval constant.)
-          Default: er_constants.FIFTH
-        max_interval: number, or a per-voice sequence of numbers. If zero, does not apply.
-          If positive, indicates a generic interval. If
-          negative, indicates a specific interval (in which case it can be a
-          float to indicate a just interval which will be tempered in
-          pre-processing---see note above on specifying pitch materials).
-          max_interval sets an inclusive bound (so if `max_interval == -5`,
-          an interval of 5 semitones is allowed, but 6 is not). `max_interval`,
-          like the other similar settings below, applies across rests.
-          Default: -er_constants.OCTAVE
-        max_interval_for_non_chord_tones: number, or a per-voice sequence of numbers.
-          Works in the same way as max_interval, but only applies to
-          non-chord tones. If given a value of 1, can be used to apply a
-          sort of primitive dissonance treatment. It can, however, also
-          be given a value *larger* than max_interval, for unusual effects.
-            min_interval sets an inclusive bound (so if `min_interval == -3`,
-            an interval of 3 semitones is allowed, but 2 is not).
-            If not passed, is assigned the value of `max_interval`.
-        min_interval: number, or a per-voice sequence of numbers. Works like `max_interval`, but
-            specifies a minimum, rather than a maximum, interval.
+            we have to tell the algorithm how to weight melodic unisons, because
+            we usually don't want them to be the most common melodic interval.
+            Unisons will be weighted the same as whichever generic interval this
+            variable is assigned to.
+
+            (If you *DO* want unisons to be the most common melodic interval,
+            set to GENERIC_UNISON -- you can't use UNISON because that's a just
+            interval constant.)
+            Default: er_constants.FIFTH
+        max_interval: number, or a per-voice sequence of numbers. If zero, does
+            not apply.  If positive, indicates a generic interval. If negative,
+            indicates a specific interval (in which case it can be a float to
+            indicate a just interval which will be tempered in
+            pre-processing---see the note above on specifying pitches and
+            intervals).
+
+            `max_interval` sets an inclusive bound (so if `max_interval == -5`,
+            an interval of 5 semitones is allowed, but 6 is not).
+            `max_interval`, like the other similar settings below, applies
+            across rests.
+            Default: -er_constants.OCTAVE
+        max_interval_for_non_chord_tones: number, or a per-voice sequence of
+            numbers.  Works in the same way as max_interval, but only applies to
+            non-chord tones. If given a value of 1, can be used to apply a sort
+            of primitive dissonance treatment. It can, however, also be given a
+            value *larger* than max_interval, for unusual effects.  min_interval
+            sets an inclusive bound (so if `min_interval == -3`, an interval of
+            3 semitones is allowed, but 2 is not).  If not passed, is assigned
+            the value of `max_interval`.
+        min_interval: number, or a per-voice sequence of numbers. Works like
+            `max_interval`, but specifies a minimum, rather than a maximum,
+            interval.
             Default: 0
-        min_interval_for_non_chord_tones: number, or a per-voice sequence of numbers. Works like `max_interval_for_non_chord_tones`, but
-            specifies a minimum, rather than a maximum, interval.
-            If not passed, is assigned the value of `min_interval`.
+        min_interval_for_non_chord_tones: number, or a per-voice sequence of
+            numbers. Works like `max_interval_for_non_chord_tones`, but
+            specifies a minimum, rather than a maximum, interval.  If not
+            passed, is assigned the value of `min_interval`.
         force_repeated_notes: bool. If True, then within each harmony, each
             note is forced to repeat the pitch of the previous note.
             Default: False
@@ -576,32 +680,34 @@ class ERSettings:
             pitches in a single voice. If `force_repeated_notes` is True, this
             parameter is ignored. "One repeated note" means two notes with the
             same pitch in a row.
+
             Warning: for now, only applies to the initial pattern, not to
             the subsequent voice-leading
+
             Default: 1
-        max_alternations: integer, or a per-voice sequence of integers. Specifies the
-            maximum allowed number of consecutive alternations of two pitches
-            in a voice.  "One alternation" is two pitches (e.g., A, B), and
-            "two alternations"
-            is four pitches (e.g., A, B, A, B). If set to two, then the sequence
-            "A, B, A, B, A" is allowed, just not "A, B, A, B, A, B" (or longer).
-            To disable, set to 0.
+        max_alternations: integer, or a per-voice sequence of integers.
+            Specifies the maximum allowed number of consecutive alternations of
+            two pitches in a voice.  "One alternation" is two pitches (e.g., A,
+            B), and "two alternations" is four pitches (e.g., A, B, A, B). If
+            set to two, then the sequence "A, B, A, B, A" is allowed, just not
+            "A, B, A, B, A, B" (or longer).  To disable, set to 0.
             Default: 2
-        pitch_loop: int, or a sequence of ints. If passed, in each voice, pitches will be
-            repeated in a loop of the specified length. (However, at each harmony change, the loop
-            will be adjusted to fit the new harmony.)
-        hard_pitch_loop: boolean. If True, then after the initial loop of each voice
-            is constructed, pitch constraint parameters such as `consonances`
-            and `max_interval` will be ignored and the pitches will
-            continue to be looped "no matter what." If False, then a "soft" pitch
-            loop is constructed, where a new pitch is chosen each time a pitch fails
-            to pass the pitch constraint parameters.
+        pitch_loop: int, or a sequence of ints. If passed, in each voice,
+            pitches will be repeated in a loop of the specified length.
+            (However, at each harmony change, the loop will be adjusted to fit
+            the new harmony.)
+        hard_pitch_loop: boolean. If True, then after the initial loop of each
+            voice is constructed, pitch constraint parameters such as
+            `consonances` and `max_interval` will be ignored and the pitches
+            will continue to be looped "no matter what." If False, then a "soft"
+            pitch loop is constructed, where a new pitch is chosen each time a
+            pitch fails to pass the pitch constraint parameters.
             Default: False
         prohibit_parallels: sequence of numbers. The numbers will be treated as
             octave-equivalent intervals (so, e.g., an octave equals a unison).
             Parallel motion by these intervals will be forbidden. The obvious
             use is to prohibit parallel octaves, but can be used however one
-            wishes. (See note above on specifying pitch materials.)
+            wishes. (See the note above on specifying pitches and intervals.)
             Default: (OCTAVE,)
         antiparallels: bool. If True, then "antiparallel" versions of the
             intervals in `prohibit_parallels` will also be prohibited. (E.g.,
@@ -609,14 +715,15 @@ class ERSettings:
             unison or a fifteenth will also be forbidden, and vice versa.)
             Default: True
         force_parallel_motion: bool, or a dictionary where keys are tuples of
-            ints (indicating voice indices) and values are bools.
-            If True,  then voices will be constrained to move in (generic) parallel
+            ints (indicating voice indices) and values are bools.  If True,
+            then voices will be constrained to move in (generic) parallel
             motion. The parallel motion is only enforced within harmonies;
             across the boundaries between harmonies, voices may move freely.
             When this parameter is True between voices that do not have the same
             attacks, it works as follows: it takes the *last* melodic interval
             in the leader voice, and adds the same melodic interval in the
             follower voice.
+
             If True, `prohibit_parallels` is nevertheless respected
             (specifically, the harmonic interval that would result from forcing
             parallel motion is checked for membership in `prohibit_parallels`).
@@ -625,11 +732,13 @@ class ERSettings:
             octave; conversely, if it would exceed the highest pitch of its
             range, it will be moved down an octave. (Either operation may
             violate `max_interval` or `max_interval_for_non_chord_tones`.) Note
-            that strange effects may result if the voice's range is less than
-            an octave.
+            that strange effects may result if the voice's range is less than an
+            octave.
+
             Note that if the follower has a longer `pattern_len` than the
             leader, the parallel motion will only last until the conclusion
             of the leader pattern.
+
             Default: False
 
 
@@ -643,7 +752,7 @@ class ERSettings:
                 "all_durs": each pitch is evaluated for consonance with
                     all other pitches sounding during its duration.
                 "none": no consonance treatment.
-                Default: "all_attacks"
+            Default: "all_attacks"
         consonance_type: string. Controls how notes are evaluated for
             consonance/dissonance. Possible values:
                 "pairwise": all pairs of sounding voices are checked against
@@ -651,62 +760,66 @@ class ERSettings:
                 "chordwise": all voices are checked as a group
                     to see if they belong to one of the chords in
                     `consonant_chords`
-                Default: "pairwise"
+            Default: "pairwise"
         consonance_modulo: number, or a sequence of numbers, or a
             per-voice sequence of sequences of numbers.
+
             If a number, only attack times that are 0 modulo this number will
             have consonance settings applied. For example, if
             `consonance_modulo == 1`, then every quarter-note beat will have
             consonance settings applied, but pitches *between* these beats
             will not.
+
             If a sequence of numbers, the sequence of numbers defines a loop
             of attack times at which consonance settings will be applied. The
             largest number in the sequence defines the loop length.
             For example, if `consonance_modulo == [1, 1.5, 2]`, then consonance
             settings will be applied at beats 0, 1, 1.5, 2, 3, 3.5, 4, 5, etc.
-            If a sequence of sequence of numbers, each sub-sequence works as
+
+            If a sequence of sequences of numbers, each sub-sequence works as
             defined above, and they are applied to individual voices in a
             looping per-voice manner as described above.
         min_dur_for_cons_treatment: number. Notes with durations shorter than
             this value will not be evaluated for consonance.
             Default: 0
         forbidden_interval_classes: a sequence of numbers. The intervals in
-          this sequence (interpreted as harmonic intervals) will be entirely avoided,
-          regardless of consonance settings, at least in the initial pattern.
-          Whether this setting persists after the initial pattern depends on
-          the value of `vl_maintain_consonance`. (See note above on specifying
-          pitch materials.)
-          Default: ()
-        forbidden_interval_modulo: number, or a sequence of number, or a sequence of
-            sequence of numbers.
-            Optionally defines attack times at which
-            `forbidden_interval_classes` will be enforced. Works similarly to
-            and is specified in the same manner as `consonance_modulo`.
+            this sequence (interpreted as harmonic intervals) will be entirely
+            avoided, regardless of consonance settings, at least in the initial
+            pattern.  Whether this setting persists after the initial pattern
+            depends on the value of `vl_maintain_consonance`. (See the note
+            above on specifying pitches and intervals.)
+            Default: ()
+        forbidden_interval_modulo: number, or a sequence of number, or a
+            sequence of sequence of numbers. Optionally defines attack times
+            at which `forbidden_interval_classes` will be enforced. Works
+            similarly to and is specified in the same manner as
+            `consonance_modulo`.
         exclude_augmented_triad: boolean. Because all the pairwise intervals of
-          the 12-tet augmented triad are consonant, if we want to avoid it, we
-          need to explicitly
-          exclude it. Only has any effect if consonance_type is "pairwise".
-          Default: True
-        consonances: a sequence of numbers. The sequence items specify the intervals
-            that will be treated as consonances if `consonance_type` is
-            `"pairwise"`. (But see `invert_consonances` below.) Since it's just a sequence of numbers, you can specify
-            any intervals you like---it does not have to conform to the usual
-            set of consonances. (See note above on specifying pitch materials.)
+            the 12-tet augmented triad are consonant, if we want to avoid it, we
+            need to explicitly exclude it. Only has any effect if
+            consonance_type is "pairwise".
+            Default: True
+        consonances: a sequence of numbers. The sequence items specify the
+            intervals that will be treated as consonances if `consonance_type`
+            is `"pairwise"`. (But see `invert_consonances` below.) Since it's
+            just a sequence of numbers, you can specify any intervals you
+            like---it does not have to conform to the usual set of consonances.
+            (See the note above on specifying pitches and intervals.)
             Default: `er_constants.CONSONANCES`
         invert_consonances: bool. If True, then the contents of `consonances`
-            are replaced by their setwise complement. (E.g., if `tet` is 12, then
-            `[0, 3, 4, 5, 7, 8, 9]` will be replaced by `[1, 2, 6, 10, 11]`.)
-            This permits an easy way of specifying so-called "dissonant
+            are replaced by their setwise complement. (E.g., if `tet` is 12,
+            then `[0, 3, 4, 5, 7, 8, 9]` will be replaced by `[1, 2, 6, 10,
+            11]`.) This permits an easy way of specifying so-called "dissonant
             counterpoint". Has no effect if `consonance_type` is `"chordwise"`.
             Default: False
-        consonant_chords: a sequence of sequences of numbers. Each sub-sequence specifies a
-            chord to be understood as consonant if `consonance_type` is
-            `"chordwise"`. (See note above on specifying pitch materials.)
+        consonant_chords: a sequence of sequences of numbers. Each sub-sequence
+            specifies a chord to be understood as consonant if `consonance_type`
+            is `"chordwise"`. (See the note above on specifying pitches and
+            intervals.)
             Default: `(er_constants.MAJOR_TRIAD, er_constants.MINOR_TRIAD)`
         chord_octave_equi_type: string. If `consonance_type` is `"chordwise"`,
-            controls how the items in
-            `consonant_chords` are interpreted regarding octave equivalence and
-            octave permutations. Possible
+            controls how the items in `consonant_chords` are interpreted
+            regarding octave equivalence and octave permutations. Possible
             values:
                 "all": all octave-equivalent and octave-permuted voicings are
                     allowed. Thus (C4, E4, G4), (C4, G4, E5), and (G3, E4, C4)
@@ -720,14 +833,19 @@ class ERSettings:
                 "order": octave equivalence is allowed but pitches must be in
                     the order listed. Thus (C4, E4, G4) is equivalent to
                     (C4, E4, G5) but not to (C4, G4, E5).
-                "none": no octave equivalence or octave permutations of voicings.
-                    Thus (C3, E4, G4) is not equivalent to (C4, E4, G4).
-            Note that transpositional equivalence always applies, so (C4, E4, G4)
-            will always match (F4, A4, C5), and also (C3, E3, G3), even if `"none"`.
-            Note on voice crossings: in all of these settings, "order" refers to order by
-            pitch height, and not by voice number. So if voice 0 has E3 and
-            voice 1 has C3, the order is (C3, E3), because C3 is lower in pitch
-            than E3, and not (E3, C3), because voice 0 is lower than voice 1.
+                "none": no octave equivalence or octave permutations of
+                    voicings. Thus (C3, E4, G4) is not equivalent to
+                    (C4, E4, G4).
+
+            Note that transpositional equivalence always applies, so (C4, E4,
+            G4) will always match (F4, A4, C5), and also (C3, E3, G3), even if
+            `"none"`.
+
+            Note on voice crossings: in all of these settings,
+            "order" refers to order by pitch height, and not by voice number. So
+            if voice 0 has E3 and voice 1 has C3, the order is (C3, E3), because
+            C3 is lower in pitch than E3, and not (E3, C3), because voice 0 is
+            lower than voice 1.
             Default: "all"
         chord_permit_doublings: string. If `consonance_type` is `"chordwise"`,
             controls when octave doublings of chord members are permitted.
@@ -736,8 +854,9 @@ class ERSettings:
                 "complete": doublings are only permitted once the chord is
                     complete. E.g., if the allowed chord is a major triad, then
                     after (C4, E4), the doubling E5 will not be permitted
-                    because the chord is incomplete. However, after (C4, E4, G4),
-                    E5 will be permitted, because the chord is now complete.
+                    because the chord is incomplete. However, after
+                    (C4, E4, G4), E5 will be permitted, because the chord is
+                    now complete.
                 "none": all doublings are prohibited.
             Default: "all"
 
@@ -746,62 +865,66 @@ class ERSettings:
 
         All rhythm settings use `rhythm_len` above.
 
-        rhythms_specified_in_midi: string. If passed, specifies a
-            midi file whose rhythms will be used for the output file. In this
-            case, all rhythm settings below are ignored, with the sole
-            exception of `overlap`. However, `rhythm_len`
-            and `pattern_len` must still be set explicitly above. If
-            `num_voices` is greater than the number of tracks in the input midi
-            file, then the rhythms will loops through the tracks. If the number
-            of tracks in the input midi file is greater than `num_voices`,
-            the excess tracks will be ignored.
+        rhythms_specified_in_midi: string. If passed, specifies a midi file
+            whose rhythms will be used for the output file. In this case, all
+            rhythm settings below are ignored, with the sole exception of
+            `overlap`. However, `rhythm_len` and `pattern_len` must still be set
+            explicitly above. If `num_voices` is greater than the number of
+            tracks in the input midi file, then the rhythms will loops through
+            the tracks. If the number of tracks in the input midi file is
+            greater than `num_voices`, the excess tracks will be ignored.
         rhythms_in_midi_reverse_voices: boolean. The convention in this
             program is for the bass voice to be track 0. On the other hand, in
-            scores (e.g., those made with Sibelius), the convention is for the bass
-            to be the lowest displayed (e.g., highest-numbered) track. If the input file
-            was made with this latter score-order convention, set this
-            boolean to true.
+            scores (e.g., those made with Sibelius), the convention is for the
+            bass to be the lowest displayed (e.g., highest-numbered) track. If
+            the input file was made with this latter score-order convention, set
+            this boolean to true.
             Default: False
         attack_density: a float from 0.0 to 1.0, or an int, or a per-voice
             sequence of floats and/or ints.
+
             Floats represent a proportion of the available attacks to be
             filled. E.g., if `attack_density == 0.5` and there are 4 possible
             attack times, there will be 2 attacks. (Possible attack times are
             determined by `attack_subdivision`, `sub_subdivisions`, and
             `comma` below).
+
             Integers represent a literal number of attacks. E.g., if
             `attack_density == 3`, there will be 3 attacks.
+
             Any negative values will be replaced by a random float between
             0.0 and 1.0.
+
             Note that there will always be at least one attack in each rhythm,
             regardless of how low `attack_density` is set.
             Default: 0.5
         dur_density: a float from 0.0 to 1.0, or a per-voice sequence of floats.
             Indicates a proportion of the duration of `rhythm_len` that should
-            be filled. Any negative values will be replaced by a random float between
-            0.0 and 1.0.
+            be filled. Any negative values will be replaced by a random float
+            between 0.0 and 1.0.
             Default: 1.0
         attack_subdivision: a number, or a per-voice sequence of numbers.
-            Indicates the basic "grid" on which attacks can take place,
-            measured in quarter notes. For example, if
-            `attack_subdivision == 1/4`, then attacks can occur on every
-            sixteenth note subdivision. (But see also `sub_subdivision` below.)
-            If `cont_rhythms == "all"` or `cont_rhythms == "grid"`, then this
-            parameter no longer indicates the grid on which attacks can take
-            place, but it is still used to calculate how many attack positions
-            there should be. Thus, in the case of continuous rhythms, this
-            parameter can be thought of as indicating the average grid duration,
-            rather than the exact grid duration.
+            Indicates the basic "grid" on which attacks can take place, measured
+            in quarter notes. For example, if `attack_subdivision == 1/4`, then
+            attacks can occur on every sixteenth note subdivision. (But see also
+            `sub_subdivision` below.) If `cont_rhythms == "all"` or
+            `cont_rhythms == "grid"`, then this parameter no longer indicates
+            the grid on which attacks can take place, but it is still used to
+            calculate how many attack positions there should be. Thus, in the
+            case of continuous rhythms, this parameter can be thought of as
+            indicating the average grid duration, rather than the exact grid
+            duration.
             Default: Fraction(1, 4)
-        sub_subdivisions: a sequence of ints, or a per-voice sequence of sequences of ints.
-            Further subdivides `attack_subdivision`, into parts defined by the
-            ratio of the integers in the sequence. This can be used to apply "swing"
-            or any other irregular subdivision you like. For instance, if passed
-            a value of `(3, 4, 2)`, each unit of length `attack_subdivision`
-            will be subdivided into a portion of 3/9, a portion of 4/9, and a
-            portion of 2/9. If a sequence of sequences, each sub-sequence
-            applies to an individual voice, interpreted in the looping
-            per-voice manner described above.
+        sub_subdivisions: a sequence of ints, or a per-voice sequence of
+            sequences of ints.  Further subdivides `attack_subdivision`, into
+            parts defined by the ratio of the integers in the sequence. This can
+            be used to apply "swing" or any other irregular subdivision you
+            like. For instance, if passed a value of `(3, 4, 2)`, each unit of
+            length `attack_subdivision` will be subdivided into a portion of
+            3/9, a portion of 4/9, and a portion of 2/9. If a sequence of
+            sequences, each sub-sequence applies to an individual voice,
+            interpreted in the looping per-voice manner described above.
+
             Note that this parameter is ignored if `cont_rhythms != "none"`.
         dur_subdivision: a number, or a per-voice sequence of numbers.
             Indicates the "grid" on which note durations are extended (and thus
@@ -853,10 +976,13 @@ class ERSettings:
         rhythmic_unison: bool, or a sequence of tuples of ints. Controls
             whether to apply "rhythmic unison" (i.e., simultaneous attacks
             and releases) to some or all voices.
+
             If True, all voices are in rhythmic unison. In this case, the
             rhythm settings that will apply to all voices are those of the
             bass voice (i.e., voice 0).
+
             If False, no voices are in rhythmic unison.
+
             If a sequence of tuples of ints, specifies combinations of voices
             that are in rhythmic unison. For example, `[(0, 1), (2, 3)]` would
             indicate that voices 0 and 1 would be in rhythmic unison with one
@@ -869,36 +995,35 @@ class ERSettings:
             would each have independent rhythms. Note that each tuple should
             be in ascending order. The rhythmic parameters that will be used
             in the construction of each rhythm are those of the first-listed
-            voice. LONGTERM sort tuples
+            voice.
+
             Note that, when using tuples of rhythmic unison voices, it is
             sometimes necessary to provide "dummy" rhythmic parameters. If, for
-            instance, the `rhythmic_unison` tuples are
-                  `[(0, 1), (2, 3)]` and a parameter such as
-                  `attack_density` is `[0.5, 0.3]`, the second
-                  value of `attack_density` will never be used,
-                  because the first voices of the `rhythmic_unison`
-                  tuples are 0 and 2 (and 2, modulo the length of
-                  `attack_density`, is 0). In this situation it
-                  is necessary to insert a dummy value into `attack_density` (e.g.,
-                  [0.5, 0.0, 0.3]) in order to apply the parameter 0.3 to
-                  the second `rhythmic_unison` tuple.
+            instance, the `rhythmic_unison` tuples are `[(0, 1), (2, 3)]` and a
+            parameter such as `attack_density` is `[0.5, 0.3]`, the second value
+            of `attack_density` will never be used, because the first voices of
+            the `rhythmic_unison` tuples are 0 and 2 (and 2, modulo the length
+            of `attack_density`, is 0). In this situation it is necessary to
+            insert a dummy value into `attack_density` (e.g., [0.5, 0.0, 0.3])
+            in order to apply the parameter 0.3 to the second `rhythmic_unison`
+            tuple.
             Default: False
         rhythmic_quasi_unison: bool, or a sequence of tuples of ints. This
             parameter is specified in the same way as `rhythmic_unison` above.
             However, whereas `rhythmic_unison` causes voices to have precisely
             the same rhythms, this parameter works differently. It does not
-            override the rhythmic settings (such as `attack_density`) that
-            apply to each voice, but it constrains the attacks of "follower"
-            voices to occur at the same time as the attacks of "leader" voices,
-            as far as is possible. If the follower has a greater
-            `attack_density` than the leader, then the follower will have
-            attacks simultaneous with all those of the leader, as well as
-            extra attacks to satisfy its `attack_density` value. If the follower
-            has a lesser `attack_density` than the leader, then all of the
-            followers attacks will occur simultaneous with attacks in the
-            leader, but it will have fewer attacks than the leader. The effect
-            on other rhythmic parameters like `dur_density` is similar.
-            See also `rhythmic_quasi_unison_constrain` below.
+            override the rhythmic settings (such as `attack_density`) that apply
+            to each voice, but it constrains the attacks of "follower" voices to
+            occur at the same time as the attacks of "leader" voices, as far as
+            is possible. If the follower has a greater `attack_density` than the
+            leader, then the follower will have attacks simultaneous with all
+            those of the leader, as well as extra attacks to satisfy its
+            `attack_density` value. If the follower has a lesser
+            `attack_density` than the leader, then all of the followers attacks
+            will occur simultaneous with attacks in the leader, but it will have
+            fewer attacks than the leader. The effect on other rhythmic
+            parameters like `dur_density` is similar.  See also
+            `rhythmic_quasi_unison_constrain` below.
             Default: False
         rhythmic_quasi_unison_constrain: boolean. If `rhythmic_quasi_unison`
             is False, has no effect. If True, and `rhythmic_quasi_unison` is
@@ -910,14 +1035,16 @@ class ERSettings:
                 it will be constrained to have all its attacks occur during the
                 durations of the leader, if possible.
             Default: False
-        hocketing: bool, or a sequence of tuples of ints.  This
-            parameter is specified in the same way as `rhythmic_unison` above.
-            Its effect is to lead combinations of voices to be "hocketed"
-            ---i.e., for, when possible, the attacks of one voice to be placed
-            during the pauses of another, and vice versa.
+        hocketing: bool, or a sequence of tuples of ints.  This parameter is
+            specified in the same way as `rhythmic_unison` above.  Its effect is
+            to lead combinations of voices to be "hocketed" ---i.e., for, when
+            possible, the attacks of one voice to be placed during the pauses of
+            another, and vice versa.
+
             Tuples of the form (0, 1, 2) will cause voice 1 to be constructed
             in hocket with voice 0, and then voice 2 to be constructed in hocket
             with voice 1.
+
             Tuples of the form (0, 1) and (1, 2), in contrast, will cause
             voice 1 to be constructed in hocket with voice 0 (as before), but
             voice 2 to be constructed in hocket with voice 1 *but not* with
@@ -925,34 +1052,35 @@ class ERSettings:
             Default: False
         cont_rhythms: string. Specifies whether and how to use "continuous"
             rhythms. Usually, rhythms in music are understood in a discrete
-            manner, as rational subdivisions or combinations of unit values
-            like quarter-notes or thirty-second-notes. (Of course, in
-            live performance, this is
-            an idealization, since humans are not metronomes.) In contrast,
-            this script allows for the construction of "continuous" rhythms,
-            where the rhythmic values are
-            drawn arbitrarily from the real number line.
+            manner, as rational subdivisions or combinations of unit values like
+            quarter-notes or thirty-second-notes. (Of course, in live
+            performance, this is an idealization, since humans are not
+            metronomes.) In contrast, this script allows for the construction of
+            "continuous" rhythms, where the rhythmic values are drawn
+            arbitrarily from the real number line.
+
             `cont_rhythms` can take the following values:
                 "none": continuous rhythms are not used.
                 "all": all voices have unique continuous rhythm.
                 "grid": all voices share a continuous-rhythm "grid", so that
                     their rhythmic attacks (  and releases?) will be
                     on a common grid.
+
             If `cont_rhythms` is not `None`, then `rhythm_len` must equal
             `pattern_len` and both must have only a single value.
             Default: "none"
         num_cont_rhythm_vars: int, or sequence of ints. If
-            `cont_rhythms != "none"`, then, optionally,
-            the rhythms can be varied when they recur by perturbing them
-            randomly. This parameter determines the number of such variations.
-            Setting it to `1` has the effect of disabling it. Setting it to
-            a negative value will cause the rhythmic variations to continue
-            throughout the super pattern, or throughout the entire output,
-            depending on the value of `super_pattern_reps_cont_var`. See also
-            `vary_rhythm_consistently` and `cont_var_increment`.
+            `cont_rhythms != "none"`, then, optionally, the rhythms can be
+            varied when they recur by perturbing them randomly. This parameter
+            determines the number of such variations.  Setting it to `1` has the
+            effect of disabling it. Setting it to a negative value will cause
+            the rhythmic variations to continue throughout the super pattern, or
+            throughout the entire output, depending on the value of
+            `super_pattern_reps_cont_var`. See also `vary_rhythm_consistently`
+            and `cont_var_increment`.
             Default: 1
-        vary_rhythm_consistently: bool. If True, and `num_cont_rhythm_vars != 1`,
-            then the perturbations applied to the rhythm will be the same
+        vary_rhythm_consistently: bool. If True, and `num_cont_rhythm_vars !=
+            1`, then the perturbations applied to the rhythm will be the same
             from one variation until the next---at least until `min_dur` is
             reached in one or more of the notes of the rhythm.
             Default: True
@@ -970,23 +1098,25 @@ class ERSettings:
         ==============
 
         choirs: a sequence of ints or tuples.
-            Integers specify
-            the program numbers of GM midi instruments. Constants defining
-            these can be found in `er_constants.py`.
+
+            Integers specify the program numbers of GM midi instruments.
+            Constants defining these can be found in `er_constants.py`.
+
             Tuples can be used to combine multiple instruments (e.g., violins
             and cellos) into a single "choir". They should consist of two items:
                 - a sequence of GM midi instruments, listed from low to high
                 - an integer or sequence of integers, specifying a split point
                 or split points, that is, the pitches at which the instruments
                 should be switched between.
-            Default: (er_constants.MARIMBA, er_constants.VIBRAPHONE, er_constants.ELECTRIC_PIANO, er_constants.GUITAR,)
+            Default: (er_constants.MARIMBA, er_constants.VIBRAPHONE,
+            er_constants.ELECTRIC_PIANO, er_constants.GUITAR,)
         choir_assignments: sequence of ints. Assigns voices to the given index
             in `choirs`. Will be looped through if necessary. For example, if
             `choir_assignments == [1, 0]`, voice 0 will be assigned to
-            `choirs[1]`, voice 1 will be assigned to `choirs[0]`, voice 2 (if
-            it exists) will be assigned to `choirs[1]`, and so on.
-            By default, or if passed an empty sequence, all voices are assigned to
-            choir 0.
+            `choirs[1]`, voice 1 will be assigned to `choirs[0]`, voice 2 (if it
+            exists) will be assigned to `choirs[1]`, and so on.  By default, or
+            if passed an empty sequence, all voices are assigned to choir 0.
+
             If `randomly_distribute_between_choirs` is True, then this
             setting is ignored.
         randomly_distribute_between_choirs: bool. If True, then voices are
@@ -994,38 +1124,35 @@ class ERSettings:
             this occurs is controlled by the settings below.
             Default: False
         length_choir_segments: number. Only has an effect if
-            `randomly_distribute_between_choirs` is True. Sets the duration
-            of each random choir
-            assignment in quarter notes. If 0 or negative, each voice is
-            permanently assigned to a choir at random.
+            `randomly_distribute_between_choirs` is True. Sets the duration of
+            each random choir assignment in quarter notes. If 0 or negative,
+            each voice is permanently assigned to a choir at random.
             Default: 1
         length_choir_loop: number. Only has an effect if
-            `randomly_distribute_between_choirs` is True. If positive, sets
-            the duration of a loop for the random choir assignments. Shorter
-            values will be readily audible loops; longer values are likely
-            to be less apparent as loops. If 0 or negative, then no loop.
-            Note that depending on the combination of settings applied,
-            it may not be possible to construct a loop of sufficient
-            length. In this case, a warning will be emitted, but the script
-            will otherwise continue.
+            `randomly_distribute_between_choirs` is True. If positive, sets the
+            duration of a loop for the random choir assignments. Shorter values
+            will be readily audible loops; longer values are likely to be less
+            apparent as loops. If 0 or negative, then no loop.  Note that
+            depending on the combination of settings applied, it may not be
+            possible to construct a loop of sufficient length. In this case, a
+            warning will be emitted, but the script will otherwise continue.
             Default: 0
         choir_segments_dovetail: bool. Only has an effect if
-            `randomly_distribute_between_choirs` is True. If True, then
-            choir assignments will be extended by one note, so that they overlap
-            with the following choir assignment. (This can make this sort
-            of thing easier for humans to play.)
+            `randomly_distribute_between_choirs` is True. If True, then choir
+            assignments will be extended by one note, so that they overlap with
+            the following choir assignment. (This can make this sort of thing
+            easier for humans to play.)
             Default: False
         max_consec_seg_from_same_choir: int. Only has an effect if
-            `randomly_distribute_between_choirs` is True. If positive, then
-            no voice will be assigned to the same choir for more than the
-            specified number of segments in a row.
+            `randomly_distribute_between_choirs` is True. If positive, then no
+            voice will be assigned to the same choir for more than the specified
+            number of segments in a row.
             Default: 0
         all_voices_from_different_choirs: bool. Only has an effect if
             `randomly_distribute_between_choirs` is True. If True, then at each
             new choir assignment, it will be ensured that no two voices are
-            assigned to the same choir.
-            An error will be raised if this setting is True and `num_voices`
-            is greater than `len(choirs)`.
+            assigned to the same choir.  An error will be raised if this setting
+            is True and `num_voices` is greater than `len(choirs)`.
             Default: False
         each_choir_combination_only_once: bool.  Only has an effect if
             `randomly_distribute_between_choirs` is True. If True, then
@@ -1043,18 +1170,19 @@ class ERSettings:
             through if necessary. If an empty sequence, a tempo or tempi will
             be randomly generated.
             Default: 120
-        tempo_len: a number or a sequence of numbers. Specifies the duration of each
-            tempo in `tempo` in quarter-note beats. If a sequence, will be looped
-            through as necessary. Has no effect if `tempo` is a single number.
-            If 0, then the first tempo in `tempo` applies to the whole file.
+        tempo_len: a number or a sequence of numbers. Specifies the duration of
+            each tempo in `tempo` in quarter-note beats. If a sequence, will be
+            looped through as necessary. Has no effect if `tempo` is a single
+            number.  If 0, then the first tempo in `tempo` applies to the whole
+            file.
             Default: 0
         tempo_bounds: a tuple of form (number, number). If `tempo` is an empty
             sequence, then tempi are randomly generated within the (inclusive)
             bounds set by this tuple.
             Default: (80, 144)
 
-        Transpose settings
-        ==================
+        Transposition settings
+        ======================
 
         transpose: bool. Toggles transposition of segments according to the
             following settings. Note that the limits imposed by `voice_ranges`
@@ -1080,23 +1208,21 @@ class ERSettings:
             If an empty sequence, segments will be transposed at random.
             Default: ()
         cumulative_max_transpose_interval: a number. Sets an absolute maximum
-            bound for cumulative transposition, after which segments will
-            be transposed up or down an octave. The bound is inclusive. To
-            disable, set to 0.
-            Thus, if `cumulative_max_transpose_interval == 6` and
+            bound for cumulative transposition, after which segments will be
+            transposed up or down an octave. The bound is inclusive. To disable,
+            set to 0.  Thus, if `cumulative_max_transpose_interval == 6` and
             `transpose_intervals == 3`, segments will be transposed by 3, 6, -3,
             0, 3, ... semitones. (If, on the other hand,
-            `cumulative_max_transpose_interval == 0`, segments will be transposed
-            by 3, 6, 9, 12, 15, ...)
+            `cumulative_max_transpose_interval == 0`, segments will be
+            transposed by 3, 6, 9, 12, 15, ...)
         transpose_before_repeat: boolean. If True, then any transpositions are
             applied to the completed "super pattern" *before* repeating it;
             thus, the super pattern will have the same sequence of
             transpositions on all repetitions. If False, then any transpositions
             are applied *after* repeating the super pattern. Thus, unless the
-            sequence of transpositions happen to return to their starting
-            point at exactly the beginning of the repetitions of the super
-            pattern, each super pattern will feature a new sequence of
-            transpositions.
+            sequence of transpositions happen to return to their starting point
+            at exactly the beginning of the repetitions of the super pattern,
+            each super pattern will feature a new sequence of transpositions.
 
     """
 

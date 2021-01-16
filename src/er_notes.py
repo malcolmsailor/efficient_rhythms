@@ -871,6 +871,17 @@ class Score:
         self.voices[voice_i].add_other_message(message)
 
     def add_meta_message(self, message):
+        try:
+            if message.type == "time_signature":
+                if self.time_sig is None:
+                    self.time_sig = (message.numerator, message.denominator)
+                else:
+                    print(
+                        "Warning: midi file has more than one time signature. "
+                        "Only the first is supported."
+                    )
+        except AttributeError:
+            pass
         self.meta_messages.append(message)
 
     def attack(self, attack_time, voice_i):

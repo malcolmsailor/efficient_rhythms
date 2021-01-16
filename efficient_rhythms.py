@@ -24,15 +24,17 @@ def main():
 
     midi_in = args.input_midi
     if midi_in:
-        if args.no_interface and not args.output_notation:
+        if args.output_notation:
             print(
-                "Both '--input-midi' and '--no-interface' passed, and "
-                "--output-notation not passed. Nothing to do!"
+                "'--output-notation' not implemented when running on an "
+                "external midi file"
+            )
+        if args.no_interface:
+            print(
+                "Both '--input-midi' and '--no-interface' passed. "
+                "Nothing to do!"
             )
             return
-        if args.no_interface:
-            # TODO either fix output_notation or remove
-            raise NotImplementedError
         midi_in = os.path.abspath(midi_in)
         midi_settings = er_preprocess.read_in_settings(
             args.settings, er_midi_settings.MidiSettings
@@ -50,14 +52,6 @@ def main():
         )
         if super_pattern.attacks_adjusted_by != 0:
             er_midi.write_midi(super_pattern, midi_settings)
-        if args.no_interface:
-            er_output_notation.run_verovio(
-                super_pattern,
-                midi_settings.output_path,
-                args.verovio_arguments,
-                "." + args.output_notation,
-            )
-            return
         er_interface.input_loop(
             midi_settings,
             super_pattern,
