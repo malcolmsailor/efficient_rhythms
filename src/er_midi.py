@@ -429,7 +429,7 @@ def write_tempi(er, mf, total_len):
         tempo_i += 1
 
 
-def write_er_midi(er, super_pattern, reverse_tracks=True):
+def write_er_midi(er, super_pattern, midi_fname, reverse_tracks=True):
     """Write a midi file with an ERSettings class.
     """
     time = 0
@@ -454,7 +454,6 @@ def write_er_midi(er, super_pattern, reverse_tracks=True):
         # LONGTERM infer ticks_per_quarternote intelligently from min_dur?
         ticks_per_quarternote=3200,
     )
-    midi_fname = er.output_path
 
     write_track_names(er, mf, midi_fname)
 

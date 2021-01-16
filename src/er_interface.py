@@ -7,7 +7,7 @@ import os
 import subprocess
 import sys
 
-import src.er_filters as er_filters
+import src.er_changers as er_changers
 import src.er_midi as er_midi
 import src.er_misc_funcs as er_misc_funcs
 import src.er_output_notation as er_output_notation
@@ -100,6 +100,10 @@ def parse_cmd_line_args():
         action="store_true",
         help="provide option to enter a breakpoint in user input loop",
     )
+    # LONGTERM
+    # parser.add_argument(
+    #     "--filters",
+    # )
     args = parser.parse_args()
 
     return args
@@ -288,7 +292,7 @@ def adjust_changer_prompt(active_changers, changer_i):
             try:
                 changer.validate()
                 break
-            except er_filters.ChangeFuncError as err:
+            except er_changers.ChangeFuncError as err:
                 print(
                     er_misc_funcs.add_line_breaks(
                         "Validation error: " + err.args[0],
@@ -545,13 +549,13 @@ def changer_interface(super_pattern, active_changers, changer_counter):
     def _get_changers():
         filters = []
         transformers = []
-        for item in dir(er_filters):
+        for item in dir(er_changers):
             if "Filter" in item:
-                filters.append(getattr(er_filters, item))
-                # filters.append(vars(er_filters)[item])
+                filters.append(getattr(er_changers, item))
+                # filters.append(vars(er_changers)[item])
             if "Transformer" in item and item != "Transformer":
-                transformers.append(getattr(er_filters, item))
-                # transformers.append(vars(er_filters)[item])
+                transformers.append(getattr(er_changers, item))
+                # transformers.append(vars(er_changers)[item])
 
         i = 1
         changer_dict = {}
@@ -595,7 +599,7 @@ def changer_interface(super_pattern, active_changers, changer_counter):
             active_changer.apply(copied_pattern)
             print("done.")
             success = True
-        except er_filters.ChangeFuncError as err:
+        except er_changers.ChangeFuncError as err:
             print("ERROR!")
             print(
                 er_misc_funcs.add_line_breaks(

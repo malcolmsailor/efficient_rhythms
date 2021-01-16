@@ -68,7 +68,7 @@ def main():
         super_pattern = er_make.make_super_pattern(er)
         er_make.complete_pattern(er, super_pattern)
         er_choirs.assign_choirs(er, super_pattern)
-        er_midi.write_er_midi(er, super_pattern)
+        er_midi.write_er_midi(er, super_pattern, er.output_path)
         if args.no_interface:
             print(f"Output written to {er.output_path}")
             if args.output_notation:

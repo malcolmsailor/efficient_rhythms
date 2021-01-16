@@ -56,8 +56,3 @@ class MidiSettings:
                 )
             )
         return self._output_path
-
-    # def output_path_from(self, midi_in):
-    #     self.original_path = midi_in
-    #     if self.output_dir is None:
-    #         self.output_dir = os.path.dirname(midi_in)
