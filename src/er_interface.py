@@ -3,9 +3,13 @@
 import argparse
 import collections
 import copy
+import math
 import os
 import subprocess
 import sys
+import traceback
+
+import termcolor
 
 import src.er_changers as er_changers
 import src.er_midi as er_midi
@@ -15,14 +19,16 @@ import src.er_playback as er_playback
 import src.er_prob_funcs as er_prob_funcs
 import src.er_settings as er_settings
 
-LINE_WIDTH = os.get_terminal_size().columns
+try:
+    LINE_WIDTH = os.get_terminal_size().columns
+except OSError:
+    LINE_WIDTH = 80
 SELECT_HEADER = "Active filters and transformers"
 FILTERS_HEADER = "Filters"
 TRANSFORMERS_HEADER = "Transformers"
+GITHUB_URL = "my github page"  # INTERNET_TODO
 
-# TODO bold headers
-# TODO two-column table for filter/transformer selection
-# TODO fix filter paths!
+# TODO clear at each new prompt
 
 
 def parse_cmd_line_args():
@@ -137,10 +143,10 @@ def make_changer_prompt_line(i, attr_name, value, hint_name="", hint_value=""):
     return out
 
 
-def make_prompt_line(i, line):
+def make_prompt_line(i, line, indent=8):
     num_str = f"({i})"
-    out = f"{num_str:>8} {line}"
-    return out
+    format_str = "{:>" + str(indent) + "} {}"
+    return format_str.format(num_str, line)
 
 
 def add_to_changer_attribute_dict(
@@ -194,9 +200,6 @@ def possible_values_prompt(possible_values):
         make_prompt_line(pv_i + 1, possible_value)
         for (pv_i, possible_value) in enumerate(possible_values)
     ] + [""]
-    # for pv_i, possible_value in enumerate(possible_values):
-    #     lines.append(make_prompt_line(pv_i + 1, possible_value))
-    # lines.append("")
 
 
 def update_changer_attribute(changer, attribute):
@@ -247,7 +250,12 @@ def update_adjust_changer_prompt(changer):
         "would like to adjust or toggle, 'r' to remove the "
         "filter/transformer, or <enter> to continue: "
     )
-    lines = ["", er_misc_funcs.make_header(changer.pretty_name), ""]
+    lines = [
+        "",
+        er_misc_funcs.make_header(changer.pretty_name),
+        er_misc_funcs.add_line_breaks("Description: " + changer.description),
+        "",
+    ]
     attribute_i = 1
     attribute_dict = {}
     prob_func_name = changer.interface_dict["prob_func"]
@@ -325,21 +333,47 @@ def adjust_changer_prompt(active_changers, changer_i):
 
 
 def add_changer_prompt(changer_dict):
+    def _get_table(changer_lines):
+        # LONGTERM determine how wide terminal is and adjust n_cols accordingly
+        n_cols = 2
+        n_rows = math.ceil(len(changer_lines) / n_cols)
+        rows = [
+            [
+                changer_lines[i + j * n_rows]
+                if (i + j * n_rows) < len(changer_lines)
+                else ""
+                for j in range(n_cols)
+            ]
+            for i in range(n_rows)
+        ]
+        return er_misc_funcs.make_table(
+            rows,
+            divider="",
+            row_width=LINE_WIDTH // 2 - 2,
+            align_char="<",
+            fit_in_window=False,
+            borders=False,
+        )
 
     add_prompt = (
         "Enter the number corresponding to the filter or transformer "
         "you would like to select, or <enter> to continue: "
     )
-    lines = ["", er_misc_funcs.make_header(FILTERS_HEADER), ""]
+    filter_lines = []
+    transformer_lines = []
+    add_lines_to = filter_lines
     for i, changer in changer_dict.items():
         if i == -1:
-            lines += ["", er_misc_funcs.make_header(TRANSFORMERS_HEADER), ""]
+            add_lines_to = transformer_lines
         else:
-            lines.append(make_prompt_line(i, changer.pretty_name))
-    lines += [
-        "",
-    ]
-    lines.append(er_misc_funcs.add_line_breaks(add_prompt))
+            add_lines_to.append(
+                make_prompt_line(i, changer.pretty_name, indent=4)
+            )
+    lines = ["", er_misc_funcs.make_header(FILTERS_HEADER), ""]
+    lines.append(_get_table(filter_lines))
+    lines += ["", er_misc_funcs.make_header(TRANSFORMERS_HEADER), ""]
+    lines.append(_get_table(transformer_lines))
+    lines += ("", er_misc_funcs.add_line_breaks(add_prompt))
     return "\n".join(lines)
 
 
@@ -545,28 +579,28 @@ def select_changer_prompt(
         return True
 
 
-def changer_interface(super_pattern, active_changers, changer_counter):
+def changer_interface(super_pattern, active_changers, changer_counter, debug):
     def _get_changers():
-        filters = []
-        transformers = []
-        for item in dir(er_changers):
-            if "Filter" in item:
-                filters.append(getattr(er_changers, item))
-                # filters.append(vars(er_changers)[item])
-            if "Transformer" in item and item != "Transformer":
-                transformers.append(getattr(er_changers, item))
-                # transformers.append(vars(er_changers)[item])
+        # filters = []
+        # transformers = []
+        # for item in dir(er_changers):
+        #     if "Filter" in item:
+        #         filters.append(getattr(er_changers, item))
+        #         # filters.append(vars(er_changers)[item])
+        #     if "Transformer" in item and item != "Transformer":
+        #         transformers.append(getattr(er_changers, item))
+        #         # transformers.append(vars(er_changers)[item])
 
         i = 1
         changer_dict = {}
-        for filter_ in filters:
-            changer_dict[i] = filter_
+        for filter_ in er_changers.FILTERS:
+            changer_dict[i] = getattr(er_changers, filter_)
             i += 1
         # The next dictionary entry is added to mark the boundary
         #   between filters and transformers.
         changer_dict[-1] = None
-        for transformer in transformers:
-            changer_dict[i] = transformer
+        for transformer in er_changers.TRANSFORMERS:
+            changer_dict[i] = getattr(er_changers, transformer)
             i += 1
 
         return changer_dict
@@ -600,6 +634,7 @@ def changer_interface(super_pattern, active_changers, changer_counter):
             print("done.")
             success = True
         except er_changers.ChangeFuncError as err:
+            # TODO are ChangeFuncErrors also bugs? Should they be caught below?
             print("ERROR!")
             print(
                 er_misc_funcs.add_line_breaks(
@@ -613,6 +648,24 @@ def changer_interface(super_pattern, active_changers, changer_counter):
                     indent_type="all",
                 )
             )
+        except Exception:  # pylint: disable=broad-except
+            if debug:
+                raise
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            traceback.print_exception(
+                exc_type, exc_value, exc_traceback, limit=5, file=sys.stdout
+            )
+            print(
+                termcolor.colored(
+                    "There was an exception applying "
+                    f"{active_changer.pretty_name}\n"
+                    "This is a bug in `efficient_rhythms.py`. I would be "
+                    "grateful if you would file an "
+                    f"issue at {GITHUB_URL}",
+                    attrs=("bold",),
+                )
+            )
+            input("press <enter> to continue")
     print("")
 
     if not success:
@@ -701,6 +754,37 @@ def update_midi_type(er):
         print(prompt_str)
 
 
+def failure_message(exc, random_failures=None):
+    if random_failures is not None:
+        msg = (
+            "Failed to find realizable random settings after "
+            f"{random_failures} attempts. If this keeps happening, it "
+            "is probably some sort of bug with this script---please "
+            "report it!"
+        )
+    else:
+        msg = (
+            "The script failed to build the pattern. You can always try "
+            "again with a different seed (if you didn't explicitly set the "
+            "seed, then a new seed will be chosen automatically next time "
+            "you run the script), but you may have to make your settings "
+            "more permissive (you might be able to get some hints as to "
+            "how from the above failure counts)."
+        )
+    print(
+        "\n".join(
+            [
+                "",
+                er_misc_funcs.make_header("UNABLE TO BUILD PATTERN"),
+                exc.__str__(),
+                "",
+                er_misc_funcs.add_line_breaks(msg, indent_type="none",),
+            ]
+        )
+    )
+    sys.exit(1)
+
+
 def input_loop(
     er, super_pattern, midi_player, verovio_arguments=None, debug=False
 ):
@@ -740,6 +824,9 @@ def input_loop(
         )
 
     playback_on = True
+    # we set non_empty to True because this function should only be called
+    # when the initial midi file exists and is non-empty
+    non_empty = True
     if isinstance(er, er_settings.ERSettings) or os.path.exists(er.output_path):
         midi_path = er.output_path
     else:
@@ -757,9 +844,14 @@ def input_loop(
     while True:
         print("File name:", print_path(current_midi_path, offset=11))
         if answer == "":
-            breaker.reset()
-            er_playback.playback_midi(midi_player, breaker, current_midi_path)
-            playback_on = True
+            if non_empty:
+                breaker.reset()
+                er_playback.playback_midi(
+                    midi_player, breaker, current_midi_path
+                )
+                playback_on = True
+            else:
+                print("Midi file is empty, nothing to write or play!")
         answer = input(get_input_prompt()).lower()
 
         if answer in ("q", "s"):
@@ -770,7 +862,7 @@ def input_loop(
 
         elif answer == "a":
             changed_pattern, active_changers = changer_interface(
-                super_pattern, active_changers, changer_counter
+                super_pattern, active_changers, changer_counter, debug
             )
             if changed_pattern is not None and active_changers:
                 # LONGTERM allow specification of transformers from external
@@ -780,12 +872,12 @@ def input_loop(
                     current_midi_path = er_misc_funcs.get_changed_midi_path(
                         midi_path
                     )
-                    er_midi.write_er_midi(
+                    non_empty = er_midi.write_er_midi(
                         er, changed_pattern, current_midi_path
                     )
                 else:
                     current_midi_path = er.output_path
-                    er_midi.write_midi(changed_pattern, er)
+                    non_empty = er_midi.write_midi(changed_pattern, er)
                 current_pattern = changed_pattern
             else:
                 current_midi_path = midi_path
@@ -794,7 +886,9 @@ def input_loop(
 
         if answer == "c" and isinstance(er, er_settings.ERSettings):
             update_midi_type(er)
-            er_midi.write_er_midi(er, current_pattern, current_midi_path)
+            non_empty = er_midi.write_er_midi(
+                er, current_pattern, current_midi_path
+            )
 
         elif answer == "o":
             mac_open(current_midi_path)

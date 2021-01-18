@@ -5,6 +5,8 @@ import random
 
 import src.er_misc_funcs as er_misc_funcs
 
+# TODO where is exempt beats modulo?
+
 
 def ensure_list(obj, attr_str):
     """If given attributes of object are not inside a list,
@@ -86,7 +88,7 @@ class AttributeAdder:
         if self.display_if[attr_name] is None:
             return True
         for attr, val in self.display_if[attr_name].items():
-            actual_attr_val = vars(self)[attr]
+            actual_attr_val = getattr(self, attr)
             if val == "true":
                 if actual_attr_val:
                     if (
@@ -97,10 +99,8 @@ class AttributeAdder:
                         return False
                     return True
                 return False
-            if val == "non_empty" and er_misc_funcs.empty_nested(
-                actual_attr_val
-            ):
-                return False
+            if val == "non_empty":
+                return not er_misc_funcs.empty_nested(actual_attr_val)
             if isinstance(val, (tuple, list)) and actual_attr_val in val:
                 return True
             if actual_attr_val != val:
@@ -125,8 +125,8 @@ class AttributeValidator:
         tuple_of: required number of elements in a tuple. If a negative int,
             then the number of elements must divide that number evenly,
             and the elements will be grouped into sub-tuples of that size.
-            (E.g., if 2, then must be an even number, and will be returned
-            as a tuple of 2-tuples.)
+            (E.g., if -2, then there must be an even number of elements, and
+            they will be returned as a tuple of 2-tuples.)
     Methods:
         possible_values_str(): returns a string containing the possible values,
             for help in the shell.
@@ -279,6 +279,7 @@ class AttributeValidator:
         # if _sub_validate(answer) is None:
         #     return None
         answer = _sub_validate(answer)
+
         if answer is None:
             return None
 
@@ -311,7 +312,8 @@ class AttributeValidator:
             return f"Possible values: {self.possible_values}: "
         if self.type_ == bool:
             return "Possible values: 'True' or 'False'"
-        raise NotImplementedError
+        # TODO look for a help string?
+        return "Sorry, possible values for this attribute not implemented yet!"
 
 
 class NullProbFunc(AttributeAdder):
@@ -429,7 +431,7 @@ class ProbFunc(NullProbFunc):
                 if self.get(voice_i, "granularity") == 0:
                     pass
                 else:
-                    raise
+                    raise  # We should never get here unless there is a bug
 
         if voice_i not in self._count_dict or not self._count_dict[voice_i]:
             self._count_dict[voice_i] = self._get_seg_len(voice_i)

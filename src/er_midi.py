@@ -271,6 +271,7 @@ def humanize(er, attack, dur, velocity, tuning=None):
 def add_er_voice(er, voice_i, voice, mf, force_choir=None):
     """Adds a Voice object to the midi file object.
     """
+    empty = True
     for note in voice:
         attack_time = note.attack_time
         pitch = note.pitch
@@ -297,6 +298,7 @@ def add_er_voice(er, voice_i, voice, mf, force_choir=None):
                         er, attack_time, dur, velocity
                     )
                 mf.addNote(track, channel, pitch, attack_time, dur, velocity)
+                empty = False
             continue
 
         midi_num, pitch_bend = er.pitch_bend_tuple_dict[pitch]
@@ -317,6 +319,7 @@ def add_er_voice(er, voice_i, voice, mf, force_choir=None):
                 velocity,
                 # note.finetune, # what is this? It seems to be unimplemented
             )
+            empty = False
         else:
             prev_time_on_channel = er.pitch_bend_time_dict[track][
                 note_count % er.num_channels_pitch_bend_loop
@@ -342,6 +345,8 @@ def add_er_voice(er, voice_i, voice, mf, force_choir=None):
                 channel,
                 velocity,
             )
+            empty = False
+    return empty
 
 
 def write_track_names(
@@ -431,6 +436,10 @@ def write_tempi(er, mf, total_len):
 
 def write_er_midi(er, super_pattern, midi_fname, reverse_tracks=True):
     """Write a midi file with an ERSettings class.
+
+    Doesn't write the midi file if it contains no notes.
+
+    Returns a boolean indicating whether there are any notes in the midi file.
     """
     time = 0
 
@@ -466,36 +475,60 @@ def write_er_midi(er, super_pattern, midi_fname, reverse_tracks=True):
 
     if er.write_program_changes:
         write_program_changes(er, mf)
+    non_empty = False
+    for voice_i, voice in enumerate(
+        super_pattern.voices
+        if not reverse_tracks
+        else reversed(super_pattern.voices)
+    ):
+        empty = add_er_voice(er, voice_i, voice, mf)
+        if not empty:
+            non_empty = True
+    for existing_voice_i, existing_voice in enumerate(
+        super_pattern.existing_voices
+        if not reverse_tracks
+        else reversed(super_pattern.existing_voices)
+    ):
+        empty = add_er_voice(
+            er,
+            existing_voice_i + er.num_voices + 1,
+            existing_voice,
+            mf,
+            force_choir=0,
+        )
+        if not empty:
+            non_empty = True
+    # if reverse_tracks:
+    #     for voice_i, voice in enumerate(reversed(super_pattern.voices)):
+    #         add_er_voice(er, voice_i, voice, mf)
+    #     for existing_voice_i, existing_voice in enumerate(
+    #         reversed(super_pattern.existing_voices)
+    #     ):
+    #         add_er_voice(
+    #             er,
+    #             existing_voice_i + er.num_voices + 1,
+    #             existing_voice,
+    #             mf,
+    #             force_choir=0,
+    #         )
+    # else:
+    #     for voice_i, voice in enumerate(super_pattern.voices):
+    #         add_er_voice(er, voice_i, voice, mf)
+    #     for existing_voice_i, existing_voice in enumerate(
+    #         super_pattern.existing_voices
+    #     ):
+    #         add_er_voice(
+    #             er,
+    #             existing_voice_i + er.num_voices + 1,
+    #             existing_voice,
+    #             mf,
+    #             force_choir=0,
+    #         )
 
-    if reverse_tracks:
-        for voice_i, voice in enumerate(reversed(super_pattern.voices)):
-            add_er_voice(er, voice_i, voice, mf)
-        for existing_voice_i, existing_voice in enumerate(
-            reversed(super_pattern.existing_voices)
-        ):
-            add_er_voice(
-                er,
-                existing_voice_i + er.num_voices + 1,
-                existing_voice,
-                mf,
-                force_choir=0,
-            )
-    else:
-        for voice_i, voice in enumerate(super_pattern.voices):
-            add_er_voice(er, voice_i, voice, mf)
-        for existing_voice_i, existing_voice in enumerate(
-            super_pattern.existing_voices
-        ):
-            add_er_voice(
-                er,
-                existing_voice_i + er.num_voices + 1,
-                existing_voice,
-                mf,
-                force_choir=0,
-            )
-
-    with open(midi_fname, "wb") as outf:
-        mf.writeFile(outf)
+    if non_empty:
+        with open(midi_fname, "wb") as outf:
+            mf.writeFile(outf)
+    return non_empty
 
 
 def write_meta_messages(super_pattern, mf):
@@ -538,7 +571,7 @@ def add_track(track_i, track, midi_settings, mf):
     #     except AttributeError:
     #         midi_settings.pitch_bend_tuple_dict = (
     #             er_tuning.return_pitch_bend_tuple_dict(midi_settings.tet))
-
+    empty = True
     for note in track:
         if midi_settings.tet == 12 and no_finetuning:
             if 0 <= note.pitch <= 127:
@@ -550,6 +583,7 @@ def add_track(track_i, track, midi_settings, mf):
                     note.dur,
                     note.velocity,
                 )
+                empty = False
         else:
             channel = (
                 midi_settings.note_counter[track_i]
@@ -588,11 +622,17 @@ def add_track(track_i, track, midi_settings, mf):
                 channel,
                 note.velocity,
             )
+            empty = False
+    return empty
 
 
 def write_midi(super_pattern, midi_settings, abbr_track_names=True):
     """Write a midi file, without an associated ERSettings class (e.g.,
     if processing an external midi file).
+
+    Doesn't write the midi file if it contains no notes.
+
+    Returns a boolean indicating whether there are any notes in the midi file.
     """
     midi_fname = midi_settings.output_path
     mf = midiutil.MidiFile.MIDIFile(
@@ -604,12 +644,16 @@ def write_midi(super_pattern, midi_settings, abbr_track_names=True):
     )
 
     write_meta_messages(super_pattern, mf)
-
+    non_empty = False
     for track_i, track in enumerate(super_pattern.voices):
-        add_track(track_i, track, midi_settings, mf)
+        empty = add_track(track_i, track, midi_settings, mf)
+        if not empty:
+            non_empty = True
 
-    with open(midi_fname, "wb") as outf:
-        mf.writeFile(outf)
+    if non_empty:
+        with open(midi_fname, "wb") as outf:
+            mf.writeFile(outf)
+    return non_empty
 
 
 def _pitch_bend_handler(pitch_bend_dict, track_i, msg):

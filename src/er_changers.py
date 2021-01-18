@@ -34,7 +34,9 @@ def _get_prob_funcs():
         if var in ("ProbFunc", "NonStaticFunc", "OscFunc"):
             continue
         try:
-            yes = issubclass(vars(er_prob_funcs)[var], er_prob_funcs.ProbFunc)
+            yes = issubclass(
+                getattr(er_prob_funcs, var), er_prob_funcs.ProbFunc
+            )
         except TypeError:
             continue
         if yes:
@@ -52,6 +54,7 @@ class ChangeFuncError(Exception):
 
 class Changer(er_prob_funcs.AttributeAdder):
     pretty_name = "Changer"
+    description = ""
 
     def __init__(
         self,
@@ -495,6 +498,7 @@ class Mediator(er_prob_funcs.AttributeAdder):
 
 class Filter(Changer):
     pretty_name = "Pitch filter"
+    description = pretty_name + " removes notes of any pitch"
 
     def __init__(
         self,
@@ -662,6 +666,10 @@ class Filter(Changer):
 
 class RangeFilter(Filter):
     pretty_name = "Range filter"
+    description = (
+        pretty_name
+        + " removes notes whose pitches lie outside the specified range(s)"
+    )
 
     def __init__(
         self,
@@ -671,6 +679,7 @@ class RangeFilter(Filter):
         prob_func="Linear",
         voices=(),
         filter_range=((0, 127),),
+        # filter_range=(0, 127),
         changer_counter=None,
     ):
         def pitch_in_range(note_object):
@@ -693,12 +702,18 @@ class RangeFilter(Filter):
             "Range(s) to pass through filter",
             int,
             attr_val_kwargs={"min_value": 0, "max_value": -1, "tuple_of": -2},
+            unique=True,  # TODO not sure this should be unique
         )
         self.condition = pitch_in_range
 
 
 class OscillatingRangeFilter(Filter):
     pretty_name = "Oscillating range filter"
+    description = (
+        pretty_name
+        + " removes notes whose pitches lie outside of a range whose bounds "
+        "oscillate according to parameters that you control."
+    )
 
     def pitch_in_osc_range(self, note_object):
         range_width = (
@@ -726,7 +741,7 @@ class OscillatingRangeFilter(Filter):
         end_time=0,
         prob_func="Linear",
         voices=(),
-        bottom_range=((0, 127),),
+        bottom_range=(0, 127),
         range_size=36,
         osc_period=8,
         osc_offset=0,
@@ -747,6 +762,7 @@ class OscillatingRangeFilter(Filter):
             "Range at bottom of oscillation",
             int,
             attr_val_kwargs={"min_value": 0, "max_value": -1, "tuple_of": 2},
+            unique=True,
         )
         self.add_attribute(
             "range_size",
@@ -777,6 +793,7 @@ class OscillatingRangeFilter(Filter):
 
 class OddPitchFilter(Filter):
     pretty_name = "Odd pitch filter"
+    description = pretty_name + " removes notes of odd pitch"
 
     def __init__(
         self,
@@ -805,6 +822,7 @@ class OddPitchFilter(Filter):
 
 class EvenPitchFilter(Filter):
     pretty_name = "Even pitch filter"
+    description = pretty_name + " removes notes of even pitch"
 
     def __init__(
         self,
@@ -833,6 +851,7 @@ class EvenPitchFilter(Filter):
 
 class FilterSelectedPCs(Filter):
     pretty_name = "Selected pitch-class filter"
+    description = pretty_name + " removes notes of the selected pitch-classes"
 
     def __init__(
         self,
@@ -871,7 +890,9 @@ class FilterSelectedPCs(Filter):
         return False
 
 
-class Transformer(Changer):
+# We don't name this class 'Transformer' because we don't want it to show
+#   up in the interface
+class TransformBase(Changer):
     pretty_name = "Transformer"
 
     def __init__(
@@ -909,7 +930,7 @@ class Transformer(Changer):
             ]
 
 
-class ForcePitchTransformer(Transformer):
+class ForcePitchTransformer(TransformBase):
     pretty_name = "Force pitch transformer"
 
     def __init__(
@@ -956,7 +977,7 @@ class ForcePitchTransformer(Transformer):
             raise ChangeFuncError("'Pitches to force' contains an empty list.")
 
 
-class ForcePitchClassesTransformer(Transformer):
+class ForcePitchClassesTransformer(TransformBase):
     pretty_name = "Force pitch-classes transformer"
 
     def __init__(
@@ -1016,7 +1037,7 @@ class ForcePitchClassesTransformer(Transformer):
             )
 
 
-class VelocityTransformer(Transformer, Mediator):
+class VelocityTransformer(TransformBase, Mediator):
     pretty_name = "Velocity transformer"
 
     def __init__(self, score, changer_counter=None):
@@ -1093,7 +1114,7 @@ class VelocityTransformer(Transformer, Mediator):
                 self.mark_note(note)
 
 
-class ChangeDurationsTransformer(Transformer, Mediator):
+class ChangeDurationsTransformer(TransformBase, Mediator):
     pretty_name = "Change durations transformer"
 
     def __init__(self, score, changer_counter=None):
@@ -1182,7 +1203,7 @@ class ChangeDurationsTransformer(Transformer, Mediator):
             voice.remove_note_object(note)
 
 
-class RandomOctaveTransformer(Transformer):
+class RandomOctaveTransformer(TransformBase):
     pretty_name = "Random octave transformer"
 
     def __init__(
@@ -1255,7 +1276,7 @@ class RandomOctaveTransformer(Transformer):
             self.mark_note(note)
 
 
-class TransposeTransformer(Transformer):
+class TransposeTransformer(TransformBase):
     pretty_name = "Transpose transformer"
 
     def __init__(
@@ -1452,7 +1473,7 @@ class TransposeTransformer(Transformer):
             )
 
 
-class ChannelTransformer(Transformer):
+class ChannelTransformer(TransformBase):
     pretty_name = "Channel transformer"
 
     def __init__(
@@ -1493,7 +1514,7 @@ class ChannelTransformer(Transformer):
             self.mark_note(note)
 
 
-class ChannelExchangerTransformer(Transformer):
+class ChannelExchangerTransformer(TransformBase):
     pretty_name = "Channel exchanger transformer"
 
     def __init__(
@@ -1544,7 +1565,7 @@ class ChannelExchangerTransformer(Transformer):
             self.mark_note(note)
 
 
-class ShepherdTransformer(Transformer):
+class ShepherdTransformer(TransformBase):
     pretty_name = "Shepherd tone transformer"
 
     def __init__(
@@ -1707,7 +1728,7 @@ class ShepherdTransformer(Transformer):
         voice.update_sort()
 
 
-class TrackExchangerTransformer(Transformer):
+class TrackExchangerTransformer(TransformBase):
     pretty_name = "Track exchanger transformer"
 
     def __init__(
@@ -1763,7 +1784,7 @@ class TrackExchangerTransformer(Transformer):
         # score.voices[voice_i].update_sort()
 
 
-class InvertTransformer(Transformer):
+class InvertTransformer(TransformBase):
     pretty_name = "Melodic inversion transformer"
 
     def __init__(
@@ -1815,7 +1836,7 @@ class InvertTransformer(Transformer):
                 voice.remove_note_object(note)
 
 
-class TrackRandomizerTransformer(Transformer):
+class TrackRandomizerTransformer(TransformBase):
     pretty_name = "Track randomizer transformer"
 
     def __init__(
@@ -1869,7 +1890,7 @@ class TrackRandomizerTransformer(Transformer):
         # score.voices[voice_i].update_sort()
 
 
-class TrackDoublerTransformer(Transformer):
+class TrackDoublerTransformer(TransformBase):
     pretty_name = "Track doubler transformer"
 
     def __init__(
@@ -1911,7 +1932,7 @@ class TrackDoublerTransformer(Transformer):
             dest_track.transpose(doubling_interval)
 
 
-class SubdivideTransformer(Transformer):
+class SubdivideTransformer(TransformBase):
     pretty_name = "Subdivide transformer"
 
     def __init__(
@@ -1963,7 +1984,7 @@ class SubdivideTransformer(Transformer):
         voice.update_sort()
 
 
-class LoopTransformer(Transformer):
+class LoopTransformer(TransformBase):
     pretty_name = "Loop transformer"
 
     def __init__(
@@ -2010,3 +2031,8 @@ class LoopTransformer(Transformer):
                 continue
             note.pitch = ref_note.pitch
             self.mark_note(note)
+
+
+# INTERNET_TODO is there a better way of doing this?
+FILTERS = tuple(item for item in locals() if "Filter" in item)
+TRANSFORMERS = tuple(item for item in locals() if "Transformer" in item)

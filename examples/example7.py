@@ -22,5 +22,5 @@
     "max_interval": 4,
     "output_path": "examples/midi/example7.mid",
     "overwrite": True,
-    "num_reps_super_pattern": 4,
+    "num_reps_super_pattern": 8,  # TODO 4
 }

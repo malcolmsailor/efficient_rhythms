@@ -7,8 +7,8 @@ The many settings below control the behavior of this script. The
 recommended way of using the script is to store the desired settings as
 a Python dictionary in a file and then pass the file into the script
 with the `--settings` flag. For examples, see the files in the
-`examples/` directory. For a high-level overview of the script, see \#
-TODO
+`examples/` directory. For a high-level overview of the script, see
+`/docs/general.html`
 
 ### Note on "per-voice sequences" and other "looping sequences"
 
@@ -88,24 +88,19 @@ explanation. \# TODO complete this note
 
 ### General settings
 
+Less often used general settings are under
+"<a href="#miscellaneous-settings">Miscellaneous settings</a>" below.
+
 -   [**`seed`**]{#seed}: int. Seed for random number generation.
 
 -   [**`output_path`**]{#output_path}: str. Path for output midi file.
-    If a relative path, will be created relative to the script
-    directory. If any folder in the path does not exist, it will be
-    created. \# TODO don't create relative to script directory
+    If a relative path, will be created relative to the current
+    directory, unless the path begins with the string "EFFRHY/", in
+    which case "EFFRHY/" will be replaced with the directory of the
+    efficient\_rhythms script. If any folder in the path does not exist,
+    it will be created. See also <a href="#overwrite">`overwrite`</a>.
 
-    *Default*: `"output_midi/effrhy.mid"`
-
--   [**`overwrite`**]{#overwrite}: bool. If False, if a file named
-    <a href="#output_path">`output_path`</a> already exists, the
-    pathname will be incremented with a numeric suffix before the
-    extension until it does not exist. E.g., if
-    `output_path == 'effrhy.mid'` but `effrhy.mid` already exists,
-    `effrhy_001.mid` will be created; if `effrhy_001.mid` already
-    exists, `effrhy_002.mid` will be created.
-
-    *Default*: `False`
+    *Default*: `"EFFRHY/output_midi/effrhy.mid"`
 
 -   [**`tet`**]{#tet}: int. Specifies equal division of the octave.
 
@@ -195,12 +190,6 @@ explanation. \# TODO complete this note
 
     *Default*: `4`
 
--   [**`max_super_pattern_len`**]{#max_super_pattern_len}: number. If
-    positive, the super pattern will be truncated if it reaches this
-    length.
-
-    *Default*: `128`
-
 -   [**`voice_ranges`**]{#voice_ranges}: a sequence of 2-tuples. Each
     tuple is of form (lowest\_note, highest\_note). ([See the note above
     on specifying pitches and
@@ -213,124 +202,9 @@ explanation. \# TODO complete this note
     if it is not. Note that if
     <a href="#constrain_voice_leading_to_ranges">`constrain_voice_leading_to_ranges`</a>
     is False, than these ranges will only be enforced for the initial
-    pattern.
+    pattern. See also <a href="#hard_bounds">`hard_bounds`</a>.
 
     *Default*: `CONTIGUOUS_OCTAVES * OCTAVE3 * C`
-
--   [**`hard_bounds`**]{#hard_bounds}: a [per-voice
-    sequence](#note-on-per-voice-sequences-and-other-looping-sequences)
-    of 2-tuples. Each tuple is of form (lowest\_note, highest\_note).
-    ([See the note above on specifying pitches and
-    intervals](#note-on-specifying-pitches-and-intervals).) This setting
-    determines a lower and upper bound that will be enforced regardless
-    of the setting of
-    <a href="#constrain_voice_leading_to_ranges">`constrain_voice_leading_to_ranges`</a>.
-    The default values are the lowest and highest notes of an 88-key
-    piano, respectively.
-
-    *Default*: `((OCTAVE0 * A, OCTAVE8 * C))`
-
--   [**`voice_order_str`**]{#voice_order_str}: string. If "reverse",
-    voices will be generated from highest to lowest. Otherwise, they are
-    generated from lowest to highest.
-
-    *Default*: `"usual"`
-
--   [**`allow_voice_crossings`**]{#allow_voice_crossings}: bool, or a
-    [per-voice
-    sequence](#note-on-per-voice-sequences-and-other-looping-sequences)
-    of bools. This could be used, for example, to forbid voice-crossings
-    in the bass voice, but not in the other voices.
-
-    *Default*: `True`
-
--   [**`time_sig`**]{#time_sig}: an optional tuple of form (int, int).
-    The integers are the numerator and denominator of a time signature,
-    respectively. The time signature will be written to the midi output
-    file and used if exporting notation with Verovio. If no time
-    signature is passed, the script will do its best to infer an
-    appropriate time signature from the other settings.
-
-    *Default*: `None`
-
--   [**`existing_voices`**]{#existing_voices}: string. The path to a
-    midi file that contains some pre-existing music to which new voices
-    should be added. Settings such as <a href="#scales">`scales`</a> or
-    <a href="#chords">`chords`</a> are not inferred from the midi file
-    and must be set explicitly by the user.
-
--   [**`existing_voices_offset`**]{#existing_voices_offset}: number.
-    Used to set the beat at which the voices in
-    <a href="#existing_voices">`existing_voices`</a> should begin. Has
-    no effect if <a href="#existing_voices">`existing_voices`</a> is not
-    passed.
-
-    *Default*: `0`
-
--   [**`bass_in_existing_voice`**]{#bass_in_existing_voice}: boolean. If
-    True, then all bass-specific parameters (like
-    <a href="#preserve_root_in_bass">`preserve_root_in_bass`</a>) will
-    have no effect.
-
-    *Default*: `False`
-
--   [**`existing_voices_repeat`**]{#existing_voices_repeat}: boolean. If
-    True, then any existing voices will be truncated at the end of the
-    super pattern, and then repeated together with the new voices.
-
-    *Default*: `True`
-
--   [**`existing_voices_transpose`**]{#existing_voices_transpose}:
-    boolean. If True, then any existing voices will be transposed
-    according to the "<a href="#transposition-settings">transposition
-    settings</a>" below.
-
-    *Default*: `True`
-
--   [**`existing_voices_max_denominator`**]{#existing_voices_max_denominator}:
-    integer. In order to avoid rounding errors and the like, the rhythms
-    in <a href="#existing_voices">`existing_voices`</a> are converted to
-    Python's Fraction type. This parameter sets the maximum denominator
-    allowed in the conversion.
-
-    *Default*: `8192`
-
--   [**`initial_pattern_attempts`**]{#initial_pattern_attempts}:
-    integer. Number of attempts to make at constructing initial pattern
-    before giving up or asking whether to make more attempts.
-
-    *Default*: `50`
-
--   [**`exclude_from_randomization`**]{#exclude_from_randomization}:
-    sequence of strings. A list of attribute names of this class. Only
-    has an effect when the script is invoked with "-r" or "--random", in
-    which case any attribute names found in this list will be excluded
-    from randomization. (Although note that not all attributes are
-    randomized in any case; see the documentation for more info.)
-
-    *Default*: `()`
-
--   [**`voice_leading_attempts`**]{#voice_leading_attempts}: integer.
-    Number of attempts to make at constructing voice-leading pattern
-    before giving up or asking whether to make more attempts.
-
-    *Default*: `50`
-
--   [**`ask_for_more_attempts`**]{#ask_for_more_attempts}: bool. If
-    True, if
-    <a href="#initial_pattern_attempts">`initial_pattern_attempts`</a>
-    or <a href="#voice_leading_attempts">`voice_leading_attempts`</a>
-    are made without success, script will prompt user whether to try
-    again.
-
-    *Default*: `False`
-
--   [**`max_available_pitch_materials_deadends`**]{#max_available_pitch_materials_deadends}:
-    integer. Sets the maximum number of "deadends" the recursive
-    algorithm for building the initial pattern can reach before it will
-    be aborted.
-
-    *Default*: `1000`
 
 ### Scale and chord settings
 
@@ -668,11 +542,11 @@ explanation. \# TODO complete this note
 Parameters that begin "force\_chord\_tone" (though not
 "force\_non\_chord\_tone") apply regardless of whether
 <a href="#chord_tone_selection">`chord_tone_selection`</a> is true.
-Other chord tone settings modify the behaviour activated by
+Other chord tone settings modify the behavior activated by
 <a href="#chord_tone_selection">`chord_tone_selection`</a>.
 
 -   [**`chord_tone_and_root_disable`**]{#chord_tone_and_root_disable}:
-    bool. If True, disables all chord-tone and root specific behaviour.
+    bool. If True, disables all chord-tone and root specific behavior.
     Specifically, disables
     <a href="#chord_tone_selection">`chord_tone_selection`</a>,
     <a href="#chord_tones_no_diss_treatment">`chord_tones_no_diss_treatment`</a>,
@@ -695,7 +569,7 @@ Other chord tone settings modify the behaviour activated by
     conditions (e.g., <a href="#max_interval">`max_interval`</a>, etc.),
     the algorithm will try to find a non-chord-tone that works.
 
-    -   Note that not all chord tone behaviour is controlled by this
+    -   Note that not all chord tone behavior is controlled by this
         setting, however. Some settings (such as those that begin
         "force\_chord\_tone") apply regardless. To disable all chord
         tone behavior entirely, use
@@ -1688,3 +1562,139 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
     return to their starting point at exactly the beginning of the
     repetitions of the super pattern, each super pattern will feature a
     new sequence of transpositions.
+
+### Existing voices settings
+
+-   [**`existing_voices`**]{#existing_voices}: string. The path to a
+    midi file that contains some pre-existing music to which new voices
+    should be added. Settings such as <a href="#scales">`scales`</a> or
+    <a href="#chords">`chords`</a> are not inferred from the midi file
+    and must be set explicitly by the user.
+
+-   [**`existing_voices_offset`**]{#existing_voices_offset}: number.
+    Used to set the beat at which the voices in
+    <a href="#existing_voices">`existing_voices`</a> should begin. Has
+    no effect if <a href="#existing_voices">`existing_voices`</a> is not
+    passed.
+
+    *Default*: `0`
+
+-   [**`bass_in_existing_voice`**]{#bass_in_existing_voice}: boolean. If
+    True, then all bass-specific parameters (like
+    <a href="#preserve_root_in_bass">`preserve_root_in_bass`</a>) will
+    have no effect.
+
+    *Default*: `False`
+
+-   [**`existing_voices_repeat`**]{#existing_voices_repeat}: boolean. If
+    True, then any existing voices will be truncated at the end of the
+    super pattern, and then repeated together with the new voices.
+
+    *Default*: `True`
+
+-   [**`existing_voices_transpose`**]{#existing_voices_transpose}:
+    boolean. If True, then any existing voices will be transposed
+    according to the "<a href="#transposition-settings">transposition
+    settings</a>" below.
+
+    *Default*: `True`
+
+-   [**`existing_voices_max_denominator`**]{#existing_voices_max_denominator}:
+    integer. In order to avoid rounding errors and the like, the rhythms
+    in <a href="#existing_voices">`existing_voices`</a> are converted to
+    Python's Fraction type. This parameter sets the maximum denominator
+    allowed in the conversion.
+
+    *Default*: `8192`
+
+### Miscellaneous settings
+
+-   [**`overwrite`**]{#overwrite}: bool. If False, if a file named
+    <a href="#output_path">`output_path`</a> already exists, the
+    pathname will be incremented with a numeric suffix before the
+    extension until it does not exist. E.g., if
+    `output_path == 'effrhy.mid'` but `effrhy.mid` already exists,
+    `effrhy_001.mid` will be created; if `effrhy_001.mid` already
+    exists, `effrhy_002.mid` will be created.
+
+    *Default*: `False`
+
+-   [**`max_super_pattern_len`**]{#max_super_pattern_len}: number. If
+    positive, the super pattern will be truncated if it reaches this
+    length.
+
+    *Default*: `128`
+
+-   [**`hard_bounds`**]{#hard_bounds}: a [per-voice
+    sequence](#note-on-per-voice-sequences-and-other-looping-sequences)
+    of 2-tuples. Each tuple is of form (lowest\_note, highest\_note).
+    ([See the note above on specifying pitches and
+    intervals](#note-on-specifying-pitches-and-intervals).) This setting
+    determines a lower and upper bound that will be enforced regardless
+    of the setting of
+    <a href="#constrain_voice_leading_to_ranges">`constrain_voice_leading_to_ranges`</a>.
+    The default values are the lowest and highest notes of an 88-key
+    piano, respectively. See also
+    <a href="#voice_ranges">`voice_ranges`</a>.
+
+    *Default*: `((OCTAVE0 * A, OCTAVE8 * C))`
+
+-   [**`voice_order_str`**]{#voice_order_str}: string. If "reverse",
+    voices will be generated from highest to lowest. Otherwise, they are
+    generated from lowest to highest.
+
+    *Default*: `"usual"`
+
+-   [**`allow_voice_crossings`**]{#allow_voice_crossings}: bool, or a
+    [per-voice
+    sequence](#note-on-per-voice-sequences-and-other-looping-sequences)
+    of bools. This could be used, for example, to forbid voice-crossings
+    in the bass voice, but not in the other voices.
+
+    *Default*: `True`
+
+-   [**`time_sig`**]{#time_sig}: an optional tuple of form (int, int).
+    The integers are the numerator and denominator of a time signature,
+    respectively. The time signature will be written to the midi output
+    file and used if exporting notation with Verovio. If no time
+    signature is passed, the script will do its best to infer an
+    appropriate time signature from the other settings.
+
+    *Default*: `None`
+
+-   [**`initial_pattern_attempts`**]{#initial_pattern_attempts}:
+    integer. Number of attempts to make at constructing initial pattern
+    before giving up or asking whether to make more attempts.
+
+    *Default*: `50`
+
+-   [**`exclude_from_randomization`**]{#exclude_from_randomization}:
+    sequence of strings. A list of attribute names of this class. Only
+    has an effect when the script is invoked with "-r" or "--random", in
+    which case any attribute names found in this list will be excluded
+    from randomization. (Although note that not all attributes are
+    randomized in any case; see the documentation for more info.)
+
+    *Default*: `()`
+
+-   [**`voice_leading_attempts`**]{#voice_leading_attempts}: integer.
+    Number of attempts to make at constructing voice-leading pattern
+    before giving up or asking whether to make more attempts.
+
+    *Default*: `50`
+
+-   [**`ask_for_more_attempts`**]{#ask_for_more_attempts}: bool. If
+    True, if
+    <a href="#initial_pattern_attempts">`initial_pattern_attempts`</a>
+    or <a href="#voice_leading_attempts">`voice_leading_attempts`</a>
+    are made without success, script will prompt user whether to try
+    again.
+
+    *Default*: `False`
+
+-   [**`max_available_pitch_materials_deadends`**]{#max_available_pitch_materials_deadends}:
+    integer. Sets the maximum number of "deadends" the recursive
+    algorithm for building the initial pattern can reach before it will
+    be aborted.
+
+    *Default*: `1000`

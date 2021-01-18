@@ -1,8 +1,11 @@
 """Does the indescribable.
 """
+import itertools
 import os
+import random
 
 import src.er_choirs as er_choirs
+import src.er_exceptions as er_exceptions
 import src.er_interface as er_interface
 import src.er_make as er_make
 import src.er_midi as er_midi
@@ -11,11 +14,11 @@ import src.er_output_notation as er_output_notation
 import src.er_playback as er_playback
 import src.er_preprocess as er_preprocess
 
-# MAYBE make old directory and check it when looking for files (???)
 # MAYBE wait a moment when sending midi messages, see if this solves
 #   issue of first messages sometimes not sounding?
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
+MAX_RANDOM_TRIES = 10
 
 
 def main():
@@ -61,14 +64,35 @@ def main():
         )
 
     else:
-        er = er_preprocess.preprocess_settings(
-            args.settings, script_path=SCRIPT_DIR, random_settings=args.random
-        )
-
-        super_pattern = er_make.make_super_pattern(er)
-        er_make.complete_pattern(er, super_pattern)
+        seed = None
+        # LONGTERM move this loop to er_make.py or something
+        for try_i in itertools.count():
+            er = er_preprocess.preprocess_settings(
+                args.settings,
+                script_dir=SCRIPT_DIR,
+                random_settings=args.random,
+                seed=seed,
+            )
+            try:
+                super_pattern = er_make.make_super_pattern(er)
+                er_make.complete_pattern(er, super_pattern)
+                break
+            except er_exceptions.ErMakeException as exc:
+                if not args.random or try_i + 1 >= MAX_RANDOM_TRIES:
+                    er_interface.failure_message(
+                        exc, random_failures=MAX_RANDOM_TRIES
+                    )
+            # we should only get here if args.random is True and er_make failed
+            print("Random settings failed, trying again with another seed")
+            seed = random.randint(0, 2 ** 32)
         er_choirs.assign_choirs(er, super_pattern)
-        er_midi.write_er_midi(er, super_pattern, er.output_path)
+        non_empty = er_midi.write_er_midi(er, super_pattern, er.output_path)
+        if not non_empty:
+            print(
+                "Midi file is empty! Nothing to write. "
+                "(Check your settings and try again.)"
+            )
+            return
         if args.no_interface:
             print(f"Output written to {er.output_path}")
             if args.output_notation:

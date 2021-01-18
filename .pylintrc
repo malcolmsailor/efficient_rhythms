@@ -9,7 +9,8 @@ ignore=rapid_random_invention_like.py,
 ignore-patterns=test_settings.*\.py,
     debug_settings.*\.py,
     example.*\.py,
-    .*random_settings.*\.py
+    .*random_settings.*\.py,
+    test.*settings.*\.py
 
 
 [MESSAGES CONTROL]

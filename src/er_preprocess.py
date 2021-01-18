@@ -21,6 +21,8 @@ import src.er_settings as er_settings
 import src.er_tuning as er_tuning
 import src.er_voice_leadings as er_voice_leadings
 
+SCRIPT_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
+
 
 class SettingsError(Exception):
     pass
@@ -714,13 +716,19 @@ def read_in_settings(user_settings, settings_class):
     return settings_class(**user_settings)
 
 
-def preprocess_settings(user_settings, script_path=None, random_settings=False):
+def preprocess_settings(
+    user_settings, script_dir=SCRIPT_DIR, random_settings=False, seed=None
+):
 
     er = read_in_settings(user_settings, er_settings.ERSettings)
+    if seed is not None:
+        er.seed = seed
     er.seed = er_misc_funcs.set_seed(er.seed)
 
-    if not os.path.isabs(er.output_path) and script_path is not None:
-        er.output_path = os.path.join(script_path, er.output_path)
+    if er.output_path.startswith("EFFRHY/"):
+        er.output_path = os.path.join(
+            script_dir, er.output_path.replace("EFFRHY/", "", 1)
+        )
 
     if not os.path.exists(os.path.dirname(er.output_path)):
         os.makedirs(os.path.dirname(er.output_path))
@@ -881,14 +889,28 @@ def preprocess_settings(user_settings, script_path=None, random_settings=False):
         for i, pattern_length in enumerate(er.pattern_len):
             if er.rhythm_len[i] > pattern_length or er.rhythm_len[i] == 0:
                 er.rhythm_len[i] = pattern_length
-
-    if er.truncate_patterns:
-        er.super_pattern_len = er_misc_funcs.lcm(
-            [max(er.pattern_len), er.length_of_all_harmonies]
+    try:
+        max_super_pattern_len = (
+            er.max_super_pattern_len
+            if er.max_super_pattern_len
+            else er_settings.MAX_SUPER_PATTERN_LEN
         )
-    else:
+        # if er.truncate_patterns:
+        #     er.super_pattern_len = er_misc_funcs.lcm(
+        #         (max(er.pattern_len), er.length_of_all_harmonies),
+        #         max_n=max_super_pattern_len,
+        #     )
+        # else:
         er.super_pattern_len = er_misc_funcs.lcm(
-            er.pattern_len + [er.length_of_all_harmonies,]
+            ([max(er.pattern_len)] if er.truncate_patterns else er.pattern_len)
+            + [er.length_of_all_harmonies,],
+            max_n=max_super_pattern_len,
+        )
+    except er_misc_funcs.LCMError as exc:
+        er.super_pattern_len = max_super_pattern_len
+        print(
+            f"Notice: {exc} Reducing `super_pattern_len` to "
+            f"{max_super_pattern_len}"
         )
 
     if (

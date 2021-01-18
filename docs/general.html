@@ -23,7 +23,7 @@
 <li><code>pattern_len</code>: the length of the initial pattern</li>
 <li><code>harmony_len</code>: the length of each harmony (i.e., chord)</li>
 </ul>
-<p>For example, in example 1, the initial pattern is two beats long—i.e., <code>pattern_len = 2</code>. Each harmony, however, is four beats (<code>harmony_len = 4</code>). Thus you can see that the pattern repeats twice on each harmony before being adjusted to fit the next harmony.</p>
+<p>For example, in example 1, the initial pattern is two beats long—i.e., <code>pattern_len = 2</code>. Each harmony, however, is four beats (<code>harmony_len = 4</code>). Thus you can see that the pattern repeats twice on each harmony, and is then adjusted to fit the next harmony.</p>
 <!-- TODO annotate notated examples -->
 <p><img src="resources/svgs/example1.svg" class="notation" alt="Example 1 notation" /> <img src="resources/pngs/example100001.png" class="piano_roll" alt="Example 1 piano roll" /> <!-- TODO caption with path --></p>
 <!-- TODO link to midani -->
@@ -51,7 +51,7 @@
 <p>If the script is invoked with the “–random” or “-r” flag, then many settings will be randomly varied. The randomized settings will then be printed out so you can inspect them.</p>
 <p>The parameters of the randomization (i.e., the possible values that each setting can receive and their respective probabilities) are hard-coded into the script. A longterm to-do is to allow the user to specify the parameters of randomization in the same way that other settings are specified. There is, however, a setting available to exclude specific settings from randomization: <code>exclude_from_randomization</code>.</p>
 <p>These are the settings that by default are randomized:</p>
-<!-- Update dynamically? -->
+<!-- TODO update this list dynamically, store in settings.html -->
 <pre><code>num_voices
 pattern_len
 rhythm_len

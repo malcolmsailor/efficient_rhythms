@@ -1,9 +1,12 @@
 {
-    "midi_fname": "examples/midi/example1.mid",
+    "midi_fname": [
+        "examples/midi/example1.mid",
+        "docs/resources/midi/3cycle_triads_16_measures.mid",
+    ],
     "color_loop": 6,
     "voice_settings": {
         0: {"bracket_settings": {"hlen": {"y_offset": 4},},},
-        1: {"bracket_settings": {"hlen": {"y_offset": 4},},},
+        1: {"bracket_settings": {"hlen": {"y_offset": 4},}, "color_loop": 7},
     },
     "brackets": [
         (0.0, 1.0, "plen", "pattern_len = 2"),

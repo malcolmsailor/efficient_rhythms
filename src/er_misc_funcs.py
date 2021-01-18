@@ -9,6 +9,7 @@ import random
 import typing
 
 import numpy as np
+import termcolor
 
 MAX_DENOMINATOR = 8192
 
@@ -145,6 +146,95 @@ def add_line_breaks(
     return lines
 
 
+def make_table(
+    rows,
+    header=None,
+    row_width=7,
+    fit_in_window=True,
+    divider="|",
+    align_char="^",
+    row_spacing=0,
+    borders=True,
+):
+    """Returns a formatted table from a list of lists.
+
+    Table cells can be strings, integers, floats, fractions.
+
+    Args:
+        rows: a list of rows, where each row is a list of table cells.
+
+    Keyword args:
+        header: an optional row of column names.
+        row_width: integer. Default 7.
+        fit_in_window: boolean. If True, then row_width will be adjusted
+            downward if necessary to fit all columns in one terminal line
+            (although it's still possible that not all rows will fit on one
+            line).
+        divider: character or string to use as a column divider. (Will be
+            padded with a space on either side.) Default "|".
+        align_char: character to pass to format specification for cells.
+            Default "^".
+        row_spacing: integer. Inserts this number of blank lines between each
+            row.
+        borders: bool. Whether to print lines above and below the table.
+            Default True
+
+    Returns:
+        string.
+
+    Raises:
+        ValueError if the type of the object in any cell is unsupported.
+    """
+
+    def _format(cell):
+        def _format_(cell):
+            if isinstance(cell, (str, int, np.integer)):
+                # NOTE Doesn't format very large ints appropriately
+                return f"{cell:{align_char}{row_width}}"
+            if isinstance(cell, fractions.Fraction):
+                try:
+                    return f"{cell:{align_char}.{row_width - 1}g}"
+                except TypeError:
+                    out = f"{cell}"
+                    return _format(out) if len(out) < row_width else out
+            if isinstance(cell, float):
+                # NOTE Doesn't format very large floats appropriately
+                return f"{cell:{align_char}.{row_width - 1}g}"
+            raise ValueError("unsupported type")
+
+        return f"{_format_(cell):{align_char}{row_width}}"
+
+    divider = divider.join([" "] * 2)
+    try:
+        term_size = os.get_terminal_size().columns
+    except OSError:
+        term_size = 80
+    if fit_in_window:
+        if (len(rows[0]) + 1) * (row_width + len(divider)) - len(
+            divider
+        ) > term_size:
+            row_width = (term_size + len(divider)) // (len(rows[0]) + 1) - len(
+                divider
+            )
+    formatted_rows = [[_format(cell) for cell in row] for row in rows]
+    row_strings = [divider.join(row) for row in formatted_rows]
+    if row_spacing > 0:
+        blank_row_string = divider.join([" " * row_width for _ in rows[0]])
+        for i in range(len(row_strings)):
+            for _ in range(row_spacing):
+                row_strings.insert((1 + row_spacing) * i, blank_row_string)
+    line_width = min(term_size, len(row_strings[0]))
+    line = "-" * line_width
+    if header is not None:
+        header_string = divider.join([_format(cell) for cell in header])
+        row_strings.insert(0, line)
+        row_strings.insert(0, header_string)
+    if borders:
+        row_strings.insert(0, line)
+        row_strings.append(line)
+    return "\n".join(row_strings)
+
+
 def make_header(
     text, fill_char="#", space_char=" ", line_width=None, align="left", indent=2
 ):
@@ -183,7 +273,7 @@ def make_header(
     if "\n" in text:
         raise NotImplementedError("Text contains line break")
     if align == "left":
-        return "".join(
+        out = "".join(
             [
                 fill_char * indent,
                 space_char if indent else "",
@@ -192,8 +282,8 @@ def make_header(
                 fill_char * (line_width - len(text) - 2 - indent),
             ]
         )
-    if align == "right":
-        return "".join(
+    elif align == "right":
+        out = "".join(
             [
                 fill_char * (line_width - len(text) - 2 - indent),
                 space_char,
@@ -202,8 +292,8 @@ def make_header(
                 fill_char * indent,
             ]
         )
-    if align == "center":
-        return "".join(
+    elif align == "center":
+        out = "".join(
             [
                 fill_char * math.ceil((line_width - len(text) - 2) / 2),
                 space_char,
@@ -212,7 +302,10 @@ def make_header(
                 fill_char * math.floor((line_width - len(text) - 2) / 2),
             ]
         )
-    raise ValueError("Alignment type not recognized")
+    else:
+        raise ValueError("Alignment type not recognized")
+    # LONGTERM remove termcolor
+    return termcolor.colored(out, attrs=["bold"])
 
 
 def no_empty_lists(item):
@@ -317,6 +410,10 @@ def flatten(item):
     return out
 
 
+class LCMError(Exception):
+    pass
+
+
 def lcm(numbers, max_n=2 ** 15):
     """Can take any list, not necessarily a flat list.
 
@@ -324,9 +421,6 @@ def lcm(numbers, max_n=2 ** 15):
 
     Returns an error if there's no lcm smaller than max_n.
     """
-
-    class LCMError(Exception):
-        pass
 
     def _lcm_sub(num1, num2):
         i = 1
@@ -336,7 +430,7 @@ def lcm(numbers, max_n=2 ** 15):
             i += 1
             if i * num1 > max_n:
                 raise LCMError(
-                    f"No common multiple of {num1} and {num2} smaller than "
+                    f"No common multiple of {original_numbers} smaller than "
                     f"{max_n}."
                 )
 
@@ -346,6 +440,7 @@ def lcm(numbers, max_n=2 ** 15):
         )
 
     numbers = flatten(numbers)
+    original_numbers = numbers
     numbers = convert_to_fractions(numbers)
 
     while True:
@@ -718,7 +813,7 @@ def get_scale_index(scale, pitch, up_or_down=0, return_adjustment_sign=False):
     appropriate value by taking the nearest pitch to it in the
     previous scale.
 
-    It's possible this will lead to odd behaviour applying parallel
+    It's possible this will lead to odd behavior applying parallel
     motion if, e.g., thirds become seconds across the barline, etc.
 
     Keyword args:

@@ -3,7 +3,11 @@ import collections
 import src.er_misc_funcs as er_misc_funcs
 
 
-class UnableToChoosePitchError(Exception):
+class ErMakeException(Exception):
+    pass
+
+
+class UnableToChoosePitchError(ErMakeException):
     def __init__(self):
         super().__init__()
         self.too_many_alternations = 0
@@ -25,7 +29,7 @@ class UnableToChoosePitchError(Exception):
         )
 
 
-class AvailablePitchMaterialsError(Exception):
+class AvailablePitchMaterialsError(ErMakeException):
     """Error will be raised if at any stage of _attempt_harmony_pattern
     there are no available pitch-classes or pitches."""
 
@@ -133,7 +137,7 @@ class AvailablePitchMaterialsError(Exception):
         return out
 
 
-class NoMoreVoiceLeadingsError(Exception):
+class NoMoreVoiceLeadingsError(ErMakeException):
     """Raised if cannot find voice-leading of necessary displacement."""
 
 
@@ -158,7 +162,7 @@ class VoiceLeadFailureCounter:
         return out
 
 
-class VoiceLeadingError(Exception):
+class VoiceLeadingError(ErMakeException):
     def __init__(self, er):
         super().__init__()
         self.total_failures = 0
