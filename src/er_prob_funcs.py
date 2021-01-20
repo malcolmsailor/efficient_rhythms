@@ -5,8 +5,6 @@ import random
 
 import src.er_misc_funcs as er_misc_funcs
 
-# TODO where is exempt beats modulo?
-
 
 def ensure_list(obj, attr_str):
     """If given attributes of object are not inside a list,
@@ -33,6 +31,7 @@ class AttributeAdder:
         self.interface_dict = {}
         self.validation_dict = {}
         self.display_if = {}
+        self.desc_dict = {}
 
     def add_attribute(
         self,
@@ -44,6 +43,7 @@ class AttributeAdder:
         attr_hint=None,
         unique=False,
         display_if=None,
+        description=None,
     ):
         """
         Arguments:
@@ -58,7 +58,9 @@ class AttributeAdder:
             attr_hint: String. Explanatory text to appear in user interface.
                 Default: None.
             unique: Boolean. If false, attribute value will be placed in a list
-                if not already an iterable.
+                if not already an iterable. TODO
+            display_if: TODO
+            description: TODO
         """
         setattr(self, attr_name, attr_value)
         self.interface_dict[attr_name] = attr_pretty_name
@@ -72,13 +74,14 @@ class AttributeAdder:
         if not unique:
             ensure_list(self, attr_name)
         self.display_if[attr_name] = display_if
+        self.desc_dict[attr_name] = description
 
     def get(self, voice_i, *params):
         out = []
         for param in params:
             try:
                 out.append(vars(self)[param][voice_i % len(vars(self)[param])])
-            except TypeError:
+            except TypeError:  # TODO!
                 breakpoint()
         if len(out) == 1:
             out = out[0]
@@ -149,13 +152,16 @@ class AttributeValidator:
         self.type_ = type_
         self.min_value = min_value
         self.max_value = max_value
-        self.possible_values = possible_values
-        for possible_value in possible_values:
-            if " " in possible_value:
-                raise ValueError(
-                    "Possible values cannot contain spaces. "
-                    f"Change possible value '{possible_value}'"
-                )
+        if type_ == bool:
+            self.possible_values = ("True", "False")
+        else:
+            self.possible_values = possible_values
+            for possible_value in possible_values:
+                if " " in possible_value:
+                    raise ValueError(
+                        "Possible values cannot contain spaces. "
+                        f"Change possible value '{possible_value}'"
+                    )
         self.unique = unique
         self.tuple_of = tuple_of
         self.iter_of_iters = iter_of_iters
@@ -170,6 +176,7 @@ class AttributeValidator:
         """
 
         def _sub_validate(bit):
+            # breakpoint()
             if isinstance(bit, (list, tuple)):
                 if self.tuple_of > 0:
                     if (
@@ -190,6 +197,7 @@ class AttributeValidator:
 
                 out = []
                 for piece in bit:
+                    # breakpoint()
                     new_piece = _sub_validate(piece)
                     if new_piece is None:
                         return None
@@ -258,7 +266,6 @@ class AttributeValidator:
                 answer = str(enquote(answer, self.unique))
         try:
             answer = eval(answer)
-
         except SyntaxError:
             return None
         except NameError:
@@ -278,6 +285,7 @@ class AttributeValidator:
 
         # if _sub_validate(answer) is None:
         #     return None
+        print(answer)
         answer = _sub_validate(answer)
 
         if answer is None:

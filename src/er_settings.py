@@ -1186,10 +1186,10 @@ class ERSettings:
         Miscellaneous settings
         ======================
 
-        overwrite: bool. If False, if a file named `output_path` already
-            exists, the pathname will be incremented with a numeric suffix
-            before the extension until it does not exist. E.g., if
-            `output_path == 'effrhy.mid'` but `effrhy.mid` already exists,
+        overwrite: bool. If False, if a file with the name specified by
+            `output_path` already exists, the name will be incremented with
+            a numeric suffix before the extension until it does not exist. E.g.,
+            if `output_path == 'effrhy.mid'` but `effrhy.mid` already exists,
             `effrhy_001.mid` will be created; if `effrhy_001.mid` already
             exists, `effrhy_002.mid` will be created.
             Default: False

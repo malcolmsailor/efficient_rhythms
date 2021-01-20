@@ -8,9 +8,10 @@ ignore=rapid_random_invention_like.py,
 #   pytest will not run pylint
 ignore-patterns=test_settings.*\.py,
     debug_settings.*\.py,
-    example.*\.py,
+    example\d+\.py,
     .*random_settings.*\.py,
-    test.*settings.*\.py
+    test.*settings.*\.py,
+    .*midani_settings\.py
 
 
 [MESSAGES CONTROL]

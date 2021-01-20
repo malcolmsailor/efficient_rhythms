@@ -22,6 +22,15 @@ import src.er_notes as er_notes
 #       - abbreviate/extend score transformer
 #       - quantize transformer
 
+# TODO change "filter" to "transformer" for transformers?
+EXEMPTIONS_DESC = """'Exemptions' specify notes that the filter will never be
+applied to. Exemptions can either be 'metric', meaning that notes attacked on
+certain beats are exempt, or 'counting', meaning that notes are counted, and
+every 'nth' note is exempt.
+"""
+EXEMPT_BEATS_DESC = """Beats to exempt from the filter. Zero-indexed (so the
+first beat is 0). See also 'Exempt beats modulo' and 'Exempt comma'."""
+
 
 def _get_prob_funcs():
     """Gets the possible probability functions from er_prob_funcs.py.
@@ -117,11 +126,22 @@ class Changer(er_prob_funcs.AttributeAdder):
         # MAYBE explicitly toggle between exempt beats and exempt n
         #       also, add possibility of offset for exempt n?
         self.add_attribute(
+            "exemptions",
+            "off",
+            "Exemptions",
+            str,
+            attr_val_kwargs={"possible_values": ("off", "metric", "counting")},
+            unique=True,
+            description=EXEMPTIONS_DESC,
+        )
+        self.add_attribute(
             "exempt",
             (),
             "Exempt beats",
             fractions.Fraction,
             attr_val_kwargs={"min_value": 0, "max_value": -1, "sort": True},
+            description=EXEMPT_BEATS_DESC,
+            display_if={"exemptions": "metric"},
         )
         self.add_attribute(
             "exempt_modulo",
@@ -130,7 +150,7 @@ class Changer(er_prob_funcs.AttributeAdder):
             fractions.Fraction,
             attr_val_kwargs={"min_value": 0, "max_value": -1},
             unique=True,
-            display_if={"exempt": "non_empty"},
+            display_if={"exemptions": "metric"},
         )
         self.add_attribute(
             "exempt_n",
@@ -138,7 +158,7 @@ class Changer(er_prob_funcs.AttributeAdder):
             "Exempt num notes",
             int,
             attr_val_kwargs={"min_value": 0, "max_value": -1},
-            attr_hint=("Only has an effect if exempt beats modulo == 0"),
+            display_if={"exemptions": "counting"},
         )
         self.add_attribute(
             "exempt_comma",
@@ -147,7 +167,7 @@ class Changer(er_prob_funcs.AttributeAdder):
             fractions.Fraction,
             attr_val_kwargs={"min_value": 0, "max_value": -1},
             unique=True,
-            display_if={"exempt": "non_empty"},
+            display_if={"exemptions": "metric"},
         )
         self.add_attribute(
             "invert_exempt",
@@ -155,7 +175,7 @@ class Changer(er_prob_funcs.AttributeAdder):
             "Invert exempt beats",
             bool,
             unique=True,
-            display_if={"exempt": "non_empty"},
+            display_if={"exemptions": ("metric", "counting")},
         )
 
     def validate(self, *args):

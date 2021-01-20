@@ -46,6 +46,7 @@ def add_line_breaks(
     fill=False,
     force_breaks=True,
     preserve_trailing_ws=True,
+    preserve_existing_line_breaks=True,
 ):
     """Adds line breaks to a string for printing in the shell.
 
@@ -66,6 +67,7 @@ def add_line_breaks(
             at the end of `in_str`. Even if True, will not add trailing
             whitespace to the last line if that leads to it being more
             than one line long. Default: True
+        preserve_existing_line_breaks: TODO Default: True
 
     """
 
@@ -100,6 +102,8 @@ def add_line_breaks(
         current_line_width = line_width - indent_width
     else:
         current_line_width = line_width
+    if not preserve_existing_line_breaks:
+        in_str = in_str.replace("\n", " ")
     for char_i, char in enumerate(in_str):
         if indent_type in ("hanging", "all") and line_i > 0:
             current_line_width = line_width - indent_width

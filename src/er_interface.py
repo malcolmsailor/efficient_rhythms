@@ -126,11 +126,29 @@ def print_path(in_path, offset=0):
 
 
 def make_changer_prompt_line(i, attr_name, value, hint_name="", hint_value=""):
+    # The main motivation for _stringify is so that fractions will print out
+    # as "1" or "2/3" rather than Fraction(1, 1) or Fraction(2, 3)
+    def _stringify(item):
+        # I don't think any other types of sequence should show up here
+        if isinstance(item, tuple):
+            return (
+                "("
+                + ", ".join([_stringify(sub_item) for sub_item in item])
+                + ")"
+            )
+        if isinstance(item, list):
+            return (
+                "["
+                + ", ".join([_stringify(sub_item) for sub_item in item])
+                + "]"
+            )
+        return item.__str__()
+
     num_str = f"({i})"
-    out = f"{num_str:>8} {attr_name}: {value}"
+    out = f"{num_str:>8} {attr_name}: {_stringify(value)}"
     if hint_name:
         if hint_value:
-            hint_str = f"{hint_name}: {hint_value:<10}"
+            hint_str = f"{hint_name}: {_stringify(hint_value):<10}"
         else:
             hint_str = hint_name + " " * 2
         if len(out) + len(hint_str) > LINE_WIDTH - 2:
@@ -196,32 +214,68 @@ def add_to_changer_attribute_dict(
 
 
 def possible_values_prompt(possible_values):
-    return [
-        make_prompt_line(pv_i + 1, possible_value)
-        for (pv_i, possible_value) in enumerate(possible_values)
-    ] + [""]
+    return "\n".join(
+        [
+            make_prompt_line(pv_i + 1, possible_value)
+            for (pv_i, possible_value) in enumerate(possible_values)
+        ]
+    )
+
+
+def print_prompt(
+    header_text, user_prompt, description=None, possible_values=None
+):
+    # LONGTERM refactor to use this function more often
+    lines = ["", er_misc_funcs.make_header(header_text)]
+    if description is not None:
+        lines.append(
+            er_misc_funcs.add_line_breaks(
+                description,
+                indent_type="none",
+                preserve_existing_line_breaks=False,
+            ).rstrip()  # Not sure why sometimes it appends a newline and others not
+        )
+    lines.append("")
+    if possible_values is not None:
+        lines.append(possible_values)  # a str
+        lines.append("")
+    lines.append(
+        er_misc_funcs.add_line_breaks(user_prompt, indent_type="hanging")
+    )
+    return input("\n".join(lines))
 
 
 def update_changer_attribute(changer, attribute):
+    # TODO can we only ask for plural values when plural values are possible?
     update_prompt = (
         "Enter new value (or values, separated by commas), "
         "'h' for possible values, or leave blank to cancel: "
     )
     if attribute.startswith("prob_func."):
         obj = changer.prob_func
-        attribute = attribute.replace("prob_func.", "")
+        attribute = attribute[10:]
     else:
         obj = changer
     header_text = obj.pretty_name + ": " + obj.interface_dict[attribute]
-    lines = ["", er_misc_funcs.make_header(header_text), ""]
     validator = obj.validation_dict[attribute]
-    if validator.type_ == bool and validator.unique:
+    if validator.type_ == bool and validator.unique:  # review
         setattr(obj, attribute, bool(getattr(obj, attribute)))
         return
+    if attribute in obj.desc_dict:
+        description = obj.desc_dict[attribute]
+    else:
+        description = None
     if validator.possible_values:
-        lines.extend(possible_values_prompt(validator.possible_values))
-    print("\n".join(lines))
-    answer = input(er_misc_funcs.add_line_breaks(update_prompt))
+        possible_values = possible_values_prompt(validator.possible_values)
+    else:
+        possible_values = None
+    user_prompt = update_prompt
+    answer = print_prompt(
+        header_text,
+        user_prompt,
+        description=description,
+        possible_values=possible_values,
+    )
     while True:
         if answer == "":
             return
@@ -581,16 +635,6 @@ def select_changer_prompt(
 
 def changer_interface(super_pattern, active_changers, changer_counter, debug):
     def _get_changers():
-        # filters = []
-        # transformers = []
-        # for item in dir(er_changers):
-        #     if "Filter" in item:
-        #         filters.append(getattr(er_changers, item))
-        #         # filters.append(vars(er_changers)[item])
-        #     if "Transformer" in item and item != "Transformer":
-        #         transformers.append(getattr(er_changers, item))
-        #         # transformers.append(vars(er_changers)[item])
-
         i = 1
         changer_dict = {}
         for filter_ in er_changers.FILTERS:
@@ -686,7 +730,7 @@ def verovio_interface(super_pattern, midi_path, verovio_arguments):
         ".png (requires Verovio and ImageMagick)",
         ".pdf (requires Verovio, ImageMagick, and img2pdf)",
     ]
-    lines.extend(possible_values_prompt(possible_values))
+    lines.extend([possible_values_prompt(possible_values), ""])
     print("\n".join(lines))
     while True:
         answer = input(er_misc_funcs.add_line_breaks(verovio_prompt))
