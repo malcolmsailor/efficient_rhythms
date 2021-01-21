@@ -5,7 +5,7 @@ from fractions import Fraction
 
 import src.er_constants as er_constants
 
-
+DEFAULT_NUM_HARMONIES = 4
 MAX_SUPER_PATTERN_LEN = 128
 
 # INTERNET_TODO how to allow numpy arrays in sequence annotations?
@@ -96,7 +96,7 @@ class ERSettings:
     qualities to specific intervals is onto but not one-to-one.)
 
     Note that "root" below doesn't strictly mean root, in music-theoretic sense.
-    See `root_pcs` below for more explanation. # TODO complete this note
+    See `foot_pcs` below for more explanation. # TODO complete this note
 
     Keyword args:
 
@@ -111,8 +111,13 @@ class ERSettings:
             be created relative to the current directory, unless the path begins
             with the string "EFFRHY/", in which case "EFFRHY/" will be replaced
             with the directory of the efficient_rhythms script.  If any folder
-            in the path does not exist, it will be created. See also
-            `overwrite`.
+            in the path does not exist, it will be created.  If the path is a
+            directory (ending with `"/"`), a midi file will be created within
+            that directory with the same basename as the last settings file, but
+            with the extension `.mid`. (If there are no settings files, the
+            basename will be `effrhy.mid`.)
+
+            See also `overwrite`.
             Default: "EFFRHY/output_midi/effrhy.mid"
         tet: int. Specifies equal division of the octave.
             Default: 12
@@ -158,9 +163,9 @@ class ERSettings:
             a single number, which must be the same as the value of
             `pattern_len`.
         num_harmonies: int. The number of harmonies in the pattern. If a
-            non-positive value is passed, the length of `root_pcs` will be
-            assigned to this setting.
-            Default: 4
+            not passed, the length of `foot_pcs` will be assigned to this
+            setting. If `foot_pcs` is not passed either, will be set to a
+            default value of 4.
         harmony_len: a number, or a looping sequence of numbers (see above).
             If a sequence of numbers, the harmonies will cycle through the
             sequence until `num_harmonies` is reached. That is, the first
@@ -188,12 +193,12 @@ class ERSettings:
 
         scales_and_chords_specified_in_midi: string. If passed, specifies a
             midi file in a specific format, described below, from which the
-            settings `root_pcs`, `scales`, and `chords` below should be inferred
+            settings `foot_pcs`, `scales`, and `chords` below should be inferred
             (in which case any explicit values for these settings are ignored).
 
             The midi file should consist of two tracks. `scales` are inferred
-            from the first track, and `chords` and `root_pcs` are inferred
-            from the second track (`root_pcs` are simply the lowest sounding
+            from the first track, and `chords` and `foot_pcs` are inferred
+            from the second track (`foot_pcs` are simply the lowest sounding
             pitch of each chord). Each track should consist entirely of
             simultaneous whole notes (i.e., semibreves) constituting the
             intended scales or chords, respectively. For an example, see
@@ -205,45 +210,46 @@ class ERSettings:
             that the chords do not contain pitch-classes that do not belong to
             the  scales; i.e., that the scales are supersets of the chords),
             or an `InconsistentChordsAndScalesError` will be raised.
-        root_pcs: sequence of numbers. Specifies the pitch-classes that
+        foot_pcs: sequence of numbers. Specifies the `foots` of each item in
+            `scales` and `chords`---i.e., the pitch-classes that
             will correspond to `0` in each item of `scales` and `chords`.
-            Note that for chords that are not in root position, this will not
-            correspond to the root in a music-theoretic sense.
 
-            For example, if `root_pcs == [2, 4]` and `chords == [[0, 4, 7], [0,
+            TODO refer to explanation of `foot_pcs` elsewhere?
+
+            For example, if `foot_pcs == [2, 4]` and `chords == [[0, 4, 7], [0,
             3, 8]]`, then the actually realized chords will have pitch-classes
             `[2, 6, 9]` and `[4, 7, 0]`, respectively (assuming `tet == 12`).
             (In music-theoretic terms, the chords will be a D major triad
             followed by a first- inversion C major triad.)
 
-            If `root_pcs` is shorter than `num_harmonies`, it is looped through
+            If `foot_pcs` is shorter than `num_harmonies`, it is looped through
             until the necessary length is obtained.
 
-            If not passed, or passed an empty sequence, `num_harmonies` roots
+            If not passed, or passed an empty sequence, `num_harmonies` foots
             will be generated randomly.
 
             Note that if `interval_cycle` below is non-empty, all items in this
             sequence past the first are ignored.
 
             (See the note above on specifying pitches and intervals.)
-        interval_cycle: number, or sequence of numbers. Specifies a root-pc
-            interval cycle beginning on the first pitch-class of `root_pcs` (or
-            on a randomly chosen pitch-class, if `root_pcs` is not passed).
-            For example, if `root_pcs == [0]`, and
-                - `interval_cycle == 3`, the root pitch-classes will be 0, 3,
+        interval_cycle: number, or sequence of numbers. Specifies a foot-pc
+            interval cycle beginning on the first pitch-class of `foot_pcs` (or
+            on a randomly chosen pitch-class, if `foot_pcs` is not passed).
+            For example, if `foot_pcs == [0]`, and
+                - `interval_cycle == 3`, the foot pitch-classes will be 0, 3,
                     6...
-                - `interval_cycle == [3, -2]`, the root pitch-classes will be
+                - `interval_cycle == [3, -2]`, the foot pitch-classes will be
                     0, 3, 1, 4, 2...
             (See the note above on specifying pitches and intervals.)
         scales: a sequence of sequences of numbers. Each subsequence specifies
             a scale. Scales should always be specified starting from pitch-class
             0; they will then be transposed to the appropriate pitch-classes
-            according to the settings `root_pcs` or `interval_cycle`.
+            according to the settings `foot_pcs` or `interval_cycle`.
 
-            If `root_pcs` has fewer items than `scales`, then the excess items
+            If `foot_pcs` has fewer items than `scales`, then the excess items
             in `scales` will be ignored.
 
-            If `root_pcs` has more items than `scales`, then `scales` will be
+            If `foot_pcs` has more items than `scales`, then `scales` will be
             looped through.
 
             (See the note above on specifying pitches and intervals.)
@@ -251,12 +257,12 @@ class ERSettings:
         chords: a sequence of sequences of numbers. Each subsequence specifies
             a chord. Scales should always be specified starting from pitch-class
             0; they will then be transposed to the appropriate pitch-classes
-            according to the settings `root_pcs` or `interval_cycle`.
+            according to the settings `foot_pcs` or `interval_cycle`.
 
-            If `root_pcs` has fewer items than `chords`, then the excess items
+            If `foot_pcs` has fewer items than `chords`, then the excess items
             in `chords` will be ignored.
 
-            If `root_pcs` has more items than `chords`, then `chords` will be
+            If `foot_pcs` has more items than `chords`, then `chords` will be
             looped through.
 
             (See the note above on specifying pitches and intervals.)
@@ -359,12 +365,12 @@ class ERSettings:
             motions.
 
             Default: False
-        preserve_root_in_bass: string. Controls whether the occurrences
-            of the root in the bass are "preserved" when voice-leading the
+        preserve_foot_in_bass: string. Controls whether the occurrences
+            of the foot in the bass are "preserved" when voice-leading the
             initial pattern to subsequent harmonies. For example, if the first
             two harmonies are C major followed by F major, should a C in the
             bass on the first chord be voice-led to an F in the bass on the
-            second chord, preserving the root, or should it be voice-led to a C
+            second chord, preserving the foot, or should it be voice-led to a C
             (which would be more efficient, in the sense of moving a smaller
             interval, a unison, rather than a fourth or fifth).
 
@@ -373,20 +379,20 @@ class ERSettings:
 
             Possible values:
                 "lowest": only the lowest sounding occurrences of
-                    the root on each harmony are preserved (so if, e.g.,
+                    the foot on each harmony are preserved (so if, e.g.,
                     C2 and C3 both occur, only C2 will
                     be preserved when voice-led to the next chord, while
                     C3 will proceed by efficient voice-leading like all
                     other pitches).
-                "all": all occurrences of the root of each harmony
+                "all": all occurrences of the foot of each harmony
                     are preserved.
-                "none": the root is voice-led like any other pitch.
+                "none": the foot is voice-led like any other pitch.
             Default: "none"
-        extend_bass_range_for_roots: number. If non-zero, permits transposition
-            of the root lower than the normal range of the bass voice, in order
-            to maintain the root as the lowest sounding pitch during a given
+        extend_bass_range_for_foots: number. If non-zero, permits transposition
+            of the foot lower than the normal range of the bass voice, in order
+            to maintain the foot as the lowest sounding pitch during a given
             harmony. Specifically, if the lowest sounding occurrences
-            of the root during a given harmony are not the lowest sounding pitch
+            of the foot during a given harmony are not the lowest sounding pitch
             during that harmony, then they will be transposed an octave
             downwards, provided that this transposition lies within this
             extended range.
@@ -423,6 +429,10 @@ class ERSettings:
             forbidden intervals.  (See `forbidden_interval_classes`,
             `forbidden_interval_modulo`.)
             Default: True
+        vl_maintain_prohibit_parallels: bool. If False, then after the initial
+            pattern is complete, voice-leadings will be permitted to contain
+            prohibited parallel intervals. (See `prohibit_parallels`.)
+            Default: True
 
         Chord-tone settings
         ===================
@@ -432,13 +442,13 @@ class ERSettings:
         `chord_tone_selection` is true. Other chord tone settings modify the
         behavior activated by `chord_tone_selection`.
 
-        chord_tone_and_root_disable: bool. If True, disables all chord-tone and
-            root specific behavior. Specifically, disables
+        chord_tone_and_foot_disable: bool. If True, disables all chord-tone and
+            foot specific behavior. Specifically, disables
             `chord_tone_selection`, `chord_tones_no_diss_treatment`,
-            `force_chord_tone`, `force_root_in_bass`,
+            `force_chord_tone`, `force_foot_in_bass`,
             `max_interval_for_non_chord_tones`,
             `min_interval_for_non_chord_tones`, `voice_lead_chord_tones`,
-            `preserve_root_in_bass`, `extend_bass_range_for_roots`
+            `preserve_foot_in_bass`, `extend_bass_range_for_foots`
             Default: False
         chord_tone_selection: boolean. If True, then the script will select
             whether each note should be assigned a chord-tone according to a
@@ -451,7 +461,7 @@ class ERSettings:
                     by this setting, however. Some settings (such as those
                     that begin "force_chord_tone") apply regardless. To disable
                     all chord tone behavior entirely, use
-                    `chord_tone_and_root_disable`.
+                    `chord_tone_and_foot_disable`.
             Default: True
         chord_tone_prob_func: string. If `chord_tone_selection` is True, then
             the probability of the next note being a nonchord tone falls
@@ -543,7 +553,7 @@ class ERSettings:
             selection will be synchronized between all simultaneously attacked
             voices.
             Default: False
-        force_root_in_bass: string. Possible values are listed below; they work
+        force_foot_in_bass: string. Possible values are listed below; they work
             in the same way as for `force_chord_string` above.
                 "first_beat"
                 "first_note"
@@ -577,8 +587,8 @@ class ERSettings:
             set to GENERIC_UNISON -- you can't use UNISON because that's a just
             interval constant.)
             Default: er_constants.FIFTH
-        max_interval: number, or a per-voice sequence of numbers. If zero, does
-            not apply.  If positive, indicates a generic interval. If negative,
+        max_interval: number, or a per-voice sequence of numbers. If `None`, does
+            not apply.  If positive, indicates a generic interval. Otherwise,
             indicates a specific interval (in which case it can be a float to
             indicate a just interval which will be tempered in
             pre-processing---see the note above on specifying pitches and
@@ -600,7 +610,7 @@ class ERSettings:
         min_interval: number, or a per-voice sequence of numbers. Works like
             `max_interval`, but specifies a minimum, rather than a maximum,
             interval.
-            Default: 0
+            Default: None
         min_interval_for_non_chord_tones: number, or a per-voice sequence of
             numbers. Works like `max_interval_for_non_chord_tones`, but
             specifies a minimum, rather than a maximum, interval.  If not
@@ -611,12 +621,12 @@ class ERSettings:
         max_repeated_notes: integer. Sets the maximum allowed number of repeated
             pitches in a single voice. If `force_repeated_notes` is True, this
             parameter is ignored. "One repeated note" means two notes with the
-            same pitch in a row.
+            same pitch in a row. To disable, set to a negative value.
 
             Warning: for now, only applies to the initial pattern, not to
             the subsequent voice-leading
 
-            Default: 1
+            Default: -1
         max_alternations: integer, or a per-voice sequence of integers.
             Specifies the maximum allowed number of consecutive alternations of
             two pitches in a voice.  "One alternation" is two pitches (e.g., A,
@@ -1168,7 +1178,7 @@ class ERSettings:
             `existing_voices` is not passed.
             Default: 0
         bass_in_existing_voice: boolean. If True, then all bass-specific
-            parameters (like `preserve_root_in_bass`) will have no effect.
+            parameters (like `preserve_foot_in_bass`) will have no effect.
             Default: False
         existing_voices_repeat: boolean. If True, then any existing voices
             will be truncated at the end of the super pattern, and then repeated
@@ -1310,7 +1320,7 @@ class ERSettings:
     rhythm_len: typing.Union[
         numbers.Number, typing.Sequence[numbers.Number]
     ] = None
-    num_harmonies: int = 4
+    num_harmonies: int = None
     pitch_loop: typing.Union[int, typing.Sequence[int]] = ()
     hard_pitch_loop: bool = False
     time_sig: typing.Tuple[int, int] = None
@@ -1337,7 +1347,7 @@ class ERSettings:
     ###################################################################
     # Scale and chord settings
     scales_and_chords_specified_in_midi: str = None
-    root_pcs: typing.Sequence[numbers.Number] = None
+    foot_pcs: typing.Sequence[numbers.Number] = None
     interval_cycle: typing.Union[
         numbers.Number, typing.Sequence[numbers.Number]
     ] = None
@@ -1373,6 +1383,10 @@ class ERSettings:
 
     ###################################################################
     # Voice-leading settings
+    # LONGTERM setting that allows voice-leading to be applied to entire
+    #   score segment at once, rather than just to individual voices
+    #   (so that each pitch-class will have same voice-leading in all
+    #   parts)
     #
     #       These settings govern how the initial pattern is voice-led
     #       through subsequent harmonies.
@@ -1385,22 +1399,23 @@ class ERSettings:
     # LONGTERM address fact that otherwise forbidden intervals can occur
     #   if this setting is not "none"
 
-    preserve_root_in_bass: str = "none"
+    preserve_foot_in_bass: str = "none"
 
     # LONGTERM allow transposition by multiple octaves if necessary.
 
-    extend_bass_range_for_roots: numbers.Number = 0
+    extend_bass_range_for_foots: numbers.Number = 0
     constrain_voice_leading_to_ranges: bool = False
     allow_flexible_voice_leading: bool = False
     vl_maintain_consonance: bool = True
     vl_maintain_limit_intervals: bool = True
     # LONGTERM maintain max_repeated_notes
     vl_maintain_forbidden_intervals: bool = True
+    vl_maintain_prohibit_parallels: bool = True
 
     ###################################################################
     # Chord tones settings
 
-    chord_tone_and_root_disable: bool = False
+    chord_tone_and_foot_disable: bool = False
     chord_tone_selection: bool = True
     chord_tone_prob_func: str = "linear"
     max_n_between_chord_tones: int = 4
@@ -1419,7 +1434,7 @@ class ERSettings:
     ] = False
     force_chord_tone: str = "none"
     chord_tones_sync_attack_in_all_voices: bool = False
-    force_root_in_bass: str = "none"
+    force_foot_in_bass: str = "none"
 
     ###################################################################
     # Melody settings
@@ -1429,20 +1444,20 @@ class ERSettings:
     unison_weighted_as: int = er_constants.FIFTH
 
     # LONGTERM min rest value across which limit intervals do not apply
-    # LONGTERM avoid enforcing limit intervals with voice-led root
+    # LONGTERM avoid enforcing limit intervals with voice-led foot
 
     max_interval: typing.Union[
         numbers.Number, typing.Sequence[numbers.Number]
     ] = -er_constants.OCTAVE
     max_interval_for_non_chord_tones: typing.Union[
         numbers.Number, typing.Sequence[numbers.Number]
-    ] = None
+    ] = "take_from_max_interval"
     min_interval: typing.Union[
         numbers.Number, typing.Sequence[numbers.Number]
-    ] = 0
+    ] = None
     min_interval_for_non_chord_tones: typing.Union[
         numbers.Number, typing.Sequence[numbers.Number]
-    ] = None
+    ] = "take_from_min_interval"
 
     # LONGTERM apply on a per-voice basis
     force_repeated_notes: bool = False

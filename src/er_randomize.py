@@ -237,10 +237,10 @@ class ERRandomize:
         )
         self.parallel_voice_leading = BoolRandomizer(0.1)
         self.voice_lead_chord_tones = BoolRandomizer(0.65)
-        self.preserve_root_in_bass = StrRandomizer(
+        self.preserve_foot_in_bass = StrRandomizer(
             {"lowest": 0.35, "none": 0.5, "all": 0.15}
         )
-        self.chord_tone_and_root_disable = BoolRandomizer(0.1)
+        self.chord_tone_and_foot_disable = BoolRandomizer(0.1)
         self.chord_tone_selection = BoolRandomizer(0.75)
         self.force_chord_tone = StrRandomizer(
             {
@@ -252,7 +252,7 @@ class ERRandomize:
             }
         )
         self.chord_tones_sync_attack_in_all_voices = BoolRandomizer(0.2)
-        self.force_root_in_bass = StrRandomizer(
+        self.force_foot_in_bass = StrRandomizer(
             {
                 "global_first_beat": 0.2,
                 "global_first_note": 0.2,

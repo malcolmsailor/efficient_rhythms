@@ -67,7 +67,8 @@ def add_line_breaks(
             at the end of `in_str`. Even if True, will not add trailing
             whitespace to the last line if that leads to it being more
             than one line long. Default: True
-        preserve_existing_line_breaks: TODO Default: True
+        preserve_existing_line_breaks: if False, newlines in the input string
+            are replaced with spaces. Default: True
 
     """
 
@@ -1026,6 +1027,11 @@ def chord_in_list(
     in the list (under transpositional equivalence, and according to
     the octave equivalence and doubling settings).
 
+    The first pc in all the chords in `list_of_chords` should be 0.
+    # TODO What if chords in `list_of_chords` contain doublings?
+    # TODO enforce this elsewhere?
+    # TODO can we count on passed chord being sorted? What about list of chords?
+
     Keyword arguments:
         tet: int.
         octave_equi: str. Possible values:
@@ -1039,7 +1045,9 @@ def chord_in_list(
                 in the order listed. (This is order from lowest to highest,
                 not by voice. So if the alto is lower than the tenor, the
                 alto's pitch-class comes first.)
-            "none": no octave equivalence, in thse sense that (C3, E4, G4) is
+                # TODO How do we even know what the order by voice is here?
+                # TODO how are pitch-class doublings treated here?
+            "none": no octave equivalence, in the sense that (C3, E4, G4) is
                 not considered the same as (C4, E4, G4) because of the tenth/
                 third. Nevertheless, transpositional equivalence still applies,
                 including when the interval of transposition is an octave,
@@ -1048,44 +1056,65 @@ def chord_in_list(
             "all": permit any and all doublings.
             "complete": doublings only permitted after the chord is complete.
             "none": no doublings permitted.
-    """
 
-    chord = list(chord)
-    chord.sort()
-    list_of_chords_ = []
-    for lchord in list_of_chords:
-        lchord_ = [pitch - lchord[0] for pitch in lchord]
-        lchord_.sort()
-        list_of_chords_.append(lchord_)
-    if permit_doublings in ("all", "complete"):
-        orig_card = len(chord)
-        chord = np.array(chord)
-        unique_is = np.unique(chord % 12, return_index=True)[1]
-        unique_is.sort()
-        chord = chord[unique_is].tolist()
-    chord_card = len(chord)
-    consec_intervals = _get_consec_intervals(chord, tet, octave_equi)
-    for listed_chord in list_of_chords_:
-        if chord_card > len(listed_chord):
-            continue
-        if (
-            permit_doublings == "complete"
-            and chord_card < len(listed_chord)
-            and chord_card < orig_card
-        ):
-            continue
-        listed_consec_intervals = _get_consec_intervals(
-            listed_chord, tet, octave_equi
-        )[: chord_card - 1]
-        if octave_equi == "all":
-            mod_consec_intervals = consec_intervals + consec_intervals
-            for i in range(chord_card):
-                consec_slice = mod_consec_intervals[i : i + chord_card - 1]
-                if consec_slice == listed_consec_intervals:
-                    return True
-        else:
-            if consec_intervals == listed_consec_intervals:
-                return True
+    Examples:
+        Suppose `list_of_chords` is [[0, 4, 7]]. # TODO
+    """
+    chord = sorted(chord)
+    for pitch in chord:
+        reduced_chord = np.array(chord) - pitch
+        if octave_equi != "none":
+            reduced_chord %= tet
+        reduced_chord_set = set(reduced_chord)
+        for ref_chord in list_of_chords:
+            if reduced_chord_set.issubset(ref_chord):
+                if octave_equi in ("all", "bass"):
+                    if permit_doublings == "all":
+                        return True
+                    if len(reduced_chord_set) == len(chord) or (
+                        reduced_chord_set.issuperset(ref_chord)
+                        and permit_doublings == "complete"
+                    ):
+                        return True
+                else:
+                    if permit_doublings == "all":
+                        i = -1
+                        for ref_pc in ref_chord:
+                            try:
+                                pc = reduced_chord[i + 1]
+                            except IndexError:
+                                break
+                            if pc != ref_pc:  # pcs should be equal >= once
+                                break
+                            i += 1
+                            for j in range(i + 1, len(reduced_chord)):
+                                if reduced_chord[j] == ref_pc:
+                                    i += 1
+                                else:
+                                    break
+                        if i == len(reduced_chord) - 1:
+                            return True
+                    else:
+                        try:
+                            if np.equal(
+                                reduced_chord, ref_chord[: len(reduced_chord)]
+                            ).all():
+                                return True
+                        except ValueError:
+                            if permit_doublings == "complete":
+                                if (
+                                    np.equal(
+                                        ref_chord,
+                                        reduced_chord[: len(ref_chord)],
+                                    ).all()
+                                    and len(
+                                        set(reduced_chord[len(ref_chord) - 1 :])
+                                    )
+                                    == 1
+                                ):
+                                    return True
+        if octave_equi != "all":
+            return False
 
     return False
 
@@ -1224,3 +1253,58 @@ def nested_method(method):
         return method(self, item, *args, **kwargs)
 
     return f
+
+
+def tuplify(item, max_float_p=None):
+    """Prints out all iterables like tuples.
+    """
+    if isinstance(item, (typing.Sequence, np.ndarray)) and not isinstance(
+        item, str
+    ):
+        return (
+            "("
+            + ", ".join(
+                tuplify(sub_item, max_float_p=max_float_p) for sub_item in item
+            )
+            + ")"
+        )
+    if max_float_p is not None and isinstance(item, (float, np.float)):
+
+        fmt_str = "{:." + str(max_float_p) + "g}"
+        return fmt_str.format(item)
+    return f"{item}"
+
+
+# def print_setting(attr, val):
+#     # Originally I wrote this function because I wanted to format floats
+#     # nicely for printing. But then I got rid of the float formatting
+#     # because it caused issues when copying the settings for re-use with
+#     # the script. It still makes numpy arrays print like tuples which is
+#     # nice though.
+#     def _format_item(item):
+#         if isinstance(item, bool):
+#             if item:
+#                 return "True"
+#             return "False"
+#         if isinstance(item, Fraction):
+#             return f"{float(item)}"
+#         if isinstance(item, numbers.Number):
+#             return f"{item:g}"
+#         if isinstance(item, str):
+#             return f'"{item}"'
+#         if isinstance(item, (typing.Sequence, np.ndarray)):
+#             return _tuplify(item)
+#         return f"{item}"
+#
+#     def _tuplify(item):
+#         if isinstance(item, (typing.Sequence, np.ndarray)) and not isinstance(
+#             item, str
+#         ):
+#             return (
+#                 "("
+#                 + ", ".join(_format_item(sub_item) for sub_item in item)
+#                 + ")"
+#             )
+#         return _format_item(item)
+#
+#     print(f'"{attr}": {_format_item(val)},')

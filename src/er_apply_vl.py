@@ -20,10 +20,10 @@ def apply_voice_leading(
     # MAYBE something about the number of arguments for this function?
     # LONGTERM use PossibleNote class
 
-    def _try_to_force_root():
-        root = er_make2.get_root_to_force(er, voice_i, new_harmony_i)
-        if root is not None:
-            new_pitch = root
+    def _try_to_force_foot():
+        foot = er_make2.get_foot_to_force(er, voice_i, new_harmony_i)
+        if foot is not None:
+            new_pitch = foot
             new_note = er_notes.Note(new_pitch, new_attack_time, new_dur)
             return new_note
         return None
@@ -35,9 +35,9 @@ def apply_voice_leading(
         first_note
         and not er.bass_in_existing_voice
         and voice_i == 0
-        and er.force_root_in_bass in ("first_beat", "first_note")
+        and er.force_foot_in_bass in ("first_beat", "first_note")
     ):
-        new_note = _try_to_force_root()
+        new_note = _try_to_force_foot()
         if new_note:
             return new_note, None
 
@@ -51,13 +51,13 @@ def apply_voice_leading(
             return new_note, None
 
     if (
-        er.preserve_root_in_bass != "none"
+        er.preserve_foot_in_bass != "none"
         and (not er.bass_in_existing_voice)
         and voice_i == 0
     ):
         pattern_len = er.pattern_len[voice_i]
-        if new_attack_time % pattern_len in er.bass_root_times:
-            new_note = _try_to_force_root()
+        if new_attack_time % pattern_len in er.bass_foot_times:
+            new_note = _try_to_force_foot()
             if new_note:
                 return new_note, None
 
@@ -88,6 +88,13 @@ def apply_voice_leading(
         new_note = er_notes.Note(new_pitch, new_attack_time, new_dur)
         return new_note, (prev_pitch_index, voice_leading_interval)
 
+    if er.vl_maintain_prohibit_parallels:
+        if not er_make2.check_parallel_intervals(
+            er, super_pattern, new_pitch, prev_pitch, new_attack_time, voice_i
+        ):
+            voice_lead_error.temp_failure_counter.parallel_intervals += 1
+            return _fail()
+
     if er.vl_maintain_forbidden_intervals:
         if not er_make2.check_harmonic_intervals(
             er,
@@ -113,6 +120,9 @@ def apply_voice_leading(
             er, super_pattern, new_pitch, new_attack_time, new_dur, voice_i
         ):
             voice_lead_error.temp_failure_counter.check_consonance += 1
+            er_make2.check_consonance(
+                er, super_pattern, new_pitch, new_attack_time, new_dur, voice_i,
+            )
             return _fail()
 
     if er.vl_maintain_limit_intervals:

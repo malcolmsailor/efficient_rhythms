@@ -55,12 +55,16 @@ class AttributeAdder:
         Keyword arguments:
             attr_val_kwargs: Dict. Keyword arguments for attribute validator.
                 (See AttributeValidator class.) Default: None.
-            attr_hint: String. Explanatory text to appear in user interface.
+            attr_hint: String. Brief explanatory text to appear in user
+                interface, on the right margin at the attribute selection
+                screen.
                 Default: None.
             unique: Boolean. If false, attribute value will be placed in a list
-                if not already an iterable. TODO
-            display_if: TODO
-            description: TODO
+                if not already an iterable. CHANGER_TODO I think this is placing
+                    tuples etc. in lists too.
+            display_if: CHANGER_TODO
+            description: String. Longer explanatory text to appear under the
+                header when adjusting the attribute.
         """
         setattr(self, attr_name, attr_value)
         self.interface_dict[attr_name] = attr_pretty_name
@@ -81,7 +85,7 @@ class AttributeAdder:
         for param in params:
             try:
                 out.append(vars(self)[param][voice_i % len(vars(self)[param])])
-            except TypeError:  # TODO!
+            except TypeError:  # CHANGER_TODO delete this try/except?
                 breakpoint()
         if len(out) == 1:
             out = out[0]
@@ -320,7 +324,7 @@ class AttributeValidator:
             return f"Possible values: {self.possible_values}: "
         if self.type_ == bool:
             return "Possible values: 'True' or 'False'"
-        # TODO look for a help string?
+        # CHANGER_TODO look for a help string?
         return "Sorry, possible values for this attribute not implemented yet!"
 
 

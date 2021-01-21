@@ -5,5 +5,5 @@
     "harmony_len": 2,
     "voice_lead_chord_tones": True,
     "interval_cycle": 3,
-    "root_pcs": [0],
+    "foot_pcs": [0],
 }

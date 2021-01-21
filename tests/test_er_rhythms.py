@@ -61,6 +61,34 @@ def test_update_pattern_voice_leading_order():
                 voice_is[voice_i] = item.end_rhythm_i
 
 
+def test_fill_attack_durs():
+    densities = tuple(i / 10 for i in range(1, 10))
+    rhythm_lens = (i / 2 for i in range(1, 13))
+    min_dur = 1 / 4
+    for density in densities:
+        for rhythm_len in rhythm_lens:
+            settingsdict = {
+                "attack_density": density,
+                "dur_density": density,
+                "min_dur": min_dur,
+                "num_voices": 1,
+                "rhythm_len": rhythm_len,
+                "pattern_len": rhythm_len,  # ensure we don't truncate rhythm
+            }
+            er = er_preprocess.preprocess_settings(settingsdict)
+            rhythm = er_rhythm.rhythms_handler(er)[0]
+            try:
+                assert all(
+                    val == min_dur for val in rhythm.values()
+                ), "all(val == min_dur for val in rhythm.values())"
+            except:  # pylint: disable=bare-except
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                traceback.print_exception(
+                    exc_type, exc_value, exc_traceback, file=sys.stdout
+                )
+                breakpoint()
+
+
 def test_get_attack_time_and_dur():
     pattern_lens_list = [(2.5, 3, 3.5, 4), (2, 3, 5)]
     for pattern_lens in pattern_lens_list:
@@ -91,4 +119,5 @@ def test_get_attack_time_and_dur():
 
 if __name__ == "__main__":
     test_update_pattern_voice_leading_order()
+    test_fill_attack_durs()
     test_get_attack_time_and_dur()

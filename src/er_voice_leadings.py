@@ -339,8 +339,8 @@ class VoiceLeader:
             self.source_pc_scale, self.source_pc_chord
         )
         self.scale_roots = (
-            er.get(source_harmony_i, "root_pcs"),
-            er.get(dest_harmony_i, "root_pcs"),
+            er.get(source_harmony_i, "foot_pcs"),
+            er.get(dest_harmony_i, "foot_pcs"),
         )
         self.parallel_voice_leading = er.parallel_voice_leading
         self.parallel_direction = er.parallel_direction

@@ -83,7 +83,7 @@ comprise 3 semitones. (Thus, the mapping from generic intervals with
 qualities to specific intervals is onto but not one-to-one.)
 
 Note that "root" below doesn't strictly mean root, in music-theoretic
-sense. See <a href="#root_pcs">`root_pcs`</a> below for more
+sense. See <a href="#foot_pcs">`foot_pcs`</a> below for more
 explanation. \# TODO complete this note
 
 ### General settings
@@ -98,7 +98,12 @@ Less often used general settings are under
     directory, unless the path begins with the string "EFFRHY/", in
     which case "EFFRHY/" will be replaced with the directory of the
     efficient\_rhythms script. If any folder in the path does not exist,
-    it will be created. See also <a href="#overwrite">`overwrite`</a>.
+    it will be created. If the path is a directory (ending with `"/"`),
+    a midi file will be created within that directory with the same
+    basename as the last settings file, but with the extension `.mid`.
+    (If there are no settings files, the basename will be `effrhy.mid`.)
+
+    See also <a href="#overwrite">`overwrite`</a>.
 
     *Default*: `"EFFRHY/output_midi/effrhy.mid"`
 
@@ -173,10 +178,10 @@ Less often used general settings are under
     <a href="#pattern_len">`pattern_len`</a>.
 
 -   [**`num_harmonies`**]{#num_harmonies}: int. The number of harmonies
-    in the pattern. If a non-positive value is passed, the length of
-    <a href="#root_pcs">`root_pcs`</a> will be assigned to this setting.
-
-    *Default*: `4`
+    in the pattern. If a not passed, the length of
+    <a href="#foot_pcs">`foot_pcs`</a> will be assigned to this setting.
+    If <a href="#foot_pcs">`foot_pcs`</a> is not passed either, will be
+    set to a default value of 4.
 
 -   [**`harmony_len`**]{#harmony_len}: a number, or a looping sequence
     of numbers (see above). If a sequence of numbers, the harmonies will
@@ -211,15 +216,15 @@ Less often used general settings are under
 -   [**`scales_and_chords_specified_in_midi`**]{#scales_and_chords_specified_in_midi}:
     string. If passed, specifies a midi file in a specific format,
     described below, from which the settings
-    <a href="#root_pcs">`root_pcs`</a>, <a href="#scales">`scales`</a>,
+    <a href="#foot_pcs">`foot_pcs`</a>, <a href="#scales">`scales`</a>,
     and <a href="#chords">`chords`</a> below should be inferred (in
     which case any explicit values for these settings are ignored).
 
     The midi file should consist of two tracks.
     <a href="#scales">`scales`</a> are inferred from the first track,
     and <a href="#chords">`chords`</a> and
-    <a href="#root_pcs">`root_pcs`</a> are inferred from the second
-    track (<a href="#root_pcs">`root_pcs`</a> are simply the lowest
+    <a href="#foot_pcs">`foot_pcs`</a> are inferred from the second
+    track (<a href="#foot_pcs">`foot_pcs`</a> are simply the lowest
     sounding pitch of each chord). Each track should consist entirely of
     simultaneous whole notes (i.e., semibreves) constituting the
     intended scales or chords, respectively. For an example, see
@@ -232,25 +237,28 @@ Less often used general settings are under
     scales; i.e., that the scales are supersets of the chords), or an
     `InconsistentChordsAndScalesError` will be raised.
 
--   [**`root_pcs`**]{#root_pcs}: sequence of numbers. Specifies the
-    pitch-classes that will correspond to `0` in each item of
-    <a href="#scales">`scales`</a> and <a href="#chords">`chords`</a>.
-    Note that for chords that are not in root position, this will not
-    correspond to the root in a music-theoretic sense.
+-   [**`foot_pcs`**]{#foot_pcs}: sequence of numbers. Specifies the
+    `foots` of each item in <a href="#scales">`scales`</a> and
+    <a href="#chords">`chords`</a>---i.e., the pitch-classes that will
+    correspond to `0` in each item of <a href="#scales">`scales`</a> and
+    <a href="#chords">`chords`</a>.
 
-    For example, if `root_pcs == [2, 4]` and
+    TODO refer to explanation of <a href="#foot_pcs">`foot_pcs`</a>
+    elsewhere?
+
+    For example, if `foot_pcs == [2, 4]` and
     `chords == [[0, 4, 7], [0,           3, 8]]`, then the actually
     realized chords will have pitch-classes `[2, 6, 9]` and `[4, 7, 0]`,
     respectively (assuming `tet == 12`). (In music-theoretic terms, the
     chords will be a D major triad followed by a first- inversion C
     major triad.)
 
-    If <a href="#root_pcs">`root_pcs`</a> is shorter than
+    If <a href="#foot_pcs">`foot_pcs`</a> is shorter than
     <a href="#num_harmonies">`num_harmonies`</a>, it is looped through
     until the necessary length is obtained.
 
     If not passed, or passed an empty sequence,
-    <a href="#num_harmonies">`num_harmonies`</a> roots will be generated
+    <a href="#num_harmonies">`num_harmonies`</a> foots will be generated
     randomly.
 
     Note that if <a href="#interval_cycle">`interval_cycle`</a> below is
@@ -260,14 +268,14 @@ Less often used general settings are under
     intervals](#note-on-specifying-pitches-and-intervals).)
 
 -   [**`interval_cycle`**]{#interval_cycle}: number, or sequence of
-    numbers. Specifies a root-pc interval cycle beginning on the first
-    pitch-class of <a href="#root_pcs">`root_pcs`</a> (or on a randomly
-    chosen pitch-class, if <a href="#root_pcs">`root_pcs`</a> is not
-    passed). For example, if `root_pcs == [0]`, and
+    numbers. Specifies a foot-pc interval cycle beginning on the first
+    pitch-class of <a href="#foot_pcs">`foot_pcs`</a> (or on a randomly
+    chosen pitch-class, if <a href="#foot_pcs">`foot_pcs`</a> is not
+    passed). For example, if `foot_pcs == [0]`, and
 
-    -   `interval_cycle == 3`, the root pitch-classes will be 0, 3, 6...
+    -   `interval_cycle == 3`, the foot pitch-classes will be 0, 3, 6...
 
-    -   `interval_cycle == [3, -2]`, the root pitch-classes will be 0,
+    -   `interval_cycle == [3, -2]`, the foot pitch-classes will be 0,
         3, 1, 4, 2... ([See the note above on specifying pitches and
         intervals](#note-on-specifying-pitches-and-intervals).)
 
@@ -275,14 +283,14 @@ Less often used general settings are under
     subsequence specifies a scale. Scales should always be specified
     starting from pitch-class 0; they will then be transposed to the
     appropriate pitch-classes according to the settings
-    <a href="#root_pcs">`root_pcs`</a> or
+    <a href="#foot_pcs">`foot_pcs`</a> or
     <a href="#interval_cycle">`interval_cycle`</a>.
 
-    If <a href="#root_pcs">`root_pcs`</a> has fewer items than
+    If <a href="#foot_pcs">`foot_pcs`</a> has fewer items than
     <a href="#scales">`scales`</a>, then the excess items in
     <a href="#scales">`scales`</a> will be ignored.
 
-    If <a href="#root_pcs">`root_pcs`</a> has more items than
+    If <a href="#foot_pcs">`foot_pcs`</a> has more items than
     <a href="#scales">`scales`</a>, then <a href="#scales">`scales`</a>
     will be looped through.
 
@@ -295,14 +303,14 @@ Less often used general settings are under
     subsequence specifies a chord. Scales should always be specified
     starting from pitch-class 0; they will then be transposed to the
     appropriate pitch-classes according to the settings
-    <a href="#root_pcs">`root_pcs`</a> or
+    <a href="#foot_pcs">`foot_pcs`</a> or
     <a href="#interval_cycle">`interval_cycle`</a>.
 
-    If <a href="#root_pcs">`root_pcs`</a> has fewer items than
+    If <a href="#foot_pcs">`foot_pcs`</a> has fewer items than
     <a href="#chords">`chords`</a>, then the excess items in
     <a href="#chords">`chords`</a> will be ignored.
 
-    If <a href="#root_pcs">`root_pcs`</a> has more items than
+    If <a href="#foot_pcs">`foot_pcs`</a> has more items than
     <a href="#chords">`chords`</a>, then <a href="#chords">`chords`</a>
     will be looped through.
 
@@ -451,13 +459,13 @@ Less often used general settings are under
 
     *Default*: `False`
 
--   [**`preserve_root_in_bass`**]{#preserve_root_in_bass}: string.
-    Controls whether the occurrences of the root in the bass are
+-   [**`preserve_foot_in_bass`**]{#preserve_foot_in_bass}: string.
+    Controls whether the occurrences of the foot in the bass are
     "preserved" when voice-leading the initial pattern to subsequent
     harmonies. For example, if the first two harmonies are C major
     followed by F major, should a C in the bass on the first chord be
     voice-led to an F in the bass on the second chord, preserving the
-    root, or should it be voice-led to a C (which would be more
+    foot, or should it be voice-led to a C (which would be more
     efficient, in the sense of moving a smaller interval, a unison,
     rather than a fourth or fifth).
 
@@ -466,22 +474,22 @@ Less often used general settings are under
 
     Possible values:
 
-    -   `"lowest"`: only the lowest sounding occurrences of the root on
+    -   `"lowest"`: only the lowest sounding occurrences of the foot on
         each harmony are preserved (so if, e.g., C2 and C3 both occur,
         only C2 will be preserved when voice-led to the next chord,
         while C3 will proceed by efficient voice-leading like all other
         pitches).
-    -   `"all"`: all occurrences of the root of each harmony are
+    -   `"all"`: all occurrences of the foot of each harmony are
         preserved.
-    -   `"none"`: the root is voice-led like any other pitch.
+    -   `"none"`: the foot is voice-led like any other pitch.
 
     *Default*: `"none"`
 
--   [**`extend_bass_range_for_roots`**]{#extend_bass_range_for_roots}:
-    number. If non-zero, permits transposition of the root lower than
-    the normal range of the bass voice, in order to maintain the root as
+-   [**`extend_bass_range_for_foots`**]{#extend_bass_range_for_foots}:
+    number. If non-zero, permits transposition of the foot lower than
+    the normal range of the bass voice, in order to maintain the foot as
     the lowest sounding pitch during a given harmony. Specifically, if
-    the lowest sounding occurrences of the root during a given harmony
+    the lowest sounding occurrences of the foot during a given harmony
     are not the lowest sounding pitch during that harmony, then they
     will be transposed an octave downwards, provided that this
     transposition lies within this extended range.
@@ -537,6 +545,14 @@ Less often used general settings are under
 
     *Default*: `True`
 
+-   [**`vl_maintain_prohibit_parallels`**]{#vl_maintain_prohibit_parallels}:
+    bool. If False, then after the initial pattern is complete,
+    voice-leadings will be permitted to contain prohibited parallel
+    intervals. (See
+    <a href="#prohibit_parallels">`prohibit_parallels`</a>.)
+
+    *Default*: `True`
+
 ### Chord-tone settings
 
 Parameters that begin "force\_chord\_tone" (though not
@@ -545,18 +561,18 @@ Parameters that begin "force\_chord\_tone" (though not
 Other chord tone settings modify the behavior activated by
 <a href="#chord_tone_selection">`chord_tone_selection`</a>.
 
--   [**`chord_tone_and_root_disable`**]{#chord_tone_and_root_disable}:
-    bool. If True, disables all chord-tone and root specific behavior.
+-   [**`chord_tone_and_foot_disable`**]{#chord_tone_and_foot_disable}:
+    bool. If True, disables all chord-tone and foot specific behavior.
     Specifically, disables
     <a href="#chord_tone_selection">`chord_tone_selection`</a>,
     <a href="#chord_tones_no_diss_treatment">`chord_tones_no_diss_treatment`</a>,
     <a href="#force_chord_tone">`force_chord_tone`</a>,
-    <a href="#force_root_in_bass">`force_root_in_bass`</a>,
+    <a href="#force_foot_in_bass">`force_foot_in_bass`</a>,
     <a href="#max_interval_for_non_chord_tones">`max_interval_for_non_chord_tones`</a>,
     <a href="#min_interval_for_non_chord_tones">`min_interval_for_non_chord_tones`</a>,
     <a href="#voice_lead_chord_tones">`voice_lead_chord_tones`</a>,
-    <a href="#preserve_root_in_bass">`preserve_root_in_bass`</a>,
-    <a href="#extend_bass_range_for_roots">`extend_bass_range_for_roots`</a>
+    <a href="#preserve_foot_in_bass">`preserve_foot_in_bass`</a>,
+    <a href="#extend_bass_range_for_foots">`extend_bass_range_for_foots`</a>
 
     *Default*: `False`
 
@@ -573,7 +589,7 @@ Other chord tone settings modify the behavior activated by
         setting, however. Some settings (such as those that begin
         "force\_chord\_tone") apply regardless. To disable all chord
         tone behavior entirely, use
-        <a href="#chord_tone_and_root_disable">`chord_tone_and_root_disable`</a>.
+        <a href="#chord_tone_and_foot_disable">`chord_tone_and_foot_disable`</a>.
 
     *Default*: `True`
 
@@ -722,7 +738,7 @@ Other chord tone settings modify the behavior activated by
 
     *Default*: `False`
 
--   [**`force_root_in_bass`**]{#force_root_in_bass}: string. Possible
+-   [**`force_foot_in_bass`**]{#force_foot_in_bass}: string. Possible
     values are listed below; they work in the same way as for
     `force_chord_string` above.
 
@@ -769,10 +785,10 @@ Other chord tone settings modify the behavior activated by
 
 -   [**`max_interval`**]{#max_interval}: number, or a [per-voice
     sequence](#note-on-per-voice-sequences-and-other-looping-sequences)
-    of numbers. If zero, does not apply. If positive, indicates a
-    generic interval. If negative, indicates a specific interval (in
-    which case it can be a float to indicate a just interval which will
-    be tempered in pre-processing---[see the note above on specifying
+    of numbers. If `None`, does not apply. If positive, indicates a
+    generic interval. Otherwise, indicates a specific interval (in which
+    case it can be a float to indicate a just interval which will be
+    tempered in pre-processing---[see the note above on specifying
     pitches and intervals](#note-on-specifying-pitches-and-intervals)).
 
     <a href="#max_interval">`max_interval`</a> sets an inclusive bound
@@ -798,7 +814,7 @@ Other chord tone settings modify the behavior activated by
     of numbers. Works like <a href="#max_interval">`max_interval`</a>,
     but specifies a minimum, rather than a maximum, interval.
 
-    *Default*: `0`
+    *Default*: `None`
 
 -   [**`min_interval_for_non_chord_tones`**]{#min_interval_for_non_chord_tones}:
     number, or a [per-voice
@@ -819,12 +835,12 @@ Other chord tone settings modify the behavior activated by
     maximum allowed number of repeated pitches in a single voice. If
     <a href="#force_repeated_notes">`force_repeated_notes`</a> is True,
     this parameter is ignored. "One repeated note" means two notes with
-    the same pitch in a row.
+    the same pitch in a row. To disable, set to a negative value.
 
     Warning: for now, only applies to the initial pattern, not to the
     subsequent voice-leading
 
-    *Default*: `1`
+    *Default*: `-1`
 
 -   [**`max_alternations`**]{#max_alternations}: integer, or a
     [per-voice
@@ -1581,7 +1597,7 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
 
 -   [**`bass_in_existing_voice`**]{#bass_in_existing_voice}: boolean. If
     True, then all bass-specific parameters (like
-    <a href="#preserve_root_in_bass">`preserve_root_in_bass`</a>) will
+    <a href="#preserve_foot_in_bass">`preserve_foot_in_bass`</a>) will
     have no effect.
 
     *Default*: `False`
@@ -1609,10 +1625,10 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
 
 ### Miscellaneous settings
 
--   [**`overwrite`**]{#overwrite}: bool. If False, if a file named
-    <a href="#output_path">`output_path`</a> already exists, the
-    pathname will be incremented with a numeric suffix before the
-    extension until it does not exist. E.g., if
+-   [**`overwrite`**]{#overwrite}: bool. If False, if a file with the
+    name specified by <a href="#output_path">`output_path`</a> already
+    exists, the name will be incremented with a numeric suffix before
+    the extension until it does not exist. E.g., if
     `output_path == 'effrhy.mid'` but `effrhy.mid` already exists,
     `effrhy_001.mid` will be created; if `effrhy_001.mid` already
     exists, `effrhy_002.mid` will be created.

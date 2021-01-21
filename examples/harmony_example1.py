@@ -1,0 +1,5 @@
+{
+    "foot_pcs": ("C", "G", "A", "F"),
+    "chords": ("MAJOR_TRIAD", "MAJOR_TRIAD", "MINOR_TRIAD", "MAJOR_TRIAD"),
+    "scales": ("MAJOR_SCALE", "MIXOLYDIAN", "AEOLIAN", "LYDIAN"),
+}

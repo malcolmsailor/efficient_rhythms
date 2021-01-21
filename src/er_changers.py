@@ -22,7 +22,7 @@ import src.er_notes as er_notes
 #       - abbreviate/extend score transformer
 #       - quantize transformer
 
-# TODO change "filter" to "transformer" for transformers?
+# CHANGER_TODO change "filter" to "transformer" for transformers?
 EXEMPTIONS_DESC = """'Exemptions' specify notes that the filter will never be
 applied to. Exemptions can either be 'metric', meaning that notes attacked on
 certain beats are exempt, or 'counting', meaning that notes are counted, and
@@ -722,7 +722,7 @@ class RangeFilter(Filter):
             "Range(s) to pass through filter",
             int,
             attr_val_kwargs={"min_value": 0, "max_value": -1, "tuple_of": -2},
-            unique=True,  # TODO not sure this should be unique
+            unique=True,  # CHANGER_TODO not sure this should be unique
         )
         self.condition = pitch_in_range
 

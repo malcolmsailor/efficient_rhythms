@@ -147,16 +147,18 @@ class VoiceLeadFailureCounter:
         self.check_intervals = 0
         self.check_consonance = 0
         self.limit_intervals = 0
+        self.parallel_intervals = 0
 
     def __str__(self):
         out = (
             "Out of range:{:<4} Harm. ints:{:<4} "
-            "Not consonant:{:<4} Mel. ints:{:<4}"
+            "Not consonant:{:<4} Mel. ints:{:<4} Par. ints:{:<4}"
             "".format(
                 self.out_of_range,
                 self.check_intervals,
                 self.check_consonance,
                 self.limit_intervals,
+                self.parallel_intervals,
             )
         )
         return out
@@ -182,12 +184,15 @@ class VoiceLeadingError(ErMakeException):
         self.reset_temp_counter()
         counter_strs = []
         within = False
+        max_count = 0
         for (
             (prev_harmony_i, harmony_i),
             count,
         ) in self.harmony_counter.items():
             if prev_harmony_i == harmony_i:
-                within = True
+                if count > max_count:
+                    within = True
+                    max_count = count
                 counter_strs.append(
                     er_misc_funcs.add_line_breaks(
                         f"{count:3} failures within harmony {prev_harmony_i:2}",
@@ -195,6 +200,9 @@ class VoiceLeadingError(ErMakeException):
                     )
                 )
             else:
+                if count > max_count:
+                    within = False
+                    max_count = count
                 counter_strs.append(
                     er_misc_funcs.add_line_breaks(
                         f"{count:3} failures between harmony "

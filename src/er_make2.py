@@ -3,20 +3,49 @@ import warnings
 import src.er_misc_funcs as er_misc_funcs
 
 
-def get_root_to_force(er, voice_i, harmony_i):
-    root_pc = er.get(harmony_i, "pc_chords")[0]
-    root_pitches = er_misc_funcs.get_all_pitches_in_range(
-        root_pc, er.voice_ranges[voice_i], er.tet
+def check_parallel_intervals(
+    er, super_pattern, new_pitch, prev_pitch, new_attack_time, voice_i
+):
+    # LONGTERM make this work with `existing_voices?`
+    for other_voice in super_pattern.voices:
+        if other_voice.voice_i == voice_i:
+            continue
+        try:
+            other_voice[new_attack_time]
+        except KeyError:
+            continue
+        # LONGTERM should we stop at rests?
+        other_prev_pitch, other_pitch = other_voice.get_last_n_pitches(
+            2, new_attack_time
+        )
+        if -1 in (other_prev_pitch, other_pitch):
+            continue
+        if other_prev_pitch == other_pitch:
+            # We don't care about unisons
+            continue
+        prev_interval = (prev_pitch - other_prev_pitch) % er.tet
+        if prev_interval not in er.prohibit_parallels:
+            continue
+        new_interval = (new_pitch - other_pitch) % er.tet
+        if new_interval == prev_interval:
+            return False
+    return True
+
+
+def get_foot_to_force(er, voice_i, harmony_i):
+    foot_pc = er.get(harmony_i, "pc_chords")[0]
+    foot_pitches = er_misc_funcs.get_all_pitches_in_range(
+        foot_pc, er.voice_ranges[voice_i], er.tet
     )
-    if not root_pitches:
-        if er.already_warned["force_root"][harmony_i] == 0:
+    if not foot_pitches:
+        if er.already_warned["force_foot"][harmony_i] == 0:
             warnings.warn(
-                f"Unable to force root in bass on harmony {harmony_i}.\n"
+                f"Unable to force foot in bass on harmony {harmony_i}.\n"
                 "Try increasing voice range."
             )
-            er.already_warned["force_root"][harmony_i] += 1
+            er.already_warned["force_foot"][harmony_i] += 1
         return None
-    return min(root_pitches)
+    return min(foot_pitches)
 
 
 def get_repeated_pitch(poss_note, min_attack_time=0):
@@ -171,18 +200,20 @@ def check_melodic_intervals(
             return [
                 sub_item for sub_item in item if _sub_check_mel_ints(sub_item)
             ]
-        if max_interval < 0:
-            if abs(item - prev_pitch) > -max_interval:
-                return None
-        elif max_interval > 0:
-            generic_interval = er_misc_funcs.get_generic_interval(
-                er, harmony_i, item, prev_pitch
-            )
-            if abs(generic_interval) > max_interval:
-                return None
-        if min_interval == 0:
+        if max_interval is not None:
+            if max_interval <= 0:
+                if abs(item - prev_pitch) > -max_interval:
+                    return None
+            elif max_interval > 0:
+                generic_interval = er_misc_funcs.get_generic_interval(
+                    er, harmony_i, item, prev_pitch
+                )
+                if abs(generic_interval) > max_interval:
+                    return None
+        if min_interval is None:
+            # if min_interval == 0:
             return item
-        if min_interval < 0:
+        if min_interval <= 0:
             if abs(item - prev_pitch) >= -min_interval:
                 return item
         elif min_interval > 0:

@@ -114,14 +114,15 @@ class Rhythm(RhythmicDict):
             self.min_dur = new_min_dur
         if self.rhythm_len <= self.min_dur * self.num_notes:
             # LONGTERM move this notice outside of the initial_pattern loop
-            print(
-                "Notice: 'cont_rhythms' will have no effect in voice "
-                f"{self.voice_i} because "
-                "'min_dur' is the maximum value compatible with "
-                "'rhythm_len' and 'attack_subdivision'. "
-                "To allow 'cont_rhythms' to have an effect, reduce 'min_dur' "
-                f"to less than {self.min_dur}"
-            )
+            if isinstance(self, (Grid, ContinuousRhythm)):
+                print(
+                    "Notice: 'cont_rhythms' will have no effect in voice "
+                    f"{self.voice_i} because "
+                    "'min_dur' is the maximum value compatible with "
+                    "'rhythm_len' and 'attack_subdivision'. "
+                    "To allow 'cont_rhythms' to have an effect, reduce "
+                    f"'min_dur' to less than {self.min_dur}"
+                )
             self.full = True
         else:
             self.full = False
@@ -659,7 +660,7 @@ def _get_attack_list(
     oblig = obligatory_attacks.copy()
 
     out = []
-    if voice_i == 0 and er.force_root_in_bass in (
+    if voice_i == 0 and er.force_foot_in_bass in (
         "first_beat",
         "global_first_beat",
     ):
@@ -752,7 +753,11 @@ def _fill_attack_durs(
             if time in dur_dict and attacks[time] != dur_dict[time]:
                 available.append(time)
 
-        while target_total_dur > actual_total_dur and available:
+        # We round dur_density to the nearest dur_subdivision
+        while (
+            target_total_dur - actual_total_dur > dur_subdivision / 2
+            and available
+        ):
             choose = random.choice(available)
             remaining_dur = remaining_dict[choose] - attacks[choose]
             dur_to_add = min(dur_subdivision, remaining_dur)
@@ -764,6 +769,7 @@ def _fill_attack_durs(
             ):
                 available.remove(choose)
 
+        # breakpoint()
         return actual_total_dur
 
     dur_subdivision = er.get(voice_i, "dur_subdivision")

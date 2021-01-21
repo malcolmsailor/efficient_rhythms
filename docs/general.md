@@ -79,11 +79,118 @@ Another feature of all the examples up until now is that `harmony_len` has alway
 ![Example 7 notation](resources/svgs/example7.svg){class="notation"}
 ![Example 7 piano roll](resources/pngs/example700001.png){class="piano_roll"}
 
+## Harmony
+
+So far, we've looked at how to adjust the lengths of patterns, rhythms and harmonies. Now we'll look at how to specify chords and scales to create harmonic progressions.
+
+The most straightforward way is to specify all chords and scales explicitly. As a first example, I've specified [one of the most (over?-)used chord progressions](<!-- TODO add link to axis of awesome -->) in pop music, the I-V-vi-IV progression, in C major. The results are in example 8. The relevant lines in `harmony_example1.py` are <!-- TODO embed entire document? -->
+
+<!-- TODO how to indicate python in code block? -->
+```
+"foot_pcs": ("C", "G", "A", "F"),
+"chords": ("MAJOR_TRIAD", "MAJOR_TRIAD", "MINOR_TRIAD", "MAJOR_TRIAD"),
+"scales": ("MAJOR_SCALE", "MIXOLYDIAN", "AEOLIAN", "LYDIAN"),
+```
+
+There's a lot to explain here:
+
+1. Strings like `"C"` and `"MAJOR_TRIAD"` name constants that are defined in `src\er_constants.py`. If you know any music theory, the meaning of the constants above shouldn't require any further explanation now. <!-- TODO add link to er_constants doc -->
+2. We call the "main bass note" of each chord its "foot". <!-- TODO add link to further explanation -->
+3. Each foot is associated with the chord and the scale in the same serial position. Both the chord and the scale will be transposed so that they begin on the foot. Thus, there is a one-to-one correspondence between chords and scales (much like the "chord-scale" approach sometimes used in jazz pedagogy).
+
+![Example 8 notation](resources/svgs/harmony_example1.svg){class="notation"}
+![Example 8 piano roll](resources/pngs/harmony_example1.png){class="piano_roll"}
+
+We can put the progression into another key by changing `foot_pcs`. For instance, this is what it would look like in E major:
+
+```
+"foot_pcs": ("E", "B", "C#", "A"),
+"chords": ("MAJOR_TRIAD", "MAJOR_TRIAD", "MINOR_TRIAD", "MAJOR_TRIAD"),
+"scales": ("MAJOR_SCALE", "MIXOLYDIAN", "AEOLIAN", "LYDIAN"),
+```
+
+There are no constaints on `foot_pcs`, so we can always get a different progression by changing `foot_pcs` arbitrarily. For example, here I've changed the middle two members of `foot_pcs` to create a more chromatic progression:
+
+```
+"foot_pcs": ("E", "G", "C", "A"), # was ("E", "B", "C#", "A")
+"chords": ("MAJOR_TRIAD", "MAJOR_TRIAD", "MINOR_TRIAD", "MAJOR_TRIAD"),
+"scales": ("MAJOR_SCALE", "MIXOLYDIAN", "AEOLIAN", "LYDIAN"),
+```
+
+![Example 9 notation](resources/svgs/harmony_example1.svg){class="notation"}
+![Example 9 piano roll](resources/pngs/harmony_example1.png){class="piano_roll"}
+
+There are, however, two major constraints on `chords` and `scales`.
+
+1. Each item of `chords` must have the same number of pitch-classes, and each item of `scales` must as well. This means, for example, you can't go from a major triad to a seventh chord, or from a major scale to a whole-tone scale. (You can, however, use scales or chords with any number of pitch-classes you like---as long as that number is the same.) There is a technical reason for this constraint, (namely, that the script works by finding bijective voice-leadings between chords and scales), but in the longterm, I would very much like to remove it.
+2. Every scale must be a superset of the associated chord. So, for example
+    - `"MAJOR_TRIAD"` will work with `"MAJOR_SCALE"`, `"MIXOLYDIAN"`, or any other scale that contains a major triad beginning on its first pitch
+    - `"MAJOR_TRIAD"` will *not* work with `"AEOLIAN"`, `"DORIAN"`, etc., because these scales contain a minor triad beginning on their first pitch
+
+Both `chords` and `scales` will be looped through if they are shorter than `foot_pcs`. For example, the following short loop: <!-- TODO link harmony_example3.py -->
+
+```
+    "foot_pcs": ("E", "G"),
+    "chords": ("MAJOR_TRIAD",), # the trailing commas before the parentheses
+    "scales": ("MIXOLYDIAN",),  #   are necessary!
+```
+
+`chords` and `scales` do not have to be the same length, e.g., <!-- TODO link harmony_example4.py -->
+
+```
+    "foot_pcs": ("E", "G", "E", "C"),
+    "chords": ("MAJOR_TRIAD",),
+    "scales": ("MIXOLYDIAN", "LYDIAN"),
+```
+
+So far, the length of the progression has always been taken implicitly from the length of `foot_pcs`. But it is also possible to set the length of the progression explicitly, using `num_harmonies`. This allows us to create "pedal points" on a repeated bass note:
+
+```
+    "num_harmonies": 4,
+    "foot_pcs": ("D",),
+    # This example also illustrates a strategy for simulating mixing seventh
+    #   chords with triads, using incomplete seventh chords.
+    "chords": ("MAJOR_7TH_NO5", "DOMINANT_7TH_NO3", "MAJOR_64", "MAJOR_63"),
+    "scales": ("MAJOR_SCALE", "MIXOLYDIAN", "DORIAN", "AEOLIAN"),
+```
+
+Another useful setting for creating harmonic progressions is `interval_cycle`. If we pass `interval_cycle` to the script, then any values of `foot_pcs` beyond the first are ignored. Instead, the progression of `foot_pcs` is created by repeatedly progressing upwards by `interval_cycle`. For example,
+
+```
+    "num_harmonies": 4,
+    "interval_cycle": "PERFECT_4TH",
+    "foot_pcs": ("Eb",),
+    # The preceding three lines are equivalent to:
+    #   `"foot_pcs": ("Eb", "Ab", "Db", "Gb")`
+    "chords": ("MAJOR_TRIAD",),
+    "scales": ("MAJOR_SCALE",),
+```
+
+`interval_cycle` can also consist of more than one interval:
+
+```
+    "num_harmonies": 4,
+    "interval_cycle": ("PERFECT_4TH", "MINOR_6TH"),
+    "foot_pcs": ("Eb",),
+    # The preceding three lines are equivalent to:
+    #   `"foot_pcs": ("Eb", "Ab", "E", "A")`
+    "chords": ("MAJOR_TRIAD",),
+    "scales": ("MAJOR_SCALE",),
+```
+
+(Note that, since the intervals in `interval_cycle` are always understood *upwards*, `"MINOR_6TH"` in the preceding example is equivalent to a descending major third.)
+
+## Specifying rhythms
+
+<!-- TODO  -->
+
 If you're interested in exploring the script further, some next steps could be:
 
 - tinkering with the example settings in `examples/`
 - running the script with `--random`
 - checking out the documentation in [`settings.html`](settings.html)
+
+
 
 ## Filters and transformers
 
@@ -111,12 +218,12 @@ interval_cycle
 chords
 parallel_voice_leading
 voice_lead_chord_tones
-preserve_root_in_bass
-chord_tone_and_root_disable
+preserve_foot_in_bass
+chord_tone_and_foot_disable
 chord_tone_selection
 force_chord_tone
 chord_tones_sync_attack_in_all_voices
-force_root_in_bass
+force_foot_in_bass
 prefer_small_melodic_intervals
 force_repeated_notes
 force_parallel_motion
@@ -134,7 +241,7 @@ length_choir_segments
 tempo
 ```
 
-These are the settings that are not randomized (although note that it is possible to specify that some of these settings, such as `root_pcs`, be individually randomized):
+These are the settings that are not randomized (although note that it is possible to specify that some of these settings, such as `foot_pcs`, be individually randomized):
 
 ```
 tet
@@ -153,7 +260,7 @@ max_super_pattern_len
 voice_ranges
 allow_voice_crossings
 scales_and_chords_specified_in_midi
-root_pcs
+foot_pcs
 scales
 voices_separate_tracks
 choirs_separate_tracks
@@ -169,7 +276,7 @@ num_channels_pitch_bend_loop
 pitch_bend_time_prop
 integers_in_12_tet
 parallel_direction
-extend_bass_range_for_roots
+extend_bass_range_for_foots
 constrain_voice_leading_to_ranges
 allow_flexible_voice_leading
 vl_maintain_consonance
@@ -257,6 +364,9 @@ vl_maintain_forbidden_intervals = False
 ```
 TODO
 
+<!-- TODO document constants -->
+
+<!-- TODO document fact that voice-leading is applied to individual voices -->
 
 <!-- TODO ? (It isn't really intended to produce stand-alone compositions all by itself.) -->
 

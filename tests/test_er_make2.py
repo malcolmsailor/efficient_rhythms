@@ -59,7 +59,7 @@ def test_check_melodic_intervals():
             "num_harmonies": 4,
             "pattern_len": 8,
             "harmony_len": 8,
-            "root_pcs": [0, 5, 10, 3],
+            "foot_pcs": [0, 5, 10, 3],
             "num_reps_super_pattern": 2,
             "overlap": False,
             "consonance_treatment": "none",

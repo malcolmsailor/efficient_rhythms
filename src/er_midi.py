@@ -63,7 +63,7 @@ def get_rhythms_from_midi(er):
 
 
 def get_scales_and_chords_from_midi(midif, tet=12, time_sig=4):
-    """Infer scales, chords, and roots from a midi file.
+    """Infer scales, chords, and foots from a midi file.
 
     Expects a midi file formatted as follows:
     1) Time signature is 4, although this can be changed with
@@ -76,13 +76,13 @@ def get_scales_and_chords_from_midi(midif, tet=12, time_sig=4):
     Roots are inferred from the lowest pitch of each chord.
 
     Returns:
-        A tuple of scales, chords, and roots (as pcsets).
+        A tuple of scales, chords, and foots (as pcsets).
     """
 
     score = read_midi_to_internal_data(midif, tet=tet)
     scales = [[]]
     chords = [[]]
-    roots = []
+    foots = []
 
     for i, pcset_type, pcsets in ((0, "scales", scales), (1, "chords", chords)):
         if pcset_type == "chords":
@@ -93,7 +93,7 @@ def get_scales_and_chords_from_midi(midif, tet=12, time_sig=4):
             if round(attack / time_sig) > len(pcsets) - 1:
                 pcsets.append([])
                 if pcset_type == "chords":
-                    roots.append(lowest_pitch % tet)
+                    foots.append(lowest_pitch % tet)
                     lowest_pitch = tet * 100
             if pcset_type == "chords":
                 if pitch < lowest_pitch:
@@ -101,14 +101,14 @@ def get_scales_and_chords_from_midi(midif, tet=12, time_sig=4):
             if pitch % tet not in pcsets[-1]:
                 pcsets[-1].append(pitch % tet)
         if pcset_type == "chords":
-            roots.append(lowest_pitch % tet)
+            foots.append(lowest_pitch % tet)
 
-    for i, root in enumerate(roots):
-        scales[i] = [(pitch - root) % tet for pitch in scales[i]]
+    for i, foot in enumerate(foots):
+        scales[i] = [(pitch - foot) % tet for pitch in scales[i]]
         scales[i].sort()
-        chords[i] = [(pitch - root) % tet for pitch in chords[i]]
+        chords[i] = [(pitch - foot) % tet for pitch in chords[i]]
 
-    return (scales, chords, roots)
+    return (scales, chords, foots)
 
 
 def get_midi_time_sig(time_sig):

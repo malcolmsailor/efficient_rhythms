@@ -28,7 +28,7 @@ FILTERS_HEADER = "Filters"
 TRANSFORMERS_HEADER = "Transformers"
 GITHUB_URL = "my github page"  # INTERNET_TODO
 
-# TODO clear at each new prompt
+# INTERNET_TODO clear at each new prompt
 
 
 def parse_cmd_line_args():
@@ -75,8 +75,8 @@ def parse_cmd_line_args():
     parser.add_argument(
         "-s",
         "--settings",
-        help="path to settings file containing a Python dictionary",
-        default=None,
+        nargs="*",
+        help="path to settings files, each containing a Python dictionary",
     )
     parser.add_argument(
         "-n",
@@ -246,7 +246,7 @@ def print_prompt(
 
 
 def update_changer_attribute(changer, attribute):
-    # TODO can we only ask for plural values when plural values are possible?
+    # CHANGER_TODO can we only ask for plural values when plural values are possible?
     update_prompt = (
         "Enter new value (or values, separated by commas), "
         "'h' for possible values, or leave blank to cancel: "
@@ -678,7 +678,7 @@ def changer_interface(super_pattern, active_changers, changer_counter, debug):
             print("done.")
             success = True
         except er_changers.ChangeFuncError as err:
-            # TODO are ChangeFuncErrors also bugs? Should they be caught below?
+            # CHANGER_TODO are ChangeFuncErrors also bugs? Should they be caught below?
             print("ERROR!")
             print(
                 er_misc_funcs.add_line_breaks(

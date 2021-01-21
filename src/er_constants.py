@@ -13,10 +13,44 @@ B = 15 / 8
 FLAT = 24 / 25
 SHARP = 25 / 24
 
+
 # Difference between (perfect fifth + major third) and (perfect fourth +
 # perfect fourth):
 # FLAT = 128/135
 # SHARP = 135/128
+
+# Sharp and flat constants
+Cb = C * FLAT
+Db = D * FLAT
+Eb = E * FLAT
+Fb = F * FLAT
+Gb = G * FLAT
+Ab = A * FLAT
+Bb = B * FLAT
+# "#" in user strings will be replaced by _SHARP
+C_SHARP = C * SHARP
+D_SHARP = D * SHARP
+E_SHARP = E * SHARP
+F_SHARP = F * SHARP
+G_SHARP = G * SHARP
+A_SHARP = A * SHARP
+B_SHARP = B * SHARP
+# Double flat and sharp constants
+Cbb = C * FLAT * FLAT
+Dbb = D * FLAT * FLAT
+Ebb = E * FLAT * FLAT
+Fbb = F * FLAT * FLAT
+Gbb = G * FLAT * FLAT
+Abb = A * FLAT * FLAT
+Bbb = B * FLAT * FLAT
+C_SHARP_SHARP = C * SHARP * SHARP
+D_SHARP_SHARP = D * SHARP * SHARP
+E_SHARP_SHARP = E * SHARP * SHARP
+F_SHARP_SHARP = F * SHARP * SHARP
+G_SHARP_SHARP = G * SHARP * SHARP
+A_SHARP_SHARP = A * SHARP * SHARP
+B_SHARP_SHARP = B * SHARP * SHARP
+
 
 # Interval constants
 UNISON = 1.0
@@ -46,19 +80,25 @@ FIFTH = 4
 SIXTH = 5
 SEVENTH = 6
 GENERIC_OCTAVE = 7
+GENERIC_SECOND = SECOND
+GENERIC_THIRD = THIRD
+GENERIC_FOURTH = FOURTH
+GENERIC_FIFTH = FIFTH
+GENERIC_SIXTH = SIXTH
+GENERIC_SEVENTH = SEVENTH
 
 # Roman numeral constants
 I = UNISON
-bII = MINOR_2ND  # pylint: disable=invalid-name
+bII = MINOR_2ND
 II = MAJOR_2ND
-bIII = MINOR_3RD  # pylint: disable=invalid-name
+bIII = MINOR_3RD
 III = MAJOR_3RD
 IV = PERFECT_4TH
-bV = DIMINISHED_5TH  # pylint: disable=invalid-name
+bV = DIMINISHED_5TH
 V = PERFECT_5TH
-bVI = MINOR_6TH  # pylint: disable=invalid-name
+bVI = MINOR_6TH
 VI = MAJOR_6TH
-bVII = MINOR_7TH  # pylint: disable=invalid-name
+bVII = MINOR_7TH
 VII = MAJOR_7TH
 
 # Chord constants
@@ -71,6 +111,15 @@ HALF_DIMINISHED_CHORD = np.array([UNISON, MINOR_3RD, DIMINISHED_5TH, MINOR_7TH])
 DOMINANT_7TH_CHORD = np.array([UNISON, MAJOR_3RD, PERFECT_5TH, MINOR_7TH])
 MAJOR_7TH_CHORD = np.array([UNISON, MAJOR_3RD, PERFECT_5TH, MAJOR_7TH])
 MINOR_7TH_CHORD = np.array([UNISON, MINOR_3RD, PERFECT_5TH, MINOR_7TH])
+
+HALF_DIMINISHED_NO5 = np.array([UNISON, MINOR_3RD, MINOR_7TH])
+HALF_DIMINISHED_NO3 = np.array([UNISON, DIMINISHED_5TH, MINOR_7TH])
+DOMINANT_7TH_NO5 = np.array([UNISON, MAJOR_3RD, MINOR_7TH])
+DOMINANT_7TH_NO3 = np.array([UNISON, PERFECT_5TH, MINOR_7TH])
+MAJOR_7TH_NO5 = np.array([UNISON, MAJOR_3RD, MAJOR_7TH])
+MAJOR_7TH_NO3 = np.array([UNISON, PERFECT_5TH, MAJOR_7TH])
+MINOR_7TH_NO5 = np.array([UNISON, MINOR_3RD, MINOR_7TH])
+MINOR_7TH_NO3 = np.array([UNISON, PERFECT_5TH, MINOR_7TH])
 
 # Chord inversion constants (for root position use the chord constants above)
 MAJOR_63 = np.array([1.0, 6 / 5, 8 / 5])
@@ -121,10 +170,26 @@ DIATONIC_SCALE = np.array([F, C, G, D, A, E, B])
 HEXACHORD_MAJOR = np.array([F, C, G, D, A, E])
 HEXACHORD_MINOR = np.array([F, C, G, D, A, E * FLAT])
 
+MAJOR_SCALE = DIATONIC_SCALE
+NATURAL_MINOR_SCALE = DIATONIC_SCALE * E * FLAT
+
+# Diatonic modes
+
+IONIAN = DIATONIC_SCALE
+DORIAN = DIATONIC_SCALE * B * FLAT
+PHRYGIAN = DIATONIC_SCALE * A * FLAT
+LYDIAN = DIATONIC_SCALE * G
+MIXOLYDIAN = DIATONIC_SCALE * F
+AEOLIAN = DIATONIC_SCALE * E * FLAT
+LOCRIAN = DIATONIC_SCALE * D * FLAT
+
+
 PENTATONIC_SCALE_MIN3 = np.array([C, G, D, A, E * FLAT])
 # Pythagorean:
 # PENTATONIC_SCALE = np.array([1.0, 3/2, 9/8, 27/16, 81/64])
 # DIATONIC_SCALE = np.array([4/3, 1.0, 3/2, 9/8, 27/16, 81/64, 243/128])
+
+# TODO change formatting of tempered constants
 
 # 12-tet scale constants
 

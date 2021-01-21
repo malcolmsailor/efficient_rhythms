@@ -52,7 +52,7 @@ def test_changers():
     for prob_func in prob_funcs:
         prob_func_input[3] = str(prob_func)
         run("\n".join(prob_func_input))
-    # TODO write more tests
+    # CHANGER_TODO write more tests
     filters = range(1, len(er_changers.FILTERS))
     input_loop = "\n".join(
         [

@@ -14,6 +14,7 @@ import warnings
 import numpy as np
 
 import src.er_choirs as er_choirs
+import src.er_constants as er_constants
 import src.er_midi as er_midi
 import src.er_misc_funcs as er_misc_funcs
 import src.er_randomize as er_randomize
@@ -22,6 +23,30 @@ import src.er_tuning as er_tuning
 import src.er_voice_leadings as er_voice_leadings
 
 SCRIPT_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
+
+PITCH_MATERIAL_LISTS = (
+    "scales",
+    "chords",
+    "foot_pcs",
+    "interval_cycle",
+    "voice_ranges",
+    "hard_bounds",
+    "consonances",
+    "consonant_chords",
+    "forbidden_interval_classes",
+    "prohibit_parallels",
+    "transpose_intervals",
+)
+
+PITCH_MATERIALS = (
+    # TODO finish populating this list?
+    "unison_weighted_as",
+)
+
+
+# INTERNET_TODO either replace `warnings` module with simple print statements
+#   or figure out a way to integrate their appearance more closely into the
+#   rest of the script
 
 
 class SettingsError(Exception):
@@ -170,33 +195,97 @@ def prepare_warnings(er):
     a dictionary for keeping track of this.
     """
     er.already_warned = {
-        "force_root": collections.Counter(),
+        "force_foot": collections.Counter(),
     }
+
+
+PITCH_CONSTANT_OP_MAP = {
+    "*": "__mul__",
+    "+": "__add__",
+    "-": "__sub__",
+    "/": "__rtruediv__",  # TODO test
+}
+
+
+def replace_pitch_constants(er):
+    class PitchConstantError(Exception):
+        pass
+
+    def _process_str(pitch_str):
+        pitch_str = pitch_str.replace("#", "_SHARP")
+        bits = pitch_str.split()
+        # I have to begin with an np array (and then retrieve the only item from
+        #   it if it has len(1) below) because operations from
+        #   python built-in types to np arrays (e.g., int.__mul__(np array))
+        #   are not implemented. When the intended operations are done in the
+        #   normal way, Python must try the method in the np array after finding
+        #   that the initial operation fails. But I don't have access to the
+        #   python docs right now (at the cabin). INTERNET_TODO
+        val = np.array([1])
+        next_op = "__mul__"
+        for bit in bits:
+            if next_op is None:
+                try:
+                    next_op = PITCH_CONSTANT_OP_MAP[bit]
+                except KeyError:
+                    raise PitchConstantError(  # pylint: disable=raise-missing-from
+                        f"{bit} is not an implemented operation on pitch "
+                        "constants. Implemented pitch constant operations are "
+                        f"{tuple(PITCH_CONSTANT_OP_MAP.keys())}."
+                        # TODO see documentation for more help
+                    )
+            else:
+                try:
+                    constant = getattr(er_constants, bit)
+                except AttributeError:
+                    raise PitchConstantError(  # pylint: disable=raise-missing-from
+                        f"{bit} is not an implemented pitch constant."
+                    )
+                    # TODO see documentation for more help
+                val = getattr(val, next_op)(constant)
+                next_op = None
+        if next_op is not None:
+            raise PitchConstantError(
+                f"Trailing operation in pitch constant {pitch_str}"
+            )
+        if len(val) == 1:
+            return val[0]
+        return val
+
+    def _replace(pitch_material, i):
+        if isinstance(pitch_material[i], str):
+            pitch_material[i] = _process_str(pitch_material[i])
+        elif isinstance(pitch_material[i], typing.Sequence):
+            for j in range(len(pitch_material[i])):
+                _replace(pitch_material[i], j)
+
+    for pitch_material_name in PITCH_MATERIAL_LISTS + PITCH_MATERIALS:
+        pitch_material = getattr(er, pitch_material_name)
+        if pitch_material is not None:
+            if isinstance(pitch_material, str):
+                pitch_material = _process_str(pitch_material)
+            elif isinstance(pitch_material, typing.Sequence):
+                # LONGTERM handle list conversion elsewhere?
+                pitch_material = list(pitch_material)
+                for i in range(len(pitch_material)):
+                    _replace(pitch_material, i)
+            setattr(er, pitch_material_name, pitch_material)
 
 
 def preprocess_temper_pitch_materials(er):
     """Tempers pitch materials as necessary.
     """
 
-    pitch_material_lists = (
-        er.scales,
-        er.chords,
-        er.root_pcs,
-        er.interval_cycle,
-        er.voice_ranges,
-        er.hard_bounds,
-        er.consonances,
-        er.consonant_chords,
-        er.forbidden_interval_classes,
-        er.prohibit_parallels,
-        er.transpose_intervals,
-    )
-
-    for pitch_material in pitch_material_lists:
+    for pitch_material_name in PITCH_MATERIAL_LISTS:
+        pitch_material = getattr(er, pitch_material_name)
         if pitch_material is None:
             continue
-        er_tuning.temper_pitch_materials_in_place(
-            pitch_material, er.tet, integers_in_12_tet=er.integers_in_12_tet
+        setattr(
+            er,
+            pitch_material_name,
+            er_tuning.temper_pitch_materials(
+                pitch_material, er.tet, integers_in_12_tet=er.integers_in_12_tet
+            ),
         )
 
     er.cumulative_max_transpose_interval = er_tuning.temper_pitch_materials(
@@ -205,7 +294,7 @@ def preprocess_temper_pitch_materials(er):
         integers_in_12_tet=er.integers_in_12_tet,
     )
 
-    # If er.max_interval is < 0, it is a specific interval and must be
+    # If limit_intervals are <= 0, they are specific intervals and must be
     # processed as follows:
     for interval_list in (
         er.max_interval,
@@ -213,16 +302,18 @@ def preprocess_temper_pitch_materials(er):
         er.min_interval,
         er.min_interval_for_non_chord_tones,
     ):
+        if interval_list is None:
+            continue
         for i in range(  # pylint: disable=consider-using-enumerate
             len(interval_list)
         ):
-            if interval_list[i] < 0:
+            if interval_list[i] <= 0:
                 interval_list[i] = er_tuning.temper_pitch_materials(
                     (interval_list[i]), tet=er.tet
                 )
 
-    er.extend_bass_range_for_roots = er_tuning.temper_pitch_materials(
-        er.extend_bass_range_for_roots, tet=er.tet
+    er.extend_bass_range_for_foots = er_tuning.temper_pitch_materials(
+        er.extend_bass_range_for_foots, tet=er.tet
     )
 
 
@@ -287,11 +378,12 @@ def ensure_lists_or_tuples(er):
         "tempo",
         "tempo_len",
     ]
-    for prop in to_list:
-        if getattr(er, prop) is None:
+    for attr in to_list:
+        val = getattr(er, attr)
+        if val is None:
             continue
-        if not isinstance(getattr(er, prop), typing.Sequence):
-            setattr(er, prop, [getattr(er, prop)])
+        if not isinstance(val, typing.Sequence) or isinstance(val, str):
+            setattr(er, attr, [val])
 
     to_list_of_iters = [
         "hard_bounds",
@@ -505,19 +597,19 @@ def fill_rhythm_lists_by_voice(er):
         fill_list(list_to_fill, er.num_voices)
 
 
-def chord_tone_and_root_toggle(er):
-    if not er.chord_tone_and_root_disable:
+def chord_tone_and_foot_toggle(er):
+    if not er.chord_tone_and_foot_disable:
         return
 
     er.chord_tone_selection = False
     er.chord_tones_no_diss_treatment = [False for i in range(er.num_voices)]
     er.force_chord_tone = ["none" for i in range(er.num_voices)]
-    er.force_root_in_bass = "none"
+    er.force_foot_in_bass = "none"
     er.max_interval_for_non_chord_tones = er.max_interval
     er.min_interval_for_non_chord_tones = er.max_interval
     er.voice_lead_chord_tones = False
-    er.preserve_root_in_bass = "none"
-    er.extend_bass_range_for_roots = 0
+    er.preserve_foot_in_bass = "none"
+    er.extend_bass_range_for_foots = 0
 
 
 def rhythm_preprocessing(er):
@@ -706,14 +798,36 @@ def cum_mod_lists(er):
             ]
 
 
-def read_in_settings(user_settings, settings_class):
-    if user_settings is None:
-        user_settings = {}
-    elif isinstance(user_settings, str):
-        print(f"Reading settings from {user_settings}")
-        with open(user_settings, "r", encoding="utf-8") as inf:
+# def read_in_settings(user_settings, settings_class):
+#     if user_settings is None:
+#         user_settings = {}
+#     elif isinstance(user_settings, str):
+#         print(f"Reading settings from {user_settings}")
+#         with open(user_settings, "r", encoding="utf-8") as inf:
+#             user_settings = eval(inf.read())
+#     return settings_class(**user_settings)
+
+
+def read_in_settings(settings_input, settings_class):
+    def _merge(dict1, dict2):
+        for key, val in dict2.items():
+            if (
+                isinstance(val, dict)
+                and key in dict1
+                and isinstance(dict1[key], dict)
+            ):
+                dict2[key] = _merge(dict1[key], val)
+        return dict1 | dict2
+
+    if isinstance(settings_input, dict):
+        return settings_class(**settings_input)
+    merged_dict = {}
+    for user_settings_path in settings_input:
+        print(f"Reading settings from {user_settings_path}")
+        with open(user_settings_path, "r", encoding="utf-8") as inf:
             user_settings = eval(inf.read())
-    return settings_class(**user_settings)
+        merged_dict = _merge(merged_dict, user_settings)
+    return settings_class(**merged_dict)
 
 
 def preprocess_settings(
@@ -732,6 +846,15 @@ def preprocess_settings(
 
     if not os.path.exists(os.path.dirname(er.output_path)):
         os.makedirs(os.path.dirname(er.output_path))
+    if os.path.dirname(er.output_path) == er.output_path.rstrip(os.path.sep):
+        if user_settings is None:
+            er.output_path = os.path.join(er.output_path, "effrhy.mid")
+        else:
+            er.output_path = os.path.join(
+                er.output_path,
+                os.path.splitext(os.path.basename(user_settings[-1]))[0]
+                + ".mid",
+            )
 
     if not er.overwrite and os.path.exists(er.output_path):
         er.output_path = er_misc_funcs.increment_fname(er.output_path)
@@ -742,9 +865,9 @@ def preprocess_settings(
         # we re-set the seed in the hopes that the music will be reproducible
         er_misc_funcs.set_seed(er.seed, print_out=False)
 
-    if er.max_interval_for_non_chord_tones is None:
+    if er.max_interval_for_non_chord_tones == "take_from_max_interval":
         er.max_interval_for_non_chord_tones = er.max_interval
-    if er.min_interval_for_non_chord_tones is None:
+    if er.min_interval_for_non_chord_tones == "take_from_min_interval":
         er.min_interval_for_non_chord_tones = er.min_interval
 
     process_np_arrays(er)
@@ -755,7 +878,7 @@ def preprocess_settings(
         (
             er.scales,
             er.chords,
-            er.root_pcs,
+            er.foot_pcs,
         ) = er_midi.get_scales_and_chords_from_midi(
             er.scales_and_chords_specified_in_midi
         )
@@ -774,53 +897,63 @@ def preprocess_settings(
 
     # Temper pitch materials:
 
+    replace_pitch_constants(er)
     preprocess_temper_pitch_materials(er)
 
-    # If root_pcs are not specified, generate them randomly
-    if not er.root_pcs:
+    # If foot_pcs are not specified, generate them randomly
+    if not er.foot_pcs:
+        if er.num_harmonies is None:
+            er.num_harmonies = er_settings.DEFAULT_NUM_HARMONIES
         if er.num_harmonies <= 0:
 
             class KeyNotesError(Exception):
                 pass
 
-            raise KeyNotesError("num_harmonies = 0 and no key notes specified")
-        er.root_pcs = [
+            raise KeyNotesError("num_harmonies <= 0 and no key notes specified")
+        er.foot_pcs = [
             random.randrange(0, er.tet) for i in range(er.num_harmonies)
         ]
+    elif er.num_harmonies is None:
+        er.num_harmonies = len(er.foot_pcs)
+    elif len(er.foot_pcs) < er.num_harmonies:
+        while len(er.foot_pcs) < er.num_harmonies:
+            er.foot_pcs.extend(
+                er.foot_pcs[: er.num_harmonies - len(er.foot_pcs)]
+            )
 
-    if er.num_harmonies <= 0:
-        er.num_harmonies = len(er.root_pcs)
+    # if er.num_harmonies <= 0:
+    #     er.num_harmonies = len(er.foot_pcs)
 
     # if (er.interval_cycle and er.interval_cycle[0] # not sure why er.interval_cycle[0] condition
     if er.interval_cycle and not er.scales_and_chords_specified_in_midi:
-        temp_root_pcs = []
+        temp_foot_pcs = []
         interval_i = 0
-        temp_root_pcs.append(er.root_pcs[0])
-        while len(temp_root_pcs) < er.num_harmonies:
+        temp_foot_pcs.append(er.foot_pcs[0])
+        while len(temp_foot_pcs) < er.num_harmonies:
             interval = er.get(interval_i, "interval_cycle")
-            temp_root_pcs.append(temp_root_pcs[-1] + interval)
+            temp_foot_pcs.append(temp_foot_pcs[-1] + interval)
             interval_i += 1
-        er.root_pcs = temp_root_pcs
+        er.foot_pcs = temp_foot_pcs
 
-    er.root_pcs = [root_pc % er.tet for root_pc in er.root_pcs]
+    er.foot_pcs = [foot_pc % er.tet for foot_pc in er.foot_pcs]
 
-    if len(er.root_pcs) > er.num_harmonies:
-        er.root_pcs = er.root_pcs[: er.num_harmonies]
+    if len(er.foot_pcs) > er.num_harmonies:
+        er.foot_pcs = er.foot_pcs[: er.num_harmonies]
 
-    # Truncate scales and root_pcs if necessary
+    # Truncate scales and foot_pcs if necessary
     if er.num_harmonies:
         if er.num_harmonies < len(er.scales):
             er.scales = er.scales[: er.num_harmonies]
-        if er.num_harmonies < len(er.root_pcs):
-            er.root_pcs = er.root_pcs[: er.num_harmonies]
+        if er.num_harmonies < len(er.foot_pcs):
+            er.foot_pcs = er.foot_pcs[: er.num_harmonies]
 
     er.pc_chords = []
     er.pc_scales = []
 
     for scs, pcsets in [(er.chords, er.pc_chords), (er.scales, er.pc_scales)]:
-        for i, root_pc in enumerate(er.root_pcs):
+        for i, foot_pc in enumerate(er.foot_pcs):
             set_class = scs[i % len(scs)]
-            pcsets.append([(pc + root_pc) % er.tet for pc in set_class])
+            pcsets.append([(pc + foot_pc) % er.tet for pc in set_class])
 
     # Check to ensure chords and scales are consistent.
 
@@ -1080,7 +1213,7 @@ def preprocess_settings(
 
     fill_rhythm_lists_by_voice(er)
 
-    chord_tone_and_root_toggle(er)
+    chord_tone_and_foot_toggle(er)
 
     rhythm_preprocessing(er)
 

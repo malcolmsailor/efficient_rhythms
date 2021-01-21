@@ -2,7 +2,8 @@
 
 # INTERNET_TODO I can't get ignore-patterns or ignore to work on directories :(
 ignore=rapid_random_invention_like.py,
-    rapid_random_notes.py
+    rapid_random_notes.py,
+    test_repeated_notes.py
 
 # It appears that if ignore-patterns has a trailing comma,
 #   pytest will not run pylint
@@ -11,7 +12,8 @@ ignore-patterns=test_settings.*\.py,
     example\d+\.py,
     .*random_settings.*\.py,
     test.*settings.*\.py,
-    .*midani_settings\.py
+    .*midani_settings\.py,
+    harmony_example.*\.py
 
 
 [MESSAGES CONTROL]
@@ -53,10 +55,23 @@ good-names=
     j,
     m,
     n,
+    r,
     er,
     mf,
     pc,
     fc,
     no,
     ic,
-    op
+    op,
+    Cb,
+    Db,
+    Eb,
+    Fb,
+    Gb,
+    Ab,
+    Bb,
+    bII,
+    bIII,
+    bV,
+    bVI,
+    bVII,

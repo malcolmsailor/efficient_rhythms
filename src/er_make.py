@@ -38,11 +38,11 @@ class PossibleNote:
 
 
 # it appears this function is never called
-# def _force_root(er, super_pattern, poss_note):
-#     root = get_root_to_force(er, poss_note)
-#     if root is not None:
+# def _force_foot(er, super_pattern, poss_note):
+#     foot = get_foot_to_force(er, poss_note)
+#     if foot is not None:
 #         super_pattern.add_note(
-#             poss_note.voice_i, root, poss_note.attack_time, poss_note.dur
+#             poss_note.voice_i, foot, poss_note.attack_time, poss_note.dur
 #         )
 #         return True
 #     return False
@@ -143,7 +143,11 @@ def _force_parallel_motion(er, super_pattern, poss_note):
         elif follower_pitch > max_pitch:
             follower_pitch -= er.tet
 
-        if (follower_pitch - leader_pitch) % er.tet in er.prohibit_parallels:
+        if (
+            follower_prev_pitch != follower_pitch
+            and (follower_pitch - leader_pitch) % er.tet
+            in er.prohibit_parallels
+        ):
             return None
 
         return follower_pitch
@@ -480,6 +484,8 @@ def _remove_parallels(er, super_pattern, available_pitches, poss_note):
         )
         if -1 in (other_prev_pitch, other_pitch):
             continue
+        if other_prev_pitch == other_pitch:
+            continue
         prev_interval = prev_pitch - other_prev_pitch
         if prev_interval % er.tet not in forbidden_parallels:
             continue
@@ -566,6 +572,9 @@ def _too_many_alternations(er, super_pattern, pitch, attack_time, voice_i):
     prev_n_pitches = super_pattern.get_prev_n_pitches(
         num_notes - 1, attack_time, voice_i
     )
+    if pitch == prev_n_pitches[-1]:
+        # we don't want to filter out repeated pitches with this function
+        return False
     last_n_pitches = prev_n_pitches + [
         pitch,
     ]
@@ -653,28 +662,28 @@ def _choose_from_pitches(
     return pitch
 
 
-def _check_whether_to_force_root(er, super_pattern, poss_note):
+def _check_whether_to_force_foot(er, super_pattern, poss_note):
 
     # MAYBE move this function to a more opportune location
-    if er.force_root_in_bass == "none":
+    if er.force_foot_in_bass == "none":
         return False
     if (
         poss_note.attack_time == 0
-        and er.force_root_in_bass == "global_first_beat"
+        and er.force_foot_in_bass == "global_first_beat"
     ):
         return True
     if (
-        er.force_root_in_bass == "global_first_note"
+        er.force_foot_in_bass == "global_first_note"
         and poss_note.attack_time == min(er.rhythms[BASS])
     ):
         return True
-    if er.force_root_in_bass in ("first_note", "first_beat"):
+    if er.force_foot_in_bass in ("first_note", "first_beat"):
         harmony_start_time = super_pattern.get_harmony_times(
             poss_note.harmony_i
         ).start_time
         if (
             poss_note.attack_time == harmony_start_time
-            and er.force_root_in_bass == "first_beat"
+            and er.force_foot_in_bass == "first_beat"
         ):
             return True
         if poss_note.attack_time == min(
@@ -736,14 +745,14 @@ def _attempt_initial_pattern(
     if (
         poss_note.voice_i == BASS
         and (not er.bass_in_existing_voice)
-        and _check_whether_to_force_root(er, super_pattern, poss_note)
+        and _check_whether_to_force_foot(er, super_pattern, poss_note)
     ):
-        forced_root = er_make2.get_root_to_force(
+        forced_foot = er_make2.get_foot_to_force(
             er, poss_note.voice_i, poss_note.harmony_i
         )
-        if forced_root:
+        if forced_foot:
             poss_note.voice.add_note(
-                forced_root, poss_note.attack_time, poss_note.dur
+                forced_foot, poss_note.attack_time, poss_note.dur
             )
             if _attempt_initial_pattern(
                 er, super_pattern, available_pitch_error, attack_i=attack_i + 1
@@ -846,19 +855,19 @@ def _attempt_initial_pattern(
     return False
 
 
-def _get_bass_root_times(er, super_pattern):
+def _get_bass_foot_times(er, super_pattern):
     bass = super_pattern.voices[0]
-    er.bass_root_times = []
+    er.bass_foot_times = []
     for note in bass:
         attack_time = note.attack_time
         harmony_i = super_pattern.get_harmony_i(attack_time)
-        root_pc = er.get(harmony_i, "pc_chords")[0]
+        foot_pc = er.get(harmony_i, "pc_chords")[0]
 
-        if note.pitch % er.tet != root_pc:
+        if note.pitch % er.tet != foot_pc:
             continue
 
-        if er.preserve_root_in_bass == "all":
-            er.bass_root_times.append(attack_time)
+        if er.preserve_foot_in_bass == "all":
+            er.bass_foot_times.append(attack_time)
             continue
 
         harmony_times = super_pattern.get_harmony_times(harmony_i)
@@ -870,7 +879,7 @@ def _get_bass_root_times(er, super_pattern):
         if er_misc_funcs.lowest_occurrence_of_pc_in_set(
             note.pitch, all_pitches, tet=er.tet
         ):
-            er.bass_root_times.append(attack_time)
+            er.bass_foot_times.append(attack_time)
 
 
 def make_initial_pattern(er):
@@ -923,17 +932,17 @@ def make_initial_pattern(er):
         sys.stdout.flush()
         raise available_pitch_error
 
-    if er.preserve_root_in_bass != "none":
-        _get_bass_root_times(er, super_pattern)
+    if er.preserve_foot_in_bass != "none":
+        _get_bass_foot_times(er, super_pattern)
 
     return super_pattern
 
 
-def transpose_roots(er, super_pattern):
+def transpose_foots(er, super_pattern):
 
     bass = super_pattern.voices[BASS]
     lowest_pitch = (
-        er.voice_ranges[BASS][LOWEST_PITCH] - er.extend_bass_range_for_roots
+        er.voice_ranges[BASS][LOWEST_PITCH] - er.extend_bass_range_for_foots
     )
     # pattern_len = er.pattern_len[BASS]
 
@@ -953,9 +962,9 @@ def transpose_roots(er, super_pattern):
             all_pitches = super_pattern.get_all_pitches_attacked_during_duration(
                 harmony_times.start_time, dur=harmony_dur, voices=[BASS,]
             )
-            root_pc = er.get(harmony_i, "pc_chords")[ROOT]
+            foot_pc = er.get(harmony_i, "pc_chords")[FOOT]
 
-        if note.pitch % er.tet != root_pc:
+        if note.pitch % er.tet != foot_pc:
             continue
 
         if min(all_pitches) == note.pitch:
@@ -1037,8 +1046,8 @@ def make_super_pattern(er):
     if not success:
         raise voice_lead_error
 
-    if er.extend_bass_range_for_roots > 0:
-        transpose_roots(er, super_pattern)
+    if er.extend_bass_range_for_foots > 0:
+        transpose_foots(er, super_pattern)
 
     return super_pattern
 
@@ -1244,7 +1253,7 @@ HIGHEST_PITCH = 1
 
 BASS = 0
 
-ROOT = 0
+FOOT = 0
 
 
 if __name__ == "__main__":
