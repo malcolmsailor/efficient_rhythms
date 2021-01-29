@@ -28,7 +28,11 @@ FILTERS_HEADER = "Filters"
 TRANSFORMERS_HEADER = "Transformers"
 GITHUB_URL = "my github page"  # INTERNET_TODO
 
-# INTERNET_TODO clear at each new prompt
+# TODO clear at each new prompt
+
+
+def clear():  # from https://stackoverflow.com/a/684344/10155119
+    os.system("cls" if os.name == "nt" else "clear")
 
 
 def parse_cmd_line_args():
@@ -342,6 +346,7 @@ def adjust_changer_prompt(active_changers, changer_i):
 
     prompt, attribute_dict = update_adjust_changer_prompt(changer)
     while True:
+        clear()
         answer = input(prompt).lower()
         while not answer in ("", "r"):
             try:
@@ -409,6 +414,7 @@ def add_changer_prompt(changer_dict):
             borders=False,
         )
 
+    clear()
     add_prompt = (
         "Enter the number corresponding to the filter or transformer "
         "you would like to select, or <enter> to continue: "
@@ -534,7 +540,8 @@ def move_changer_loop(active_changers):
 
 
 def update_copy_changer_prompt(active_changers):
-    # MAYBE replace this individual functions with a single function
+    clear()
+    # MAYBE replace these individual functions with a single function
     # that takes a header, and a prompt
     header = "Copy filters or transformers"
     copy_prompt = (
@@ -604,7 +611,7 @@ def update_prompt_for_adjusting_changers(active_changers):
 def select_changer_prompt(
     changer_dict, active_changers, score, changer_counter
 ):
-
+    clear()
     prompt = update_prompt_for_adjusting_changers(active_changers)
     answer = input(prompt).lower()
     while True:
@@ -745,9 +752,14 @@ def verovio_interface(super_pattern, midi_path, verovio_arguments):
             if 0 <= answer < len(possible_values):
                 break
         print("Invalid input.")
-    er_output_notation.run_verovio(
-        super_pattern, midi_path, verovio_arguments, file_types[answer]
-    )
+    try:
+        er_output_notation.run_verovio(
+            super_pattern, midi_path, verovio_arguments, file_types[answer]
+        )
+    except er_misc_funcs.ProcError as exc:
+        er_output_notation.clean_up_temporary_notation_files()
+        print(exc)
+        input("press <enter> to continue")
 
 
 def update_midi_type(er):
@@ -757,7 +769,6 @@ def update_midi_type(er):
     def _update_midi_type_prompt():
         prompt_strs = [er_misc_funcs.make_header("Midi settings")]
         for param_i, (pretty_name, name) in enumerate(params):
-            # val = vars(er)[name]
 
             prompt_strs.append(
                 make_changer_prompt_line(

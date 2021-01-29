@@ -1,3 +1,4 @@
+# Should be used with harmony_example_base.py
 {
     "num_harmonies": 4,
     "foot_pcs": ("D",),

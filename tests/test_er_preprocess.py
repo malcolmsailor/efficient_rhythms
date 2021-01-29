@@ -14,7 +14,7 @@ import src.er_settings as er_settings  # pylint: disable=wrong-import-position
 
 
 def test_process_pattern_voice_leading_order():
-    # INTERNET_TODO is there a way to redirect stdout and stderr while running
+    # LONGTERM is there a way to redirect stdout and stderr while running
     #   the tests?
     pattern_lens_list = [(2.5, 3, 3.5, 4), (2, 3, 5)]
     for pattern_lens in pattern_lens_list:

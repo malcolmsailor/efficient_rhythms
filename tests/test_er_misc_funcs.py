@@ -3,9 +3,9 @@ import os
 import sys
 import traceback
 
-# INTERNET_TODO install hypothesis, uncomment
-# import hypothesis
-# import hypothesis.strategies as st
+# TODO is there a way to add these to requirements only for testing?
+import hypothesis
+import hypothesis.strategies as st
 
 sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -416,33 +416,57 @@ def test_chord_in_list():
     _sub_test("bass", tests)
 
 
-# INTERNET_TODO install hypothesis, uncomment
-# @hypothesis.given(list_and_item(),)
-# def test_binary_search(tup):
-#     list_, item = tup
-#     assert item == list_[mal_misc.binary_search(list_, item)]
-#
-#
-# @hypothesis.given(list_and_missing_item(),)
-# def test_binary_search_not_found(tup):
-#     list_, item = tup
-#     assert mal_misc.binary_search(list_, item) is None
-#     assert mal_misc.binary_search(list_, item, not_found="none") is None
-#     upper = list_[mal_misc.binary_search(list_, item, not_found="upper")]
-#     lower = list_[mal_misc.binary_search(list_, item, not_found="lower")]
-#     nearest = list_[mal_misc.binary_search(list_, item, not_found="nearest")]
-#     assert upper >= lower
-#     assert nearest == upper or nearest == lower
-#     if upper != lower:
-#         assert (nearest == upper) == (upper - item < item - lower)
-#     force_upper_i = mal_misc.binary_search(list_, item, not_found="force_upper")
-#     force_lower_i = mal_misc.binary_search(list_, item, not_found="force_lower")
-#     if item > max(list_):
-#         assert force_upper_i == len(list_)
-#         assert list_[force_lower_i] == nearest
-#     elif item < min(list_):
-#         assert force_lower_i == -1
-#         assert list_[force_upper_i] == nearest
+@st.composite
+def list_and_item(draw):
+    list_ = draw(st.lists(st.integers(), min_size=1))
+    list_.sort()
+    item = draw(st.sampled_from(list_))
+    return list_, item
+
+
+@hypothesis.given(list_and_item(),)  # pylint: disable=no-value-for-parameter
+def test_binary_search(tup):
+    list_, item = tup
+    assert item == list_[er_misc_funcs.binary_search(list_, item)]
+
+
+@st.composite
+def list_and_missing_item(draw):
+    list_ = draw(st.lists(st.integers(), min_size=1))
+    list_.sort()
+    item = draw(st.integers())
+    hypothesis.assume(item not in list_)
+    return list_, item
+
+
+@hypothesis.given(
+    list_and_missing_item(),  # pylint: disable=no-value-for-parameter
+)
+def test_binary_search_not_found(tup):
+    list_, item = tup
+    assert er_misc_funcs.binary_search(list_, item) is None
+    assert er_misc_funcs.binary_search(list_, item, not_found="none") is None
+    upper = list_[er_misc_funcs.binary_search(list_, item, not_found="upper")]
+    lower = list_[er_misc_funcs.binary_search(list_, item, not_found="lower")]
+    nearest = list_[
+        er_misc_funcs.binary_search(list_, item, not_found="nearest")
+    ]
+    assert upper >= lower
+    assert nearest in (upper, lower)
+    if upper != lower:
+        assert (nearest == upper) == (upper - item < item - lower)
+    force_upper_i = er_misc_funcs.binary_search(
+        list_, item, not_found="force_upper"
+    )
+    force_lower_i = er_misc_funcs.binary_search(
+        list_, item, not_found="force_lower"
+    )
+    if item > max(list_):
+        assert force_upper_i == len(list_)
+        assert list_[force_lower_i] == nearest
+    elif item < min(list_):
+        assert force_lower_i == -1
+        assert list_[force_upper_i] == nearest
 
 
 if __name__ == "__main__":
@@ -451,3 +475,5 @@ if __name__ == "__main__":
     test_get_prev_voice_indices()
     test_empty_nested()
     test_chord_in_list()
+    test_binary_search()  # pylint: disable=no-value-for-parameter
+    test_binary_search_not_found()  # pylint: disable=no-value-for-parameter

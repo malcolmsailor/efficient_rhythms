@@ -1,3 +1,4 @@
+# TODO create example_base.py, share it among examples
 {
     "seed": 2,
     "pattern_len": 2,

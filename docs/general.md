@@ -180,6 +180,21 @@ Another useful setting for creating harmonic progressions is `interval_cycle`. I
 
 (Note that, since the intervals in `interval_cycle` are always understood *upwards*, `"MINOR_6TH"` in the preceding example is equivalent to a descending major third.)
 
+<!-- TODO document `chord_tone_selection` and `voice_lead_chord_tones` -->
+
+Before concluding this introduction to specifying harmonies, I should add a few words about what the script actually does with `chords` and `scales`.
+
+- `scales` are used unconditionally: during each harmony, pitches are drawn exclusively from the associated scale. When a pattern is voice-led from one harmony to another, a bijective mapping is effected between the associated scales.
+- the use of `chords` is more contingent. The most important relevant settings are
+    - if `chord_tone_selection` is `True`, then when constructing the initial pattern, the script probabilistically decides whether each note should be a chord-tone (according to [parameters that you specify](settings.html#chord-tone-settings)).
+    - if `voice_lead_chord_tones` is `True`, then when voice-leading the pattern over subsequent harmonies, the script will ensure that chord-tones are mapped to chord-tones (and non-chord-tones to non-chord-tones).
+
+In the preceding examples of this section both `chord_tone_selection` and `voice_lead_chord_tones` have been `True`. As a contrasting illustration, here is example 6 again, but with `voice_lead_chord_tones = False`. (Note, however, that the settings `force_foot_in_bass` and `extend_bass_range_for_foots` in `examples/harmony_example_base.py` are still causing the foot of each scale/chord to sound on beat one of each harmony.)
+
+<!-- TODO example -->
+
+And here is the same thing, with `chord_tone_selection = False` as well.
+
 ## Specifying rhythms
 
 <!-- TODO  -->

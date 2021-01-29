@@ -3,11 +3,13 @@
 import itertools
 import os
 import random
+import sys
 
 import src.er_choirs as er_choirs
 import src.er_exceptions as er_exceptions
 import src.er_interface as er_interface
 import src.er_make as er_make
+import src.er_misc_funcs as er_misc_funcs
 import src.er_midi as er_midi
 import src.er_midi_settings as er_midi_settings
 import src.er_output_notation as er_output_notation
@@ -16,6 +18,8 @@ import src.er_preprocess as er_preprocess
 
 # MAYBE wait a moment when sending midi messages, see if this solves
 #   issue of first messages sometimes not sounding?
+
+# TODO fix printing of scores to include note octave
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 MAX_RANDOM_TRIES = 10
@@ -98,12 +102,20 @@ def main():
         if args.no_interface:
             print(f"Output written to {er.output_path}")
             if args.output_notation:
-                er_output_notation.run_verovio(
-                    super_pattern,
-                    er.output_path,
-                    args.verovio_arguments,
-                    "." + args.output_notation,
-                )
+                try:
+                    result = er_output_notation.run_verovio(
+                        super_pattern,
+                        er.output_path,
+                        args.verovio_arguments,
+                        "." + args.output_notation,
+                    )
+                except er_misc_funcs.ProcError as exc:
+                    if not args.debug:
+                        er_output_notation.clean_up_temporary_notation_files()
+                    print(exc)
+                    sys.exit(1)
+                if not result:
+                    sys.exit(1)
             return
         midi_player = er_playback.init_and_return_midi_player(
             shell=args.midi_port

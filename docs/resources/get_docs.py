@@ -121,8 +121,9 @@ def get_settings_docstring():
 
 
 def get_constants():
-    # INTERNET_TODO Can I figure out a better way to get a non-alphabetized
+    # Can I figure out a better way to get a non-alphabetized
     #   equivalent to dir() other than parsing the file myself?
+    # TODO no, I can't!
     dir_constants = dir(er_constants)
     for attr, val in vars(er_constants).items():
         if attr.startswith("__"):

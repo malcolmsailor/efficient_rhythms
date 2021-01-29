@@ -1,11 +1,11 @@
-# INTERNET_TODO either figure out how not to run this with pytest or figure out
-#   how to get it to work with pytest
 """This module tests whether various transformers/filters run without crashing.
 It doesn't actually veryify that they behave as expected!
 """
 import os
 import subprocess
 import sys
+
+# import pytest
 
 sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -37,7 +37,13 @@ def run(user_input):
         raise ProcError
 
 
-def test_changers():
+# @pytest.mark.skip(
+#     reason="better to run this test independently from shell "
+#     "(there is a git pre-commit hook that does this)"
+# )
+# assay_changers() rather than test_changers() because we don't want pytest
+#   to run
+def assay_changers():
     # does every filter and transformer have the same number of prob_funcs?
     prob_funcs = range(1, N_PROB_FUNCS + 1)
     prob_func_input = [
@@ -73,4 +79,4 @@ def test_changers():
 
 
 if __name__ == "__main__":
-    test_changers()
+    assay_changers()

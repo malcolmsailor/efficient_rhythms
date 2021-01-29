@@ -1,3 +1,4 @@
+# Should be used with harmony_example_base.py
 {
     "foot_pcs": ("C", "G", "A", "F"),
     "chords": ("MAJOR_TRIAD", "MAJOR_TRIAD", "MINOR_TRIAD", "MAJOR_TRIAD"),

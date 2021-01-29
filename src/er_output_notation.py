@@ -15,12 +15,28 @@ import math
 import os
 import re
 import shutil
-import subprocess
 from fractions import Fraction
 
 import src.er_misc_funcs as er_misc_funcs
 import src.er_spelling as er_spelling
 import src.er_tuning as er_tuning
+
+
+TEMP_NOTATION_DIR = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), "../.temp_notation_dir"
+)
+
+# TODO warning if trying to output notation with complex rhythms
+
+
+# def dur_to_kern2(dur, offset, time_sig_dur, unbreakable_value=1):
+#     out = []
+#     while dur:
+#         fragment = min(dur, (unbreakable_value - (offset % unbreakable_value)))
+#         out.append(fragment)
+#         dur -= fragment
+#         offset = 0
+#     return out
 
 
 def dur_to_kern(
@@ -123,7 +139,8 @@ def dur_to_kern(
 
     offset = offset % unbreakable_value
 
-    if offset != 0 and adjusted_input + offset > unbreakable_value:
+    # if offset != 0 and adjusted_input + offset > unbreakable_value:
+    if adjusted_input + offset > unbreakable_value:
         unbroken_input = unbreakable_value - offset
         sub_output = []
         while True:
@@ -173,6 +190,11 @@ def dur_to_kern(
 def write_kern(super_pattern, kern_file):
     """Writes a Score object to a kern file."""
 
+    with open(kern_file, "w", encoding="utf8") as outf:
+        outf.write(get_kern(super_pattern))
+
+
+def get_kern(super_pattern):
     unbreakable_value = Fraction(1, 1)
 
     num_voices = len(super_pattern.voices)
@@ -223,7 +245,8 @@ def write_kern(super_pattern, kern_file):
 
     attacks = sorted(list(set(attacks)))
 
-    outkern = open(kern_file, "w", encoding="utf8")
+    # outkern = open(kern_file, "w", encoding="utf8")
+    outkern = []
 
     # select clefs
     clefs = []
@@ -245,11 +268,13 @@ def write_kern(super_pattern, kern_file):
 
     for bit in preamble_bits:
         for voice_i in range(num_voices):
-            outkern.write(bit)
-            outkern.write(_kern_white_space(voice_i))
+            # outkern.write(bit)
+            # outkern.write(_kern_white_space(voice_i))
+            outkern.append(bit)
+            outkern.append(_kern_white_space(voice_i))
     for i, clef in enumerate(clefs):
-        outkern.write(clef)
-        outkern.write(_kern_white_space(i))
+        outkern.append(clef)
+        outkern.append(_kern_white_space(i))
 
     measure_counter = 0
 
@@ -258,17 +283,17 @@ def write_kern(super_pattern, kern_file):
             # write bar line
             measure_counter += 1
             for voice in range(num_voices):
-                outkern.write("=" + str(measure_counter))
-                outkern.write(_kern_white_space(voice))
+                outkern.append("=" + str(measure_counter))
+                outkern.append(_kern_white_space(voice))
         for voice in range(num_voices):
             if attack in ties[voice]:
                 kern_dur, kern_letter, tie_status = ties[voice][attack]
                 if tie_status == "end":
-                    outkern.write(kern_dur + kern_letter + "]")
+                    outkern.append(kern_dur + kern_letter + "]")
                 elif tie_status == "start":
-                    outkern.write("[" + kern_dur + kern_letter)
+                    outkern.append("[" + kern_dur + kern_letter)
                 else:
-                    outkern.write(kern_dur + kern_letter)
+                    outkern.append(kern_dur + kern_letter)
             elif attack in super_pattern.voices[voice]:
                 note = super_pattern.voices[voice][attack][0]
                 if len(super_pattern.voices[voice][attack]) > 1:
@@ -281,10 +306,10 @@ def write_kern(super_pattern, kern_file):
                 if len(kern_dur) != 1:
                     input("Tied note seems to have gotten through!")
                 kern_dur = kern_dur[0][1]
-                outkern.write(kern_dur + kern_letter)
+                outkern.append(kern_dur + kern_letter)
             else:
-                outkern.write(".")
-            outkern.write(_kern_white_space(voice))
+                outkern.append(".")
+            outkern.append(_kern_white_space(voice))
 
     afterword_bits = [
         "=" + str(measure_counter),
@@ -293,36 +318,54 @@ def write_kern(super_pattern, kern_file):
 
     for bit in afterword_bits:
         for voice in range(num_voices):
-            outkern.write(bit)
-            outkern.write(_kern_white_space(voice))
-    outkern.write("!!!filter: autobeam")
+            outkern.append(bit)
+            outkern.append(_kern_white_space(voice))
+    outkern.append("!!!filter: autobeam")
 
-    outkern.close()
+    # outkern.close()
+    return "".join(outkern)
 
 
-def write_notation(
-    kern_file, fname_path, filetype=".pdf", verovio_arguments=None
-):
+def init_temp_notation_dir():
+    try:
+        os.mkdir(TEMP_NOTATION_DIR)
+    except FileExistsError:
+        print(
+            f"Warning: temporary notation directory {TEMP_NOTATION_DIR} "
+            "already exists---it will be deleted at the conclusion of "
+            "the script"
+        )
+
+
+def clean_up_temporary_notation_files():
+    try:
+        shutil.rmtree(TEMP_NOTATION_DIR)
+    except FileNotFoundError:
+        pass
+
+
+def tidy_up(temp_paths, permanent_dirname):
+    if isinstance(temp_paths, str):
+        temp_paths = (temp_paths,)
+    permanent_paths = [
+        os.path.join(permanent_dirname, os.path.basename(temp_path))
+        for temp_path in temp_paths
+    ]
+    for temp_path, permanent_path in zip(temp_paths, permanent_paths):
+        shutil.move(temp_path, permanent_path)
+    if len(temp_paths) == 1:
+        print("Output file is: ")
+    else:
+        print("Output files are: ")
+    for path in permanent_paths:
+        print(path)
+    clean_up_temporary_notation_files()
+
+
+def write_notation(kern_file, dirname, filetype=".pdf", verovio_arguments=None):
     """Runs shell commands to convert a kern file to pdf.
     """
 
-    class ProcError(Exception):
-        pass
-
-    def _run_process(commands):
-        proc = subprocess.run(
-            commands,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            check=False,
-        )
-        if proc.returncode != 0:
-            print(f"{commands[0]} returned error code {proc.returncode}")
-            print(proc.stdout.decode())
-            raise ProcError
-        return proc
-
-    # LONGTERM put temp files in a temporary location!
     if filetype not in [".svg", ".png", ".pdf"]:
         print(f"filetype {filetype} not recognized!")
         return
@@ -342,16 +385,15 @@ def write_notation(
         verovio_arguments = verovio_arguments.split()
     else:
         verovio_arguments = ["--all-pages"]
-    vrv_in = kern_file
-    vrv_out = vrv_in.replace("krn", "svg")
+
+    vrv_out = os.path.splitext(kern_file)[0] + ".svg"
     print("Writing svgs...")
-    try:
-        verovio_proc = _run_process(
-            ["verovio", vrv_in, "-o", vrv_out, "--no-footer", "--no-header",]
-            + verovio_arguments
-        )
-    except ProcError:
-        return
+
+    verovio_proc = er_misc_funcs.silently_run_process(
+        ["verovio", kern_file, "-o", vrv_out, "--no-footer", "--no-header",]
+        + verovio_arguments
+    )
+
     svg_paths = re.findall(
         r"Output written to (.*\.svg)",
         verovio_proc.stdout.decode(),
@@ -359,50 +401,28 @@ def write_notation(
     )
 
     if filetype == ".svg":
-        print("Output files are: ")
-        for file_name in svg_paths:
-            print(file_name)
+        tidy_up(svg_paths, dirname)
         return
 
     # convert svg to png
     print("Converting svgs to pngs...")
     png_paths = []
     for svg_path in svg_paths:
-        png_path = svg_path.replace("svg", "png")
-        try:
-            _run_process(["convert", svg_path, png_path])
-            # subprocess.run(["convert", svg_path, png_path], check=False)
-        except ProcError:
-            return
+        png_path = os.path.splitext(svg_path)[0] + ".png"
+        er_misc_funcs.silently_run_process(["convert", svg_path, png_path])
         png_paths.append(png_path)
     if filetype == ".png":
-        for file_name in svg_paths:
-            os.remove(file_name)
-        print("Output files are: ")
-        for file_name in png_paths:
-            print(file_name)
+        tidy_up(png_paths, dirname)
         return
 
     # convert png to pdf
+    pdf_path = os.path.splitext(kern_file)[0] + ".pdf"
     print("Converting pngs to pdf...")
-    if not os.path.exists(os.path.join(fname_path, "pdfs")):
-        os.mkdir(os.path.join(fname_path, "pdfs"))
-
-    pdf_path = kern_file.replace(".krn", ".pdf").replace(
-        "_midi/", "_midi/pdfs/"
+    er_misc_funcs.silently_run_process(
+        ["img2pdf",] + png_paths + ["-o", pdf_path]
     )
-    try:
-        _run_process(["img2pdf",] + png_paths + ["-o", pdf_path])
-    except ProcError:
-        return
-    # subprocess.run(["img2pdf",] + png_paths + ["-o", pdf_path], check=False)
 
-    # clean up temp files
-    for file_name in png_paths + svg_paths:
-        os.remove(file_name)
-    os.remove(kern_file)
-    print("Output file: ")
-    print(pdf_path)
+    tidy_up(pdf_path, dirname)
 
 
 def run_verovio(super_pattern, midi_path, verovio_arguments, file_type):
@@ -419,13 +439,16 @@ def run_verovio(super_pattern, midi_path, verovio_arguments, file_type):
                 indent_type="none",
             )
         )
-        return
+        return False
 
     copied_pattern = copy.deepcopy(super_pattern)
     copied_pattern.fill_with_rests(super_pattern.get_total_len())
 
-    kern_path = midi_path.replace(".mid", ".krn")
-    dirname = os.path.dirname(kern_path)
+    kern_basename = os.path.basename(os.path.splitext(midi_path)[0] + ".krn")
+    kern_path = os.path.join(TEMP_NOTATION_DIR, kern_basename)
+    dirname = os.path.dirname(midi_path)
+
+    init_temp_notation_dir()
 
     write_kern(copied_pattern, kern_path)
     write_notation(
@@ -434,3 +457,4 @@ def run_verovio(super_pattern, midi_path, verovio_arguments, file_type):
         filetype=file_type,
         verovio_arguments=verovio_arguments,
     )
+    return True

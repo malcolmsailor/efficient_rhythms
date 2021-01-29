@@ -1,9 +1,14 @@
+import sys
 import threading
 
-# LONGTERM is there a way to only import pygame if we need it?
-import pygame
+sys.stdout = open("/dev/null", "w")
+import pygame  # pylint: disable=wrong-import-position
 
-import src.er_midi as er_midi
+sys.stdout.close()
+sys.stdout = sys.__stdout__
+
+
+import src.er_midi as er_midi  # pylint: disable=wrong-import-position
 
 SOUND_FONT = "/Users/Malcolm/Music/SoundFonts/GeneralUser GS 1.471/GeneralUser_GS_v1.471.sf2"
 
@@ -27,8 +32,8 @@ def init_and_return_midi_player(shell=False):
         #     return "fluidsynth"
         pygame.mixer.init()
         return "pygame"
-    raise NotImplementedError  # INTERNET_TODO
-    return "self"  # pylint: disable=unreachable
+    # TODO debug, add python-rtmidi to requirements
+    return "self"
 
 
 def playback_midi(midi_player, breaker, midi_path):

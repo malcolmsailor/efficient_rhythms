@@ -3,13 +3,22 @@ import numbers
 import typing
 from fractions import Fraction
 
+
+import numpy as np
+
 import src.er_constants as er_constants
+
+# import src.er_type_check as er_type_check
 
 DEFAULT_NUM_HARMONIES = 4
 MAX_SUPER_PATTERN_LEN = 128
 
-# INTERNET_TODO how to allow numpy arrays in sequence annotations?
-#   (e.g., typing.Sequence)
+# TODO use this type annotation for sequences that can be ndarrays as well
+# Note that Seq_or_arr will match strings
+# Seq_or_arr = typing.Union[typing.Sequence, np.ndarray]
+
+
+# @er_type_check.enforce_types
 @dataclasses.dataclass
 class ERSettings:
     """Stores the settings that control the script's behavior.
@@ -441,6 +450,8 @@ class ERSettings:
         "force_non_chord_tone") apply regardless of whether
         `chord_tone_selection` is true. Other chord tone settings modify the
         behavior activated by `chord_tone_selection`.
+        # TODO it seems to me that `force_chord_tone` is the only setting that
+        #   begins `force_chord_tone`?
 
         chord_tone_and_foot_disable: bool. If True, disables all chord-tone and
             foot specific behavior. Specifically, disables

@@ -6,12 +6,40 @@ import itertools
 import math
 import os
 import random
+import subprocess
 import typing
 
 import numpy as np
 import termcolor
 
 MAX_DENOMINATOR = 8192
+
+
+class ProcError(Exception):
+    pass
+
+
+def silently_run_process(commands, stdin=None):
+    """Runs a process silently.
+
+    If the process returns non-zero exit code,
+    raises a ProcError.
+    """
+    if isinstance(stdin, str):
+        stdin = stdin.encode(encoding="utf-8")
+    proc = subprocess.run(
+        commands,
+        input=stdin,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        check=False,
+    )
+    if proc.returncode != 0:
+        raise ProcError(
+            f"{commands[0]} returned error code {proc.returncode}\n"
+            + proc.stdout.decode()
+        )
+    return proc
 
 
 def check_modulo(n, mod):

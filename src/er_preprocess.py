@@ -200,10 +200,10 @@ def prepare_warnings(er):
 
 
 PITCH_CONSTANT_OP_MAP = {
-    "*": "__mul__",
-    "+": "__add__",
-    "-": "__sub__",
-    "/": "__rtruediv__",  # TODO test
+    "*": ("__mul__", "__rmul__"),
+    "+": ("__add__", "__radd__"),
+    "-": ("__sub__", "__rsub__"),
+    "/": ("__truediv__", "__rtruediv__"),  # TODO test
 }
 
 
@@ -214,19 +214,12 @@ def replace_pitch_constants(er):
     def _process_str(pitch_str):
         pitch_str = pitch_str.replace("#", "_SHARP")
         bits = pitch_str.split()
-        # I have to begin with an np array (and then retrieve the only item from
-        #   it if it has len(1) below) because operations from
-        #   python built-in types to np arrays (e.g., int.__mul__(np array))
-        #   are not implemented. When the intended operations are done in the
-        #   normal way, Python must try the method in the np array after finding
-        #   that the initial operation fails. But I don't have access to the
-        #   python docs right now (at the cabin). INTERNET_TODO
-        val = np.array([1])
-        next_op = "__mul__"
+        val = 1
+        next_op, rnext_op = "__mul__", "__rmul__"
         for bit in bits:
             if next_op is None:
                 try:
-                    next_op = PITCH_CONSTANT_OP_MAP[bit]
+                    next_op, rnext_op = PITCH_CONSTANT_OP_MAP[bit]
                 except KeyError:
                     raise PitchConstantError(  # pylint: disable=raise-missing-from
                         f"{bit} is not an implemented operation on pitch "
@@ -242,14 +235,16 @@ def replace_pitch_constants(er):
                         f"{bit} is not an implemented pitch constant."
                     )
                     # TODO see documentation for more help
-                val = getattr(val, next_op)(constant)
+                next_val = getattr(val, next_op)(constant)
+                if next_val is NotImplemented:
+                    val = getattr(constant, rnext_op)(val)
+                else:
+                    val = next_val
                 next_op = None
         if next_op is not None:
             raise PitchConstantError(
                 f"Trailing operation in pitch constant {pitch_str}"
             )
-        if len(val) == 1:
-            return val[0]
         return val
 
     def _replace(pitch_material, i):
@@ -819,6 +814,8 @@ def read_in_settings(settings_input, settings_class):
                 dict2[key] = _merge(dict1[key], val)
         return dict1 | dict2
 
+    if settings_input is None:
+        settings_input = {}
     if isinstance(settings_input, dict):
         return settings_class(**settings_input)
     merged_dict = {}

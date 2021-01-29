@@ -5,4 +5,5 @@
     "foot_pcs": ("Eb",),
     "chords": ("MAJOR_TRIAD",),
     "scales": ("MAJOR_SCALE",),
+    "voice_lead_chord_tones": False,
 }

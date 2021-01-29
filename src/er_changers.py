@@ -2053,6 +2053,5 @@ class LoopTransformer(TransformBase):
             self.mark_note(note)
 
 
-# INTERNET_TODO is there a better way of doing this?
 FILTERS = tuple(item for item in locals() if "Filter" in item)
 TRANSFORMERS = tuple(item for item in locals() if "Transformer" in item)
