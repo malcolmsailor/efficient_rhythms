@@ -20,8 +20,8 @@ init-hook=
     PylintIgnorePaths(
         'favorites',
         'tests/test_settings',
-        'examples',
-        'docs/resources/midani', 
+        'docs/examples',
+        'docs/resources/midani',
         'src/third_party',
     )
 
