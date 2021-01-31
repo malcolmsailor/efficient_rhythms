@@ -82,11 +82,8 @@ resources/pngs/%_00001.png: examples/midi/%.mid \
 
 m4as: $(EXAMPLE_M4A)
 
-# assumes that pygmid2aud.py is in path
 resources/m4as/%.m4a: examples/midi/%.mid
-	# TODO check that other applications that might be making sounds are closed
-	#	(Chrome, iTunes, etc.)
-	pygmid2aud.py $< --overwrite --output-path $@
+	resources/get_m4a.sh $< $@
 
 #########
 # CLEAN #
