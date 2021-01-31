@@ -1,5 +1,5 @@
 {
-    "midi_fname": "examples/midi/example7.mid",
+    "midi_fname": "../examples/midi/example7.mid",
     "voice_settings": {
         0: {"bracket_settings": {"hlen": {"y_offset": 4},}, "color_loop": 11,},
         1: {"bracket_settings": {"hlen": {"y_offset": 4},}, "color_loop": 11,},

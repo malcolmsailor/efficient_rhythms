@@ -40,7 +40,7 @@ For example, in example 1, the initial pattern is two beats long---i.e., `patter
 
 <!-- TODO annotate notated examples -->
 ![Example 1 notation](resources/svgs/example1.svg){class="notation"}
-![Example 1 piano roll](resources/pngs/example100001.png){class="piano_roll"}
+![Example 1 piano roll](resources/pngs/example1_00001.png){class="piano_roll"}
 <!-- TODO caption with path -->
 
 <!-- TODO link to midani -->
@@ -50,34 +50,34 @@ Note that in example 1, we didn't specify `rhythm_len` at all. We didn't have to
 [^parallel_fifths]: The music-theoretically fastidious among you may have observed that these examples contain plentiful parallel fifths (for example, the first two sixteenth-notes in example 2). If desired, this could be avoided by including `7` in the argument `prohibit_parallels`.
 
 ![Example 2 notation](resources/svgs/example2.svg){class="notation"}
-![Example 2 piano roll](resources/pngs/example200001.png){class="piano_roll"}
+![Example 2 piano roll](resources/pngs/example2_00001.png){class="piano_roll"}
 
 We aren't constrained, however, to have `pattern_len` be a whole multiple of `rhythm_len`. In example 3, `pattern_len` is still `4`, but `rhythm_len = 1.5`, so now every third time the rhythm occurs, it is truncated (a bit like a 3--3--2 *tresillo* pattern).
 
 ![Example 3 notation](resources/svgs/example3.svg){class="notation"}
-![Example 3 piano roll](resources/pngs/example300001.png){class="piano_roll"}
+![Example 3 piano roll](resources/pngs/example3_00001.png){class="piano_roll"}
 
 Up until now, we've always specified the same settings in both voices. But we need not do so! In the next example, the bottom voice again has `rhythm_len = 1.5`, but the top voice now has `rhythm_len = 2`.
 
 ![Example 4 notation](resources/svgs/example4.svg){class="notation"}
-![Example 4 piano roll](resources/pngs/example400001.png){class="piano_roll"}
+![Example 4 piano roll](resources/pngs/example4_00001.png){class="piano_roll"}
 
 We can also have different values of `pattern_len` in each voice, as in example 5. However, if we do so, the script has to work quite a bit harder to find a solution.[^smarter] To help it do so, I made its task a little easier by changing  [`consonance_treatment`](settings.html#consonance_treatment) from `"all_attacks"` to `"none"`. (Thus whereas in the previous examples, the simultaneously attacked notes all formed intervals like 3rds and fifths, in example 5, there are also dissonances like 7ths and 9ths.)
 
 [^smarter]: If the algorithm were a little smarter, it wouldn't have to work nearly so hard to cope with voices of different `pattern_len`. So this is a longterm to-do.
 
 ![Example 5 notation](resources/svgs/example5.svg){class="notation"}
-![Example 5 piano roll](resources/pngs/example500001.png){class="piano_roll"}
+![Example 5 piano roll](resources/pngs/example5_00001.png){class="piano_roll"}
 
 Up until now, whenever one pattern or rhythm didn't line up with the other, we have truncated the shorter one, so that their next repetitions began together. But the script doesn't require us to do so. In example 6, I have changed [`truncate_patterns`](settings.html#truncate_patterns) to `False`. Thus, the 1.5-beat pattern in the lower part is no longer truncated after 4 beats. Instead, it is displaced relative to both the 4-beat upper pattern, as well as the 4-beat harmony changes. (The two patterns finally come into sync after 12 beats, the least-common-multiple of 1.5 and 4.)
 
 ![Example 6 notation](resources/svgs/example6.svg){class="notation"}
-![Example 6 piano roll](resources/pngs/example600001.png){class="piano_roll"}
+![Example 6 piano roll](resources/pngs/example6_00001.png){class="piano_roll"}
 
 Another feature of all the examples up until now is that `harmony_len` has always been at least as long as `pattern_len`. But this doesn't have to be the case either! In example 7, I've set `harmony_len = 2` but `pattern_len = 4` so that each pattern covers two harmonies.
 
 ![Example 7 notation](resources/svgs/example7.svg){class="notation"}
-![Example 7 piano roll](resources/pngs/example700001.png){class="piano_roll"}
+![Example 7 piano roll](resources/pngs/example7_00001.png){class="piano_roll"}
 
 ## Harmony
 

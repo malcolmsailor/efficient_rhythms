@@ -1,7 +1,7 @@
 {
     "midi_fname": [
-        "examples/midi/example2.mid",
-        "docs/resources/midi/3cycle_triads_16_measures.mid",
+        "../examples/midi/example2.mid",
+        "resources/midi/3cycle_triads_16_measures.mid",
     ],
     "color_loop": 12,
     "voice_settings": {

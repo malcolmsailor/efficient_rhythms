@@ -6,7 +6,7 @@
     "connection_line_end_offset": 0.1,
     "connection_line_start_offset": 0.1,
     "frame_len": 4.3,
-    "output_dirname": "docs/resources/pngs/",
+    # expects to be run by the makefile in the docs/ directory
     "default_bracket_settings": {"x_offset": 0.02, "text_size": 2.0},
     "voice_settings": {
         0: {
