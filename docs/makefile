@@ -11,6 +11,8 @@ EXAMPLE_PNG = $(EXAMPLE_SRC:examples/%.py=resources/pngs/%_00001.png)
 HARMONY_EXAMPLE_SRC = $(wildcard examples/harmony_example[0-9].py)
 HARMONY_EXAMPLE_MID = \
 	$(HARMONY_EXAMPLE_SRC:examples/%.py=examples/midi/%.mid)
+HARMONY_EXAMPLE_M4A = \
+	$(HARMONY_EXAMPLE_SRC:examples/%.py=resources/m4as/%.m4a)
 HARMONY_EXAMPLE_SVG = \
 	$(HARMONY_EXAMPLE_SRC:examples/%.py=resources/svgs/%.svg)
 HARMONY_EXAMPLE_PNG = \
@@ -77,13 +79,13 @@ resources/pngs/%_00001.png: examples/midi/%.mid \
 		resources/midani/example_midani_settings.py \
 		resources/midani/stationary_midani_settings.py \
 		resources/midani/%_midani_settings.py
-	python3 "$(MIDANI)" --settings $(filter-out $<,$^) --frames 2
+	python3 "$(MIDANI)" --settings $(filter-out $<,$^) --frames 3
 
 ########
 # M4As #
 ########
 
-m4as: $(EXAMPLE_M4A)
+m4as: $(EXAMPLE_M4A) $(HARMONY_EXAMPLE_M4A)
 
 # next recipe expects to find pygmid2aud.py in the path
 resources/m4as/%.m4a: examples/midi/%.mid

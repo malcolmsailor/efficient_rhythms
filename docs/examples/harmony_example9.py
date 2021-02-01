@@ -1,6 +1,5 @@
 # Should be used with harmony_example_base.py
 {
-    "seed": 3831952957,  # TODO delete
     "num_harmonies": 4,
     "interval_cycle": "PERFECT_4TH",
     "foot_pcs": ("Eb",),

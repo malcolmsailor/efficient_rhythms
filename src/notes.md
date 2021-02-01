@@ -1,3 +1,11 @@
+<!-- These are notes for the developer -->
+
+LONGTERM
+- consider shorter values of pattern_len as part of the initial pattern so that the voice-leading of these sections isn't so difficult, addressing:
+
+    We can also have different values of `pattern_len` in each voice, as in REF:example5. However, if we do so, the script has to work quite a bit harder to find a solution.[^smarter] To help it do so, I made its task a little easier by changing  [`consonance_treatment`](settings.html#consonance_treatment) from `"all_attacks"` to `"none"`. (Thus whereas in the previous examples, the simultaneously attacked notes all formed intervals like 3rds and fifths, in example 5, there are also dissonances like 7ths and 9ths.)
+
+    [^smarter]: If the algorithm were a little smarter, it wouldn't have to work nearly so hard to cope with voices of different `pattern_len`. So this is a longterm to-do.
 
 
 Wishlist:

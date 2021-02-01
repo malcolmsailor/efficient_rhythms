@@ -150,7 +150,7 @@ def main():
             "pandoc",
             "--standalone",
             "--strip-comments",
-            f"--css={CSS_PATH2}",
+            f"--css={CSS_PATH1}",
             f"--css={CSS_PATH2}",
             "-i",
             SETTINGS_MD_PATH,

@@ -11,7 +11,7 @@
       span.underline{text-decoration: underline;}
       div.column{display: inline-block; vertical-align: top; width: 50%;}
   </style>
-  <link rel="stylesheet" href="resources/markdown-body.css" />
+  <link rel="stylesheet" href="resources/third_party/github-markdown-css/github-markdown.css" />
   <link rel="stylesheet" href="resources/markdown-body.css" />
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
@@ -19,7 +19,7 @@
 </head>
 <body class="markdown-body">
 <h1 id="efficient-rhythms-settings">Efficient rhythms settings</h1>
-<p>The many settings below control the behavior of this script. The recommended way of using the script is to store the desired settings as a Python dictionary in a file and then pass the file into the script with the <code>--settings</code> flag. For examples, see the files in the <code>examples/</code> directory. For a high-level overview of the script, see <code>/docs/general.html</code></p>
+<p>The many settings below control the behavior of this script. The recommended way of using the script is to store the desired settings as a Python dictionary in a file and then pass the file into the script with the <code>--settings</code> flag. For examples, see the files in the <code>docs/examples/</code> directory. For a high-level overview of the script, see <code>docs/general.html</code></p>
 <h3 id="note-on-per-voice-sequences-and-other-looping-sequences">Note on “per-voice sequences” and other “looping sequences”</h3>
 <p>Many arguments below can take “per-voice sequences” as arguments. These are sequences (e.g., tuples or lists) that assign a different setting to each voice. Importantly, however, it is possible to provide a sequence that is shorter than the number of voices. In this case, the sequence will be looped through as many times as is necessary. For example, if <code>num_voices == 5</code>, but <code>len(pattern_len) == 2</code>, voices 0, 2, and 4 will be assigned the first value in <a href="#pattern_len"><code>pattern_len</code></a>, while voices 1 and 3 will be assigned the second value. (The voices are zero-indexed.)</p>
 <p>There are also a number of arguments that take sequences that, if necessary, will be looped through in a similar manner, but where the items of the sequence are not applied to voices, but to something else. An example is <a href="#harmony_len"><code>harmony_len</code></a>. I refer to these as “looping sequences”.</p>
@@ -63,9 +63,9 @@
 <h3 id="scale-and-chord-settings">Scale and chord settings</h3>
 <ul class="incremental">
 <li><p><span id="scales_and_chords_specified_in_midi"><strong><code>scales_and_chords_specified_in_midi</code></strong></span>: string. If passed, specifies a midi file in a specific format, described below, from which the settings <a href="#foot_pcs"><code>foot_pcs</code></a>, <a href="#scales"><code>scales</code></a>, and <a href="#chords"><code>chords</code></a> below should be inferred (in which case any explicit values for these settings are ignored).</p>
-<p>The midi file should consist of two tracks. <a href="#scales"><code>scales</code></a> are inferred from the first track, and <a href="#chords"><code>chords</code></a> and <a href="#foot_pcs"><code>foot_pcs</code></a> are inferred from the second track (<a href="#foot_pcs"><code>foot_pcs</code></a> are simply the lowest sounding pitch of each chord). Each track should consist entirely of simultaneous whole notes (i.e., semibreves) constituting the intended scales or chords, respectively. For an example, see <code>examples/scales_and_chords_specified_in_midi_example.mid</code>. Note that the rhythm of the harmonic changes is set through the <a href="#harmony_len"><code>harmony_len</code></a> parameter above.</p>
+<p>The midi file should consist of two tracks. <a href="#scales"><code>scales</code></a> are inferred from the first track, and <a href="#chords"><code>chords</code></a> and <a href="#foot_pcs"><code>foot_pcs</code></a> are inferred from the second track (<a href="#foot_pcs"><code>foot_pcs</code></a> are simply the lowest sounding pitch of each chord). Each track should consist entirely of simultaneous whole notes (i.e., semibreves) constituting the intended scales or chords, respectively. For an example, see <code>docs/examples/scales_and_chords_specified_in_midi_example.mid</code>. Note that the rhythm of the harmonic changes is set through the <a href="#harmony_len"><code>harmony_len</code></a> parameter above.</p>
 <p>You must ensure that chords and scales are consistent (that is, that the chords do not contain pitch-classes that do not belong to the scales; i.e., that the scales are supersets of the chords), or an <code>InconsistentChordsAndScalesError</code> will be raised.</p></li>
-<li><p><span id="foot_pcs"><strong><code>foot_pcs</code></strong></span>: sequence of numbers. Specifies the <code>foots</code> of each item in <a href="#scales"><code>scales</code></a> and <a href="#chords"><code>chords</code></a>—i.e., the pitch-classes that will correspond to <code>0</code> in each item of <a href="#scales"><code>scales</code></a> and <a href="#chords"><code>chords</code></a>.</p>
+<li><p><span id="foot_pcs"><strong><code>foot_pcs</code></strong></span>: sequence of numbers. Specifies the “foots” of each item in <a href="#scales"><code>scales</code></a> and <a href="#chords"><code>chords</code></a>—i.e., the pitch-classes that will correspond to <code>0</code> in each item of <a href="#scales"><code>scales</code></a> and <a href="#chords"><code>chords</code></a>.</p>
 <p>TODO refer to explanation of <a href="#foot_pcs"><code>foot_pcs</code></a> elsewhere?</p>
 <p>For example, if <code>foot_pcs == [2, 4]</code> and <code>chords == [[0, 4, 7], [0, 3, 8]]</code>, then the actually realized chords will have pitch-classes <code>[2, 6, 9]</code> and <code>[4, 7, 0]</code>, respectively (assuming <code>tet == 12</code>). (In music-theoretic terms, the chords will be a D major triad followed by a first- inversion C major triad.)</p>
 <p>If <a href="#foot_pcs"><code>foot_pcs</code></a> is shorter than <a href="#num_harmonies"><code>num_harmonies</code></a>, it is looped through until the necessary length is obtained.</p>
@@ -152,8 +152,14 @@
 <p><em>Default</em>: <code>False</code></p></li>
 <li><p><span id="vl_maintain_consonance"><strong><code>vl_maintain_consonance</code></strong></span>: bool. If False, then after the initial pattern is complete, voice-leadings will not be checked for consonance. (See the settings under “<a href="#consonance-and-dissonance-settings">Consonance and dissonance settings</a>” below.)</p>
 <p><em>Default</em>: <code>True</code></p></li>
-<li><p><span id="vl_maintain_limit_intervals"><strong><code>vl_maintain_limit_intervals</code></strong></span>: bool. If False, then after the initial pattern is complete, voice-leadings will be allowed to exceed limit intervals. (See settings <a href="#max_interval"><code>max_interval</code></a>, <a href="#max_interval_for_non_chord_tones"><code>max_interval_for_non_chord_tones</code></a>, <a href="#min_interval"><code>min_interval</code></a>, <a href="#min_interval_for_non_chord_tones"><code>min_interval_for_non_chord_tones</code></a>.)</p>
-<p><em>Default</em>: <code>True</code></p></li>
+<li><p><span id="vl_maintain_limit_intervals"><strong><code>vl_maintain_limit_intervals</code></strong></span>: string. Determines when and whether, after the initial pattern is complete, voice-leadings will be allowed to exceed limit intervals. (See settings <a href="#max_interval"><code>max_interval</code></a>, <a href="#max_interval_for_non_chord_tones"><code>max_interval_for_non_chord_tones</code></a>, <a href="#min_interval"><code>min_interval</code></a>, <a href="#min_interval_for_non_chord_tones"><code>min_interval_for_non_chord_tones</code></a>.)</p>
+<p>Possible values:</p>
+<ul class="incremental">
+<li><code>"all"</code>: limit intervals are always maintained.</li>
+<li><code>"across_harmonies"</code>: limit intervals are maintained when voice- leading from one harmony to another, but not when voice- leading within a single harmony. (Maintaining the limit intervals within a single harmony when a pattern is repeated on that harmony can lead the script to switch to a different voice-leading abruptly for the repetition, which may not be desired.)</li>
+<li><code>"none"</code>: limit intervals are never maintained.</li>
+</ul>
+<p><em>Default</em>: <code>"across_harmonies"</code></p></li>
 <li><p><span id="vl_maintain_forbidden_intervals"><strong><code>vl_maintain_forbidden_intervals</code></strong></span>: bool. If False, then after the initial pattern is complete, voice-leadings will be permitted to contain forbidden intervals. (See <a href="#forbidden_interval_classes"><code>forbidden_interval_classes</code></a>, <a href="#forbidden_interval_modulo"><code>forbidden_interval_modulo</code></a>.)</p>
 <p><em>Default</em>: <code>True</code></p></li>
 <li><p><span id="vl_maintain_prohibit_parallels"><strong><code>vl_maintain_prohibit_parallels</code></strong></span>: bool. If False, then after the initial pattern is complete, voice-leadings will be permitted to contain prohibited parallel intervals. (See <a href="#prohibit_parallels"><code>prohibit_parallels</code></a>.)</p>

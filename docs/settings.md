@@ -6,8 +6,8 @@ The many settings below control the behavior of this script. The
 recommended way of using the script is to store the desired settings as
 a Python dictionary in a file and then pass the file into the script
 with the `--settings` flag. For examples, see the files in the
-`examples/` directory. For a high-level overview of the script, see
-`/docs/general.html`
+`docs/examples/` directory. For a high-level overview of the script, see
+`docs/general.html`
 
 ### Note on “per-voice sequences” and other “looping sequences”
 
@@ -232,8 +232,8 @@ Less often used general settings are under
     sounding pitch of each chord). Each track should consist entirely of
     simultaneous whole notes (i.e., semibreves) constituting the
     intended scales or chords, respectively. For an example, see
-    `examples/scales_and_chords_specified_in_midi_example.mid`. Note
-    that the rhythm of the harmonic changes is set through the
+    `docs/examples/scales_and_chords_specified_in_midi_example.mid`.
+    Note that the rhythm of the harmonic changes is set through the
     <a href="#harmony_len">`harmony_len`</a> parameter above.
     
     You must ensure that chords and scales are consistent (that is, that
@@ -242,7 +242,7 @@ Less often used general settings are under
     `InconsistentChordsAndScalesError` will be raised.
 
   - <span id="foot_pcs">**`foot_pcs`**</span>: sequence of numbers.
-    Specifies the `foots` of each item in <a href="#scales">`scales`</a>
+    Specifies the “foots” of each item in <a href="#scales">`scales`</a>
     and <a href="#chords">`chords`</a>—i.e., the pitch-classes that will
     correspond to `0` in each item of <a href="#scales">`scales`</a> and
     <a href="#chords">`chords`</a>.
@@ -534,14 +534,25 @@ Less often used general settings are under
     *Default*: `True`
 
   - <span id="vl_maintain_limit_intervals">**`vl_maintain_limit_intervals`**</span>:
-    bool. If False, then after the initial pattern is complete,
-    voice-leadings will be allowed to exceed limit intervals. (See
-    settings <a href="#max_interval">`max_interval`</a>,
+    string. Determines when and whether, after the initial pattern is
+    complete, voice-leadings will be allowed to exceed limit intervals.
+    (See settings <a href="#max_interval">`max_interval`</a>,
     <a href="#max_interval_for_non_chord_tones">`max_interval_for_non_chord_tones`</a>,
     <a href="#min_interval">`min_interval`</a>,
     <a href="#min_interval_for_non_chord_tones">`min_interval_for_non_chord_tones`</a>.)
     
-    *Default*: `True`
+    Possible values:
+    
+      - `"all"`: limit intervals are always maintained.
+      - `"across_harmonies"`: limit intervals are maintained when voice-
+        leading from one harmony to another, but not when voice- leading
+        within a single harmony. (Maintaining the limit intervals within
+        a single harmony when a pattern is repeated on that harmony can
+        lead the script to switch to a different voice-leading abruptly
+        for the repetition, which may not be desired.)
+      - `"none"`: limit intervals are never maintained.
+    
+    *Default*: `"across_harmonies"`
 
   - <span id="vl_maintain_forbidden_intervals">**`vl_maintain_forbidden_intervals`**</span>:
     bool. If False, then after the initial pattern is complete,
