@@ -16,6 +16,8 @@ import src.er_constants as er_constants  # pylint: disable=wrong-import-position
 import src.er_misc_funcs as er_misc_funcs  # pylint: disable=wrong-import-position
 
 SCRIPT_DIR = os.path.dirname((os.path.realpath(__file__)))
+CSS_PATH1 = "resources/third_party/github-markdown-css/github-markdown.css"
+CSS_PATH2 = "resources/markdown-body.css"
 
 # Constants for processing settings.py
 SETTINGS_PY_PATH = os.path.join(SCRIPT_DIR, "../../src/er_settings.py")
@@ -138,15 +140,31 @@ def main():
     docstring = get_settings_docstring()
 
     subprocess.run(
-        ["pandoc", "-o", SETTINGS_MD_PATH],
+        ["pandoc", "-o", SETTINGS_MD_PATH, "-t", "gfm"],
         encoding="utf-8",
         input=SETTINGS_PREAMBLE + docstring,
         check=True,
     )
-    subprocess.run(
-        ["pandoc", "-i", SETTINGS_MD_PATH, "-o", SETTINGS_HTML_PATH],
+    html_content = subprocess.run(
+        [
+            "pandoc",
+            "--standalone",
+            "--strip-comments",
+            f"--css={CSS_PATH2}",
+            f"--css={CSS_PATH2}",
+            "-i",
+            SETTINGS_MD_PATH,
+            "-t",
+            "html",
+        ],
         check=True,
-    )
+        capture_output=True,
+    ).stdout.decode()
+    # A hack to get github-markdown.css to display
+    with open(SETTINGS_HTML_PATH, "w", encoding="utf-8") as outf:
+        outf.write(
+            html_content.replace("<body>", '<body class="markdown-body">')
+        )
 
 
 if __name__ == "__main__":

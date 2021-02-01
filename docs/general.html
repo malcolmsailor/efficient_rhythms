@@ -1,7 +1,27 @@
-<h1 id="efficient-rhythms">Efficient rhythms</h1>
-<!-- TODO format images -->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Efficient rhythms documentation</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <link rel="stylesheet" href="resources/third_party/github-markdown-css/github-markdown.css" />
+  <link rel="stylesheet" href="resources/markdown-body.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body class="markdown-body">
+<header id="title-block-header">
+<h1 class="title">Efficient rhythms documentation</h1>
+</header>
 <p>This script is a tool for musical composition. Here are a few examples of things I have made using it:</p>
-<!-- TODO -->
 <p>The gist of how it works goes as follows:</p>
 <ul class="incremental">
 <li>first it makes an initial <strong>rhythmic</strong> pattern.</li>
@@ -9,12 +29,10 @@
 <li>finally, it repeats the pattern, adjusting it <strong>efficiently</strong> to fit any chord changes (hence “efficient rhythms”).</li>
 </ul>
 <p>After it’s finished, you can listen to the results as a midi file. The script also provides a few tools (see <a href="#filters-and-transformers">Filters and Transformers</a>) for reshaping the results.</p>
-<!-- The name of the script comes from the fact that it begins with a **rhythm** and then transforms (or "voice-leads", in musical parlance) it **efficiently** over new chord changes. -->
 <p>To quickly try the script out, you can run:</p>
 <p><code>python3 efficient_rhythms.py --settings examples/example1.py</code></p>
 <p>You can also try running it with randomized settings, although be prepared for strange results:</p>
 <p><code>python3 efficient_rhythms.py --random</code></p>
-<!-- TODO maybe delete the next paragraph or move it after the following exposition -->
 <p>The script provides very many settings that allow you to control the results. Full documentation is available in <a href="settings.html"><code>settings.html</code></a>. But a gentler introduction is provided in the next section.</p>
 <h2 id="how-it-works-a-longer-explanation">How it works (a longer explanation)</h2>
 <p>The basic settings that control the script are</p>
@@ -24,9 +42,7 @@
 <li><code>harmony_len</code>: the length of each harmony (i.e., chord)</li>
 </ul>
 <p>For example, in example 1, the initial pattern is two beats long—i.e., <code>pattern_len = 2</code>. Each harmony, however, is four beats (<code>harmony_len = 4</code>). Thus you can see that the pattern repeats twice on each harmony, and is then adjusted to fit the next harmony.</p>
-<!-- TODO annotate notated examples -->
-<p><img src="resources/svgs/example1.svg" class="notation" alt="Example 1 notation" /> <img src="resources/pngs/example1_00001.png" class="piano_roll" alt="Example 1 piano roll" /> <!-- TODO caption with path --></p>
-<!-- TODO link to midani -->
+<p><img src="resources/svgs/example1.svg" class="notation" alt="Example 1 notation" /> <img src="resources/pngs/example1_00001.png" class="piano_roll" alt="Example 1 piano roll" /> </p>
 <p>Note that in example 1, we didn’t specify <code>rhythm_len</code> at all. We didn’t have to, because whenever <code>rhythm_len</code> is not set explicitly, it is implicitly assigned the value of <code>pattern_len</code>. In example 2, in contrast, <code>rhythm_len = 2</code> but <code>pattern_len = 4</code>. Thus, if you look and/or listen carefully, you’ll find that the same rhythm repeats twice on each harmony, but with different notes each time—the entire pattern of pitches takes four beats to repeat, and by the time it does, its pitches are somewhat different, having been adjusted to the new harmony.<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p>
 <p><img src="resources/svgs/example2.svg" class="notation" alt="Example 2 notation" /> <img src="resources/pngs/example2_00001.png" class="piano_roll" alt="Example 2 piano roll" /></p>
 <p>We aren’t constrained, however, to have <code>pattern_len</code> be a whole multiple of <code>rhythm_len</code>. In example 3, <code>pattern_len</code> is still <code>4</code>, but <code>rhythm_len = 1.5</code>, so now every third time the rhythm occurs, it is truncated (a bit like a 3–3–2 <em>tresillo</em> pattern).</p>
@@ -41,18 +57,16 @@
 <p><img src="resources/svgs/example7.svg" class="notation" alt="Example 7 notation" /> <img src="resources/pngs/example7_00001.png" class="piano_roll" alt="Example 7 piano roll" /></p>
 <h2 id="harmony">Harmony</h2>
 <p>So far, we’ve looked at how to adjust the lengths of patterns, rhythms and harmonies. Now we’ll look at how to specify chords and scales to create harmonic progressions.</p>
-<p>The most straightforward way is to specify all chords and scales explicitly. As a first example, I’ve specified <a href="!--%20TODO%20add%20link%20to%20axis%20of%20awesome%20--">one of the most (over?-)used chord progressions</a> in pop music, the I-V-vi-IV progression, in C major. The results are in example 8. The relevant lines in <code>harmony_example1.py</code> are <!-- TODO embed entire document? --></p>
-<!-- TODO how to indicate python in code block? -->
+<p>The most straightforward way is to specify all chords and scales explicitly. As a first example, I’ve specified <a href="!--%20TODO%20add%20link%20to%20axis%20of%20awesome%20--">one of the most (over?-)used chord progressions</a> in pop music, the I-V-vi-IV progression, in C major. The results are in example 8. The relevant lines in <code>harmony_example1.py</code> are </p>
 <pre><code>&quot;foot_pcs&quot;: (&quot;C&quot;, &quot;G&quot;, &quot;A&quot;, &quot;F&quot;),
 &quot;chords&quot;: (&quot;MAJOR_TRIAD&quot;, &quot;MAJOR_TRIAD&quot;, &quot;MINOR_TRIAD&quot;, &quot;MAJOR_TRIAD&quot;),
 &quot;scales&quot;: (&quot;MAJOR_SCALE&quot;, &quot;MIXOLYDIAN&quot;, &quot;AEOLIAN&quot;, &quot;LYDIAN&quot;),</code></pre>
 <p>There’s a lot to explain here:</p>
 <ol class="incremental" type="1">
-<li>Strings like <code>"C"</code> and <code>"MAJOR_TRIAD"</code> name constants that are defined in <code>src\er_constants.py</code>. If you know any music theory, the meaning of the constants above shouldn’t require any further explanation now. <!-- TODO add link to er_constants doc --></li>
-<li>We call the “main bass note” of each chord its “foot”. <!-- TODO add link to further explanation --></li>
+<li>Strings like <code>"C"</code> and <code>"MAJOR_TRIAD"</code> name constants that are defined in <code>src\er_constants.py</code>. If you know any music theory, the meaning of the constants above shouldn’t require any further explanation now.</li>
+<li>We call the “main bass note” of each chord its “foot”.</li>
 <li>Each foot is associated with the chord and the scale in the same serial position. Both the chord and the scale will be transposed so that they begin on the foot. Thus, there is a one-to-one correspondence between chords and scales (much like the “chord-scale” approach sometimes used in jazz pedagogy).</li>
 </ol>
-<p><img src="resources/svgs/harmony_example1.svg" class="notation" alt="Example 8 notation" /> <img src="resources/pngs/harmony_example1.png" class="piano_roll" alt="Example 8 piano roll" /></p>
 <p>We can put the progression into another key by changing <code>foot_pcs</code>. For instance, this is what it would look like in E major:</p>
 <pre><code>&quot;foot_pcs&quot;: (&quot;E&quot;, &quot;B&quot;, &quot;C#&quot;, &quot;A&quot;),
 &quot;chords&quot;: (&quot;MAJOR_TRIAD&quot;, &quot;MAJOR_TRIAD&quot;, &quot;MINOR_TRIAD&quot;, &quot;MAJOR_TRIAD&quot;),
@@ -61,7 +75,6 @@
 <pre><code>&quot;foot_pcs&quot;: (&quot;E&quot;, &quot;G&quot;, &quot;C&quot;, &quot;A&quot;), # was (&quot;E&quot;, &quot;B&quot;, &quot;C#&quot;, &quot;A&quot;)
 &quot;chords&quot;: (&quot;MAJOR_TRIAD&quot;, &quot;MAJOR_TRIAD&quot;, &quot;MINOR_TRIAD&quot;, &quot;MAJOR_TRIAD&quot;),
 &quot;scales&quot;: (&quot;MAJOR_SCALE&quot;, &quot;MIXOLYDIAN&quot;, &quot;AEOLIAN&quot;, &quot;LYDIAN&quot;),</code></pre>
-<p><img src="resources/svgs/harmony_example1.svg" class="notation" alt="Example 9 notation" /> <img src="resources/pngs/harmony_example1.png" class="piano_roll" alt="Example 9 piano roll" /></p>
 <p>There are, however, two major constraints on <code>chords</code> and <code>scales</code>.</p>
 <ol class="incremental" type="1">
 <li>Each item of <code>chords</code> must have the same number of pitch-classes, and each item of <code>scales</code> must as well. This means, for example, you can’t go from a major triad to a seventh chord, or from a major scale to a whole-tone scale. (You can, however, use scales or chords with any number of pitch-classes you like—as long as that number is the same.) There is a technical reason for this constraint, (namely, that the script works by finding bijective voice-leadings between chords and scales), but in the longterm, I would very much like to remove it.</li>
@@ -71,11 +84,11 @@
 <li><code>"MAJOR_TRIAD"</code> will <em>not</em> work with <code>"AEOLIAN"</code>, <code>"DORIAN"</code>, etc., because these scales contain a minor triad beginning on their first pitch</li>
 </ul></li>
 </ol>
-<p>Both <code>chords</code> and <code>scales</code> will be looped through if they are shorter than <code>foot_pcs</code>. For example, the following short loop: <!-- TODO link harmony_example3.py --></p>
+<p>Both <code>chords</code> and <code>scales</code> will be looped through if they are shorter than <code>foot_pcs</code>. For example, the following short loop: </p>
 <pre><code>    &quot;foot_pcs&quot;: (&quot;E&quot;, &quot;G&quot;),
     &quot;chords&quot;: (&quot;MAJOR_TRIAD&quot;,), # the trailing commas before the parentheses
     &quot;scales&quot;: (&quot;MIXOLYDIAN&quot;,),  #   are necessary!</code></pre>
-<p><code>chords</code> and <code>scales</code> do not have to be the same length, e.g., <!-- TODO link harmony_example4.py --></p>
+<p><code>chords</code> and <code>scales</code> do not have to be the same length, e.g., </p>
 <pre><code>    &quot;foot_pcs&quot;: (&quot;E&quot;, &quot;G&quot;, &quot;E&quot;, &quot;C&quot;),
     &quot;chords&quot;: (&quot;MAJOR_TRIAD&quot;,),
     &quot;scales&quot;: (&quot;MIXOLYDIAN&quot;, &quot;LYDIAN&quot;),</code></pre>
@@ -103,7 +116,6 @@
     &quot;chords&quot;: (&quot;MAJOR_TRIAD&quot;,),
     &quot;scales&quot;: (&quot;MAJOR_SCALE&quot;,),</code></pre>
 <p>(Note that, since the intervals in <code>interval_cycle</code> are always understood <em>upwards</em>, <code>"MINOR_6TH"</code> in the preceding example is equivalent to a descending major third.)</p>
-<!-- TODO document `chord_tone_selection` and `voice_lead_chord_tones` -->
 <p>Before concluding this introduction to specifying harmonies, I should add a few words about what the script actually does with <code>chords</code> and <code>scales</code>.</p>
 <ul class="incremental">
 <li><code>scales</code> are used unconditionally: during each harmony, pitches are drawn exclusively from the associated scale. When a pattern is voice-led from one harmony to another, a bijective mapping is effected between the associated scales.</li>
@@ -114,10 +126,8 @@
 </ul></li>
 </ul>
 <p>In the preceding examples of this section both <code>chord_tone_selection</code> and <code>voice_lead_chord_tones</code> have been <code>True</code>. As a contrasting illustration, here is example 6 again, but with <code>voice_lead_chord_tones = False</code>. (Note, however, that the settings <code>force_foot_in_bass</code> and <code>extend_bass_range_for_foots</code> in <code>examples/harmony_example_base.py</code> are still causing the foot of each scale/chord to sound on beat one of each harmony.)</p>
-<!-- TODO example -->
 <p>And here is the same thing, with <code>chord_tone_selection = False</code> as well.</p>
 <h2 id="specifying-rhythms">Specifying rhythms</h2>
-<!-- TODO  -->
 <p>If you’re interested in exploring the script further, some next steps could be:</p>
 <ul class="incremental">
 <li>tinkering with the example settings in <code>examples/</code></li>
@@ -130,7 +140,6 @@
 <p>If the script is invoked with the “–random” or “-r” flag, then many settings will be randomly varied. The randomized settings will then be printed out so you can inspect them.</p>
 <p>The parameters of the randomization (i.e., the possible values that each setting can receive and their respective probabilities) are hard-coded into the script. A longterm to-do is to allow the user to specify the parameters of randomization in the same way that other settings are specified. There is, however, a setting available to exclude specific settings from randomization: <code>exclude_from_randomization</code>.</p>
 <p>These are the settings that by default are randomized:</p>
-<!-- TODO update this list dynamically, store in settings.html -->
 <pre><code>num_voices
 pattern_len
 rhythm_len
@@ -275,13 +284,6 @@ vl_maintain_consonance = False
 vl_maintain_limit_intervals = False
 vl_maintain_forbidden_intervals = False</code></pre>
 <p>TODO</p>
-<!-- TODO document constants -->
-<!-- TODO document fact that voice-leading is applied to individual voices -->
-<!-- TODO ? (It isn't really intended to produce stand-alone compositions all by itself.) -->
-<!-- cuts
-- first, the script generates an initial rhythm
-- next, the script creates an "initial pattern" by filling the first occurrence of this rhythm with pitches
-- finally, the script repeats the initial pattern over any subsequent harmonies, transforming (or "voice-leading", in musical parlance) the pattern as necessary to fit the new harmonies. The voice-leading is "efficient", in the sense of moving the voices as little as possible. -->
 <section class="footnotes" role="doc-endnotes">
 <hr />
 <ol>
@@ -289,3 +291,5 @@ vl_maintain_forbidden_intervals = False</code></pre>
 <li id="fn2" role="doc-endnote"><p>If the algorithm were a little smarter, it wouldn’t have to work nearly so hard to cope with voices of different <code>pattern_len</code>. So this is a longterm to-do.<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 </ol>
 </section>
+</body>
+</html>

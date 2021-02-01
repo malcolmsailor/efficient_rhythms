@@ -5,8 +5,6 @@ EFFRHY = ../efficient_rhythms.py $(EFFRHY_SOURCE_FILES)
 
 .PHONY: all tests
 
-
-
 all: tests
 
 tests: .last_ran_test_interface

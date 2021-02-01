@@ -16,6 +16,9 @@ HARMONY_EXAMPLE_SVG = \
 HARMONY_EXAMPLE_PNG = \
 	$(HARMONY_EXAMPLE_SRC:examples/%.py=resources/pngs/%_00001.png)
 
+CSS_FILES = $(resources/third_party/github-markdown-css/github-markdown.css \
+	resources/markdown-body.css)
+
 .PHONY: all clean clean_m4as clean_pngs clean_svgs clean_midi
 
 all: midi pngs svgs html
@@ -82,8 +85,10 @@ resources/pngs/%_00001.png: examples/midi/%.mid \
 
 m4as: $(EXAMPLE_M4A)
 
+# next recipe expects to find pygmid2aud.py in the path
 resources/m4as/%.m4a: examples/midi/%.mid
-	resources/get_m4a.sh $< $@
+	pygmid2aud.py $< --overwrite --output-path $@
+
 
 #########
 # CLEAN #
@@ -107,10 +112,14 @@ clean: clean_pngs clean_svgs clean_midi # clean_m4as
 # HTML #
 ########
 
+# Also builds associated markdown files
+
 html: settings.html general.html
 
-settings.html : ../src/er_settings.py
-	python3 resources/get_settings_md_and_html.py
+settings.html : resources/get_settings_md_and_html.py ../src/er_settings.py \
+		$(CSS_FILES)
+	python3 $<
 
-general.html : general.md
-	python3 resources/get_general_html.py
+general.html : resources/get_general_md_and_html.py \
+		resources/general_pandoc.md $(CSS_FILES)
+	python3 $<
