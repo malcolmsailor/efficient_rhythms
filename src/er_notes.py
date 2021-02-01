@@ -740,6 +740,12 @@ class HarmonyTimes:
         self.start_time = start
         self.end_time = end
 
+    def __repr__(self):
+        return (
+            f"{self.__class__.__name__}(start_time={self.start_time}, "
+            f"end_time={self.end_time})"
+        )
+
 
 class Score:
     """Contains the notes, as well as many methods for working with them.

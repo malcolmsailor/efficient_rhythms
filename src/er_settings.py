@@ -24,15 +24,16 @@ class ERSettings:
     """Stores the settings that control the script's behavior.
 
     Hyperlinked, formatted markdown and HTML versions automatically generated
-    from the following  documentation is available in `docs/settings.md` and
+    from the following  docstring are available in `docs/settings.md` and
     `docs/settings.html`.  For most usage cases it is probably better to consult
-    this documentation  there.
+    the documentation there.
 
     The many settings below control the behavior of this script. The recommended
     way of using the script is to store the desired settings as a Python
     dictionary in a file and then pass the file into the script with the
-    `--settings` flag. For examples, see the files in the `examples/` directory.
-    For a high-level overview of the script, see `/docs/general.html`
+    `--settings` flag. For examples, see the files in the `docs/examples/`
+    directory.  For a high-level overview of the script, see
+    `docs/general.html`
 
     Note on "per-voice sequences" and other "looping sequences"
     ===========================================================
@@ -211,7 +212,7 @@ class ERSettings:
             pitch of each chord). Each track should consist entirely of
             simultaneous whole notes (i.e., semibreves) constituting the
             intended scales or chords, respectively. For an example, see
-            `examples/scales_and_chords_specified_in_midi_example.mid`.
+            `docs/examples/scales_and_chords_specified_in_midi_example.mid`.
             Note that the rhythm of the harmonic changes is set through the
             `harmony_len` parameter above.
 
@@ -219,7 +220,7 @@ class ERSettings:
             that the chords do not contain pitch-classes that do not belong to
             the  scales; i.e., that the scales are supersets of the chords),
             or an `InconsistentChordsAndScalesError` will be raised.
-        foot_pcs: sequence of numbers. Specifies the `foots` of each item in
+        foot_pcs: sequence of numbers. Specifies the "foots" of each item in
             `scales` and `chords`---i.e., the pitch-classes that
             will correspond to `0` in each item of `scales` and `chords`.
 
@@ -427,12 +428,23 @@ class ERSettings:
             is complete, voice-leadings will not be checked for consonance.
             (See the settings under "Consonance and dissonance settings" below.)
             Default: True
-        vl_maintain_limit_intervals: bool. If False, then after the initial
-            pattern is complete, voice-leadings will be allowed to exceed limit
-            intervals.  (See settings `max_interval`,
+        vl_maintain_limit_intervals: string. Determines when and whether, after
+            the initial pattern is complete, voice-leadings will be allowed to
+            exceed limit intervals.  (See settings `max_interval`,
             `max_interval_for_non_chord_tones`, `min_interval`,
             `min_interval_for_non_chord_tones`.)
-            Default: True
+
+            Possible values:
+                "all": limit intervals are always maintained.
+                "across_harmonies": limit intervals are maintained when voice-
+                    leading from one harmony to another, but not when voice-
+                    leading within a single harmony. (Maintaining the limit
+                    intervals within a single harmony when a pattern is
+                    repeated on that harmony can lead the script to switch
+                    to a different voice-leading abruptly for the repetition,
+                    which may not be desired.)
+                "none": limit intervals are never maintained.
+            Default: "across_harmonies"
         vl_maintain_forbidden_intervals: bool. If False, then after the initial
             pattern is complete, voice-leadings will be permitted to contain
             forbidden intervals.  (See `forbidden_interval_classes`,
@@ -1069,6 +1081,7 @@ class ERSettings:
             `choirs[1]`, voice 1 will be assigned to `choirs[0]`, voice 2 (if it
             exists) will be assigned to `choirs[1]`, and so on.  By default, or
             if passed an empty sequence, all voices are assigned to choir 0.
+            # TODO change this default to loop through choirs by default
 
             If `randomly_distribute_between_choirs` is True, then this
             setting is ignored.
@@ -1418,7 +1431,7 @@ class ERSettings:
     constrain_voice_leading_to_ranges: bool = False
     allow_flexible_voice_leading: bool = False
     vl_maintain_consonance: bool = True
-    vl_maintain_limit_intervals: bool = True
+    vl_maintain_limit_intervals: str = "across_harmonies"
     # LONGTERM maintain max_repeated_notes
     vl_maintain_forbidden_intervals: bool = True
     vl_maintain_prohibit_parallels: bool = True

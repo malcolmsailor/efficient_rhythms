@@ -12,6 +12,7 @@ def apply_voice_leading(
     new_dur,
     voice_i,
     new_harmony_i,
+    prev_harmony_i,
     prev_pc_scale,
     voice_leading,
     new_notes,
@@ -120,12 +121,12 @@ def apply_voice_leading(
             er, super_pattern, new_pitch, new_attack_time, new_dur, voice_i
         ):
             voice_lead_error.temp_failure_counter.check_consonance += 1
-            er_make2.check_consonance(
-                er, super_pattern, new_pitch, new_attack_time, new_dur, voice_i,
-            )
             return _fail()
 
-    if er.vl_maintain_limit_intervals:
+    if er.vl_maintain_limit_intervals == "all" or (
+        er.vl_maintain_limit_intervals != "none"
+        and new_harmony_i != prev_harmony_i
+    ):
         try:
             last_attack = max(new_notes.data)
             last_pitch = new_notes[last_attack][0].pitch
