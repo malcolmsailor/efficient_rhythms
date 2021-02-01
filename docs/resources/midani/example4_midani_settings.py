@@ -1,5 +1,5 @@
 {
-    "midi_fname": "../examples/midi/example4.mid",
+    "midi_fname": "examples/midi/example4.mid",
     "voice_settings": {
         0: {
             "bracket_settings": {

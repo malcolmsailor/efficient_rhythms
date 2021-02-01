@@ -1,6 +1,6 @@
 {
     "midi_fname": [
-        "../examples/midi/example1.mid",
+        "examples/midi/example1.mid",
         # "docs/resources/midi/3cycle_triads_16_measures.mid",
     ],
     "color_loop": 6,
