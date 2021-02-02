@@ -125,3 +125,5 @@ settings.html : resources/get_settings_md_and_html.py ../src/er_settings.py \
 index.html : resources/get_index_md_and_html.py \
 		resources/index_pandoc.md $(CSS_FILES)
 	python3 $<
+	git add $@
+	git add index.md

@@ -5,7 +5,7 @@ title: Efficient rhythms documentation
 
 ## Introduction
 
-`efficient_rhythms` is a tool for musical composition. You can find it on Github at `[https://github.com/malcolmsailor/efficient_rhythms](https://github.com/malcolmsailor/efficient_rhythms)`
+`efficient_rhythms` is a tool for musical composition. You can find it on Github at [`https://github.com/malcolmsailor/efficient_rhythms`](https://github.com/malcolmsailor/efficient_rhythms)
 
 Here are a few examples of things I have made using it:
 
