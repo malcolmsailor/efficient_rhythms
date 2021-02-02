@@ -116,12 +116,12 @@ clean: clean_pngs clean_svgs clean_midi # clean_m4as
 
 # Also builds associated markdown files
 
-html: settings.html general.html
+html: settings.html index.html
 
 settings.html : resources/get_settings_md_and_html.py ../src/er_settings.py \
 		$(CSS_FILES)
 	python3 $<
 
-general.html : resources/get_general_md_and_html.py \
-		resources/general_pandoc.md $(CSS_FILES)
+index.html : resources/get_index_md_and_html.py \
+		resources/index_pandoc.md $(CSS_FILES)
 	python3 $<

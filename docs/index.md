@@ -16,9 +16,10 @@ The gist of how the script works goes as follows:
   - finally, it repeats the pattern, adjusting it **efficiently** to fit
     any chord changes (hence the name “efficient rhythms”).
 
-You can then hear the results as a midi file. The script also provides a
-few tools (see [Filters and Transformers](#filters-and-transformers))
-for reshaping the results.
+You can then hear the results as a midi file. See [How it
+works](#how-it-works) for a fuller explanation, with many examples. The
+script also provides a few tools (see [Filters and
+Transformers](#filters-and-transformers)) for reshaping the results.
 
 ## Installation
 
