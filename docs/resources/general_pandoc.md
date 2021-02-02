@@ -32,6 +32,8 @@ The script requires Python >= 3.8 and has the following Python dependencies:
 
 These can be installed by running `pip3 install -r requirements.txt` in the script directory.
 
+As far as installing the script itself goes, you can just clone the Github repository.
+
 ### Dependencies for music notation
 
 If you want the script to output music notation, then the following must be in your path:
@@ -243,9 +245,9 @@ EXAMPLE:harmony_example9
 
 
 
-<!-- ## Filters and transformers
+## Filters and transformers
 
-`TODO` -->
+`TODO`
 
 <!--
 ## Randomization

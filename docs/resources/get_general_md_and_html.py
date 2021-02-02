@@ -5,7 +5,7 @@ import subprocess
 SCRIPT_DIR = os.path.dirname((os.path.realpath(__file__)))
 
 IN_MD_PATH = os.path.join(SCRIPT_DIR, "general_pandoc.md")
-OUT_MD_PATH = os.path.join(SCRIPT_DIR, "../general.md")
+OUT_MD_PATH = os.path.join(SCRIPT_DIR, "../../README.md")
 OUT_HTML_PATH = os.path.join(SCRIPT_DIR, "../general.html")
 CSS_PATH1 = "resources/third_party/github-markdown-css/github-markdown.css"
 CSS_PATH2 = "resources/markdown-body.css"
@@ -43,28 +43,20 @@ def insert_examples(md_content):
     return md_content
 
 
+HTML_LINK = re.compile(r"\(([\w/]+).html")
+HTML_LINK_REPL = r"\(docs/\1.md"
+
+
+def replace_html_links(md_content):
+    return re.sub(HTML_LINK, HTML_LINK_REPL, md_content)
+
+
 def main():
     with open(IN_MD_PATH, "r", encoding="utf-8") as inf:
         input_md = inf.read()
     input_md = insert_examples(input_md)
     # input_md = insert_styling(input_md)
 
-    subprocess.run(
-        [
-            "pandoc",
-            "--strip-comments",
-            "--toc",
-            "-o",
-            OUT_MD_PATH,
-            "-f",
-            "markdown",
-            "-t",
-            "gfm",
-        ],
-        check=True,
-        input=input_md,
-        encoding="utf-8",
-    )
     html_content = subprocess.run(
         [
             "pandoc",
@@ -88,6 +80,24 @@ def main():
         outf.write(
             html_content.replace("<body>", '<body class="markdown-body">')
         )
+
+    input_md = replace_html_links(input_md)
+    subprocess.run(
+        [
+            "pandoc",
+            "--strip-comments",
+            "--toc",
+            "-o",
+            OUT_MD_PATH,
+            "-f",
+            "markdown",
+            "-t",
+            "gfm",
+        ],
+        check=True,
+        input=input_md,
+        encoding="utf-8",
+    )
 
 
 if __name__ == "__main__":

@@ -35,6 +35,9 @@ dependencies:
 These can be installed by running `pip3 install -r requirements.txt` in
 the script directory.
 
+As far as installing the script itself goes, you can just clone the
+Github repository.
+
 ### Dependencies for music notation
 
 If you want the script to output music notation, then the following must
@@ -64,8 +67,8 @@ that the results are sometimes strange:
 `python3 efficient_rhythms.py --random`
 
 There are many configurable settings that shape the output. Full
-documentation is available in [`settings.html`](settings.html). But a
-gentler introduction is provided in the next section.
+documentation is available in \[`settings.html`\](docs/settings.md). But
+a gentler introduction is provided in the next section.
 
 ## How it works
 
@@ -131,7 +134,7 @@ We can also have different values of `pattern_len` in each voice, as in
 <a href="#example5">`docs/examples/example5.py`</a>. However, if we do
 so, the script has to work quite a bit harder to find a solution. To
 help it do so, I made its task a little easier by changing
-[`consonance_treatment`](settings.html#consonance_treatment) from
+\[`consonance_treatment`\](docs/settings.md\#consonance\_treatment) from
 `"all_attacks"` to `"none"`. Thus whereas in the previous examples, the
 simultaneously attacked notes all formed intervals like 3rds and fifths,
 in <a href="#example5">`docs/examples/example5.py`</a>, there are also
@@ -147,12 +150,12 @@ Up until now, whenever one pattern or rhythm didn’t line up with the
 other, we have truncated the shorter one, so that subsequent repetitions
 began together in both voices. But the script doesn’t require this. In
 <a href="#example6">`docs/examples/example6.py`</a>, I have changed
-[`truncate_patterns`](settings.html#truncate_patterns) to `False`. Now
-the 1.5-beat pattern in the lower part isn’t truncated after 4 beats.
-Instead, it is displaced relative to both the 4-beat pattern in the
-upper part, as well as the 4-beat harmony changes. (The two patterns
-finally come into sync after 12 beats, the least-common-multiple of 1.5
-and 4.)
+\[`truncate_patterns`\](docs/settings.md\#truncate\_patterns) to
+`False`. Now the 1.5-beat pattern in the lower part isn’t truncated
+after 4 beats. Instead, it is displaced relative to both the 4-beat
+pattern in the upper part, as well as the 4-beat harmony changes. (The
+two patterns finally come into sync after 12 beats, the
+least-common-multiple of 1.5 and 4.)
 
 <span id="example6">**Example:**
 `docs/examples/example6.py`</span><br>![example6
@@ -365,8 +368,8 @@ add a few words about what the script actually does with `chords` and
     settings are
       - if `chord_tone_selection` is `True`, then when constructing the
         initial pattern, the script probabilistically decides whether
-        each note should be a chord-tone (according to [parameters that
-        you specify](settings.html#chord-tone-settings)).
+        each note should be a chord-tone (according to \[parameters that
+        you specify\](docs/settings.md\#chord-tone-settings)).
       - if `voice_lead_chord_tones` is `True`, then when voice-leading
         the pattern over subsequent harmonies, the script will ensure
         that chord-tones are mapped to chord-tones (and non-chord-tones
@@ -400,6 +403,10 @@ roll](resources/pngs/harmony_example9_00001.png) ![harmony\_example9
 audio](resources/m4as/harmony_example9.m4a)
 
 ### Specifying rhythms
+
+`TODO`
+
+## Filters and transformers
 
 `TODO`
 
