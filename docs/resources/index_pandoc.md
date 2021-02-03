@@ -93,7 +93,7 @@ We aren't constrained to have `pattern_len` be a whole multiple of `rhythm_len`.
 
 EXAMPLE:example3
 
-Up to now, we've always specified the same settings in both voices. But we need not do so! In the REF:example4, the bottom voice again has `rhythm_len = 1.5`, but the top voice now has `rhythm_len = 2`.
+Up to now, we've always specified the same settings in both voices. But we need not do so! In REF:example4, the bottom voice again has `rhythm_len = 1.5`, but the top voice now has `rhythm_len = 2`.
 
 EXAMPLE:example4
 

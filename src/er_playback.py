@@ -7,7 +7,6 @@ import pygame  # pylint: disable=wrong-import-position
 sys.stdout.close()
 sys.stdout = sys.__stdout__
 
-
 import src.er_midi as er_midi  # pylint: disable=wrong-import-position
 
 SOUND_FONT = "/Users/Malcolm/Music/SoundFonts/GeneralUser GS 1.471/GeneralUser_GS_v1.471.sf2"

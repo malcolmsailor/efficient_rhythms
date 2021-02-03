@@ -128,7 +128,7 @@ style=“max-height: 300px”} \[example3
 audio\](docs/resources/m4as/example3.m4a)
 
 Up to now, we’ve always specified the same settings in both voices. But
-we need not do so\! In the
+we need not do so\! In
 <a href="#example4">`docs/examples/example4.py`</a>, the bottom voice
 again has `rhythm_len = 1.5`, but the top voice now has `rhythm_len
 = 2`.

@@ -34,6 +34,7 @@ def silently_run_process(commands, stdin=None):
         stderr=subprocess.STDOUT,
         check=False,
     )
+    # LONGTERM replace my besoke ProcError with the standard library exception
     if proc.returncode != 0:
         raise ProcError(
             f"{commands[0]} returned error code {proc.returncode}\n"
