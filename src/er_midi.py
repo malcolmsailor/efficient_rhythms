@@ -2,6 +2,7 @@
 """
 
 import collections
+import copy
 import fractions
 import math
 import os
@@ -9,7 +10,6 @@ import random
 import warnings
 from multiprocessing.dummy import Pool as ThreadPool
 
-import midiutil
 import mido
 
 import src.er_choirs as er_choirs
@@ -30,6 +30,19 @@ MIDI_NUM = 0
 PITCH_BEND = 1
 
 # LONGTERM transpose notes up an octave as they voice-lead out of range
+
+
+def abs_to_delta_times(mf, skip=()):
+    for track_i, track in enumerate(mf.tracks):
+        if track_i in skip:
+            continue
+        track.sort(key=lambda x: x.time)
+        current_tick_time = 0  # unrounded
+        for msg in track:
+            abs_tick_time = mf.ticks_per_beat * msg.time
+            delta_tick_time = abs_tick_time - current_tick_time
+            msg.time = round(delta_tick_time)
+            current_tick_time = abs_tick_time
 
 
 def get_rhythms_from_midi(er):
@@ -207,65 +220,46 @@ def _build_track_dict(er, score_num_voices):
 
 
 def add_note_and_pitch_bend(
-    mf,
-    pitch_bend_tuple,
-    time,
-    dur,
-    track=DEFAULT_TRACK,
-    channel=DEFAULT_CHANNEL,
-    velocity=DEFAULT_VELOCITY,
+    mido_track, pitch_bend_tuple, note, channel, pitch_bend_time=None,
 ):
-    """Adds simultaneous note and pitchwheel event."""
     if 0 <= pitch_bend_tuple[MIDI_NUM] <= 127:
-        mf.addPitchWheelEvent(
-            track, channel, time, pitch_bend_tuple[PITCH_BEND]
+        mido_track.append(
+            mido.Message(
+                "pitchwheel",
+                channel=channel,
+                pitch=pitch_bend_tuple[PITCH_BEND],
+                time=pitch_bend_time
+                if pitch_bend_time is not None
+                else note.time,
+            )
         )
-        mf.addNote(
-            track, channel, pitch_bend_tuple[MIDI_NUM], time, dur, velocity
-        )
-
-
-def add_note_and_pitch_bend_separately(
-    mf,
-    pitch_bend_tuple,
-    note_time,
-    note_dur,
-    pitch_bend_time,
-    track=DEFAULT_TRACK,
-    channel=DEFAULT_CHANNEL,
-    velocity=DEFAULT_VELOCITY,
-):
-    """Adds a note and pitchwheel events at independent times.
-    """
-    if 0 <= pitch_bend_tuple[MIDI_NUM] <= 127:
-        mf.addPitchWheelEvent(
-            track, channel, pitch_bend_time, pitch_bend_tuple[PITCH_BEND]
-        )
-        mf.addNote(
-            track,
-            channel,
-            pitch_bend_tuple[MIDI_NUM],
-            note_time,
-            note_dur,
-            velocity,
+        add_note(
+            mido_track, note, pitch=pitch_bend_tuple[MIDI_NUM], channel=channel,
         )
 
 
-def humanize(er, attack, dur, velocity, tuning=None):
+def humanize(er, note=None, tuning=None):
+    # Takes *either* note or tuning as kwarg and returns a humanized version
+    #   thereof... I should probably refactor!
     def _get_value(humanize_amount):
         return random.random() * (humanize_amount) * 2 + 1 - humanize_amount
 
-    attack = max(0, attack - 1 + _get_value(er.humanize_attack))
-    dur = dur - 1 + _get_value(er.humanize_dur)
-    velocity = round(velocity * _get_value(er.humanize_velocity))
-    if tuning is None:
-        return attack, dur, velocity, 0
+    if note is not None:
+        new_note = copy.copy(note)
+        new_note.attack_time = max(
+            0, note.attack_time - 1 + _get_value(er.humanize_attack)
+        )
+        new_note.dur = note.dur - 1 + _get_value(er.humanize_dur)
+        new_note.velocity = round(
+            note.velocity * _get_value(er.humanize_velocity)
+        )
+    return new_note
     tuning = round(
         tuning
         - er_tuning.SIZE_OF_SEMITONE
         + _get_value(er.humanize_tuning) * er_tuning.SIZE_OF_SEMITONE
     )
-    return attack, dur, velocity, tuning
+    return tuning
 
 
 def add_er_voice(er, voice_i, voice, mf, force_choir=None):
@@ -273,77 +267,64 @@ def add_er_voice(er, voice_i, voice, mf, force_choir=None):
     """
     empty = True
     for note in voice:
-        attack_time = note.attack_time
-        pitch = note.pitch
-        dur = note.dur
         if force_choir is not None:
             choir_i = force_choir
         else:
             choir_i = note.choir
-        choir_program_i = er_choirs.get_choir_prog(er.choirs, choir_i, pitch)
-        track = er.track_dict[(voice_i, choir_program_i)]
+        choir_program_i = er_choirs.get_choir_prog(
+            er.choirs, choir_i, note.pitch
+        )
+        track_i = er.track_dict[(voice_i, choir_program_i)]
         if er.logic_type_pitch_bend and er.tet != 12:
-            channel = er.note_counter[track] % er.num_channels_pitch_bend_loop
-            note_count = er.note_counter[track]
-            er.note_counter[track] += 1
+            channel = er.note_counter[track_i] % er.num_channels_pitch_bend_loop
+            note_count = er.note_counter[track_i]
+            er.note_counter[track_i] += 1
         else:
             channel = choir_program_i if er.choirs_separate_channels else 0
-        velocity = note.velocity
         if note.finetune != 0:
             raise NotImplementedError("note.finetune not yet implemented")
+        if er.humanize:
+            note = humanize(er, note=note)
         if er.tet == 12:
-            if 0 <= pitch <= 127:
-                if er.humanize:
-                    attack_time, dur, velocity, _ = humanize(
-                        er, attack_time, dur, velocity
-                    )
-                mf.addNote(track, channel, pitch, attack_time, dur, velocity)
+            if 0 <= note.pitch <= 127:
+                add_note(mf.tracks[track_i], note)
                 empty = False
             continue
 
-        midi_num, pitch_bend = er.pitch_bend_tuple_dict[pitch]
+        midi_num, pitch_bend = er.pitch_bend_tuple_dict[note.pitch]
         if er.humanize:
-            attack_time, dur, velocity, pitch_bend = humanize(
-                er, attack_time, dur, velocity, tuning=pitch_bend,
-            )
-        pitch_bend_tuple = (midi_num, pitch_bend)
+            pitch_bend = humanize(er, tuning=pitch_bend,)
         if not er.logic_type_pitch_bend or er.tet == 12:
             # er.tet == 12 seems to be an unnecessary condition here!
             add_note_and_pitch_bend(
-                mf,
-                pitch_bend_tuple,
-                attack_time,
-                dur,
-                track,
+                mf.tracks[track_i],
+                (midi_num, pitch_bend),
+                note,
                 channel,
-                velocity,
                 # note.finetune, # what is this? It seems to be unimplemented
             )
             empty = False
         else:
-            prev_time_on_channel = er.pitch_bend_time_dict[track][
+            prev_time_on_channel = er.pitch_bend_time_dict[track_i][
                 note_count % er.num_channels_pitch_bend_loop
             ]
-            er.pitch_bend_time_dict[track][
+            er.pitch_bend_time_dict[track_i][
                 note_count % er.num_channels_pitch_bend_loop
-            ] = attack_time
+            ] = note.attack_time
             if prev_time_on_channel == 0:
                 pitch_bend_time = 0
             else:
                 pitch_bend_time = (
                     prev_time_on_channel
                     + er.pitch_bend_time_prop
-                    * (attack_time - prev_time_on_channel)
+                    * (note.attack_time - prev_time_on_channel)
                 )
-            add_note_and_pitch_bend_separately(
-                mf,
-                pitch_bend_tuple,
-                attack_time,
-                dur,
-                pitch_bend_time,
-                track,
+            add_note_and_pitch_bend(
+                mf.tracks[track_i],
+                (midi_num, pitch_bend),
+                note,
                 channel,
-                velocity,
+                pitch_bend_time=pitch_bend_time,
             )
             empty = False
     return empty
@@ -355,8 +336,9 @@ def write_track_names(
     """Writes track names to the midi file object."""
 
     def _add_track_name(track_i, track_name):
-        time = 0
-        mf.addTrackName(track_i, time, track_name)
+        mf.tracks[track_i].append(
+            mido.MetaMessage("track_name", name=track_name, time=0)
+        )
 
     track_name_base = _return_track_name_base(midi_fname, abbr=abbr_track_names)
     adjust = 0 if zero_origin else 1
@@ -409,18 +391,37 @@ def write_program_changes(er, mf, time=0):
     for choir_i in range(er.num_choir_programs):
         program = er.get(choir_i, "choir_programs")
         for voice_i in range(er.num_voices):
-            track = er.track_dict[(voice_i, choir_i)]
+            track_i = er.track_dict[(voice_i, choir_i)]
+            track = mf.tracks[track_i]
             if not er.logic_type_pitch_bend or er.tet == 12:
                 channel = choir_i if er.choirs_separate_channels else 0
-                mf.addProgramChange(track, channel, time, program)
+                track.append(
+                    mido.Message(
+                        "program_change",
+                        channel=channel,
+                        program=program,
+                        time=time,
+                    )
+                )
             else:
                 for channel in range(er.num_channels_pitch_bend_loop):
-                    mf.addProgramChange(track, channel, time, program)
+                    track.append(
+                        mido.Message(
+                            "program_change",
+                            channel=channel,
+                            program=program,
+                            time=time,
+                        )
+                    )
 
 
 def write_tempi(er, mf, total_len):
     if er.tempo_len[0] == 0:
-        mf.addTempo(META_TRACK, 0, er.tempo[0])
+        mf.tracks[META_TRACK].append(
+            mido.MetaMessage(
+                "set_tempo", tempo=mido.bpm2tempo(er.tempo[0]), time=0
+            )
+        )
         return
     tempo_i = 0
     time = 0
@@ -429,7 +430,9 @@ def write_tempi(er, mf, total_len):
             tempo = er.get(tempo_i, "tempo")
         else:
             tempo = random.randrange(*er.tempo_bounds)
-        mf.addTempo(META_TRACK, time, tempo)
+        mf.tracks[META_TRACK].append(
+            mido.MetaMessage("set_tempo", tempo=mido.bpm2tempo(tempo), time=0)
+        )
         time += er.get(tempo_i, "tempo_len")
         tempo_i += 1
 
@@ -441,7 +444,6 @@ def write_er_midi(er, super_pattern, midi_fname, reverse_tracks=True):
 
     Returns a boolean indicating whether there are any notes in the midi file.
     """
-    time = 0
 
     er.num_new_tracks, er.num_existing_tracks = _build_track_dict(
         er, super_pattern.num_voices
@@ -453,24 +455,29 @@ def write_er_midi(er, super_pattern, midi_fname, reverse_tracks=True):
             track_i: [0 for i in range(er.num_channels_pitch_bend_loop)]
             for track_i in range(er.num_new_tracks + er.num_existing_tracks)
         }
-
-    mf = midiutil.MidiFile.MIDIFile(
-        er.num_new_tracks + er.num_existing_tracks,
-        adjust_origin=True,
-        # ticks_per_quarternote needs to be high enough that no note_on and note_off
-        # events will end up on the same tick, because midiutil doesn't sort them
-        # properly and throws an error if the note_off comes before the note_on
-        # LONGTERM infer ticks_per_quarternote intelligently from min_dur?
-        ticks_per_quarternote=3200,
-    )
+    # When I was using midiutil, ticks_per_quarternote needed to be high enough
+    # that no note_on and note_off
+    # events ended up on the same tick, because midiutil doesn't sort them
+    # properly and throws an error if the note_off comes before the note_on.
+    # Not sure if mido has any similar issues but leaving ticks_per_beat at
+    # a high value for now.
+    mf = mido.MidiFile(ticks_per_beat=3200)
+    # Add one for META_TRACK, which will be track 0
+    for _ in range(er.num_new_tracks + er.num_existing_tracks + 1):
+        mf.add_track()
 
     write_track_names(er, mf, midi_fname)
 
     write_tempi(er, mf, er.total_len)
 
     numerator, denominator = get_midi_time_sig(er.time_sig)
-    mf.addTimeSignature(
-        META_TRACK, time, numerator, denominator, CLOCKS_PER_TICK
+    mf.tracks[META_TRACK].append(
+        mido.MetaMessage(
+            "time_signature",
+            numerator=numerator,
+            denominator=denominator,
+            clocks_per_click=CLOCKS_PER_TICK,
+        )
     )
 
     if er.write_program_changes:
@@ -526,33 +533,37 @@ def write_er_midi(er, super_pattern, midi_fname, reverse_tracks=True):
     #         )
 
     if non_empty:
-        with open(midi_fname, "wb") as outf:
-            mf.writeFile(outf)
+        abs_to_delta_times(mf)
+        mf.save(filename=midi_fname)
     return non_empty
 
 
 def write_meta_messages(super_pattern, mf):
     for msg in super_pattern.meta_messages:
-        if msg.type == "set_tempo":
-            mf.addTempo(0, msg.time, mido.tempo2bpm(msg.tempo))
-        elif msg.type == "time_signature":
-            mf.addTimeSignature(
-                0,
-                msg.time,
-                msg.numerator,
-                msg.denominator,
-                msg.clocks_per_click,
-            )
-        elif msg.type in (
-            "end_of_track",
-            "key_signature",
-            "smpte_offset",
-            "marker",
-            "copyright",
-        ):
-            continue
-        else:
-            print(f"Message of type {msg.type} not written to file.")
+        mf.tracks[META_TRACK].append(msg)
+
+
+def add_note(mido_track, note, pitch=None, channel=None):
+    channel = note.choir if channel is None else channel
+    pitch = note.pitch if pitch is None else pitch
+    mido_track.append(
+        mido.Message(
+            "note_on",
+            channel=channel,
+            note=pitch,
+            velocity=note.velocity,
+            time=note.attack_time,
+        )
+    )
+    mido_track.append(
+        mido.Message(
+            "note_off",
+            channel=channel,
+            note=pitch,
+            velocity=note.velocity,
+            time=note.attack_time + note.dur,
+        )
+    )
 
 
 def add_track(track_i, track, midi_settings, mf):
@@ -560,7 +571,7 @@ def add_track(track_i, track, midi_settings, mf):
         if msg.type in ("track_name", "end_of_track", "instrument_name"):
             continue
         if msg.type == "program_change":
-            mf.addProgramChange(track_i, msg.channel, msg.time, msg.program)
+            mf.tracks[track_i].append(msg)
         else:
             print(f"Message of type {msg.type} not written to file.")
 
@@ -575,14 +586,7 @@ def add_track(track_i, track, midi_settings, mf):
     for note in track:
         if midi_settings.tet == 12 and no_finetuning:
             if 0 <= note.pitch <= 127:
-                mf.addNote(
-                    track_i,
-                    note.choir,
-                    note.pitch,
-                    note.attack_time,
-                    note.dur,
-                    note.velocity,
-                )
+                add_note(mf.tracks[track_i], note)
                 empty = False
         else:
             channel = (
@@ -612,15 +616,12 @@ def add_track(track_i, track, midi_settings, mf):
                     + midi_settings.pitch_bend_time_prop
                     * (note.attack_time - prev_time_on_channel)
                 )
-            add_note_and_pitch_bend_separately(
-                mf,
+            add_note_and_pitch_bend(
+                track,
                 (midi_num, pitch_bend),
-                note.attack_time,
-                note.dur,
-                pitch_bend_time,
-                track_i,
+                note,
                 channel,
-                note.velocity,
+                pitch_bend_time=pitch_bend_time,
             )
             empty = False
     return empty
@@ -635,9 +636,9 @@ def write_midi(super_pattern, midi_settings, abbr_track_names=True):
     Returns a boolean indicating whether there are any notes in the midi file.
     """
     midi_fname = midi_settings.output_path
-    mf = midiutil.MidiFile.MIDIFile(
-        midi_settings.num_tracks, adjust_origin=True
-    )
+    mf = mido.MidiFile()
+    for _ in range(midi_settings.num_tracks + 1):
+        mf.add_track()
 
     write_track_names(
         midi_settings, mf, midi_fname, abbr_track_names=abbr_track_names
@@ -651,8 +652,8 @@ def write_midi(super_pattern, midi_settings, abbr_track_names=True):
             non_empty = True
 
     if non_empty:
-        with open(midi_fname, "wb") as outf:
-            mf.writeFile(outf)
+        abs_to_delta_times(mf, skip=(META_TRACK,))
+        mf.save(filename=midi_fname)
     return non_empty
 
 
@@ -771,8 +772,6 @@ def _return_sorted_midi_tracks(in_mid):
                 out[-1].append(AbsoluteMetaMidiMsg(msg, tick_time))
             else:
                 out[-1].append(AbsoluteMidiMsg(msg, tick_time))
-
-        # out[-1].sort(key=lambda msg: _sorter_string(msg))
         out[-1].sort(key=_sorter_string)
         out[-1].sort(key=lambda msg: msg.time)
 
