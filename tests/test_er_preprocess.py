@@ -12,6 +12,8 @@ import src.er_constants as er_constants  # pylint: disable=wrong-import-position
 import src.er_preprocess as er_preprocess  # pylint: disable=wrong-import-position
 import src.er_settings as er_settings  # pylint: disable=wrong-import-position
 
+SCRIPT_DIR = os.path.dirname((os.path.realpath(__file__)))
+
 
 def test_process_pattern_voice_leading_order():
     # LONGTERM is there a way to redirect stdout and stderr while running
@@ -51,6 +53,32 @@ def test_process_pattern_voice_leading_order():
                         breakpoint()
 
                 assert item.start_time == 0, "item.start_time != 0"
+
+
+def test_read_in_settings():
+    result = er_preprocess.read_in_settings(
+        [
+            os.path.join(
+                SCRIPT_DIR, "test_settings/test_read_in_settings_merge1.py"
+            ),
+            os.path.join(
+                SCRIPT_DIR, "test_settings/test_read_in_settings_merge2.py"
+            ),
+        ],
+        dict,
+    )
+    try:
+        assert result["foo"] == 2, 'result["foo"] != 2'
+        assert result["bar"] == 1, 'result["bar"] != 1'
+        assert result["raboof"]["foo"] == 1, 'result["raboof"]["foo"] != 1'
+        assert result["raboof"]["bar"] == 2, 'result["raboof"]["bar"] != 2'
+        assert result["oofrab"]["foo"] == 2, 'result["oofrab"]["foo"] != 2'
+    except:  # pylint: disable=bare-except
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        traceback.print_exception(
+            exc_type, exc_value, exc_traceback, file=sys.stdout
+        )
+        breakpoint()
 
 
 def test_replace_pitch_constants():
@@ -125,4 +153,5 @@ def test_replace_pitch_constants():
 
 if __name__ == "__main__":
     test_process_pattern_voice_leading_order()
+    test_read_in_settings()
     test_replace_pitch_constants()

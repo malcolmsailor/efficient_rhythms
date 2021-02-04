@@ -793,16 +793,6 @@ def cum_mod_lists(er):
             ]
 
 
-# def read_in_settings(user_settings, settings_class):
-#     if user_settings is None:
-#         user_settings = {}
-#     elif isinstance(user_settings, str):
-#         print(f"Reading settings from {user_settings}")
-#         with open(user_settings, "r", encoding="utf-8") as inf:
-#             user_settings = eval(inf.read())
-#     return settings_class(**user_settings)
-
-
 def read_in_settings(settings_input, settings_class):
     def _merge(dict1, dict2):
         for key, val in dict2.items():
@@ -811,8 +801,9 @@ def read_in_settings(settings_input, settings_class):
                 and key in dict1
                 and isinstance(dict1[key], dict)
             ):
-                dict2[key] = _merge(dict1[key], val)
-        return dict1 | dict2
+                _merge(dict1[key], val)
+                dict2[key] = dict1[key]
+        dict1.update(dict2)
 
     if settings_input is None:
         settings_input = {}
@@ -823,7 +814,7 @@ def read_in_settings(settings_input, settings_class):
         print(f"Reading settings from {user_settings_path}")
         with open(user_settings_path, "r", encoding="utf-8") as inf:
             user_settings = eval(inf.read())
-        merged_dict = _merge(merged_dict, user_settings)
+        _merge(merged_dict, user_settings)
     return settings_class(**merged_dict)
 
 
