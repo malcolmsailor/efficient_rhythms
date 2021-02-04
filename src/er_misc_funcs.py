@@ -10,7 +10,8 @@ import subprocess
 import typing
 
 import numpy as np
-import termcolor
+
+import src.er_shell_constants as er_shell_constants
 
 MAX_DENOMINATOR = 8192
 
@@ -338,8 +339,7 @@ def make_header(
         )
     else:
         raise ValueError("Alignment type not recognized")
-    # LONGTERM remove termcolor
-    return termcolor.colored(out, attrs=["bold"])
+    return er_shell_constants.BOLD_TEXT + out + er_shell_constants.RESET_TEXT
 
 
 def no_empty_lists(item):

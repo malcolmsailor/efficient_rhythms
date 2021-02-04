@@ -9,8 +9,6 @@ import subprocess
 import sys
 import traceback
 
-import termcolor
-
 import src.er_changers as er_changers
 import src.er_midi as er_midi
 import src.er_misc_funcs as er_misc_funcs
@@ -18,6 +16,7 @@ import src.er_output_notation as er_output_notation
 import src.er_playback as er_playback
 import src.er_prob_funcs as er_prob_funcs
 import src.er_settings as er_settings
+import src.er_shell_constants as er_shell_constants
 
 try:
     LINE_WIDTH = os.get_terminal_size().columns
@@ -707,14 +706,12 @@ def changer_interface(super_pattern, active_changers, changer_counter, debug):
                 exc_type, exc_value, exc_traceback, limit=5, file=sys.stdout
             )
             print(
-                termcolor.colored(
-                    "There was an exception applying "
-                    f"{active_changer.pretty_name}\n"
-                    "This is a bug in `efficient_rhythms.py`. I would be "
-                    "grateful if you would file an "
-                    f"issue at {GITHUB_URL}",
-                    attrs=("bold",),
-                )
+                er_shell_constants.BOLD_TEXT
+                + "There was an exception applying "
+                f"{active_changer.pretty_name}\n"
+                "This is a bug in `efficient_rhythms.py`. I would be "
+                "grateful if you would file an "
+                f"issue at {GITHUB_URL}" + er_shell_constants.RESET_TEXT
             )
             input("press <enter> to continue")
     print("")
