@@ -28,12 +28,10 @@ Transformers](#filters-and-transformers)) for reshaping the results.
 The script requires Python \>= 3.8 and has the following Python
 dependencies:
 
-  - MIDIUtil
   - mido
   - numpy
   - pygame
   - python-rtmidi
-  - termcolor
 
 These can be installed by running `pip3 install -r requirements.txt` in
 the script directory.
