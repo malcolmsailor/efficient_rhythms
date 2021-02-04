@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Run misc. settings files, make sure they complete without error
 

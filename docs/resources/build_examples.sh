@@ -1,5 +1,5 @@
 # DEPRECATED in favor of docs/makefile
-# #!/bin/sh
+# #!/bin/bash
 #
 # BASEDIR=$(dirname "$0")
 # EFF_RHY_DIR="${BASEDIR}"/../..
