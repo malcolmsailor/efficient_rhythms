@@ -9,8 +9,6 @@ sys.stdout = sys.__stdout__
 
 import src.er_midi as er_midi  # pylint: disable=wrong-import-position
 
-SOUND_FONT = "/Users/Malcolm/Music/SoundFonts/GeneralUser GS 1.471/GeneralUser_GS_v1.471.sf2"
-
 
 def init_and_return_midi_player(shell=False):
     """Selects the midi player.
@@ -30,8 +28,9 @@ def init_and_return_midi_player(shell=False):
         # if tet != 12:
         #     return "fluidsynth"
         pygame.mixer.init()
+        print("Using pygame for midi playback")
         return "pygame"
-    # TODO debug, add python-rtmidi to requirements
+    print("Using python-rtmidi for midi playback")
     return "self"
 
 
@@ -41,8 +40,6 @@ def playback_midi(midi_player, breaker, midi_path):
     if midi_player == "pygame":
         pygame.mixer.music.load(midi_path)
         pygame.mixer.music.play()
-    # elif midi_player == "fluidsynth":
-    #     subprocess.run(["fluidsynth", SOUND_FONT, midi_path], check=False)
     elif midi_player == "self":
         playback_thread = threading.Thread(
             target=er_midi.playback,
