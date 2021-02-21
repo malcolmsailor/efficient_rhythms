@@ -27,6 +27,7 @@ MAX_RANDOM_TRIES = 10
 
 def main():
 
+    er_interface.print_hello()
     args = er_interface.parse_cmd_line_args()
 
     midi_in = args.input_midi

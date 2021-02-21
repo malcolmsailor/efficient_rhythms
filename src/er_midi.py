@@ -462,7 +462,9 @@ def init_midi(er, super_pattern):
     return mf
 
 
-def write_er_midi(er, super_pattern, reverse_tracks=True, return_mf=False):
+def write_er_midi(
+    er, super_pattern, midi_fname, reverse_tracks=True, return_mf=False
+):
     """Write a midi file with an ERSettings class.
 
     Doesn't write the midi file if it contains no notes.
@@ -528,7 +530,7 @@ def write_er_midi(er, super_pattern, reverse_tracks=True, return_mf=False):
         abs_to_delta_times(mf)
         if return_mf:
             return mf
-        mf.save(filename=er.output_path)
+        mf.save(filename=midi_fname)
     return non_empty
 
 
