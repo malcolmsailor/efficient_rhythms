@@ -1,5 +1,3 @@
-import sys
-
 import src.er_exceptions as er_exceptions
 import src.er_notes as er_notes
 import src.er_voice_leadings as er_voice_leadings
@@ -14,13 +12,7 @@ def voice_lead_pattern_flexibly(
     the middle of a pattern if it runs into a problem.
     """
 
-    sys.stdout.write(
-        "\r"
-        + SPINNING_LINE[pattern_voice_leading_i % len(SPINNING_LINE)]
-        + " "
-        + str(voice_lead_error.temp_failure_counter)
-    )
-    sys.stdout.flush()
+    voice_lead_error.status()
 
     try:
         vl_item = er.pattern_voice_leading_order[pattern_voice_leading_i]
@@ -137,10 +129,7 @@ def voice_lead_pattern_strictly(
     er, super_pattern, voice_lead_error, pattern_voice_leading_i=0
 ):
 
-    sys.stdout.write(
-        "\b" + SPINNING_LINE[pattern_voice_leading_i % len(SPINNING_LINE)]
-    )
-    sys.stdout.flush()
+    voice_lead_error.status()
 
     try:
         vl_item = er.pattern_voice_leading_order[pattern_voice_leading_i]
@@ -281,6 +270,3 @@ def voice_lead_pattern_strictly(
         voice.remove_note(note.pitch, note.attack_time)
 
     return False
-
-
-SPINNING_LINE = "|/-\\"

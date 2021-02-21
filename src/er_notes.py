@@ -462,6 +462,9 @@ class Voice(collections.UserDict):
             include_start_time=True,
         )
 
+    class BreakWhile(Exception):
+        pass
+
     def get_prev_n_notes(
         self,
         n,
@@ -481,7 +484,7 @@ class Voice(collections.UserDict):
         last_attack_time = time
         i_iter = iter(range(start_i, -1, -1))
         try:
-            while n:
+            while n > 0:
                 i = next(i_iter)
                 attack_time = attack_times[i]
                 if attack_time == time and not include_start_time:
@@ -494,13 +497,13 @@ class Voice(collections.UserDict):
                         stop_at_rest
                         and note.attack_time + note.dur < last_attack_time
                     ):
-                        # Is there any reason not to use the built-in
-                        # StopIteration for this purpose?
-                        raise StopIteration
+                        raise self.BreakWhile
                     out_notes.insert(0, note)
                     n -= 1
+                    if n <= 0:
+                        raise self.BreakWhile
                     last_attack_time = note.attack_time
-        except StopIteration:
+        except (StopIteration, self.BreakWhile):
             pass
 
         for _ in range(n, 0, -1):

@@ -11,6 +11,7 @@ import src.er_constants as er_constants
 # import src.er_type_check as er_type_check
 
 DEFAULT_NUM_HARMONIES = 4
+# TODO reduce for random settings ( to make success more likely)
 MAX_SUPER_PATTERN_LEN = 128
 
 # TODO use this type annotation for sequences that can be ndarrays as well

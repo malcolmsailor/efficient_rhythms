@@ -15,6 +15,7 @@ import numpy as np
 
 import src.er_choirs as er_choirs
 import src.er_constants as er_constants
+import src.er_interface as er_interface
 import src.er_midi as er_midi
 import src.er_misc_funcs as er_misc_funcs
 import src.er_randomize as er_randomize
@@ -832,9 +833,10 @@ def preprocess_settings(
             script_dir, er.output_path.replace("EFFRHY/", "", 1)
         )
 
-    if not os.path.exists(os.path.dirname(er.output_path)):
-        os.makedirs(os.path.dirname(er.output_path))
-    if os.path.dirname(er.output_path) == er.output_path.rstrip(os.path.sep):
+    dir_name = os.path.dirname(er.output_path)
+    if dir_name and not os.path.exists(dir_name):
+        os.makedirs(dir_name)
+    if dir_name == er.output_path.rstrip(os.path.sep):
         if user_settings is None:
             er.output_path = os.path.join(er.output_path, "effrhy.mid")
         else:
@@ -1217,6 +1219,8 @@ def preprocess_settings(
     # so we re-set the seed once more in the hopes of making files produced
     # with the --random flag reproducible
     er_misc_funcs.set_seed(er.seed, print_out=False)
+
+    er.build_status_printer = er_interface.BuildStatusPrinter(er)
 
     return er
 

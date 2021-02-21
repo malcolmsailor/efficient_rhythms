@@ -75,7 +75,7 @@ def apply_voice_leading(
     if er.constrain_voice_leading_to_ranges:
         min_pitch, max_pitch = er.get(voice_i, "voice_ranges")
         if min_pitch > new_pitch or max_pitch < new_pitch:
-            voice_lead_error.temp_failure_counter.out_of_range += 1
+            voice_lead_error.out_of_range()
             return _fail()
 
     # LONGTERM should be able to move up more/less than an octave
@@ -93,7 +93,7 @@ def apply_voice_leading(
         if not er_make2.check_parallel_intervals(
             er, super_pattern, new_pitch, prev_pitch, new_attack_time, voice_i
         ):
-            voice_lead_error.temp_failure_counter.parallel_intervals += 1
+            voice_lead_error.parallel_intervals()
             return _fail()
 
     if er.vl_maintain_forbidden_intervals:
@@ -106,7 +106,7 @@ def apply_voice_leading(
             voice_i,
             other_voices=other_voices,
         ):
-            voice_lead_error.temp_failure_counter.check_intervals += 1
+            voice_lead_error.check_intervals()
             return _fail()
     if er.vl_maintain_consonance:
         if er.get(
@@ -120,7 +120,7 @@ def apply_voice_leading(
         elif not er_make2.check_consonance(
             er, super_pattern, new_pitch, new_attack_time, new_dur, voice_i
         ):
-            voice_lead_error.temp_failure_counter.check_consonance += 1
+            voice_lead_error.check_consonance()
             return _fail()
 
     if er.vl_maintain_limit_intervals == "all" or (
@@ -145,7 +145,7 @@ def apply_voice_leading(
         if not er_make2.check_melodic_intervals(
             er, new_pitch, last_pitch, max_interval, min_interval, new_harmony_i
         ):
-            voice_lead_error.temp_failure_counter.limit_intervals += 1
+            voice_lead_error.limit_intervals()
             return _fail()
 
     new_note = er_notes.Note(new_pitch, new_attack_time, new_dur)

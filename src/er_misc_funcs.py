@@ -184,12 +184,13 @@ def add_line_breaks(
 def make_table(
     rows,
     header=None,
-    row_width=7,
-    fit_in_window=True,
+    col_width=7,
+    fit_in_window=False,
     divider="|",
     align_char="^",
     row_spacing=0,
     borders=True,
+    full_borders=True,
 ):
     """Returns a formatted table from a list of lists.
 
@@ -200,11 +201,13 @@ def make_table(
 
     Keyword args:
         header: an optional row of column names.
-        row_width: integer. Default 7.
-        fit_in_window: boolean. If True, then row_width will be adjusted
+        col_width: integer. Default 7.
+        fit_in_window: boolean. If True, then col_width will be adjusted
             downward if necessary to fit all columns in one terminal line
             (although it's still possible that not all rows will fit on one
             line).
+            # The behavior enabled by this flag is a bit of a mess since it
+            # causes rows to be misaligned.
         divider: character or string to use as a column divider. (Will be
             padded with a space on either side.) Default "|".
         align_char: character to pass to format specification for cells.
@@ -213,6 +216,8 @@ def make_table(
             row.
         borders: bool. Whether to print lines above and below the table.
             Default True
+        full_borders: bool. Whether borders should extend to full width of
+            terminal window, or to size of table. Default True
 
     Returns:
         string.
@@ -225,19 +230,19 @@ def make_table(
         def _format_(cell):
             if isinstance(cell, (str, int, np.integer)):
                 # NOTE Doesn't format very large ints appropriately
-                return f"{cell:{align_char}{row_width}}"
+                return f"{cell:{align_char}{col_width}}"
             if isinstance(cell, fractions.Fraction):
                 try:
-                    return f"{cell:{align_char}.{row_width - 1}g}"
+                    return f"{cell:{align_char}.{col_width - 1}g}"
                 except TypeError:
                     out = f"{cell}"
-                    return _format(out) if len(out) < row_width else out
+                    return _format(out) if len(out) < col_width else out
             if isinstance(cell, float):
                 # NOTE Doesn't format very large floats appropriately
-                return f"{cell:{align_char}.{row_width - 1}g}"
+                return f"{cell:{align_char}.{col_width - 1}g}"
             raise ValueError("unsupported type")
 
-        return f"{_format_(cell):{align_char}{row_width}}"
+        return f"{_format_(cell):{align_char}{col_width}}"
 
     divider = divider.join([" "] * 2)
     try:
@@ -245,20 +250,23 @@ def make_table(
     except OSError:
         term_size = 80
     if fit_in_window:
-        if (len(rows[0]) + 1) * (row_width + len(divider)) - len(
+        # Formerly, I was adding 1 to len(rows[0]) --- I have no idea why!
+        if (len(rows[0])) * (col_width + len(divider)) - len(
             divider
         ) > term_size:
-            row_width = (term_size + len(divider)) // (len(rows[0]) + 1) - len(
+            col_width = (term_size + len(divider)) // (len(rows[0]) + 1) - len(
                 divider
             )
     formatted_rows = [[_format(cell) for cell in row] for row in rows]
     row_strings = [divider.join(row) for row in formatted_rows]
     if row_spacing > 0:
-        blank_row_string = divider.join([" " * row_width for _ in rows[0]])
+        blank_row_string = divider.join([" " * col_width for _ in rows[0]])
         for i in range(len(row_strings)):
             for _ in range(row_spacing):
                 row_strings.insert((1 + row_spacing) * i, blank_row_string)
-    line_width = min(term_size, len(row_strings[0]))
+    line_width = (
+        min(term_size, len(row_strings[0])) if not full_borders else term_size
+    )
     line = "-" * line_width
     if header is not None:
         header_string = divider.join([_format(cell) for cell in header])
@@ -271,7 +279,13 @@ def make_table(
 
 
 def make_header(
-    text, fill_char="#", space_char=" ", line_width=None, align="left", indent=2
+    text,
+    fill_char="#",
+    space_char=" ",
+    line_width=None,
+    align="left",
+    indent=2,
+    bold=True,
 ):
     """Puts a string into a format suitable for a header on the prompt.
 
@@ -286,6 +300,7 @@ def make_header(
         align: either "left", "center", or "right".
         indent: if align is either "left" or "right", number of fill characters
             to indent by. Default 2.
+        bold: Default True
 
     Returns:
         Formatted string.
@@ -339,7 +354,11 @@ def make_header(
         )
     else:
         raise ValueError("Alignment type not recognized")
-    return er_shell_constants.BOLD_TEXT + out + er_shell_constants.RESET_TEXT
+    if bold:
+        return (
+            er_shell_constants.BOLD_TEXT + out + er_shell_constants.RESET_TEXT
+        )
+    return out
 
 
 def no_empty_lists(item):

@@ -6,7 +6,6 @@ import itertools
 import math
 import os
 import random
-import sys
 
 import numpy as np
 
@@ -35,17 +34,6 @@ class PossibleNote:
         self.voice = super_pattern.voices[self.voice_i]
         self.dur = er.rhythms[self.voice_i][self.attack_time]
         self.harmony_i = super_pattern.get_harmony_i(self.attack_time)
-
-
-# it appears this function is never called
-# def _force_foot(er, super_pattern, poss_note):
-#     foot = get_foot_to_force(er, poss_note)
-#     if foot is not None:
-#         super_pattern.add_note(
-#             poss_note.voice_i, foot, poss_note.attack_time, poss_note.dur
-#         )
-#         return True
-#     return False
 
 
 def _repeat_pitch(super_pattern, poss_note):
@@ -697,13 +685,7 @@ def _attempt_initial_pattern(
     er, super_pattern, available_pitch_error, attack_i=0
 ):
 
-    sys.stdout.write(
-        "\r"
-        + SPINNING_LINE[attack_i % len(SPINNING_LINE)]
-        + " "
-        + available_pitch_error.status()
-    )
-    sys.stdout.flush()
+    er.build_status_printer.spin()
 
     try:
         poss_note = PossibleNote(er, super_pattern, attack_i)
@@ -882,16 +864,15 @@ def _get_bass_foot_times(er, super_pattern):
             er.bass_foot_times.append(attack_time)
 
 
-def make_initial_pattern(er):
+def make_initial_pattern(er, available_pitch_error):
     """Makes the basic pattern."""
 
-    available_pitch_error = er_exceptions.AvailablePitchMaterialsError(er)
-
+    er.build_status_printer.reset_ip_attempt_count()
     for rep in itertools.count(start=1):
-        for attempt in range(er.initial_pattern_attempts):
-            # QUESTION is it possible to "backspace" to previous line
-            # (so that "Initial pattern attempt" doesn't have to take a new line
-            #   every time)?
+        for _ in range(er.initial_pattern_attempts):
+            available_pitch_error.reset_inner_counts()
+            er.build_status_printer.increment_ip_attempt()
+            available_pitch_error.status()
             er.rhythms = er_rhythm.rhythms_handler(er)
             er.initial_pattern_order = er_rhythm.get_attack_order(er)
             super_pattern = er_notes.Score(
@@ -903,18 +884,14 @@ def make_initial_pattern(er):
                 time_sig=er.time_sig,
                 existing_score=er.existing_score,
             )
-            initial_str = f"\rInitial pattern attempt {attempt + 1}"
-            sys.stdout.write(
-                initial_str + " " * (LINE_WIDTH - len(initial_str)) + "\n"
-            )
-            sys.stdout.flush()
-            if _attempt_initial_pattern(
-                er, super_pattern, available_pitch_error
-            ):
-                # sys.stdout.write("\n... success!\n")
-                # sys.stdout.flush()
-                success = True
-                break
+            try:
+                if _attempt_initial_pattern(
+                    er, super_pattern, available_pitch_error
+                ):
+                    success = True
+                    break
+            except er_exceptions.AvailablePitchMaterialsError:
+                pass
             success = False
         if success or not er.ask_for_more_attempts:
             break
@@ -926,10 +903,9 @@ def make_initial_pattern(er):
         )
         if answer != "y":
             break
+        er.build_status_printer.reset_ip_attempt_count()
 
     if not success:
-        sys.stdout.write("\n")
-        sys.stdout.flush()
         raise available_pitch_error
 
     if er.preserve_foot_in_bass != "none":
@@ -978,7 +954,7 @@ def transpose_foots(er, super_pattern):
 
 def voice_lead_pattern(er, super_pattern, voice_lead_error):
 
-    voice_lead_error.reset_temp_counter()
+    voice_lead_error.reset_inner_counts()
 
     if er_vl_strict_and_flex.voice_lead_pattern_strictly(
         er,
@@ -1007,29 +983,19 @@ def make_super_pattern(er):
     """
 
     voice_lead_error = er_exceptions.VoiceLeadingError(er)
+    available_pitch_error = er_exceptions.AvailablePitchMaterialsError(er)
 
     for rep in itertools.count(start=1):
-        for attempt in range(er.voice_leading_attempts):
-            sys.stdout.write(f"Super pattern attempt {attempt + 1}\n")
-            sys.stdout.flush()
-
-            super_pattern = make_initial_pattern(er)
-
-            sys.stdout.write("\nSucceeded, attempting voice-leading...  " "\n")
-            sys.stdout.flush()
+        # TODO change name of this variable
+        for _ in range(er.voice_leading_attempts):
+            er.build_status_printer.increment_total_attempt_count()
+            super_pattern = make_initial_pattern(er, available_pitch_error)
             if voice_lead_pattern(er, super_pattern, voice_lead_error):
-                sys.stdout.write(" ... success!\n")
-                sys.stdout.flush()
+                er.build_status_printer.success()
                 success = True
                 break
-            sys.stdout.write(
-                "\r"
-                + SPINNING_LINE[0]
-                + " "
-                + str(voice_lead_error.temp_failure_counter)
-            )
-            sys.stdout.write(" ... failed.\n")
-            sys.stdout.flush()
+            er.build_status_printer.spin()
+            voice_lead_error.status()
 
             success = False
         if success or not er.ask_for_more_attempts:
@@ -1242,7 +1208,6 @@ try:
 except OSError:
     # Thrown when running pytest
     LINE_WIDTH = 80
-SPINNING_LINE = "|/-\\"
 
 # Constants for accessing voice ranges
 

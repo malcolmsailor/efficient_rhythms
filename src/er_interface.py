@@ -18,20 +18,214 @@ import src.er_prob_funcs as er_prob_funcs
 import src.er_settings as er_settings
 import src.er_shell_constants as er_shell_constants
 
-try:
-    LINE_WIDTH = os.get_terminal_size().columns
-except OSError:
-    LINE_WIDTH = 80
+
 SELECT_HEADER = "Active filters and transformers"
 FILTERS_HEADER = "Filters"
 TRANSFORMERS_HEADER = "Transformers"
-GITHUB_URL = "my github page"  # INTERNET_TODO
-
-# TODO clear at each new prompt
+GITHUB_URL = "https://github.com/malcolmsailor/efficient_rhythms"
 
 
 def clear():  # from https://stackoverflow.com/a/684344/10155119
     os.system("cls" if os.name == "nt" else "clear")
+
+
+def line_width():
+    try:
+        return os.get_terminal_size().columns
+    except OSError:
+        return 80
+
+
+class BuildStatusPrinter:
+    # header_strs = {
+    #     "attempt_strs": ("Overall attempt:", "Attempt:"),
+    #     "initial_pattern_strs": ("Initial pattern:", "IP:",),
+    #     "voice_leading_strs": ("Voice-leading:", "VL:",),
+    # }
+    _spin_segments = "|/-\\"
+    ip_header_strs = [
+        "No pcs",
+        "No pitches",
+        "M interval",
+        "Parallels",
+        "Alternates",
+        "Repeats",
+        "Loops",
+    ]
+    ip_col_width = max(len(item) for item in ip_header_strs)
+    vl_header_strs = [
+        "Range",
+        "H interval",
+        "Dissonant",
+        "M interval",
+        "Parallels",
+    ]
+    vl_col_width = max(len(item) for item in vl_header_strs)
+
+    def _get_header(self, er):
+        attempt_digits = math.ceil(math.log10(er.voice_leading_attempts))
+        attempt_num_str = f"{{:>{attempt_digits}}}/{er.voice_leading_attempts} "
+        # attempt_len = 2 * attempt_digits + 2
+        ip_digits = math.ceil(math.log10(er.initial_pattern_attempts))
+        ip_num_str = f"{{:>{ip_digits}}}/{er.initial_pattern_attempts} "
+        # ip_len = 2 * ip_digits + 1
+        # vl_digits = math.ceil(math.log10(er.voice_leading_attempts))
+        # vl_num_str = f"{{:>{vl_digits}}}/{er.voice_leading_attempts} "
+        # vl_len = 2 * vl_digits + 1
+        # total_num_len = attempt_len + ip_len + vl_len
+        # num_joins = 5
+
+        # for i, join_ch in itertools.product(range(2), (" ", "")):
+        #     text_len = sum([len(item[i]) for item in self.header_strs.values()])
+        #     # 2 added for width of spinning line
+        #     if text_len + total_num_len + num_joins + 2 < self.line_width:
+        #         break
+        # self._header_fmt_str = join_ch.join(
+        #     [
+        #         self.header_strs["attempt_strs"][i],
+        #         attempt_num_str,
+        #         self.header_strs["initial_pattern_strs"][i],
+        #         ip_num_str,
+        #         self.header_strs["voice_leading_strs"][i],
+        #         vl_num_str,
+        #     ]
+        # )
+        self._total_header_fmt_str = (
+            f"Building pattern: overall attempt {attempt_num_str}"
+        )
+        self._ip_header_fmt_str = f"Initial pattern attempt {ip_num_str}"
+
+    def __init__(self, er):
+        # We hope that the user doesn't change the window width too much during
+        # building!
+        self.line_width = line_width()
+        self._get_header(er)
+        self.ip_n_cols = min(
+            math.floor(self.line_width / (self.ip_col_width + 2)),
+            len(self.ip_header_strs),
+        )
+        self.ip_header_strs = self.ip_header_strs[: self.ip_n_cols]
+        self.vl_n_cols = min(
+            math.floor(self.line_width / (self.vl_col_width + 2)),
+            len(self.vl_header_strs),
+        )
+        self.vl_header_strs = self.vl_header_strs[: self.vl_n_cols]
+        self.spin_i = -1
+        self.total_attempt_count = 0
+        self.ip_attempt_count = 0
+        self.initial_print()
+
+    def increment_ip_attempt(self):
+        self.ip_attempt_count += 1
+
+    def increment_total_attempt_count(self):
+        self.total_attempt_count += 1
+        self.print_header()
+
+    def reset_ip_attempt_count(self):
+        self.ip_attempt_count = 0
+
+    @property
+    def _spinning_line(self):
+        self.spin_i += 1
+        return self._spin_segments[self.spin_i % 4]
+
+    @property
+    def header(self):
+        return er_misc_funcs.make_header(
+            self._total_header_fmt_str.format(self.total_attempt_count),
+            fill_char="=",
+            bold=True,
+        )
+
+    def spin(self):
+        print(f"\r{self._spinning_line} ", end="")
+
+    @staticmethod
+    def _table(subhead, colheads, n_cols, col_width, *vals):
+        return "\n".join(
+            [
+                er_misc_funcs.make_header(
+                    subhead, fill_char="-", bold=False, indent=4,
+                ),
+                er_misc_funcs.make_table(
+                    [
+                        colheads,
+                        [
+                            "{} ({})".format(val[0], val[1])
+                            for val in vals[:n_cols]
+                        ],
+                    ],
+                    divider="",
+                    borders=False,
+                    col_width=col_width,
+                ),
+            ]
+        )
+
+    def ip_table(self, vals):
+        return self._table(
+            self._ip_header_fmt_str.format(self.ip_attempt_count),
+            self.ip_header_strs,
+            self.ip_n_cols,
+            self.ip_col_width,
+            *vals,
+        )
+
+    def vl_table(self, vals):
+        return self._table(
+            "Voice-leading dead-ends: ",
+            self.vl_header_strs,
+            self.vl_n_cols,
+            self.vl_col_width,
+            *vals,
+        )
+
+    def voice_leading_status(self, *vals):
+        print(er_shell_constants.START_OF_PREV_LINE * 3, end="")
+        print(self.vl_table(vals))
+        assert (
+            self.vl_table(vals).count("\n") == 2
+        ), 'self.vl_table(vals).count("\n") != 2'
+        self.spin()
+        # breakpoint()
+
+    def initial_pattern_status(self, *vals):
+        print(er_shell_constants.START_OF_PREV_LINE * 6, end="")
+        print(
+            self.ip_table(vals), end=er_shell_constants.START_OF_NEXT_LINE * 4
+        )
+        self.spin()
+        # breakpoint()
+
+    def print_header(self):
+        print(er_shell_constants.START_OF_PREV_LINE * 7, end="")
+        print(self.header, end=er_shell_constants.START_OF_NEXT_LINE * 7)
+        # breakpoint()
+
+    def initial_print(self):
+        # print(
+        #     "\n"
+        #     + er_shell_constants.BOLD_TEXT
+        #     + "Building pattern..."
+        #     + er_shell_constants.RESET_TEXT,
+        # )
+        print("")
+        print(self.header)
+        print(self.ip_table([(0, 0) for _ in range(self.ip_n_cols)]))
+        print(self.vl_table([(0, 0) for _ in range(self.vl_n_cols)]))
+        # breakpoint()
+
+    @staticmethod
+    def success():
+        print(
+            "\r"
+            + er_shell_constants.BOLD_TEXT
+            + "Success!"
+            + er_shell_constants.RESET_TEXT,
+            end="\n\n",
+        )
+        # breakpoint()
 
 
 def parse_cmd_line_args():
@@ -118,12 +312,27 @@ def parse_cmd_line_args():
     return args
 
 
+def print_hello():
+    title = "Efficient rhythms: generate splendiferous midi loops"
+    underline = "=" * min(len(title), line_width())
+    print(
+        "\n".join(
+            [
+                er_shell_constants.BOLD_TEXT + title,
+                underline + er_shell_constants.RESET_TEXT,
+                GITHUB_URL,
+            ]
+        ),
+        end="\n\n",
+    )
+
+
 def print_path(in_path, offset=0):
-    if len(in_path) < LINE_WIDTH:
+    if len(in_path) < line_width():
         return in_path
     while "/" in in_path:
         in_path = in_path.split("/", maxsplit=1)[1]
-        if len(in_path) < LINE_WIDTH - 4 - offset:
+        if len(in_path) < line_width() - 4 - offset:
             return ".../" + in_path
     return in_path
 
@@ -154,13 +363,15 @@ def make_changer_prompt_line(i, attr_name, value, hint_name="", hint_value=""):
             hint_str = f"{hint_name}: {_stringify(hint_value):<10}"
         else:
             hint_str = hint_name + " " * 2
-        if len(out) + len(hint_str) > LINE_WIDTH - 2:
+        if len(out) + len(hint_str) > line_width() - 2:
             hint_str_formatted = er_misc_funcs.add_line_breaks(
                 hint_str, indent_type="all", indent_width=16, align="right"
             )
             out = out + "\n" + hint_str_formatted
         else:
-            out = out + " " * (LINE_WIDTH - len(out) - len(hint_str)) + hint_str
+            out = (
+                out + " " * (line_width() - len(out) - len(hint_str)) + hint_str
+            )
     return out
 
 
@@ -407,7 +618,7 @@ def add_changer_prompt(changer_dict):
         return er_misc_funcs.make_table(
             rows,
             divider="",
-            row_width=LINE_WIDTH // 2 - 2,
+            col_width=line_width() // 2 - 2,
             align_char="<",
             fit_in_window=False,
             borders=False,

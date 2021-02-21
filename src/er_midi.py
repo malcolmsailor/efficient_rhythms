@@ -4,7 +4,6 @@
 import collections
 import copy
 import fractions
-import math
 import os
 import random
 import warnings
@@ -124,17 +123,19 @@ def get_scales_and_chords_from_midi(midif, tet=12, time_sig=4):
     return (scales, chords, foots)
 
 
-def get_midi_time_sig(time_sig):
-    """Takes a usual time signature, returns a midi time signature.
+# this function is deprecated since switch to mido since mido takes human
+# readable time signatures already.
+# def get_midi_time_sig(time_sig):
+#     """Takes a usual time signature, returns a midi time signature.
+#
+#     The only change is to take the log base 2 of the denominator.
+#     """
+#     numer, denom = time_sig
+#     denom = int(math.log(denom, 2))
+#     return numer, denom
 
-    The only change is to take the log base 2 of the denominator.
-    """
-    numer, denom = time_sig
-    denom = int(math.log(denom, 2))
-    return numer, denom
 
-
-def _return_track_name_base(midi_fname, abbr=True):
+def return_track_name_base(midi_fname, abbr=True):
     """Returns an abbreviated version of the file name to be used to name
     the tracks.
     """
@@ -253,7 +254,7 @@ def humanize(er, note=None, tuning=None):
         new_note.velocity = round(
             note.velocity * _get_value(er.humanize_velocity)
         )
-    return new_note
+        return new_note
     tuning = round(
         tuning
         - er_tuning.SIZE_OF_SEMITONE
@@ -274,7 +275,8 @@ def add_er_voice(er, voice_i, voice, mf, force_choir=None):
         choir_program_i = er_choirs.get_choir_prog(
             er.choirs, choir_i, note.pitch
         )
-        track_i = er.track_dict[(voice_i, choir_program_i)]
+        # Add 1 because meta track is track 0
+        track_i = er.track_dict[(voice_i, choir_program_i)] + 1
         if er.logic_type_pitch_bend and er.tet != 12:
             channel = er.note_counter[track_i] % er.num_channels_pitch_bend_loop
             note_count = er.note_counter[track_i]
@@ -330,9 +332,7 @@ def add_er_voice(er, voice_i, voice, mf, force_choir=None):
     return empty
 
 
-def write_track_names(
-    settings_obj, mf, midi_fname, zero_origin=False, abbr_track_names=True
-):
+def write_track_names(settings_obj, mf, abbr_track_names=True):
     """Writes track names to the midi file object."""
 
     def _add_track_name(track_i, track_name):
@@ -340,36 +340,39 @@ def write_track_names(
             mido.MetaMessage("track_name", name=track_name, time=0)
         )
 
-    track_name_base = _return_track_name_base(midi_fname, abbr=abbr_track_names)
-    adjust = 0 if zero_origin else 1
+    midi_fname = settings_obj.output_path
+    track_name_base = return_track_name_base(midi_fname, abbr=abbr_track_names)
+
+    # Add meta track
+    _add_track_name(0, os.path.splitext(os.path.basename(midi_fname))[0])
 
     if isinstance(settings_obj, er_midi_settings.MidiSettings):
         for track_i in range(settings_obj.num_tracks):
-            track_name = track_name_base + f"_voice{track_i + adjust}"
-            _add_track_name(track_i, track_name)
+            track_name = track_name_base + f"_voice{track_i + 1}"
+            _add_track_name(track_i + 1, track_name)
         return
 
     for track_i in range(settings_obj.num_existing_tracks):
-        track_name = track_name_base + f"_existing_voice{track_i + adjust}"
-        _add_track_name(track_i, track_name)
+        track_name = track_name_base + f"_existing_voice{track_i + 1}"
+        _add_track_name(track_i + 1, track_name)
 
     if (
         settings_obj.voices_separate_tracks
         and not settings_obj.choirs_separate_tracks
     ):
         for track_i in range(settings_obj.num_new_tracks):
-            track_name = track_name_base + f"_voice{track_i + adjust}"
+            track_name = track_name_base + f"_voice{track_i + 1}"
             _add_track_name(
-                track_i + settings_obj.num_existing_tracks, track_name
+                track_i + settings_obj.num_existing_tracks + 1, track_name
             )
     elif (
         settings_obj.choirs_separate_tracks
         and not settings_obj.voices_separate_tracks
     ):
         for track_i in range(settings_obj.num_new_tracks):
-            track_name = track_name_base + f"_choir{track_i + adjust}"
+            track_name = track_name_base + f"_choir{track_i + 1}"
             _add_track_name(
-                track_i + settings_obj.num_existing_tracks, track_name
+                track_i + settings_obj.num_existing_tracks + 1, track_name
             )
     elif (
         settings_obj.voices_separate_tracks
@@ -379,11 +382,13 @@ def write_track_names(
             voice_i = track_i // settings_obj.num_choirs
             choir_i = track_i % settings_obj.num_choirs
             track_name = track_name_base + (
-                f"_voice{voice_i + adjust}_choir{choir_i + adjust}"
+                f"_voice{voice_i + 1}_choir{choir_i + 1}"
             )
             _add_track_name(
-                track_i + settings_obj.num_existing_tracks, track_name
+                track_i + settings_obj.num_existing_tracks + 1, track_name
             )
+    else:
+        _add_track_name(1, track_name_base + "_all")
 
 
 def write_program_changes(er, mf, time=0):
@@ -437,24 +442,12 @@ def write_tempi(er, mf, total_len):
         tempo_i += 1
 
 
-def write_er_midi(er, super_pattern, midi_fname, reverse_tracks=True):
-    """Write a midi file with an ERSettings class.
+def init_midi(er, super_pattern):
 
-    Doesn't write the midi file if it contains no notes.
-
-    Returns a boolean indicating whether there are any notes in the midi file.
-    """
-
+    # LONGTERM not really crazy about these side-effects
     er.num_new_tracks, er.num_existing_tracks = _build_track_dict(
         er, super_pattern.num_voices
     )
-
-    if er.logic_type_pitch_bend and er.tet != 12:
-        er.note_counter = collections.Counter()
-        er.pitch_bend_time_dict = {
-            track_i: [0 for i in range(er.num_channels_pitch_bend_loop)]
-            for track_i in range(er.num_new_tracks + er.num_existing_tracks)
-        }
     # When I was using midiutil, ticks_per_quarternote needed to be high enough
     # that no note_on and note_off
     # events ended up on the same tick, because midiutil doesn't sort them
@@ -466,16 +459,38 @@ def write_er_midi(er, super_pattern, midi_fname, reverse_tracks=True):
     for _ in range(er.num_new_tracks + er.num_existing_tracks + 1):
         mf.add_track()
 
-    write_track_names(er, mf, midi_fname)
+    return mf
+
+
+def write_er_midi(er, super_pattern, reverse_tracks=True, return_mf=False):
+    """Write a midi file with an ERSettings class.
+
+    Doesn't write the midi file if it contains no notes.
+
+    Returns a boolean indicating whether there are any notes in the midi file.
+
+    If return_mf is True, returns the mido MidiFile object. I added this flag
+    for testing purposes.
+    """
+
+    if er.logic_type_pitch_bend and er.tet != 12:
+        er.note_counter = collections.Counter()
+        er.pitch_bend_time_dict = {
+            track_i: [0 for i in range(er.num_channels_pitch_bend_loop)]
+            for track_i in range(er.num_new_tracks + er.num_existing_tracks)
+        }
+
+    mf = init_midi(er, super_pattern)
+
+    write_track_names(er, mf)
 
     write_tempi(er, mf, er.total_len)
 
-    numerator, denominator = get_midi_time_sig(er.time_sig)
     mf.tracks[META_TRACK].append(
         mido.MetaMessage(
             "time_signature",
-            numerator=numerator,
-            denominator=denominator,
+            numerator=er.time_sig[0],
+            denominator=er.time_sig[1],
             clocks_per_click=CLOCKS_PER_TICK,
         )
     )
@@ -498,43 +513,22 @@ def write_er_midi(er, super_pattern, midi_fname, reverse_tracks=True):
     ):
         empty = add_er_voice(
             er,
-            existing_voice_i + er.num_voices + 1,
+            existing_voice_i + er.num_voices,
+            # I add 1 inside add_er_voice so I don't think adding 1 is necessary
+            # here
+            # existing_voice_i + er.num_voices + 1,
             existing_voice,
             mf,
             force_choir=0,
         )
         if not empty:
             non_empty = True
-    # if reverse_tracks:
-    #     for voice_i, voice in enumerate(reversed(super_pattern.voices)):
-    #         add_er_voice(er, voice_i, voice, mf)
-    #     for existing_voice_i, existing_voice in enumerate(
-    #         reversed(super_pattern.existing_voices)
-    #     ):
-    #         add_er_voice(
-    #             er,
-    #             existing_voice_i + er.num_voices + 1,
-    #             existing_voice,
-    #             mf,
-    #             force_choir=0,
-    #         )
-    # else:
-    #     for voice_i, voice in enumerate(super_pattern.voices):
-    #         add_er_voice(er, voice_i, voice, mf)
-    #     for existing_voice_i, existing_voice in enumerate(
-    #         super_pattern.existing_voices
-    #     ):
-    #         add_er_voice(
-    #             er,
-    #             existing_voice_i + er.num_voices + 1,
-    #             existing_voice,
-    #             mf,
-    #             force_choir=0,
-    #         )
 
     if non_empty:
         abs_to_delta_times(mf)
-        mf.save(filename=midi_fname)
+        if return_mf:
+            return mf
+        mf.save(filename=er.output_path)
     return non_empty
 
 
@@ -640,9 +634,7 @@ def write_midi(super_pattern, midi_settings, abbr_track_names=True):
     for _ in range(midi_settings.num_tracks + 1):
         mf.add_track()
 
-    write_track_names(
-        midi_settings, mf, midi_fname, abbr_track_names=abbr_track_names
-    )
+    write_track_names(midi_settings, mf, abbr_track_names=abbr_track_names)
 
     write_meta_messages(super_pattern, mf)
     non_empty = False
