@@ -508,22 +508,38 @@ def process_choir_settings(er):
                 warn_if_loop_too_short=warn_if_loop_too_short,
             )
 
+    def _get_choir(choir):
+        if isinstance(choir, int):
+            return choir
+        try:
+            return getattr(er_constants, choir)
+        except AttributeError:
+            raise ValueError(  # pylint: disable=raise-missing-from
+                f"{choir} is not an implemented choir constant."
+            )
+            # TODO see documentation for more help
+
     er.choir_programs = []
     for choir_i in range(er.num_choirs):
+        # Why are both choir_programs and choirs necessary?
         choir = er.choirs[choir_i]
-        if isinstance(choir, numbers.Number):
-            er.choir_programs.append(choir)
+        if isinstance(choir, (int, str)):
+            er.choir_programs.append(_get_choir(choir))
         else:
+            # TODO test choir split points---don't seem to be working?
             sub_choirs, split_points = choir
             if not isinstance(split_points, typing.Sequence):
                 split_points = [
                     split_points,
                 ]
-            er.choirs[choir_i] = er_choirs.Choir(sub_choirs, split_points)
+            sub_choir_progs = [
+                _get_choir(sub_choir) for sub_choir in sub_choirs
+            ]
+            er.choirs[choir_i] = er_choirs.Choir(sub_choirs, split_points,)
             er.choirs[choir_i].temper_split_points(
                 er.tet, er.integers_in_12_tet
             )
-            er.choir_programs += sub_choirs
+            er.choir_programs += sub_choir_progs
 
     er.num_choir_programs = len(er.choir_programs)
 
