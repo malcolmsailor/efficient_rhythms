@@ -1587,10 +1587,10 @@ class ERSettings:
             ],
         ]
     ] = (
-        er_constants.MARIMBA,
-        er_constants.VIBRAPHONE,
-        er_constants.ELECTRIC_PIANO,
         er_constants.GUITAR,
+        er_constants.ELECTRIC_PIANO,
+        er_constants.PIANO,
+        er_constants.XYLOPHONE,
     )
     choir_assignments: typing.Sequence[int] = None
     randomly_distribute_between_choirs: bool = False
