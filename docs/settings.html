@@ -57,8 +57,8 @@
 <li><p><span id="num_harmonies"><strong><code>num_harmonies</code></strong></span>: int. The number of harmonies in the pattern. If a not passed, the length of <a href="#foot_pcs"><code>foot_pcs</code></a> will be assigned to this setting. If <a href="#foot_pcs"><code>foot_pcs</code></a> is not passed either, will be set to a default value of 4.</p></li>
 <li><p><span id="harmony_len"><strong><code>harmony_len</code></strong></span>: a number, or a looping sequence of numbers (see above). If a sequence of numbers, the harmonies will cycle through the sequence until <a href="#num_harmonies"><code>num_harmonies</code></a> is reached. That is, the first harmony will have the length of the first number in the sequence, the second harmony of the second, and so on. (Unlike <a href="#pattern_len"><code>pattern_len</code></a> or <a href="#rhythm_len"><code>rhythm_len</code></a>, there is no way of assigning different harmony_lengths to different voices.)</p>
 <p><em>Default</em>: <code>4</code></p></li>
-<li><p><span id="voice_ranges"><strong><code>voice_ranges</code></strong></span>: a sequence of 2-tuples. Each tuple is of form (lowest_note, highest_note). (<a href="#note-on-specifying-pitches-and-intervals">See the note above on specifying pitches and intervals</a>.) <code>er_constants.py</code> provides a number of useful values for this purpose. The sequence must be at least <a href="#num_voices"><code>num_voices</code></a> length. (If it is longer, excess items will be ignored.) It is not enforced that the sequence be in ascending order but I haven’t extensively tested what happens if it is not. Note that if <a href="#constrain_voice_leading_to_ranges"><code>constrain_voice_leading_to_ranges</code></a> is False, than these ranges will only be enforced for the initial pattern. See also <a href="#hard_bounds"><code>hard_bounds</code></a>.</p>
-<p><em>Default</em>: <code>CONTIGUOUS_OCTAVES * OCTAVE3 * C</code></p></li>
+<li><p><span id="voice_ranges"><strong><code>voice_ranges</code></strong></span>: a sequence of 2-tuples. Each tuple is of form (lowest_note, highest_note). (<a href="#note-on-specifying-pitches-and-intervals">See the note above on specifying pitches and intervals</a>.) <code>er_constants.py</code> provides a number of useful values for this purpose. The sequence must be at least <a href="#num_voices"><code>num_voices</code></a> length. (If it is longer, excess items will be ignored.) It is not enforced that the sequence be in ascending order but I haven’t extensively tested what happens if it is not. Note that if <a href="#constrain_voice_leading_to_ranges"><code>constrain_voice_leading_to_ranges</code></a> is False, than these ranges will only be enforced for the initial pattern. See also <a href="#hard_bounds"><code>hard_bounds</code></a>. TODO document er_constants</p>
+<p><em>Default</em>: <code>"CONTIGUOUS_OCTAVES * OCTAVE3 * C"</code></p></li>
 </ul>
 <h3 id="scale-and-chord-settings">Scale and chord settings</h3>
 <ul class="incremental">
@@ -80,13 +80,13 @@
 <li><p><span id="scales"><strong><code>scales</code></strong></span>: a sequence of sequences of numbers. Each subsequence specifies a scale. Scales should always be specified starting from pitch-class 0; they will then be transposed to the appropriate pitch-classes according to the settings <a href="#foot_pcs"><code>foot_pcs</code></a> or <a href="#interval_cycle"><code>interval_cycle</code></a>.</p>
 <p>If <a href="#foot_pcs"><code>foot_pcs</code></a> has fewer items than <a href="#scales"><code>scales</code></a>, then the excess items in <a href="#scales"><code>scales</code></a> will be ignored.</p>
 <p>If <a href="#foot_pcs"><code>foot_pcs</code></a> has more items than <a href="#scales"><code>scales</code></a>, then <a href="#scales"><code>scales</code></a> will be looped through.</p>
-<p>(<a href="#note-on-specifying-pitches-and-intervals">See the note above on specifying pitches and intervals</a>.)</p>
-<p><em>Default</em>: <code>[er_constants.DIATONIC_SCALE]</code></p></li>
+<p>(<a href="#note-on-specifying-pitches-and-intervals">See the note above on specifying pitches and intervals</a>.) TODO document er_constants</p>
+<p><em>Default</em>: <code>["DIATONIC_SCALE"]</code></p></li>
 <li><p><span id="chords"><strong><code>chords</code></strong></span>: a sequence of sequences of numbers. Each subsequence specifies a chord. Scales should always be specified starting from pitch-class 0; they will then be transposed to the appropriate pitch-classes according to the settings <a href="#foot_pcs"><code>foot_pcs</code></a> or <a href="#interval_cycle"><code>interval_cycle</code></a>.</p>
 <p>If <a href="#foot_pcs"><code>foot_pcs</code></a> has fewer items than <a href="#chords"><code>chords</code></a>, then the excess items in <a href="#chords"><code>chords</code></a> will be ignored.</p>
 <p>If <a href="#foot_pcs"><code>foot_pcs</code></a> has more items than <a href="#chords"><code>chords</code></a>, then <a href="#chords"><code>chords</code></a> will be looped through.</p>
-<p>(<a href="#note-on-specifying-pitches-and-intervals">See the note above on specifying pitches and intervals</a>.)</p>
-<p><em>Default</em>: <code>[er_constants.MAJOR_TRIAD]</code></p></li>
+<p>(<a href="#note-on-specifying-pitches-and-intervals">See the note above on specifying pitches and intervals</a>.) TODO document er_constants</p>
+<p><em>Default</em>: <code>["MAJOR_TRIAD"]</code></p></li>
 </ul>
 <h3 id="midi-settings">Midi settings</h3>
 <ul class="incremental">
@@ -232,11 +232,11 @@
 <li><p><span id="prefer_small_melodic_intervals_coefficient"><strong><code>prefer_small_melodic_intervals_coefficient</code></strong></span>: number. If <a href="#prefer_small_melodic_intervals"><code>prefer_small_melodic_intervals</code></a> is true, then <a href="#prefer_small_melodic_intervals_coefficient"><code>prefer_small_melodic_intervals_coefficient</code></a> adjusts how strong the weighting towards smaller intervals is. It can take any value &gt; 0; greater values mean larger intervals are relatively more likely. A good range of values is 0 - 10.</p>
 <p><em>Default</em>: <code>1</code></p></li>
 <li><p><span id="unison_weighted_as"><strong><code>unison_weighted_as</code></strong></span>: int. If prefer_small_melodic_intervals is true, then we have to tell the algorithm how to weight melodic unisons, because we usually don’t want them to be the most common melodic interval. Unisons will be weighted the same as whichever generic interval this variable is assigned to.</p>
-<p>(If you <em>DO</em> want unisons to be the most common melodic interval, set to GENERIC_UNISON – you can’t use UNISON because that’s a just interval constant.)</p>
-<p><em>Default</em>: <code>er_constants.FIFTH</code></p></li>
+<p>(If you <em>DO</em> want unisons to be the most common melodic interval, set to “GENERIC_UNISON” – you can’t use “UNISON” because that’s a just interval constant.) TODO document er_constants</p>
+<p><em>Default</em>: <code>"FIFTH"</code></p></li>
 <li><p><span id="max_interval"><strong><code>max_interval</code></strong></span>: number, or a <a href="#note-on-per-voice-sequences-and-other-looping-sequences">per-voice sequence</a> of numbers. If <code>None</code>, does not apply. If positive, indicates a generic interval. Otherwise, indicates a specific interval (in which case it can be a float to indicate a just interval which will be tempered in pre-processing—<a href="#note-on-specifying-pitches-and-intervals">see the note above on specifying pitches and intervals</a>).</p>
 <p><a href="#max_interval"><code>max_interval</code></a> sets an inclusive bound (so if <code>max_interval == -5</code>, an interval of 5 semitones is allowed, but 6 is not). <a href="#max_interval"><code>max_interval</code></a>, like the other similar settings below, applies across rests.</p>
-<p><em>Default</em>: <code>-er_constants.OCTAVE</code></p></li>
+<p><em>Default</em>: <code>"-OCTAVE"</code></p></li>
 <li><p><span id="max_interval_for_non_chord_tones"><strong><code>max_interval_for_non_chord_tones</code></strong></span>: number, or a <a href="#note-on-per-voice-sequences-and-other-looping-sequences">per-voice sequence</a> of numbers. Works in the same way as max_interval, but only applies to non-chord tones. If given a value of 1, can be used to apply a sort of primitive dissonance treatment. It can, however, also be given a value <em>larger</em> than max_interval, for unusual effects. min_interval sets an inclusive bound (so if <code>min_interval == -3</code>, an interval of 3 semitones is allowed, but 2 is not). If not passed, is assigned the value of <a href="#max_interval"><code>max_interval</code></a>.</p></li>
 <li><p><span id="min_interval"><strong><code>min_interval</code></strong></span>: number, or a <a href="#note-on-per-voice-sequences-and-other-looping-sequences">per-voice sequence</a> of numbers. Works like <a href="#max_interval"><code>max_interval</code></a>, but specifies a minimum, rather than a maximum, interval.</p>
 <p><em>Default</em>: <code>None</code></p></li>
@@ -289,12 +289,12 @@
 <li><p><span id="forbidden_interval_modulo"><strong><code>forbidden_interval_modulo</code></strong></span>: number, or a sequence of number, or a sequence of sequence of numbers. Optionally defines attack times at which <a href="#forbidden_interval_classes"><code>forbidden_interval_classes</code></a> will be enforced. Works similarly to and is specified in the same manner as <a href="#consonance_modulo"><code>consonance_modulo</code></a>.</p></li>
 <li><p><span id="exclude_augmented_triad"><strong><code>exclude_augmented_triad</code></strong></span>: boolean. Because all the pairwise intervals of the 12-tet augmented triad are consonant, if we want to avoid it, we need to explicitly exclude it. Only has any effect if consonance_type is “pairwise”.</p>
 <p><em>Default</em>: <code>True</code></p></li>
-<li><p><span id="consonances"><strong><code>consonances</code></strong></span>: a sequence of numbers. The sequence items specify the intervals that will be treated as consonances if <a href="#consonance_type"><code>consonance_type</code></a> is <code>"pairwise"</code>. (But see <a href="#invert_consonances"><code>invert_consonances</code></a> below.) Since it’s just a sequence of numbers, you can specify any intervals you like—it does not have to conform to the usual set of consonances. (<a href="#note-on-specifying-pitches-and-intervals">See the note above on specifying pitches and intervals</a>.)</p>
-<p><em>Default</em>: <code>er_constants.CONSONANCES</code></p></li>
+<li><p><span id="consonances"><strong><code>consonances</code></strong></span>: a sequence of numbers. The sequence items specify the intervals that will be treated as consonances if <a href="#consonance_type"><code>consonance_type</code></a> is <code>"pairwise"</code>. (But see <a href="#invert_consonances"><code>invert_consonances</code></a> below.) Since it’s just a sequence of numbers, you can specify any intervals you like—it does not have to conform to the usual set of consonances. (<a href="#note-on-specifying-pitches-and-intervals">See the note above on specifying pitches and intervals</a>.) TODO document er_constants</p>
+<p><em>Default</em>: <code>"CONSONANCES"</code></p></li>
 <li><p><span id="invert_consonances"><strong><code>invert_consonances</code></strong></span>: bool. If True, then the contents of <a href="#consonances"><code>consonances</code></a> are replaced by their setwise complement. (E.g., if <a href="#tet"><code>tet</code></a> is 12, then <code>[0, 3, 4, 5, 7, 8, 9]</code> will be replaced by <code>[1, 2, 6, 10, 11]</code>.) This permits an easy way of specifying so-called “dissonant counterpoint”. Has no effect if <a href="#consonance_type"><code>consonance_type</code></a> is <code>"chordwise"</code>.</p>
 <p><em>Default</em>: <code>False</code></p></li>
-<li><p><span id="consonant_chords"><strong><code>consonant_chords</code></strong></span>: a sequence of sequences of numbers. Each sub-sequence specifies a chord to be understood as consonant if <a href="#consonance_type"><code>consonance_type</code></a> is <code>"chordwise"</code>. (<a href="#note-on-specifying-pitches-and-intervals">See the note above on specifying pitches and intervals</a>.)</p>
-<p><em>Default</em>: <code>(er_constants.MAJOR_TRIAD, er_constants.MINOR_TRIAD)</code></p></li>
+<li><p><span id="consonant_chords"><strong><code>consonant_chords</code></strong></span>: a sequence of sequences of numbers. Each sub-sequence specifies a chord to be understood as consonant if <a href="#consonance_type"><code>consonance_type</code></a> is <code>"chordwise"</code>. (<a href="#note-on-specifying-pitches-and-intervals">See the note above on specifying pitches and intervals</a>.) TODO document er_constants</p>
+<p><em>Default</em>: <code>("MAJOR_TRIAD", "MINOR_TRIAD")</code></p></li>
 <li><p><span id="chord_octave_equi_type"><strong><code>chord_octave_equi_type</code></strong></span>: string. If <a href="#consonance_type"><code>consonance_type</code></a> is <code>"chordwise"</code>, controls how the items in <a href="#consonant_chords"><code>consonant_chords</code></a> are interpreted regarding octave equivalence and octave permutations. Possible values:</p>
 <ul class="incremental">
 <li><code>"all"</code>: all octave-equivalent and octave-permuted voicings are allowed. Thus (C4, E4, G4), (C4, G4, E5), and (G3, E4, C4) are all equivalent (as are many other voicings of a C major chord).</li>
@@ -384,14 +384,11 @@
 </ul>
 <h3 id="choir-settings">Choir settings</h3>
 <ul class="incremental">
-<li><p><span id="choirs"><strong><code>choirs</code></strong></span>: a sequence of ints or tuples.</p>
-<p>Integers specify the program numbers of GM midi instruments. Constants defining these can be found in <code>er_constants.py</code>.</p>
-<p>Tuples can be used to combine multiple instruments (e.g., violins and cellos) into a single “choir”. They should consist of two items:</p>
-<ul class="incremental">
-<li><p>a sequence of GM midi instruments, listed from low to high</p></li>
-<li><p>an integer or sequence of integers, specifying a split point or split points, that is, the pitches at which the instruments should be switched between.</p></li>
-</ul>
-<p><em>Default</em>: <code>(er_constants.MARIMBA, er_constants.VIBRAPHONE,</code> er_constants.ELECTRIC_PIANO, er_constants.GUITAR,)</p></li>
+<li><p><span id="choirs"><strong><code>choirs</code></strong></span>: sequence of ints and/or strings.</p>
+<p>Ints specify the program number of a GM midi instrument.</p>
+<p>Strings specify integer constants defining GM midi instruments defined in <code>er_constants.py</code>.</p>
+<p>TODO document er_constants</p>
+<p><em>Default</em>: <code>("GUITAR", "ELECTRIC_PIANO", "PIANO", "XYLOPHONE")</code></p></li>
 <li><p><span id="choir_assignments"><strong><code>choir_assignments</code></strong></span>: sequence of ints. Assigns voices to the given index in <a href="#choirs"><code>choirs</code></a>. Will be looped through if necessary. For example, if <code>choir_assignments == [1, 0]</code>, voice 0 will be assigned to <code>choirs[1]</code>, voice 1 will be assigned to <code>choirs[0]</code>, voice 2 (if it exists) will be assigned to <code>choirs[1]</code>, and so on. By default, or if passed an empty sequence, all voices are assigned to choir 0. # TODO change this default to loop through choirs by default</p>
 <p>If <a href="#randomly_distribute_between_choirs"><code>randomly_distribute_between_choirs</code></a> is True, then this setting is ignored.</p></li>
 <li><p><span id="randomly_distribute_between_choirs"><strong><code>randomly_distribute_between_choirs</code></strong></span>: bool. If True, then voices are randomly assigned to items from <a href="#choirs"><code>choirs</code></a>. The precise way in which this occurs is controlled by the settings below.</p>
@@ -456,7 +453,7 @@
 <li><p><span id="max_super_pattern_len"><strong><code>max_super_pattern_len</code></strong></span>: number. If positive, the super pattern will be truncated if it reaches this length.</p>
 <p><em>Default</em>: <code>128</code></p></li>
 <li><p><span id="hard_bounds"><strong><code>hard_bounds</code></strong></span>: a <a href="#note-on-per-voice-sequences-and-other-looping-sequences">per-voice sequence</a> of 2-tuples. Each tuple is of form (lowest_note, highest_note). (<a href="#note-on-specifying-pitches-and-intervals">See the note above on specifying pitches and intervals</a>.) This setting determines a lower and upper bound that will be enforced regardless of the setting of <a href="#constrain_voice_leading_to_ranges"><code>constrain_voice_leading_to_ranges</code></a>. The default values are the lowest and highest notes of an 88-key piano, respectively. See also <a href="#voice_ranges"><code>voice_ranges</code></a>.</p>
-<p><em>Default</em>: <code>((OCTAVE0 * A, OCTAVE8 * C))</code></p></li>
+<p><em>Default</em>: <code>(("OCTAVE0 * A", "OCTAVE8 * C"))</code></p></li>
 <li><p><span id="voice_order_str"><strong><code>voice_order_str</code></strong></span>: string. If “reverse”, voices will be generated from highest to lowest. Otherwise, they are generated from lowest to highest.</p>
 <p><em>Default</em>: <code>"usual"</code></p></li>
 <li><p><span id="allow_voice_crossings"><strong><code>allow_voice_crossings</code></strong></span>: bool, or a <a href="#note-on-per-voice-sequences-and-other-looping-sequences">per-voice sequence</a> of bools. This could be used, for example, to forbid voice-crossings in the bass voice, but not in the other voices.</p>

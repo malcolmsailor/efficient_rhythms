@@ -211,9 +211,10 @@ Less often used general settings are under
     if it is not. Note that if
     <a href="#constrain_voice_leading_to_ranges">`constrain_voice_leading_to_ranges`</a>
     is False, than these ranges will only be enforced for the initial
-    pattern. See also <a href="#hard_bounds">`hard_bounds`</a>.
+    pattern. See also <a href="#hard_bounds">`hard_bounds`</a>. TODO
+    document er\_constants
     
-    *Default*: `CONTIGUOUS_OCTAVES * OCTAVE3 * C`
+    *Default*: `"CONTIGUOUS_OCTAVES * OCTAVE3 * C"`
 
 ### Scale and chord settings
 
@@ -298,9 +299,10 @@ Less often used general settings are under
     will be looped through.
     
     ([See the note above on specifying pitches and
-    intervals](#note-on-specifying-pitches-and-intervals).)
+    intervals](#note-on-specifying-pitches-and-intervals).) TODO
+    document er\_constants
     
-    *Default*: `[er_constants.DIATONIC_SCALE]`
+    *Default*: `["DIATONIC_SCALE"]`
 
   - <span id="chords">**`chords`**</span>: a sequence of sequences of
     numbers. Each subsequence specifies a chord. Scales should always be
@@ -318,9 +320,10 @@ Less often used general settings are under
     will be looped through.
     
     ([See the note above on specifying pitches and
-    intervals](#note-on-specifying-pitches-and-intervals).)
+    intervals](#note-on-specifying-pitches-and-intervals).) TODO
+    document er\_constants
     
-    *Default*: `[er_constants.MAJOR_TRIAD]`
+    *Default*: `["MAJOR_TRIAD"]`
 
 ### Midi settings
 
@@ -800,10 +803,10 @@ the only setting that \# begins
     variable is assigned to.
     
     (If you *DO* want unisons to be the most common melodic interval,
-    set to GENERIC\_UNISON – you can’t use UNISON because that’s a just
-    interval constant.)
+    set to “GENERIC\_UNISON” – you can’t use “UNISON” because that’s a
+    just interval constant.) TODO document er\_constants
     
-    *Default*: `er_constants.FIFTH`
+    *Default*: `"FIFTH"`
 
   - <span id="max_interval">**`max_interval`**</span>: number, or a
     [per-voice
@@ -819,7 +822,7 @@ the only setting that \# begins
     but 6 is not). <a href="#max_interval">`max_interval`</a>, like the
     other similar settings below, applies across rests.
     
-    *Default*: `-er_constants.OCTAVE`
+    *Default*: `"-OCTAVE"`
 
   - <span id="max_interval_for_non_chord_tones">**`max_interval_for_non_chord_tones`**</span>:
     number, or a [per-voice
@@ -1029,9 +1032,10 @@ the only setting that \# begins
     below.) Since it’s just a sequence of numbers, you can specify any
     intervals you like—it does not have to conform to the usual set of
     consonances. ([See the note above on specifying pitches and
-    intervals](#note-on-specifying-pitches-and-intervals).)
+    intervals](#note-on-specifying-pitches-and-intervals).) TODO
+    document er\_constants
     
-    *Default*: `er_constants.CONSONANCES`
+    *Default*: `"CONSONANCES"`
 
   - <span id="invert_consonances">**`invert_consonances`**</span>: bool.
     If True, then the contents of
@@ -1049,9 +1053,10 @@ the only setting that \# begins
     chord to be understood as consonant if
     <a href="#consonance_type">`consonance_type`</a> is `"chordwise"`.
     ([See the note above on specifying pitches and
-    intervals](#note-on-specifying-pitches-and-intervals).)
+    intervals](#note-on-specifying-pitches-and-intervals).) TODO
+    document er\_constants
     
-    *Default*: `(er_constants.MAJOR_TRIAD, er_constants.MINOR_TRIAD)`
+    *Default*: `("MAJOR_TRIAD", "MINOR_TRIAD")`
 
   - <span id="chord_octave_equi_type">**`chord_octave_equi_type`**</span>:
     string. If <a href="#consonance_type">`consonance_type`</a> is
@@ -1430,22 +1435,17 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
 
 ### Choir settings
 
-  - <span id="choirs">**`choirs`**</span>: a sequence of ints or tuples.
+  - <span id="choirs">**`choirs`**</span>: sequence of ints and/or
+    strings.
     
-    Integers specify the program numbers of GM midi instruments.
-    Constants defining these can be found in `er_constants.py`.
+    Ints specify the program number of a GM midi instrument.
     
-    Tuples can be used to combine multiple instruments (e.g., violins
-    and cellos) into a single “choir”. They should consist of two items:
+    Strings specify integer constants defining GM midi instruments
+    defined in `er_constants.py`.
     
-      - a sequence of GM midi instruments, listed from low to high
+    TODO document er\_constants
     
-      - an integer or sequence of integers, specifying a split point or
-        split points, that is, the pitches at which the instruments
-        should be switched between.
-    
-    *Default*: `(er_constants.MARIMBA, er_constants.VIBRAPHONE,`
-    er\_constants.ELECTRIC\_PIANO, er\_constants.GUITAR,)
+    *Default*: `("GUITAR", "ELECTRIC_PIANO", "PIANO", "XYLOPHONE")`
 
   - <span id="choir_assignments">**`choir_assignments`**</span>:
     sequence of ints. Assigns voices to the given index in
@@ -1690,7 +1690,7 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
     piano, respectively. See also
     <a href="#voice_ranges">`voice_ranges`</a>.
     
-    *Default*: `((OCTAVE0 * A, OCTAVE8 * C))`
+    *Default*: `(("OCTAVE0 * A", "OCTAVE8 * C"))`
 
   - <span id="voice_order_str">**`voice_order_str`**</span>: string. If
     “reverse”, voices will be generated from highest to lowest.
