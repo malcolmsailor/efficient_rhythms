@@ -1061,7 +1061,7 @@ def input_loop(
                 "    'a' to apply filters and/or transformers\n",
                 (
                     "    'o' to open midi file with macOS 'open' command\n"
-                    if sys.platform == "darwin"
+                    if sys.platform.startswith("darwin")
                     else ""
                 ),
                 "    'v' to write notation using Verovio\n",
