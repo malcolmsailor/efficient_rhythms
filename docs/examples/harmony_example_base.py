@@ -1,4 +1,6 @@
 {
+    # TODO document that some of these programs are missing from freepats
+    "choirs": ("MARIMBA", "VIBRAPHONE", "ELECTRIC_PIANO"),
     "seed": 2,
     "pattern_len": 4,
     "consonance_treatment": "none",
