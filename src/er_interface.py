@@ -37,11 +37,6 @@ def line_width():
 
 
 class BuildStatusPrinter:
-    # header_strs = {
-    #     "attempt_strs": ("Overall attempt:", "Attempt:"),
-    #     "initial_pattern_strs": ("Initial pattern:", "IP:",),
-    #     "voice_leading_strs": ("Voice-leading:", "VL:",),
-    # }
     _spin_segments = "|/-\\"
     ip_header_strs = [
         "No pcs",
@@ -65,31 +60,8 @@ class BuildStatusPrinter:
     def _get_header(self, er):
         attempt_digits = math.ceil(math.log10(er.voice_leading_attempts))
         attempt_num_str = f"{{:>{attempt_digits}}}/{er.voice_leading_attempts} "
-        # attempt_len = 2 * attempt_digits + 2
         ip_digits = math.ceil(math.log10(er.initial_pattern_attempts))
         ip_num_str = f"{{:>{ip_digits}}}/{er.initial_pattern_attempts} "
-        # ip_len = 2 * ip_digits + 1
-        # vl_digits = math.ceil(math.log10(er.voice_leading_attempts))
-        # vl_num_str = f"{{:>{vl_digits}}}/{er.voice_leading_attempts} "
-        # vl_len = 2 * vl_digits + 1
-        # total_num_len = attempt_len + ip_len + vl_len
-        # num_joins = 5
-
-        # for i, join_ch in itertools.product(range(2), (" ", "")):
-        #     text_len = sum([len(item[i]) for item in self.header_strs.values()])
-        #     # 2 added for width of spinning line
-        #     if text_len + total_num_len + num_joins + 2 < self.line_width:
-        #         break
-        # self._header_fmt_str = join_ch.join(
-        #     [
-        #         self.header_strs["attempt_strs"][i],
-        #         attempt_num_str,
-        #         self.header_strs["initial_pattern_strs"][i],
-        #         ip_num_str,
-        #         self.header_strs["voice_leading_strs"][i],
-        #         vl_num_str,
-        #     ]
-        # )
         self._total_header_fmt_str = (
             f"Building pattern: overall attempt {attempt_num_str}"
         )
@@ -188,7 +160,6 @@ class BuildStatusPrinter:
             self.vl_table(vals).count("\n") == 2
         ), 'self.vl_table(vals).count("\n") != 2'
         self.spin()
-        # breakpoint()
 
     def initial_pattern_status(self, *vals):
         print(er_shell_constants.START_OF_PREV_LINE * 6, end="")
@@ -196,25 +167,16 @@ class BuildStatusPrinter:
             self.ip_table(vals), end=er_shell_constants.START_OF_NEXT_LINE * 4
         )
         self.spin()
-        # breakpoint()
 
     def print_header(self):
         print(er_shell_constants.START_OF_PREV_LINE * 7, end="")
         print(self.header, end=er_shell_constants.START_OF_NEXT_LINE * 7)
-        # breakpoint()
 
     def initial_print(self):
-        # print(
-        #     "\n"
-        #     + er_shell_constants.BOLD_TEXT
-        #     + "Building pattern..."
-        #     + er_shell_constants.RESET_TEXT,
-        # )
         print("")
         print(self.header)
         print(self.ip_table([(0, 0) for _ in range(self.ip_n_cols)]))
         print(self.vl_table([(0, 0) for _ in range(self.vl_n_cols)]))
-        # breakpoint()
 
     @staticmethod
     def success():
@@ -225,7 +187,6 @@ class BuildStatusPrinter:
             + er_shell_constants.RESET_TEXT,
             end="\n\n",
         )
-        # breakpoint()
 
 
 def parse_cmd_line_args():
