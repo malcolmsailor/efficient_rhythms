@@ -115,9 +115,24 @@ def test_replace_pitch_constants():
             ],
         ),
         ("unison_weighted_as", "GENERIC_UNISON", er_constants.GENERIC_UNISON,),
+        (
+            "max_interval_for_non_chord_tones",
+            "-OCTAVE",
+            -1 * er_constants.OCTAVE,
+        ),
+        (
+            "min_interval_for_non_chord_tones",
+            "-MINOR_SECOND",
+            -1 * er_constants.MINOR_2ND,
+        ),
     ]
     for attr_name, constants, vals in tests:
-        settingsdict = {attr_name: constants, "num_harmonies": 0}
+        settingsdict = {
+            attr_name: constants,
+            "num_harmonies": 0,
+            "max_interval_for_non_chord_tones": "-OCTAVE",
+            "min_interval_for_non_chord_tones": "-MINOR_SECOND",
+        }
         # unit test of replace_pitch_constants
         er = er_settings.ERSettings(**settingsdict)
         er_preprocess.replace_pitch_constants(er)

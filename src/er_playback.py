@@ -31,7 +31,7 @@ def init_and_return_midi_player(shell=False):
                 f"Using `{os.environ['EFFRHY_MIDI_PLAYER']}` for midi playback"
             )
             return "environment"
-        elif not sys.platform.startswith("darwin"):
+        if not sys.platform.startswith("darwin"):
             print(
                 """For shell midi playback, you must put a midi
 player executable (e.g., timidity) in the environment
