@@ -41,6 +41,12 @@ class Choir:
             self.split_points, tet, integers_in_12_tet
         )
 
+    def __repr__(self):
+        return (
+            f"{self.__class__.__name__}(sub_choirs={self.sub_choirs}, "
+            f"split_points={self.split_points})"
+        )
+
 
 def get_choir_prog(choirs, choir_i, pitch):
     choir_program_i = 0
