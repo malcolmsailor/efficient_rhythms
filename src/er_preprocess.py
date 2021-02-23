@@ -37,6 +37,10 @@ PITCH_MATERIAL_LISTS = (
     "forbidden_interval_classes",
     "prohibit_parallels",
     "transpose_intervals",
+    "max_interval",
+    "max_interval_for_non_chord_tones",
+    "min_interval",
+    "min_interval_for_non_chord_tones",
 )
 
 PITCH_MATERIALS = (
@@ -229,8 +233,14 @@ def replace_pitch_constants(er):
                         # TODO see documentation for more help
                     )
             else:
+                # TODO document sign flip with "-" for descending intervals
+                if bit[0] == "-":
+                    sign = -1
+                    bit = bit[1:]
+                else:
+                    sign = 1
                 try:
-                    constant = getattr(er_constants, bit)
+                    constant = sign * getattr(er_constants, bit)
                 except AttributeError:
                     raise PitchConstantError(  # pylint: disable=raise-missing-from
                         f"{bit} is not an implemented pitch constant."
@@ -253,6 +263,7 @@ def replace_pitch_constants(er):
             pitch_material[i] = _process_str(pitch_material[i])
         elif isinstance(pitch_material[i], typing.Sequence):
             for j in range(len(pitch_material[i])):
+                pitch_material[i] = list(pitch_material[i])
                 _replace(pitch_material[i], j)
 
     for pitch_material_name in PITCH_MATERIAL_LISTS + PITCH_MATERIALS:
@@ -466,6 +477,8 @@ def process_np_arrays(er):
 
 def process_choir_settings(er):
     """Prepares the choir settings."""
+    # LONGTERM check if midi programs are defined in midi player? (To avoid
+    #   tracks that mysteriously don't play back.)
     if not er.choirs:
         raise SettingsError("'choirs' cannot be empty")
     if not er.randomly_distribute_between_choirs:
@@ -526,20 +539,41 @@ def process_choir_settings(er):
         if isinstance(choir, (int, str)):
             er.choir_programs.append(_get_choir(choir))
         else:
-            # TODO test choir split points---don't seem to be working?
-            sub_choirs, split_points = choir
-            if not isinstance(split_points, typing.Sequence):
-                split_points = [
-                    split_points,
-                ]
-            sub_choir_progs = [
-                _get_choir(sub_choir) for sub_choir in sub_choirs
-            ]
-            er.choirs[choir_i] = er_choirs.Choir(sub_choirs, split_points,)
-            er.choirs[choir_i].temper_split_points(
-                er.tet, er.integers_in_12_tet
+            raise NotImplementedError(
+                "'choirs' must be integers or strings defined in "
+                "er_constants.py"
             )
-            er.choir_programs += sub_choir_progs
+            # # LONGTERM implement choir split points
+            # #   it seems I never actually completed implementing this
+            ############
+            # # here is the old docstring from er_settings which provides a spec:
+            # choirs: a sequence of ints or tuples.
+            #
+            #     Integers specify the program numbers of GM midi instruments.
+            #     Constants defining these can be found in `er_constants.py`.
+            #
+            #     Tuples can be used to combine multiple instruments (e.g., violins
+            #     and cellos) into a single "choir". They should consist of two items:
+            #         - a sequence of GM midi instruments, listed from low to high
+            #         - an integer or sequence of integers, specifying a split point
+            #         or split points, that is, the pitches at which the instruments
+            #         should be switched between.
+            #     Default: (er_constants.MARIMBA, er_constants.VIBRAPHONE,
+            #     er_constants.ELECTRIC_PIANO, er_constants.GUITAR,)
+            ############
+            # sub_choirs, split_points = choir
+            # if not isinstance(split_points, typing.Sequence):
+            #     split_points = [
+            #         split_points,
+            #     ]
+            # sub_choir_progs = [
+            #     _get_choir(sub_choir) for sub_choir in sub_choirs
+            # ]
+            # er.choirs[choir_i] = er_choirs.Choir(sub_choir_progs, split_points,)
+            # er.choirs[choir_i].temper_split_points(
+            #     er.tet, er.integers_in_12_tet
+            # )
+            # er.choir_programs += sub_choir_progs
 
     er.num_choir_programs = len(er.choir_programs)
 
