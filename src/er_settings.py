@@ -3,11 +3,6 @@ import numbers
 import typing
 from fractions import Fraction
 
-
-import numpy as np
-
-import src.er_constants as er_constants
-
 # import src.er_type_check as er_type_check
 
 DEFAULT_NUM_HARMONIES = 4
@@ -195,7 +190,8 @@ class ERSettings:
             that if `constrain_voice_leading_to_ranges` is False, than these
             ranges will only be enforced for the initial pattern. See also
             `hard_bounds`.
-            Default: CONTIGUOUS_OCTAVES * OCTAVE3 * C
+            TODO document er_constants
+            Default: "CONTIGUOUS_OCTAVES * OCTAVE3 * C"
 
 
 
@@ -264,7 +260,8 @@ class ERSettings:
             looped through.
 
             (See the note above on specifying pitches and intervals.)
-            Default: [er_constants.DIATONIC_SCALE]
+            TODO document er_constants
+            Default: ["DIATONIC_SCALE"]
         chords: a sequence of sequences of numbers. Each subsequence specifies
             a chord. Scales should always be specified starting from pitch-class
             0; they will then be transposed to the appropriate pitch-classes
@@ -277,7 +274,8 @@ class ERSettings:
             looped through.
 
             (See the note above on specifying pitches and intervals.)
-            Default: [er_constants.MAJOR_TRIAD]
+            TODO document er_constants
+            Default: ["MAJOR_TRIAD"]
 
         Midi settings
         =============
@@ -608,9 +606,10 @@ class ERSettings:
             variable is assigned to.
 
             (If you *DO* want unisons to be the most common melodic interval,
-            set to GENERIC_UNISON -- you can't use UNISON because that's a just
+            set to "GENERIC_UNISON" -- you can't use "UNISON" because that's a just
             interval constant.)
-            Default: er_constants.FIFTH
+            TODO document er_constants
+            Default: "FIFTH"
         max_interval: number, or a per-voice sequence of numbers. If `None`, does
             not apply.  If positive, indicates a generic interval. Otherwise,
             indicates a specific interval (in which case it can be a float to
@@ -622,7 +621,7 @@ class ERSettings:
             an interval of 5 semitones is allowed, but 6 is not).
             `max_interval`, like the other similar settings below, applies
             across rests.
-            Default: -er_constants.OCTAVE
+            Default: "-OCTAVE"
         max_interval_for_non_chord_tones: number, or a per-voice sequence of
             numbers.  Works in the same way as max_interval, but only applies to
             non-chord tones. If given a value of 1, can be used to apply a sort
@@ -771,7 +770,8 @@ class ERSettings:
             just a sequence of numbers, you can specify any intervals you
             like---it does not have to conform to the usual set of consonances.
             (See the note above on specifying pitches and intervals.)
-            Default: `er_constants.CONSONANCES`
+            TODO document er_constants
+            Default: `"CONSONANCES"`
         invert_consonances: bool. If True, then the contents of `consonances`
             are replaced by their setwise complement. (E.g., if `tet` is 12,
             then `[0, 3, 4, 5, 7, 8, 9]` will be replaced by `[1, 2, 6, 10,
@@ -782,7 +782,8 @@ class ERSettings:
             specifies a chord to be understood as consonant if `consonance_type`
             is `"chordwise"`. (See the note above on specifying pitches and
             intervals.)
-            Default: `(er_constants.MAJOR_TRIAD, er_constants.MINOR_TRIAD)`
+            TODO document er_constants
+            Default: `("MAJOR_TRIAD", "MINOR_TRIAD")`
         chord_octave_equi_type: string. If `consonance_type` is `"chordwise"`,
             controls how the items in `consonant_chords` are interpreted
             regarding octave equivalence and octave permutations. Possible
@@ -1063,19 +1064,16 @@ class ERSettings:
         Choir settings
         ==============
 
-        choirs: a sequence of ints or tuples.
+        choirs: sequence of ints and/or strings.
 
-            Integers specify the program numbers of GM midi instruments.
-            Constants defining these can be found in `er_constants.py`.
+            Ints specify the program number of a GM midi instrument.
 
-            Tuples can be used to combine multiple instruments (e.g., violins
-            and cellos) into a single "choir". They should consist of two items:
-                - a sequence of GM midi instruments, listed from low to high
-                - an integer or sequence of integers, specifying a split point
-                or split points, that is, the pitches at which the instruments
-                should be switched between.
-            Default: (er_constants.MARIMBA, er_constants.VIBRAPHONE,
-            er_constants.ELECTRIC_PIANO, er_constants.GUITAR,)
+            Strings specify integer constants defining GM midi instruments
+            defined in `er_constants.py`.
+
+            TODO document er_constants
+
+            Default: ("GUITAR", "ELECTRIC_PIANO", "PIANO", "XYLOPHONE")
         choir_assignments: sequence of ints. Assigns voices to the given index
             in `choirs`. Will be looped through if necessary. For example, if
             `choir_assignments == [1, 0]`, voice 0 will be assigned to
@@ -1238,7 +1236,7 @@ class ERSettings:
             `constrain_voice_leading_to_ranges`. The default values are the
             lowest and highest notes of an 88-key piano, respectively. See also
             `voice_ranges`.
-            Default: ((OCTAVE0 * A, OCTAVE8 * C))
+            Default: (("OCTAVE0 * A", "OCTAVE8 * C"))
         voice_order_str: string. If "reverse", voices will be generated from
             highest to lowest. Otherwise, they are generated from lowest to
             highest.
@@ -1354,17 +1352,14 @@ class ERSettings:
     ] = 4
     truncate_patterns: bool = False
     max_super_pattern_len: numbers.Number = MAX_SUPER_PATTERN_LEN
-    voice_ranges: typing.Sequence[
-        typing.Tuple[numbers.Number, numbers.Number]
-    ] = er_constants.CONTIGUOUS_OCTAVES * er_constants.OCTAVE3 * er_constants.C
+    voice_ranges: typing.Union[
+        typing.Sequence[typing.Tuple[numbers.Number, numbers.Number]], str
+    ] = "CONTIGUOUS_OCTAVES * OCTAVE3 * C"
     hard_bounds: typing.Sequence[
-        typing.Tuple[numbers.Number, numbers.Number]
-    ] = (
-        (
-            er_constants.A * er_constants.OCTAVE0,
-            er_constants.C * er_constants.OCTAVE8,
-        ),
-    )
+        typing.Tuple[
+            typing.Union[str, numbers.Number], typing.Union[str, numbers.Number]
+        ]
+    ] = (("OCTAVE0 * A", "OCTAVE8 * C",),)
     # MAYBE add other possible voice orders, e.g., (melody, bass, inner voices)
     voice_order_str: str = "usual"
     allow_voice_crossings: typing.Union[bool, typing.Sequence[bool]] = True
@@ -1377,13 +1372,13 @@ class ERSettings:
         numbers.Number, typing.Sequence[numbers.Number]
     ] = None
     scales: typing.Sequence[
-        typing.Sequence[numbers.Number]
-    ] = dataclasses.field(default_factory=lambda: [er_constants.DIATONIC_SCALE])
+        typing.Union[str, typing.Sequence[numbers.Number]]
+    ] = dataclasses.field(default_factory=lambda: ["DIATONIC_SCALE"])
     # QUESTION is there a way to implement octave equivalence settings for
     #   chords here as well as for consonant_chords?
     chords: typing.Sequence[
-        typing.Sequence[numbers.Number]
-    ] = dataclasses.field(default_factory=lambda: [er_constants.MAJOR_TRIAD])
+        typing.Union[str, typing.Sequence[numbers.Number]]
+    ] = dataclasses.field(default_factory=lambda: ["MAJOR_TRIAD"])
 
     ###################################################################
     # Midi settings
@@ -1466,22 +1461,22 @@ class ERSettings:
 
     prefer_small_melodic_intervals: bool = True
     prefer_small_melodic_intervals_coefficient: numbers.Number = 1
-    unison_weighted_as: int = er_constants.FIFTH
+    unison_weighted_as: int = "FIFTH"
 
     # LONGTERM min rest value across which limit intervals do not apply
     # LONGTERM avoid enforcing limit intervals with voice-led foot
 
     max_interval: typing.Union[
-        numbers.Number, typing.Sequence[numbers.Number]
-    ] = -er_constants.OCTAVE
+        str, numbers.Number, typing.Sequence[typing.Union[str, numbers.Number]]
+    ] = "-OCTAVE"
     max_interval_for_non_chord_tones: typing.Union[
-        numbers.Number, typing.Sequence[numbers.Number]
+        str, numbers.Number, typing.Sequence[typing.Union[str, numbers.Number]]
     ] = "take_from_max_interval"
     min_interval: typing.Union[
-        numbers.Number, typing.Sequence[numbers.Number]
+        str, numbers.Number, typing.Sequence[typing.Union[str, numbers.Number]]
     ] = None
     min_interval_for_non_chord_tones: typing.Union[
-        numbers.Number, typing.Sequence[numbers.Number]
+        str, numbers.Number, typing.Sequence[typing.Union[str, numbers.Number]]
     ] = "take_from_min_interval"
 
     # LONGTERM apply on a per-voice basis
@@ -1491,7 +1486,9 @@ class ERSettings:
     max_repeated_notes: int = 1
     max_alternations: typing.Union[int, typing.Sequence[int]] = 2
     # LONGTERM: prefer_alternations bool
-    prohibit_parallels: typing.Sequence[numbers.Number] = (er_constants.OCTAVE,)
+    prohibit_parallels: typing.Sequence[typing.Union[numbers.Number, str]] = (
+        "OCTAVE",
+    )
     antiparallels: bool = True
 
     # MAYBE think about other types of parallel motion (e.g.,
@@ -1520,11 +1517,15 @@ class ERSettings:
         typing.Sequence[typing.Sequence[numbers.Number]],
     ] = 0
     exclude_augmented_triad: bool = True
-    consonances: typing.Sequence[numbers.Number] = er_constants.CONSONANCES
+    consonances: typing.Sequence[
+        typing.Union[numbers.Number, str]
+    ] = "CONSONANCES"
     invert_consonances: bool = False
-    consonant_chords: typing.Sequence[typing.Sequence[numbers.Number]] = (
-        er_constants.MAJOR_TRIAD,
-        er_constants.MINOR_TRIAD,
+    consonant_chords: typing.Sequence[
+        typing.Sequence[typing.Union[numbers.Number, str]]
+    ] = (
+        "MAJOR_TRIAD",
+        "MINOR_TRIAD",
     )
     chord_octave_equi_type: str = "all"
     chord_permit_doublings: str = "all"
@@ -1582,15 +1583,16 @@ class ERSettings:
     choirs: typing.Sequence[
         typing.Union[
             int,
-            typing.Tuple[
-                typing.Sequence[int], typing.Union[int, typing.Sequence[int]]
-            ],
+            str,
+            # typing.Tuple[
+            #     typing.Sequence[int], typing.Union[int, typing.Sequence[int]]
+            # ],
         ]
     ] = (
-        er_constants.GUITAR,
-        er_constants.ELECTRIC_PIANO,
-        er_constants.PIANO,
-        er_constants.XYLOPHONE,
+        "GUITAR",
+        "ELECTRIC_PIANO",
+        "PIANO",
+        "XYLOPHONE",
     )
     choir_assignments: typing.Sequence[int] = None
     randomly_distribute_between_choirs: bool = False
