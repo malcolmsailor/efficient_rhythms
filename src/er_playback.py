@@ -1,3 +1,5 @@
+import os
+import subprocess
 import sys
 import threading
 
@@ -22,9 +24,22 @@ def init_and_return_midi_player(shell=False):
 
     Returns name of midi player.
     """
-    # LONGTERM allow user to choose midiplayer?
-    # LONGTERM implement fluidsynth or other?
+    # TODO document environment variable somewhere
     if shell:
+        if "EFFRHY_MIDI_PLAYER" in os.environ:
+            print(
+                f"Using `{os.environ['EFFRHY_MIDI_PLAYER']}` for midi playback"
+            )
+            return "environment"
+        elif not sys.platform.startswith("darwin"):
+            print(
+                """For shell midi playback, you must put a midi
+player executable (e.g., timidity) in the environment
+variable EFFRHY_MIDI_PLAYER, e.g.
+
+    export EFFRHY_MIDI_PLAYER=timidity"""
+            )
+            sys.exit(1)
         # if tet != 12:
         #     return "fluidsynth"
         pygame.mixer.init()
@@ -37,6 +52,11 @@ def init_and_return_midi_player(shell=False):
 def playback_midi(midi_player, breaker, midi_path):
     """Plays a midi file.
     """
+    if midi_player == "environment":
+        midi_exec = os.environ["EFFRHY_MIDI_PLAYER"]
+        command = midi_exec + " '" + midi_path + "'"
+        print(f"\nRunning `{command}`")
+        subprocess.run(command, shell=True, check=True)
     if midi_player == "pygame":
         pygame.mixer.music.load(midi_path)
         pygame.mixer.music.play()

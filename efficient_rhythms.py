@@ -29,7 +29,10 @@ def main():
 
     er_interface.print_hello()
     args = er_interface.parse_cmd_line_args()
-
+    if not args.no_interface:
+        midi_player = er_playback.init_and_return_midi_player(
+            shell=args.midi_port
+        )
     midi_in = args.input_midi
     if midi_in:
         if args.output_notation:
@@ -55,9 +58,6 @@ def main():
         )
         midi_settings.num_tracks_from(super_pattern)
         midi_settings.original_path = midi_in
-        midi_player = er_playback.init_and_return_midi_player(
-            shell=args.midi_port
-        )
         if super_pattern.attacks_adjusted_by != 0:
             er_midi.write_midi(super_pattern, midi_settings)
         er_interface.input_loop(
@@ -70,6 +70,7 @@ def main():
 
     else:
         seed = None
+
         # LONGTERM move this loop to er_make.py or something
         for try_i in itertools.count():
             er = er_preprocess.preprocess_settings(
@@ -118,9 +119,6 @@ def main():
                 if not result:
                     sys.exit(1)
             return
-        midi_player = er_playback.init_and_return_midi_player(
-            shell=args.midi_port
-        )
         er_interface.input_loop(
             er,
             super_pattern,
