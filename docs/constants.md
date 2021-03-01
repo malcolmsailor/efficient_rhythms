@@ -1,8 +1,8 @@
-import numpy as np
+# Pitch-class constants
 
-"""# Pitch-class constants
+Natural pitch-class constants.
 
-Natural pitch-class constants."""
+```
 C = 1.0
 D = 9 / 8
 E = 5 / 4
@@ -10,23 +10,21 @@ F = 4 / 3
 G = 3 / 2
 A = 10 / 6
 B = 15 / 8
+```
 
-"""Flats and sharps are here defined as the difference between a just major and
-a just minor third.
-"""
+Flats and sharps are here defined as the difference between a just major
+and a just minor third.
+
+```
 FLAT = 24 / 25
 SHARP = 25 / 24
+```
 
+Flat and sharp pitch-class constants. (‘\#’ in user settings will be
+replaced by ’\_SHARP’, since ‘\#’ isn’t a valid character in Python
+identifiers)
 
-# Difference between (perfect fifth + major third) and (perfect fourth +
-# perfect fourth):
-# FLAT = 128/135
-# SHARP = 135/128
-
-# TODO document sharp behavior
-"""Flat and sharp pitch-class constants. ('#' in user settings will be
-replaced by '_SHARP', since '#' isn't a valid character in Python
-identifiers)"""
+```
 Cb = C * FLAT
 Db = D * FLAT
 Eb = E * FLAT
@@ -34,14 +32,18 @@ Fb = F * FLAT
 Gb = G * FLAT
 Ab = A * FLAT
 Bb = B * FLAT
-C_SHARP = C * SHARP
-D_SHARP = D * SHARP
-E_SHARP = E * SHARP
-F_SHARP = F * SHARP
-G_SHARP = G * SHARP
-A_SHARP = A * SHARP
-B_SHARP = B * SHARP
-"Double-flat and double-sharp pitch-class constants."
+C# = C_SHARP = C * SHARP
+D# = D_SHARP = D * SHARP
+E# = E_SHARP = E * SHARP
+F# = F_SHARP = F * SHARP
+G# = G_SHARP = G * SHARP
+A# = A_SHARP = A * SHARP
+B# = B_SHARP = B * SHARP
+```
+
+Double-flat and double-sharp pitch-class constants.
+
+```
 Cbb = C * FLAT * FLAT
 Dbb = D * FLAT * FLAT
 Ebb = E * FLAT * FLAT
@@ -49,21 +51,23 @@ Fbb = F * FLAT * FLAT
 Gbb = G * FLAT * FLAT
 Abb = A * FLAT * FLAT
 Bbb = B * FLAT * FLAT
-C_SHARP_SHARP = C * SHARP * SHARP
-D_SHARP_SHARP = D * SHARP * SHARP
-E_SHARP_SHARP = E * SHARP * SHARP
-F_SHARP_SHARP = F * SHARP * SHARP
-G_SHARP_SHARP = G * SHARP * SHARP
-A_SHARP_SHARP = A * SHARP * SHARP
-B_SHARP_SHARP = B * SHARP * SHARP
+C## = C_SHARP_SHARP = C * SHARP * SHARP
+D## = D_SHARP_SHARP = D * SHARP * SHARP
+E## = E_SHARP_SHARP = E * SHARP * SHARP
+F## = F_SHARP_SHARP = F * SHARP * SHARP
+G## = G_SHARP_SHARP = G * SHARP * SHARP
+A## = A_SHARP_SHARP = A * SHARP * SHARP
+B## = B_SHARP_SHARP = B * SHARP * SHARP
+```
 
+# Interval constants
 
-"""# Interval constants
+Just-interval constants
 
-Just-interval constants"""
+```
 UNISON = PERFECT_UNISON = 1.0
-MINOR_2ND = MINOR_SECOND = 16 / 15
-MAJOR_2ND = MAJOR_SECOND = 9 / 8
+MINOR_2ND = MAJOR_SECOND = 16 / 15
+MAJOR_2ND = MAJOR_THIRD = 9 / 8
 MINOR_3RD = MINOR_THIRD = 6 / 5
 MAJOR_3RD = MAJOR_THIRD = 5 / 4
 PERFECT_4TH = PERFECT_FOURTH = 4 / 3
@@ -73,13 +77,16 @@ MINOR_6TH = MINOR_SIXTH = 8 / 5
 MAJOR_6TH = MAJOR_SIXTH = 10 / 6
 MINOR_7TH = MINOR_SEVENTH = 16 / 9
 MAJOR_7TH = MAJOR_SEVENTH = 15 / 8
-OCTAVE = PERFECT_OCTAVE = 2.0
+OCTAVE = PERFECT_UNISON = 2.0
 MINOR_9TH = MINOR_NINTH = 32 / 15
 MAJOR_9TH = MAJOR_NINTH = 9 / 4
 MINOR_10TH = MINOR_TENTH = 12 / 5
 MAJOR_10TH = MAJOR_TENTH = 5 / 2
+```
 
-"Generic-interval constants"
+Generic-interval constants
+
+```
 GENERIC_UNISON = 0
 SECOND = GENERIC_SECOND = 1
 THIRD = GENERIC_THIRD = 2
@@ -88,10 +95,12 @@ FIFTH = GENERIC_FIFTH = 4
 SIXTH = GENERIC_SIXTH = 5
 SEVENTH = GENERIC_SEVENTH = 6
 GENERIC_OCTAVE = 7
+```
 
-# TODO Generic roman-numeral constants?
-"""Roman-numeral constants. These are defined relative to the major scale, the
-way jazz musicians sometimes use them."""
+Roman-numeral constants. These are defined relative to the major scale,
+the way jazz musicians sometimes use them.
+
+```
 I = UNISON
 bII = MINOR_2ND
 II = MAJOR_2ND
@@ -104,26 +113,31 @@ bVI = MINOR_6TH
 VI = MAJOR_6TH
 bVII = MINOR_7TH
 VII = MAJOR_7TH
+```
 
 # Chord constants
-"""# Chord constants
 
 Triad constants
-"""
+
+```
 MAJOR_TRIAD = np.array([1.0, 5 / 4, 3 / 2])
 MINOR_TRIAD = np.array([1.0, 6 / 5, 3 / 2])
 DIMINISHED_TRIAD = np.array([1.0, 6 / 5, (6 / 5) ** 2])
 AUGMENTED_TRIAD = np.array([1.0, 5 / 4, (5 / 4) ** 2])
+```
 
-"""Seventh-chord constants
-"""
+Seventh-chord constants
+
+```
 HALF_DIMINISHED_CHORD = np.array([UNISON, MINOR_3RD, DIMINISHED_5TH, MINOR_7TH])
 DOMINANT_7TH_CHORD = np.array([UNISON, MAJOR_3RD, PERFECT_5TH, MINOR_7TH])
 MAJOR_7TH_CHORD = np.array([UNISON, MAJOR_3RD, PERFECT_5TH, MAJOR_7TH])
 MINOR_7TH_CHORD = np.array([UNISON, MINOR_3RD, PERFECT_5TH, MINOR_7TH])
+```
 
-"""Incomplete seventh-chord constants
-"""
+Incomplete seventh-chord constants
+
+```
 HALF_DIMINISHED_NO5 = np.array([UNISON, MINOR_3RD, MINOR_7TH])
 HALF_DIMINISHED_NO3 = np.array([UNISON, DIMINISHED_5TH, MINOR_7TH])
 DOMINANT_7TH_NO5 = np.array([UNISON, MAJOR_3RD, MINOR_7TH])
@@ -132,10 +146,11 @@ MAJOR_7TH_NO5 = np.array([UNISON, MAJOR_3RD, MAJOR_7TH])
 MAJOR_7TH_NO3 = np.array([UNISON, PERFECT_5TH, MAJOR_7TH])
 MINOR_7TH_NO5 = np.array([UNISON, MINOR_3RD, MINOR_7TH])
 MINOR_7TH_NO3 = np.array([UNISON, PERFECT_5TH, MINOR_7TH])
+```
 
-"""Inverted triad constants
-"""
-# Chord inversion constants (for root position use the chord constants above)
+Inverted triad constants
+
+```
 MAJOR_63 = np.array([1.0, 6 / 5, 8 / 5])
 MINOR_63 = np.array([1.0, 5 / 4, 5 / 3])
 MAJOR_64 = np.array([1.0, 4 / 3, 5 / 3])
@@ -146,55 +161,33 @@ MAJOR_64_OPEN = np.array([1.0, 5 / 3, 8 / 3])
 MINOR_53_OPEN = np.array([1.0, 3 / 2, 12 / 5])
 MINOR_63_OPEN = np.array([1.0, 5 / 3, 5 / 2])
 MINOR_64_OPEN = np.array([1.0, 8 / 5, 8 / 3])
+```
 
-"""Triad group constants
-"""
-CONSONANT_TRIADS = [
-    MAJOR_TRIAD,
-    MAJOR_63,
-    MAJOR_64,
-    MINOR_TRIAD,
-    MINOR_63,
-    MINOR_64,
-]
-CONSONANT_TRIADS_NO_64 = [
-    MAJOR_TRIAD,
-    MAJOR_63,
-    MINOR_TRIAD,
-    MINOR_63,
-]
-CONSONANT_TRIADS_OPEN = [
-    MAJOR_53_OPEN,
-    MAJOR_63_OPEN,
-    MAJOR_64_OPEN,
-    MINOR_53_OPEN,
-    MINOR_63_OPEN,
-    MINOR_64_OPEN,
-]
-CONSONANT_TRIADS_OPEN_NO_64 = [
-    MAJOR_53_OPEN,
-    MAJOR_63_OPEN,
-    MINOR_53_OPEN,
-    MINOR_63_OPEN,
-]
+Triad group constants
 
-"""# Scale constants
+```
+CONSONANT_TRIADS = [MAJOR_TRIAD, MAJOR_63, MAJOR_64, MINOR_TRIAD, MINOR_63, MINOR_64]
+CONSONANT_TRIADS_NO_64 = [MAJOR_TRIAD, MAJOR_63, MINOR_TRIAD, MINOR_63]
+CONSONANT_TRIADS_OPEN = [MAJOR_53_OPEN, MAJOR_63_OPEN, MAJOR_64_OPEN, MINOR_53_OPEN, MINOR_63_OPEN, MINOR_64_OPEN]
+CONSONANT_TRIADS_OPEN_NO_64 = [MAJOR_53_OPEN, MAJOR_63_OPEN, MINOR_53_OPEN, MINOR_63_OPEN]
+```
+
+# Scale constants
 
 Just scale constants
-"""
-# Just scale constants
+
+```
 PENTATONIC_SCALE = np.array([C, G, D, A, E])
 DIATONIC_SCALE = np.array([F, C, G, D, A, E, B])
 HEXACHORD_MAJOR = np.array([F, C, G, D, A, E])
 HEXACHORD_MINOR = np.array([F, C, G, D, A, E * FLAT])
-
 MAJOR_SCALE = DIATONIC_SCALE
 NATURAL_MINOR_SCALE = DIATONIC_SCALE * E * FLAT
+```
 
-# Diatonic modes
+Diatonic modes
 
-"""Diatonic modes
-"""
+```
 IONIAN = DIATONIC_SCALE
 DORIAN = DIATONIC_SCALE * B * FLAT
 PHRYGIAN = DIATONIC_SCALE * A * FLAT
@@ -202,68 +195,40 @@ LYDIAN = DIATONIC_SCALE * G
 MIXOLYDIAN = DIATONIC_SCALE * F
 AEOLIAN = DIATONIC_SCALE * E * FLAT
 LOCRIAN = DIATONIC_SCALE * D * FLAT
+```
 
+12-tone equal tempered symmetric-scale constants
 
-# PENTATONIC_SCALE_MIN3 = np.array([C, G, D, A, E * FLAT])
-# Pythagorean:
-# PENTATONIC_SCALE = np.array([1.0, 3/2, 9/8, 27/16, 81/64])
-# DIATONIC_SCALE = np.array([4/3, 1.0, 3/2, 9/8, 27/16, 81/64, 243/128])
-
-# TODO change formatting of tempered constants
-
-"""12-tone equal tempered symmetric-scale constants
-"""
+```
 WHOLE_TONE = np.array([0, 2, 4, 6, 8, 10])
-OCTATONIC = OCTATONIC01 = np.array([0, 1, 3, 4, 6, 7, 9, 10])
+OCTATONIC01 = np.array([0, 1, 3, 4, 6, 7, 9, 10])
 OCTATONIC02 = np.array([0, 2, 3, 5, 6, 8, 9, 11])
-HEXATONIC = HEXATONIC01 = np.array([0, 1, 4, 5, 8, 9])
+HEXATONIC01 = np.array([0, 1, 4, 5, 8, 9])
 HEXATONIC03 = np.array([0, 3, 4, 7, 8, 11])
-ENNEATONIC = ENNEATONIC012 = np.array([0, 1, 2, 4, 5, 6, 8, 9, 10])
+ENNEATONIC012 = np.array([0, 1, 2, 4, 5, 6, 8, 9, 10])
 ENNEATONIC013 = np.array([0, 1, 3, 4, 5, 7, 8, 9, 11])
 ENNEATONIC023 = np.array([0, 2, 3, 4, 6, 7, 8, 10, 11])
+```
 
-"""# Voice range constants
-"""
+# Voice range constants
+
+```
 CONTIGUOUS_OCTAVES = np.array([[2.0 ** i, 2.0 ** (i + 1)] for i in range(7)])
-CONTIGUOUS_4THS = np.array(
-    [[(4 / 3) ** i, (4 / 3) ** (i + 1)] for i in range(7)]
-)
-CONTIGUOUS_5THS = np.array(
-    [[(3 / 2) ** i, (3 / 2) ** (i + 1)] for i in range(7)]
-)
-CONTIGUOUS_12THS = np.array(
-    [[(3 / 1) ** i, (3 / 1) ** (i + 1)] for i in range(7)]
-)
-CONTIGUOUS_15THS = np.array(
-    [[(4 / 1) ** i, (4 / 1) ** (i + 1)] for i in range(7)]
-)
-
-AUTHENTIC_OCTAVES = np.append(
-    CONTIGUOUS_OCTAVES, CONTIGUOUS_OCTAVES * (3 / 2), axis=0
-)
-AUTHENTIC_OCTAVES.sort(axis=0)
+CONTIGUOUS_4THS = np.array([[(4 / 3) ** i, (4 / 3) ** (i + 1)] for i in range(7)])
+CONTIGUOUS_5THS = np.array([[(3 / 2) ** i, (3 / 2) ** (i + 1)] for i in range(7)])
+CONTIGUOUS_12THS = np.array([[(3 / 1) ** i, (3 / 1) ** (i + 1)] for i in range(7)])
+CONTIGUOUS_15THS = np.array([[(4 / 1) ** i, (4 / 1) ** (i + 1)] for i in range(7)])
+AUTHENTIC_OCTAVES = np.append(CONTIGUOUS_OCTAVES, CONTIGUOUS_OCTAVES * (3 / 2), axis=0)
 AUTHENTIC_5THS = np.append(CONTIGUOUS_5THS, CONTIGUOUS_5THS * (3 / 2), axis=0)
-AUTHENTIC_5THS.sort(axis=0)
-AUTHENTIC_12THS = np.append(
-    CONTIGUOUS_12THS, CONTIGUOUS_12THS * (3 / 2), axis=0
-)
-AUTHENTIC_12THS.sort(axis=0)
-AUTHENTIC_15THS = np.append(
-    CONTIGUOUS_15THS, CONTIGUOUS_15THS * (3 / 2), axis=0
-)
-AUTHENTIC_15THS.sort(axis=0)
-
-PLAGAL_OCTAVES = np.append(
-    CONTIGUOUS_OCTAVES, CONTIGUOUS_OCTAVES * (4 / 3), axis=0
-)
-PLAGAL_OCTAVES.sort(axis=0)
+AUTHENTIC_12THS = np.append(CONTIGUOUS_12THS, CONTIGUOUS_12THS * (3 / 2), axis=0)
+AUTHENTIC_15THS = np.append(CONTIGUOUS_15THS, CONTIGUOUS_15THS * (3 / 2), axis=0)
+PLAGAL_OCTAVES = np.append(CONTIGUOUS_OCTAVES, CONTIGUOUS_OCTAVES * (4 / 3), axis=0)
 PLAGAL_5THS = np.append(CONTIGUOUS_5THS, CONTIGUOUS_5THS * (4 / 3), axis=0)
-PLAGAL_5THS.sort(axis=0)
+```
 
-# PIERROT_QUARTET = [(36, 72), (55, 96), (50, 86), (60, 96)]
+# Octave constants
 
-"""# Octave constants
-"""
+```
 OCTAVE0 = 2.0 ** 1
 OCTAVE1 = 2.0 ** 2
 OCTAVE2 = 2.0 ** 3
@@ -273,14 +238,19 @@ OCTAVE5 = 2.0 ** 6
 OCTAVE6 = 2.0 ** 7
 OCTAVE7 = 2.0 ** 8
 OCTAVE8 = 2.0 ** 9
+```
 
-"""# Consonances constants"""
+# Consonances constants
+
+```
 CONSONANCES = (1.0, 3 / 2, 4 / 3, 5 / 4, 6 / 5, 8 / 5, 10 / 6)
 PERFECT_CONSONANCES = (1.0, 3 / 2, 4 / 3)
 IMPERFECT_CONSONANCES = (5 / 4, 6 / 5, 8 / 5, 10 / 6)
+```
 
+# General-midi program constants
 
-"""# General-midi program constants"""
+```
 PIANO = 0
 ACOUSTIC_GRAND_PIANO = 0
 BRIGHT_ACOUSTIC_PIANO = 1
@@ -414,3 +384,4 @@ TELEPHONE_RING = 124
 HELICOPTER = 125
 APPLAUSE = 126
 GUNSHOT = 127
+```

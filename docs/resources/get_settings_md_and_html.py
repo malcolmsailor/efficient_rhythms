@@ -12,9 +12,6 @@ sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 )
 
-import src.er_constants as er_constants  # pylint: disable=wrong-import-position
-import src.er_misc_funcs as er_misc_funcs  # pylint: disable=wrong-import-position
-
 SCRIPT_DIR = os.path.dirname((os.path.realpath(__file__)))
 CSS_PATH1 = "resources/third_party/github-markdown-css/github-markdown.css"
 CSS_PATH2 = "resources/markdown-body.css"
@@ -119,22 +116,7 @@ def get_settings_docstring():
     return docstring
 
 
-def get_constants():
-    # Can I figure out a better way to get a non-alphabetized
-    #   equivalent to dir() other than parsing the file myself?
-    # TODO no, I can't!
-    dir_constants = dir(er_constants)
-    for attr, val in vars(er_constants).items():
-        if attr.startswith("__"):
-            continue
-        if attr == "np":
-            continue
-        if attr in dir_constants:
-            print(attr, er_misc_funcs.tuplify(val, max_float_p=4))
-
-
 def main():
-    # get_constants()
     if not shutil.which("pandoc"):
         raise Exception("pandoc not found, aborting")
     docstring = get_settings_docstring()
