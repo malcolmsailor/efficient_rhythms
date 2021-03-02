@@ -191,10 +191,7 @@ class BuildStatusPrinter:
 
 def parse_cmd_line_args():
     parser = argparse.ArgumentParser(
-        description=(
-            "Generates a splendiferous midi file. "
-            "Settings are accessed by editing er_settings.py\n"
-        )
+        description=("Generates a splendiferous midi file.\n")
     )
     parser.add_argument(
         "-i",
