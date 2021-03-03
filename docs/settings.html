@@ -12,7 +12,7 @@
       div.column{display: inline-block; vertical-align: top; width: 50%;}
   </style>
   <link rel="stylesheet" href="resources/third_party/github-markdown-css/github-markdown.css" />
-  <link rel="stylesheet" href="resources/markdown-body.css" />
+  <link rel="stylesheet" href="resources/css/markdown-body.css" />
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -24,7 +24,8 @@
 <p>Many arguments below can take “per-voice sequences” as arguments. These are sequences (e.g., tuples or lists) that assign a different setting to each voice. Importantly, however, it is possible to provide a sequence that is shorter than the number of voices. In this case, the sequence will be looped through as many times as is necessary. For example, if <code>num_voices == 5</code>, but <code>len(pattern_len) == 2</code>, voices 0, 2, and 4 will be assigned the first value in <a href="#pattern_len"><code>pattern_len</code></a>, while voices 1 and 3 will be assigned the second value. (The voices are zero-indexed.)</p>
 <p>There are also a number of arguments that take sequences that, if necessary, will be looped through in a similar manner, but where the items of the sequence are not applied to voices, but to something else. An example is <a href="#harmony_len"><code>harmony_len</code></a>. I refer to these as “looping sequences”.</p>
 <h3 id="note-on-specifying-pitches-and-intervals">Note on specifying pitches and intervals</h3>
-<p>In general, pitches can be specified either as integers, or as other numeric types (e.g., floats). <strong>If you don’t care about tuning or temperament, just specify all intervals as integers</strong> (e.g., one semitone = <code>1</code>). Otherwise, read on:</p>
+<p>For most use cases, it will be most convenient to specify pitch materials using strings denoting constants which are provided in <code>src/er_constants.py</code> and documented in <code>docs/constants.md</code> and <code>docs/constants.html</code>. A few examples: <code>"PERFECT_4TH"</code>, <code>"C# * OCTAVE4"</code>, <code>"F * PHRYGIAN"</code>, etc.</p>
+<p>Otherwise, pitch materials can be specified either as integers, or as other numeric types (e.g., floats). <strong>If you don’t care about tuning or temperament, just specify all intervals and pitches as integers</strong> (e.g., one semitone = <code>1</code>, “middle C” = <code>60</code>). Otherwise, read on:</p>
 <ul class="incremental">
 <li><p>integers specify equal-tempered intervals. For example, in 12-tet (the usual temperament employed in Western music), an interval of <code>7</code> corresponds to a perfect fifth. How exactly integers function in other temperaments depends on the setting <a href="#integers_in_12_tet"><code>integers_in_12_tet</code></a>; see its documentation below for details.</p></li>
 <li><p>other numeric types are interpreted as just intervals, and then approximated in the specified equal-division-of-the-octave temperament (the default being 12). Thus an interval of 1.5 (which in tuning theory is more often specified as a ratio of 3:2) corresponds to a perfect fifth. If <code>tet = 12</code>, this will be approximated as 7 semitones (7/12ths of an octave). If <code>tet = 31</code>, on the other hand, this will be approximated as 18/31sts of an octave.</p></li>

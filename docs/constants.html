@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>constants</title>
+  <title>Efficient rhythms documentation: constants</title>
   <style>
       code{white-space: pre-wrap;}
       span.smallcaps{font-variant: small-caps;}
@@ -12,13 +12,25 @@
       div.column{display: inline-block; vertical-align: top; width: 50%;}
   </style>
   <link rel="stylesheet" href="resources/third_party/github-markdown-css/github-markdown.css" />
-  <link rel="stylesheet" href="resources/markdown-body.css" />
+  <link rel="stylesheet" href="resources/css/markdown-body.css" />
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
 </head>
 <body class="markdown-body">
+<header id="title-block-header">
+<h1 class="title">Efficient rhythms documentation: constants</h1>
+</header>
+<p>When specifying pitch materials like chords, scales, and intervals, as well as when specifying general-midi instruments, the constants defined in <code>src/er_constants.py</code> can be used. For ease of reference, these constants are also listed below.</p>
+<p>In settings files, these constants can be indicated in either of the following ways:</p>
+<ol type="1">
+<li>As Python identifiers, e.g., <code>C * MAJOR_SCALE</code></li>
+<li>As strings, e.g., <code>"C * MAJOR_SCALE"</code></li>
+</ol>
+<p>The only advantage of using strings is that you can use the <code>#</code> character to indicate sharps. So <code>"C# * MAJOR_SCALE"</code> or <code>"C## * MAJOR_SCALE"</code> will work as expected, but <code>C# * MAJOR_SCALE</code> won’t work because <code>#</code> is not a legal character in Python identifiers.</p>
+<p>TODO document just and tempered pitch constants.</p>
 <h1 id="pitch-class-constants">Pitch-class constants</h1>
+<h2 id="just-pitch-class-constants">Just pitch-class constants</h2>
 <p>Natural pitch-class constants.</p>
 <pre><code>C = 1.0
 D = 9 / 8
@@ -30,7 +42,7 @@ B = 15 / 8</code></pre>
 <p>Flats and sharps are here defined as the difference between a just major and a just minor third.</p>
 <pre><code>FLAT = 24 / 25
 SHARP = 25 / 24</code></pre>
-<p>Flat and sharp pitch-class constants. (‘#’ in user settings will be replaced by ’_SHARP’, since ‘#’ isn’t a valid character in Python identifiers)</p>
+<p>Flat and sharp pitch-class constants. (In user settings, “#” only works in strings, where it will be replaced by ‘_SHARP’, since ‘#’ isn’t a valid character in Python identifiers)</p>
 <pre><code>Cb = C * FLAT
 Db = D * FLAT
 Eb = E * FLAT
@@ -63,8 +75,8 @@ B## = B_SHARP_SHARP = B * SHARP * SHARP</code></pre>
 <h1 id="interval-constants">Interval constants</h1>
 <p>Just-interval constants</p>
 <pre><code>UNISON = PERFECT_UNISON = 1.0
-MINOR_2ND = MAJOR_SECOND = 16 / 15
-MAJOR_2ND = MAJOR_THIRD = 9 / 8
+MINOR_2ND = MINOR_SECOND = 16 / 15
+MAJOR_2ND = MAJOR_SECOND = 9 / 8
 MINOR_3RD = MINOR_THIRD = 6 / 5
 MAJOR_3RD = MAJOR_THIRD = 5 / 4
 PERFECT_4TH = PERFECT_FOURTH = 4 / 3
@@ -74,7 +86,7 @@ MINOR_6TH = MINOR_SIXTH = 8 / 5
 MAJOR_6TH = MAJOR_SIXTH = 10 / 6
 MINOR_7TH = MINOR_SEVENTH = 16 / 9
 MAJOR_7TH = MAJOR_SEVENTH = 15 / 8
-OCTAVE = PERFECT_UNISON = 2.0
+OCTAVE = PERFECT_OCTAVE = 2.0
 MINOR_9TH = MINOR_NINTH = 32 / 15
 MAJOR_9TH = MAJOR_NINTH = 9 / 4
 MINOR_10TH = MINOR_TENTH = 12 / 5
@@ -155,11 +167,11 @@ AEOLIAN = DIATONIC_SCALE * E * FLAT
 LOCRIAN = DIATONIC_SCALE * D * FLAT</code></pre>
 <p>12-tone equal tempered symmetric-scale constants</p>
 <pre><code>WHOLE_TONE = np.array([0, 2, 4, 6, 8, 10])
-OCTATONIC01 = np.array([0, 1, 3, 4, 6, 7, 9, 10])
+OCTATONIC = OCTATONIC01 = np.array([0, 1, 3, 4, 6, 7, 9, 10])
 OCTATONIC02 = np.array([0, 2, 3, 5, 6, 8, 9, 11])
-HEXATONIC01 = np.array([0, 1, 4, 5, 8, 9])
+HEXATONIC = HEXATONIC01 = np.array([0, 1, 4, 5, 8, 9])
 HEXATONIC03 = np.array([0, 3, 4, 7, 8, 11])
-ENNEATONIC012 = np.array([0, 1, 2, 4, 5, 6, 8, 9, 10])
+ENNEATONIC = ENNEATONIC012 = np.array([0, 1, 2, 4, 5, 6, 8, 9, 10])
 ENNEATONIC013 = np.array([0, 1, 3, 4, 5, 7, 8, 9, 11])
 ENNEATONIC023 = np.array([0, 2, 3, 4, 6, 7, 8, 10, 11])</code></pre>
 <h1 id="voice-range-constants">Voice range constants</h1>

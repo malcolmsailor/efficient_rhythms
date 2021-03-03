@@ -19,7 +19,7 @@ HARMONY_EXAMPLE_PNG = \
 	$(HARMONY_EXAMPLE_SRC:examples/%.py=resources/pngs/%_00001.png)
 
 CSS_FILES = $(resources/third_party/github-markdown-css/github-markdown.css \
-	resources/markdown-body.css)
+	resources/css/markdown-body.css)
 
 .PHONY: all clean clean_m4as clean_pngs clean_svgs clean_midi
 
@@ -118,16 +118,16 @@ clean: clean_pngs clean_svgs clean_midi # clean_m4as
 
 html: settings.html index.html constants.html
 
-settings.html : resources/get_settings_md_and_html.py ../src/er_settings.py \
+settings.html : resources/scripts/get_settings_md_and_html.py \
+		../src/er_settings.py $(CSS_FILES)
+	python3 $<
+
+constants.html : resources/scripts/get_constants.py ../src/er_constants.py \
 		$(CSS_FILES)
 	python3 $<
 
-constants.html : resources/get_constants.py ../src/er_constants.py \
-		$(CSS_FILES)
-	python3 $<
-
-index.html : resources/get_index_md_and_html.py \
-		resources/index_pandoc.md $(CSS_FILES)
+index.html : resources/scripts/get_index_md_and_html.py \
+		resources/markdown/index_pandoc.md $(CSS_FILES)
 	python3 $<
 	git add $@
 	git add index.md

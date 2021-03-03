@@ -29,10 +29,16 @@ as “looping sequences”.
 
 ### Note on specifying pitches and intervals
 
-In general, pitches can be specified either as integers, or as other
-numeric types (e.g., floats). **If you don’t care about tuning or
-temperament, just specify all intervals as integers** (e.g., one
-semitone = `1`). Otherwise, read on:
+For most use cases, it will be most convenient to specify pitch
+materials using strings denoting constants which are provided in
+`src/er_constants.py` and documented in `docs/constants.md` and
+`docs/constants.html`. A few examples: `"PERFECT_4TH"`, `"C# *
+OCTAVE4"`, `"F * PHRYGIAN"`, etc.
+
+Otherwise, pitch materials can be specified either as integers, or as
+other numeric types (e.g., floats). **If you don’t care about tuning or
+temperament, just specify all intervals and pitches as integers** (e.g.,
+one semitone = `1`, “middle C” = `60`). Otherwise, read on:
 
   - integers specify equal-tempered intervals. For example, in 12-tet
     (the usual temperament employed in Western music), an interval of

@@ -4,11 +4,11 @@ import subprocess
 
 SCRIPT_DIR = os.path.dirname((os.path.realpath(__file__)))
 
-IN_MD_PATH = os.path.join(SCRIPT_DIR, "index_pandoc.md")
-OUT_MD_PATH = os.path.join(SCRIPT_DIR, "../index.md")
-OUT_HTML_PATH = os.path.join(SCRIPT_DIR, "../index.html")
+IN_MD_PATH = os.path.join(SCRIPT_DIR, "../markdown/index_pandoc.md")
+OUT_MD_PATH = os.path.join(SCRIPT_DIR, "../../index.md")
+OUT_HTML_PATH = os.path.join(SCRIPT_DIR, "../../index.html")
 CSS_PATH1 = "resources/third_party/github-markdown-css/github-markdown.css"
-CSS_PATH2 = "resources/markdown-body.css"
+CSS_PATH2 = "resources/css/markdown-body.css"
 
 # TODO links to settings wherever they are mentioned
 

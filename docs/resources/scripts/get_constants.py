@@ -7,10 +7,13 @@ import subprocess
 
 SCRIPT_DIR = os.path.dirname((os.path.realpath(__file__)))
 CSS_PATH1 = "resources/third_party/github-markdown-css/github-markdown.css"
-CSS_PATH2 = "resources/markdown-body.css"
-CONSTANTS_PY_PATH = os.path.join(SCRIPT_DIR, "../../src/er_constants.py")
-CONSTANTS_MD_PATH = os.path.join(SCRIPT_DIR, "../constants.md")
-CONSTANTS_HTML_PATH = os.path.join(SCRIPT_DIR, "../constants.html")
+CSS_PATH2 = "resources/css/markdown-body.css"
+CONSTANTS_PY_PATH = os.path.join(SCRIPT_DIR, "../../../src/er_constants.py")
+CONSTANTS_MD_IN_PATH = os.path.join(
+    SCRIPT_DIR, "../markdown/constants_intro.md"
+)
+CONSTANTS_MD_OUT_PATH = os.path.join(SCRIPT_DIR, "../../constants.md")
+CONSTANTS_HTML_PATH = os.path.join(SCRIPT_DIR, "../../constants.html")
 
 
 class ConstantGroup:
@@ -54,12 +57,60 @@ def parse(f_contents):
     return out
 
 
-def format_constants(constants):
+def write_out(md):
+    subprocess.run(
+        [
+            "pandoc",
+            "--standalone",
+            "--strip-comments",
+            "-t",
+            "gfm",
+            "-f",
+            "markdown",
+            "-o",
+            CONSTANTS_MD_OUT_PATH,
+        ],
+        input=md,
+        encoding="utf-8",
+        check=True,
+    )
+    html_content = subprocess.run(
+        [
+            "pandoc",
+            "--standalone",
+            "--strip-comments",
+            f"--css={CSS_PATH1}",
+            f"--css={CSS_PATH2}",
+            "-t",
+            "html",
+        ],
+        input=md,
+        encoding="utf-8",
+        check=True,
+        capture_output=True,
+    ).stdout
+    # A hack to get github-markdown.css to display
+    with open(CONSTANTS_HTML_PATH, "w", encoding="utf-8") as outf:
+        outf.write(
+            html_content.replace("<body>", '<body class="markdown-body">')
+        )
+
+
+def get_intro():
+    with open(CONSTANTS_MD_IN_PATH, "r", encoding="utf-8") as inf:
+        md_intro = inf.read()
+    return md_intro
+
+
+def get_constants():
+    with open(CONSTANTS_PY_PATH, "r") as inf:
+        py_contents = inf.read()
+    constants = parse(py_contents)
     md_list = []
     for group in constants:
         md_list.append(
             subprocess.run(
-                ["pandoc", "-t", "gfm"],
+                ["pandoc", "-t", "markdown"],
                 encoding="utf-8",
                 input=group.doc,
                 check=True,
@@ -81,35 +132,14 @@ def format_constants(constants):
             "\n".join(group.contents)
         )
         md_list.append("```\n")
-    with open(CONSTANTS_MD_PATH, "w", encoding="utf-8") as outf:
-        outf.write("\n".join(md_list))
-    html_content = subprocess.run(
-        [
-            "pandoc",
-            "--standalone",
-            "--strip-comments",
-            f"--css={CSS_PATH1}",
-            f"--css={CSS_PATH2}",
-            "-i",
-            CONSTANTS_MD_PATH,
-            "-t",
-            "html",
-        ],
-        check=True,
-        capture_output=True,
-    ).stdout.decode()
-    # A hack to get github-markdown.css to display
-    with open(CONSTANTS_HTML_PATH, "w", encoding="utf-8") as outf:
-        outf.write(
-            html_content.replace("<body>", '<body class="markdown-body">')
-        )
+    return "\n".join(md_list)
 
 
 def main():
-    with open(CONSTANTS_PY_PATH, "r") as inf:
-        f_contents = inf.read()
-    constants = parse(f_contents)
-    format_constants(constants)
+    md_intro = get_intro()
+    breakpoint()
+    md_constants = get_constants()
+    write_out(md_intro + "\n" + md_constants)
 
 
 if __name__ == "__main__":

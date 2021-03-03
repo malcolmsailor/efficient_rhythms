@@ -63,6 +63,8 @@ You can also try running it with randomized settings, although be warned that th
 
 There are many configurable settings that shape the output. Full documentation is available in [`settings.html`](settings.html). But a gentler introduction is provided in the next section.
 
+<!-- TODO How to use custom settings here. -->
+
 ## How it works
 
 The basic settings that control the script are
