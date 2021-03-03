@@ -2,6 +2,8 @@ import numpy as np
 
 """# Pitch-class constants
 
+## Just pitch-class constants
+
 Natural pitch-class constants."""
 C = 1.0
 D = 9 / 8
@@ -23,10 +25,9 @@ SHARP = 25 / 24
 # FLAT = 128/135
 # SHARP = 135/128
 
-# TODO document sharp behavior
-"""Flat and sharp pitch-class constants. ('#' in user settings will be
-replaced by '_SHARP', since '#' isn't a valid character in Python
-identifiers)"""
+"""Flat and sharp pitch-class constants. (In user settings, "#" only works in
+strings, where it will be replaced by '_SHARP', since '#' isn't a valid
+character in Python identifiers)"""
 Cb = C * FLAT
 Db = D * FLAT
 Eb = E * FLAT
@@ -89,7 +90,7 @@ SIXTH = GENERIC_SIXTH = 5
 SEVENTH = GENERIC_SEVENTH = 6
 GENERIC_OCTAVE = 7
 
-# TODO Generic roman-numeral constants?
+# MAYBE Generic roman-numeral constants?
 """Roman-numeral constants. These are defined relative to the major scale, the
 way jazz musicians sometimes use them."""
 I = UNISON
@@ -209,7 +210,8 @@ LOCRIAN = DIATONIC_SCALE * D * FLAT
 # PENTATONIC_SCALE = np.array([1.0, 3/2, 9/8, 27/16, 81/64])
 # DIATONIC_SCALE = np.array([4/3, 1.0, 3/2, 9/8, 27/16, 81/64, 243/128])
 
-# TODO change formatting of tempered constants
+# MAYBE: tempered-pitch class constants with lower-case letters?
+# MAYBE change formatting of tempered constants
 
 """12-tone equal tempered symmetric-scale constants
 """

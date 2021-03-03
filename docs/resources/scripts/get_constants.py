@@ -137,7 +137,6 @@ def get_constants():
 
 def main():
     md_intro = get_intro()
-    breakpoint()
     md_constants = get_constants()
     write_out(md_intro + "\n" + md_constants)
 

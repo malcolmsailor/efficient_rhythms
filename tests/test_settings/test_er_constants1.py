@@ -1,0 +1,3 @@
+{
+    "scales": [DIATONIC_SCALE,],
+}
