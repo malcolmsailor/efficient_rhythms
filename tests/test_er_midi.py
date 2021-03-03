@@ -13,8 +13,9 @@ import src.er_preprocess as er_preprocess  # pylint: disable=wrong-import-positi
 
 
 def assay_write_track_names(
-    er, super_pattern, voices_separate_tracks, choirs_separate_tracks
+    er, super_pattern,
 ):
+    # This test seems to be incomplete!
     mf = er_midi.init_midi(er, super_pattern)
     er_midi.write_track_names(er, mf)
     try:
@@ -51,12 +52,8 @@ def test_er_midi():
         super_pattern = er_make.make_super_pattern(er)
         er_make.complete_pattern(er, super_pattern)
         er_choirs.assign_choirs(er, super_pattern)
-        assay_write_track_names(
-            er, super_pattern, voices_separate_tracks, choirs_separate_tracks
-        )
-        mf = er_midi.write_er_midi(
-            er, super_pattern, er.output_path, return_mf=True
-        )
+        assay_write_track_names(er, super_pattern)
+        er_midi.write_er_midi(er, super_pattern, er.output_path, return_mf=True)
 
 
 if __name__ == "__main__":

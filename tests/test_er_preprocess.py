@@ -87,9 +87,9 @@ def test_pitch_constants():
         dict,
     )
     try:
-        assert (
-            type(result["scales"][0]) == np.ndarray
-        ), 'type(result["scales"][0]) != np.ndarray'
+        assert isinstance(
+            result["scales"][0], np.ndarray
+        ), 'not isinstance(result["scales"][0], np.ndarray)'
     except:  # pylint: disable=bare-except
         exc_type, exc_value, exc_traceback = sys.exc_info()
         traceback.print_exception(

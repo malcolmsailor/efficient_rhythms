@@ -34,14 +34,14 @@ def init_and_return_midi_player(shell=False):
         # TODO don't uncomment this (which is obsolete I think)
         #   but document EFFRHY_MIDI_PLAYER elsewhere
         #  if not sys.platform.startswith("darwin"):
-            #  print(
-                #  """For shell midi playback, you must put a midi
-#  player executable (e.g., timidity) in the environment
-#  variable EFFRHY_MIDI_PLAYER, e.g.
-#  
-    #  export EFFRHY_MIDI_PLAYER=timidity"""
-            #  )
-            #  sys.exit(1)
+        #  print(
+        #  """For shell midi playback, you must put a midi
+        #  player executable (e.g., timidity) in the environment
+        #  variable EFFRHY_MIDI_PLAYER, e.g.
+        #
+        #  export EFFRHY_MIDI_PLAYER=timidity"""
+        #  )
+        #  sys.exit(1)
         # if tet != 12:
         #     return "fluidsynth"
         pygame.mixer.init()

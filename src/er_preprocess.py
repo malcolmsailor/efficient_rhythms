@@ -212,8 +212,8 @@ def prepare_warnings(er):
 
 
 def replace_pitch_constants(er):
-    class PitchConstantError(Exception):
-        pass
+    # class PitchConstantError(Exception):
+    #     pass
 
     def _process_str(pitch_str):
         pitch_str = pitch_str.replace("#", "_SHARP")
