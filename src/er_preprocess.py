@@ -203,12 +203,12 @@ def prepare_warnings(er):
     }
 
 
-PITCH_CONSTANT_OP_MAP = {
-    "*": ("__mul__", "__rmul__"),
-    "+": ("__add__", "__radd__"),
-    "-": ("__sub__", "__rsub__"),
-    "/": ("__truediv__", "__rtruediv__"),  # TODO test
-}
+# PITCH_CONSTANT_OP_MAP = {
+#     "*": ("__mul__", "__rmul__"),
+#     "+": ("__add__", "__radd__"),
+#     "-": ("__sub__", "__rsub__"),
+#     "/": ("__truediv__", "__rtruediv__"),  # MAYBE test
+# }
 
 
 def replace_pitch_constants(er):
@@ -217,45 +217,46 @@ def replace_pitch_constants(er):
 
     def _process_str(pitch_str):
         pitch_str = pitch_str.replace("#", "_SHARP")
-        bits = pitch_str.split()
-        val = 1
-        next_op, rnext_op = "__mul__", "__rmul__"
-        for bit in bits:
-            if next_op is None:
-                try:
-                    next_op, rnext_op = PITCH_CONSTANT_OP_MAP[bit]
-                except KeyError:
-                    raise PitchConstantError(  # pylint: disable=raise-missing-from
-                        f"{bit} is not an implemented operation on pitch "
-                        "constants. Implemented pitch constant operations are "
-                        f"{tuple(PITCH_CONSTANT_OP_MAP.keys())}."
-                        # TODO see documentation for more help
-                    )
-            else:
-                # TODO document sign flip with "-" for descending intervals
-                if bit[0] == "-":
-                    sign = -1
-                    bit = bit[1:]
-                else:
-                    sign = 1
-                try:
-                    constant = sign * getattr(er_constants, bit)
-                except AttributeError:
-                    raise PitchConstantError(  # pylint: disable=raise-missing-from
-                        f"{bit} is not an implemented pitch constant."
-                    )
-                    # TODO see documentation for more help
-                next_val = getattr(val, next_op)(constant)
-                if next_val is NotImplemented:
-                    val = getattr(constant, rnext_op)(val)
-                else:
-                    val = next_val
-                next_op = None
-        if next_op is not None:
-            raise PitchConstantError(
-                f"Trailing operation in pitch constant {pitch_str}"
-            )
-        return val
+        return eval(pitch_str, vars(er_constants))
+        # bits = pitch_str.split()
+        # val = 1
+        # next_op, rnext_op = "__mul__", "__rmul__"
+        # for bit in bits:
+        #     if next_op is None:
+        #         try:
+        #             next_op, rnext_op = PITCH_CONSTANT_OP_MAP[bit]
+        #         except KeyError:
+        #             raise PitchConstantError(  # pylint: disable=raise-missing-from
+        #                 f"{bit} is not an implemented operation on pitch "
+        #                 "constants. Implemented pitch constant operations are "
+        #                 f"{tuple(PITCH_CONSTANT_OP_MAP.keys())}."
+        #                 # MAYBE see documentation for more help
+        #             )
+        #     else:
+        #         # MAYBE document sign flip with "-" for descending intervals
+        #         if bit[0] == "-":
+        #             sign = -1
+        #             bit = bit[1:]
+        #         else:
+        #             sign = 1
+        #         try:
+        #             constant = sign * getattr(er_constants, bit)
+        #         except AttributeError:
+        #             raise PitchConstantError(  # pylint: disable=raise-missing-from
+        #                 f"{bit} is not an implemented pitch constant."
+        #             )
+        #             # TODO see documentation for more help
+        #         next_val = getattr(val, next_op)(constant)
+        #         if next_val is NotImplemented:
+        #             val = getattr(constant, rnext_op)(val)
+        #         else:
+        #             val = next_val
+        #         next_op = None
+        # if next_op is not None:
+        #     raise PitchConstantError(
+        #         f"Trailing operation in pitch constant {pitch_str}"
+        #     )
+        # return val
 
     def _replace(pitch_material, i):
         if isinstance(pitch_material[i], str):
@@ -863,7 +864,7 @@ def read_in_settings(settings_input, settings_class):
     for user_settings_path in settings_input:
         print(f"Reading settings from {user_settings_path}")
         with open(user_settings_path, "r", encoding="utf-8") as inf:
-            user_settings = eval(inf.read())
+            user_settings = eval(inf.read(), vars(er_constants))
         _merge(merged_dict, user_settings)
     return settings_class(**merged_dict)
 

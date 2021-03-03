@@ -81,6 +81,23 @@ def test_read_in_settings():
         breakpoint()
 
 
+def test_pitch_constants():
+    result = er_preprocess.read_in_settings(
+        [os.path.join(SCRIPT_DIR, "test_settings/test_er_constants1.py"),],
+        dict,
+    )
+    try:
+        assert (
+            type(result["scales"][0]) == np.ndarray
+        ), 'type(result["scales"][0]) != np.ndarray'
+    except:  # pylint: disable=bare-except
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        traceback.print_exception(
+            exc_type, exc_value, exc_traceback, file=sys.stdout
+        )
+        breakpoint()
+
+
 def test_replace_pitch_constants():
     # attr_name, constants, translated value
     tests = [
@@ -169,4 +186,5 @@ def test_replace_pitch_constants():
 if __name__ == "__main__":
     test_process_pattern_voice_leading_order()
     test_read_in_settings()
+    test_pitch_constants()
     test_replace_pitch_constants()
