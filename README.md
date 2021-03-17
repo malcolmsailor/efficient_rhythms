@@ -4,6 +4,6 @@ For an introduction and documentation (featuring many musical and visual example
 
 To whet your appetite, here are some things I have made with the script:
 
-[![Welcome (to my nutso garden)](https://img.youtube.com/vi/YgAUskvRWPM/maxresdefault.jpg)](https://youtu.be/YgAUskvRWPM)
+[![Welcome (to my nutso garden)](https://img.youtube.com/vi/YgAUskvRWPM/hqdefault.jpg)](https://youtu.be/YgAUskvRWPM)
 
 `TODO add more videos here`
