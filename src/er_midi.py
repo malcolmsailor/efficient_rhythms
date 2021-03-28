@@ -777,7 +777,6 @@ def read_midi_to_internal_data(
     tet=12,
     first_note_at_0=None,
     time_sig=None,
-    offset=0,
     track_num_offset=0,
     max_denominator=8192,
 ):
@@ -793,9 +792,9 @@ def read_midi_to_internal_data(
         )
 
     ticks_per_beat = in_mid.ticks_per_beat
-    # I am leaving this unused variable here because I have the feeling
-    #   I may want to implement it at some point
-    tick_offset = offset * ticks_per_beat  # pylint: disable=unused-variable
+    # # I am leaving this unused variable here because I have the feeling
+    # #   I may want to implement it at some point
+    # tick_offset = offset * ticks_per_beat  # pylint: disable=unused-variable
 
     if max_denominator == 0:
         max_denominator = 8192
