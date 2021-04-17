@@ -39,6 +39,17 @@ TEMP_NOTATION_DIR = os.path.join(
 #     return out
 
 
+def check_rhythms(er):
+    # the kern function only works if all rhythms have denominator that is a
+    # power of 2, so we want to check that first
+    # As a heuristic, we just check if the rhythms are divisible by 128.
+    # TODO check other rhythmic features besides attack_subdivision
+    if all([n % (1 / 128) == 0 for n in er.attack_subdivision]):
+        return True
+    print("Can't export notation because not all rhythms are divisible by 128")
+    return False
+
+
 def dur_to_kern(
     inp,
     offset=0,

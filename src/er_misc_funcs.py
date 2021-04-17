@@ -1223,6 +1223,13 @@ def check_interval_class(interval_class, given_pitch, other_pitches, tet=12):
     return False
 
 
+def check_interval(interval, given_pitch, other_pitches):
+    for other_pitch in other_pitches:
+        if abs(given_pitch - other_pitch) == interval:
+            return True
+    return False
+
+
 def generic_transpose(
     er,
     score,

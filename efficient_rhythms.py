@@ -104,20 +104,21 @@ def main():
         if args.no_interface:
             print(f"Output written to {er.output_path}")
             if args.output_notation:
-                try:
-                    result = er_output_notation.run_verovio(
-                        super_pattern,
-                        er.output_path,
-                        args.verovio_arguments,
-                        "." + args.output_notation,
-                    )
-                except er_misc_funcs.ProcError as exc:
-                    if not args.debug:
-                        er_output_notation.clean_up_temporary_notation_files()
-                    print(exc)
-                    sys.exit(1)
-                if not result:
-                    sys.exit(1)
+                if er_output_notation.check_rhythms(er):
+                    try:
+                        result = er_output_notation.run_verovio(
+                            super_pattern,
+                            er.output_path,
+                            args.verovio_arguments,
+                            "." + args.output_notation,
+                        )
+                    except er_misc_funcs.ProcError as exc:
+                        if not args.debug:
+                            er_output_notation.clean_up_temporary_notation_files()
+                        print(exc)
+                        sys.exit(1)
+                    if not result:
+                        sys.exit(1)
             return
         er_interface.input_loop(
             er,

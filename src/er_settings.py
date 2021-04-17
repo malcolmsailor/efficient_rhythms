@@ -13,6 +13,8 @@ MAX_SUPER_PATTERN_LEN = 128
 # Note that Seq_or_arr will match strings
 # Seq_or_arr = typing.Union[typing.Sequence, np.ndarray]
 
+# TODO setting to give notes different velocities depending on their
+#   subdivision
 
 # @er_type_check.enforce_types
 @dataclasses.dataclass
@@ -752,12 +754,19 @@ class ERSettings:
         min_dur_for_cons_treatment: number. Notes with durations shorter than
             this value will not be evaluated for consonance.
             Default: 0
-        forbidden_interval_classes: a sequence of numbers. The intervals in
-            this sequence (interpreted as harmonic intervals) will be entirely
-            avoided, regardless of consonance settings, at least in the initial
-            pattern.  Whether this setting persists after the initial pattern
+        forbidden_intervals: a sequence of numbers. The harmonic intervals
+            specified by this sequence will be  avoided. Octave-equivalent
+            intervals are NOT avoided. The main expected use is to avoid
+            unisons. Whether this setting persists after the initial pattern
             depends on the value of `vl_maintain_consonance`. (See the note
             above on specifying pitches and intervals.)
+            Default: ()
+        forbidden_interval_classes: a sequence of numbers. The harmonic interval
+            classes specified by this sequence will be  avoided. will be
+            entirely avoided, regardless of consonance settings, at least in the
+            initial pattern.  Whether this setting persists after the initial
+            pattern depends on the value of `vl_maintain_consonance`. (See the
+            note above on specifying pitches and intervals.)
             Default: ()
         forbidden_interval_modulo: number, or a sequence of number, or a
             sequence of sequence of numbers. Optionally defines attack times
@@ -1515,6 +1524,7 @@ class ERSettings:
         typing.Sequence[typing.Sequence[numbers.Number]],
     ] = 0
     min_dur_for_cons_treatment: numbers.Number = 0
+    forbidden_intervals: typing.Sequence[numbers.Number] = ()
     forbidden_interval_classes: typing.Sequence[numbers.Number] = ()
     forbidden_interval_modulo: typing.Union[
         numbers.Number,

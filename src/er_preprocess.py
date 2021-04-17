@@ -33,6 +33,7 @@ PITCH_MATERIAL_LISTS = (
     "hard_bounds",
     "consonances",
     "consonant_chords",
+    "forbidden_intervals",
     "forbidden_interval_classes",
     "prohibit_parallels",
     "transpose_intervals",

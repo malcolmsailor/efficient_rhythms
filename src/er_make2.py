@@ -94,6 +94,12 @@ def check_harmonic_intervals(
         ):
             return False
 
+    for forbidden_interval in er.forbidden_intervals:
+        if er_misc_funcs.check_interval(
+            forbidden_interval, pitch, other_pitches
+        ):
+            return False
+
     return True
 
 

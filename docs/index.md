@@ -86,11 +86,11 @@ that the pattern repeats twice on each harmony, and is then adjusted to
 fit the next harmony.\[1\]
 
 <span id="example1">**Example:**
-`docs/examples/example1.py`</span><br>\[example1
-notation\](docs/resources/svgs/example1.svg){class=“notation”}
-\[example1 piano
+`docs/examples/example1.py`</span><br>\[&#1;
+notation\](docs/resources/svgs/example1.svg){class=“notation”} \[&#1;
+piano
 roll\](docs/resources/pngs/example1\_00001.png){class=“piano\_roll”
-style=“max-height: 300px”} \[example1
+style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/example1.m4a)
 
 Whenever `rhythm_len` is not set explicitly, it is implicitly assigned
@@ -104,11 +104,11 @@ pitches takes four beats to repeat, and by the time it does, its pitches
 are somewhat different, having been adjusted to the new harmony.\[2\]
 
 <span id="example2">**Example:**
-`docs/examples/example2.py`</span><br>\[example2
-notation\](docs/resources/svgs/example2.svg){class=“notation”}
-\[example2 piano
+`docs/examples/example2.py`</span><br>\[&#1;
+notation\](docs/resources/svgs/example2.svg){class=“notation”} \[&#1;
+piano
 roll\](docs/resources/pngs/example2\_00001.png){class=“piano\_roll”
-style=“max-height: 300px”} \[example2
+style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/example2.m4a)
 
 We aren’t constrained to have `pattern_len` be a whole multiple of
@@ -118,11 +118,11 @@ time the rhythm occurs, it is truncated (a bit like a 3–3–2 *tresillo*
 pattern).
 
 <span id="example3">**Example:**
-`docs/examples/example3.py`</span><br>\[example3
-notation\](docs/resources/svgs/example3.svg){class=“notation”}
-\[example3 piano
+`docs/examples/example3.py`</span><br>\[&#1;
+notation\](docs/resources/svgs/example3.svg){class=“notation”} \[&#1;
+piano
 roll\](docs/resources/pngs/example3\_00001.png){class=“piano\_roll”
-style=“max-height: 300px”} \[example3
+style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/example3.m4a)
 
 Up to now, we’ve always specified the same settings in both voices. But
@@ -132,11 +132,11 @@ again has `rhythm_len = 1.5`, but the top voice now has `rhythm_len
 = 2`.
 
 <span id="example4">**Example:**
-`docs/examples/example4.py`</span><br>\[example4
-notation\](docs/resources/svgs/example4.svg){class=“notation”}
-\[example4 piano
+`docs/examples/example4.py`</span><br>\[&#1;
+notation\](docs/resources/svgs/example4.svg){class=“notation”} \[&#1;
+piano
 roll\](docs/resources/pngs/example4\_00001.png){class=“piano\_roll”
-style=“max-height: 300px”} \[example4
+style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/example4.m4a)
 
 We can also have different values of `pattern_len` in each voice, as in
@@ -150,11 +150,11 @@ in <a href="#example5">`docs/examples/example5.py`</a>, there are also
 dissonances like 7ths and 9ths.
 
 <span id="example5">**Example:**
-`docs/examples/example5.py`</span><br>\[example5
-notation\](docs/resources/svgs/example5.svg){class=“notation”}
-\[example5 piano
+`docs/examples/example5.py`</span><br>\[&#1;
+notation\](docs/resources/svgs/example5.svg){class=“notation”} \[&#1;
+piano
 roll\](docs/resources/pngs/example5\_00001.png){class=“piano\_roll”
-style=“max-height: 300px”} \[example5
+style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/example5.m4a)
 
 Up until now, whenever one pattern or rhythm didn’t line up with the
@@ -169,11 +169,11 @@ two patterns finally come into sync after 12 beats, the
 least-common-multiple of 1.5 and 4.)
 
 <span id="example6">**Example:**
-`docs/examples/example6.py`</span><br>\[example6
-notation\](docs/resources/svgs/example6.svg){class=“notation”}
-\[example6 piano
+`docs/examples/example6.py`</span><br>\[&#1;
+notation\](docs/resources/svgs/example6.svg){class=“notation”} \[&#1;
+piano
 roll\](docs/resources/pngs/example6\_00001.png){class=“piano\_roll”
-style=“max-height: 300px”} \[example6
+style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/example6.m4a)
 
 Another feature of all the examples up to now is that `harmony_len` has
@@ -184,11 +184,11 @@ this has to be so. In
 harmonies.
 
 <span id="example7">**Example:**
-`docs/examples/example7.py`</span><br>\[example7
-notation\](docs/resources/svgs/example7.svg){class=“notation”}
-\[example7 piano
+`docs/examples/example7.py`</span><br>\[&#1;
+notation\](docs/resources/svgs/example7.svg){class=“notation”} \[&#1;
+piano
 roll\](docs/resources/pngs/example7\_00001.png){class=“piano\_roll”
-style=“max-height: 300px”} \[example7
+style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/example7.m4a)
 
 ### Harmony
@@ -209,11 +209,11 @@ relevant lines in `harmony_example1.py` are
     "scales": ("MAJOR_SCALE", "MIXOLYDIAN", "AEOLIAN", "LYDIAN"),
 
 <span id="harmony_example1">**Example:**
-`docs/examples/harmony_example1.py`</span><br>\[harmony\_example1
+`docs/examples/harmony_example1.py`</span><br>\[&#1;
 notation\](docs/resources/svgs/harmony\_example1.svg){class=“notation”}
-\[harmony\_example1 piano
+\[&#1; piano
 roll\](docs/resources/pngs/harmony\_example1\_00001.png){class=“piano\_roll”
-style=“max-height: 300px”} \[harmony\_example1
+style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/harmony\_example1.m4a)
 
 There’s a lot to explain here:
@@ -238,7 +238,7 @@ We can easily put the progression into another key by changing
     "chords": ("MAJOR_TRIAD", "MAJOR_TRIAD", "MINOR_TRIAD", "MAJOR_TRIAD"),
     "scales": ("MAJOR_SCALE", "MIXOLYDIAN", "AEOLIAN", "LYDIAN"),
 
-There are no constaints on `foot_pcs`, so we can get a different
+There are no constraints on `foot_pcs`, so we can get a different
 progression by changing `foot_pcs` arbitrarily. For example, in
 <a href="#harmony_example2">`docs/examples/harmony_example2.py`</a> I’ve
 changed the middle two members of `foot_pcs` to create a more chromatic
@@ -249,11 +249,11 @@ progression:
     "scales": ("MAJOR_SCALE", "MIXOLYDIAN", "AEOLIAN", "LYDIAN"),
 
 <span id="harmony_example2">**Example:**
-`docs/examples/harmony_example2.py`</span><br>\[harmony\_example2
+`docs/examples/harmony_example2.py`</span><br>\[&#1;
 notation\](docs/resources/svgs/harmony\_example2.svg){class=“notation”}
-\[harmony\_example2 piano
+\[&#1; piano
 roll\](docs/resources/pngs/harmony\_example2\_00001.png){class=“piano\_roll”
-style=“max-height: 300px”} \[harmony\_example2
+style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/harmony\_example2.m4a)
 
 There are, however, two important constraints on `chords` and `scales`.
@@ -263,10 +263,7 @@ There are, however, two important constraints on `chords` and `scales`.
     means, for example, you can’t go from a major triad to a seventh
     chord, or from a major scale to a whole-tone scale. (You can,
     however, use scales or chords with any number of pitch-classes you
-    like—as long as that number remains the same.) There is a technical
-    reason for this constraint, (namely, that the script works by
-    finding bijective voice-leadings between chords and scales), but in
-    the longterm, I would very much like to remove it.
+    like—as long as that number remains the same.)\[4\]
 2.  Every scale must be a superset of the associated chord. So, for
     example
       - `"MAJOR_TRIAD"` will work with `"MAJOR_SCALE"`, `"MIXOLYDIAN"`,
@@ -288,11 +285,11 @@ illustrates with the following short loop:
 ```
 
 <span id="harmony_example3">**Example:**
-`docs/examples/harmony_example3.py`</span><br>\[harmony\_example3
+`docs/examples/harmony_example3.py`</span><br>\[&#1;
 notation\](docs/resources/svgs/harmony\_example3.svg){class=“notation”}
-\[harmony\_example3 piano
+\[&#1; piano
 roll\](docs/resources/pngs/harmony\_example3\_00001.png){class=“piano\_roll”
-style=“max-height: 300px”} \[harmony\_example3
+style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/harmony\_example3.m4a)
 
 `chords` and `scales` do not have to be the same length as
@@ -306,11 +303,11 @@ demonstrates:
 ```
 
 <span id="harmony_example4">**Example:**
-`docs/examples/harmony_example4.py`</span><br>\[harmony\_example4
+`docs/examples/harmony_example4.py`</span><br>\[&#1;
 notation\](docs/resources/svgs/harmony\_example4.svg){class=“notation”}
-\[harmony\_example4 piano
+\[&#1; piano
 roll\](docs/resources/pngs/harmony\_example4\_00001.png){class=“piano\_roll”
-style=“max-height: 300px”} \[harmony\_example4
+style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/harmony\_example4.m4a)
 
 So far, the length of the progression has always been taken implicitly
@@ -329,11 +326,11 @@ Doing so allows us to create “pedal points” on a repeated bass note:
 ```
 
 <span id="harmony_example5">**Example:**
-`docs/examples/harmony_example5.py`</span><br>\[harmony\_example5
+`docs/examples/harmony_example5.py`</span><br>\[&#1;
 notation\](docs/resources/svgs/harmony\_example5.svg){class=“notation”}
-\[harmony\_example5 piano
+\[&#1; piano
 roll\](docs/resources/pngs/harmony\_example5\_00001.png){class=“piano\_roll”
-style=“max-height: 300px”} \[harmony\_example5
+style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/harmony\_example5.m4a)
 
 Another useful setting for creating harmonic progressions is
@@ -354,11 +351,11 @@ by `interval_cycle`. See
 ```
 
 <span id="harmony_example6">**Example:**
-`docs/examples/harmony_example6.py`</span><br>\[harmony\_example6
+`docs/examples/harmony_example6.py`</span><br>\[&#1;
 notation\](docs/resources/svgs/harmony\_example6.svg){class=“notation”}
-\[harmony\_example6 piano
+\[&#1; piano
 roll\](docs/resources/pngs/harmony\_example6\_00001.png){class=“piano\_roll”
-style=“max-height: 300px”} \[harmony\_example6
+style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/harmony\_example6.m4a)
 
 `interval_cycle` can also consist of more than one interval, as in
@@ -367,22 +364,22 @@ audio\](docs/resources/m4as/harmony\_example6.m4a)
 understood *upwards*, `"MINOR_6TH"` in this example is equivalent to a
 descending major third.)
 
-``` 
-    "num_harmonies": 4,
-    "interval_cycle": ("PERFECT_4TH", "MINOR_6TH"),
-    "foot_pcs": ("Eb",),
-    # The preceding three lines are equivalent to:
-    #   `"foot_pcs": ("Eb", "Ab", "E", "A")`
-    "chords": ("MAJOR_TRIAD",),
-    "scales": ("MAJOR_SCALE",),
-```
+    {
+        "num_harmonies": 4,
+        "interval_cycle": ("PERFECT_4TH", "MINOR_6TH"),
+        "foot_pcs": ("Eb",),
+        # The preceding three lines are equivalent to:
+        #   `"foot_pcs": ("Eb", "Ab", "E", "A")`
+        "chords": ("MAJOR_TRIAD",),
+        "scales": ("MAJOR_SCALE",),
+    }
 
 <span id="harmony_example7">**Example:**
-`docs/examples/harmony_example7.py`</span><br>\[harmony\_example7
+`docs/examples/harmony_example7.py`</span><br>\[&#1;
 notation\](docs/resources/svgs/harmony\_example7.svg){class=“notation”}
-\[harmony\_example7 piano
+\[&#1; piano
 roll\](docs/resources/pngs/harmony\_example7\_00001.png){class=“piano\_roll”
-style=“max-height: 300px”} \[harmony\_example7
+style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/harmony\_example7.m4a)
 
 Before concluding this introduction to specifying harmonies, I should
@@ -417,27 +414,235 @@ and `extend_bass_range_for_foots = 7` in
 scale/chord to sound on beat one of each harmony.)
 
 <span id="harmony_example8">**Example:**
-`docs/examples/harmony_example8.py`</span><br>\[harmony\_example8
+`docs/examples/harmony_example8.py`</span><br>\[&#1;
 notation\](docs/resources/svgs/harmony\_example8.svg){class=“notation”}
-\[harmony\_example8 piano
+\[&#1; piano
 roll\](docs/resources/pngs/harmony\_example8\_00001.png){class=“piano\_roll”
-style=“max-height: 300px”} \[harmony\_example8
+style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/harmony\_example8.m4a)
 
 <a href="#harmony_example9">`docs/examples/harmony_example9.py`</a> is
 similar, but with `chord_tone_selection = False` as well.
 
 <span id="harmony_example9">**Example:**
-`docs/examples/harmony_example9.py`</span><br>\[harmony\_example9
+`docs/examples/harmony_example9.py`</span><br>\[&#1;
 notation\](docs/resources/svgs/harmony\_example9.svg){class=“notation”}
-\[harmony\_example9 piano
+\[&#1; piano
 roll\](docs/resources/pngs/harmony\_example9\_00001.png){class=“piano\_roll”
-style=“max-height: 300px”} \[harmony\_example9
+style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/harmony\_example9.m4a)
 
 ### Specifying rhythms
 
-`TODO`
+Besides setting `rhythm_len` as we did [above](#how-it-works), there are
+many other ways of controlling the rhythms that are produced.
+
+To begin with, we have `attack_subdivision` and `attack_density`:
+
+  - `attack_subdivision` indicates the basic “grid” on which note
+    attacks can take place, measured in quarter notes.
+  - `attack_density` indicates the proportion of grid points that should
+    have an attack.
+
+So for example, in
+<a href="#rhythm_example1">`docs/examples/rhythm_example1.py`</a>,
+`"attack_subdivision" = 1/4` indicates a sixteenth-note grid, and
+`"attack_density" = 1.0` indicates that every point in the grid should
+have an attack, creating a *moto perpetuo* texture. (For
+clarity/brevity, this example has only one voice.)
+
+    {
+    "num_voices": 1,
+    "attack_density": 0.5,
+    "attack_subdivision": 1/4,
+    }
+
+<span id="rhythm_example1">**Example:**
+`docs/examples/rhythm_example1.py`</span><br>\[&#1;
+notation\](docs/resources/svgs/rhythm\_example1.svg){class=“notation”}
+\[&#1; piano
+roll\](docs/resources/pngs/rhythm\_example1\_00001.png){class=“piano\_roll”
+style=“max-height: 300px”} \[&#1;
+audio\](docs/resources/m4as/rhythm\_example1.m4a)
+
+If we reduce `attack_density`, as in
+<a href="#rhythm_example2">`docs/examples/rhythm_example2.py`</a>, the
+proportion of the sixteenth-grid that is filled with attacks will be
+correspondingly reduced.
+
+    {
+        "num_voices": 1,
+        "attack_density": 0.5,
+        "attack_subdivision": 1 / 4,
+    }
+
+<span id="rhythm_example2">**Example:**
+`docs/examples/rhythm_example2.py`</span><br>\[&#1;
+notation\](docs/resources/svgs/rhythm\_example2.svg){class=“notation”}
+\[&#1; piano
+roll\](docs/resources/pngs/rhythm\_example2\_00001.png){class=“piano\_roll”
+style=“max-height: 300px”} \[&#1;
+audio\](docs/resources/m4as/rhythm\_example2.m4a)
+
+Another important rhythmic parameter is `dur_density`. It specifies the
+proportion of time that should be filled by note durations, irrespective
+of how many attacks there are. So far we have left `dur_density` at the
+default value of `1.0`, which means that all notes last until the next
+attack in that voice. (In musical terms, all notes are *legato*.) If we
+decrease it to 0.75, as in
+<a href="#rhythm_example3">`docs/examples/rhythm_example3.py`</a>, some
+of the notes will become shorter, so that 75% of the total time of the
+rhythm is filled by sounding notes.
+
+    {
+        "num_voices": 1,
+        "attack_density": 0.5,
+        "dur_density": 0.75,
+        "attack_subdivision": 1 / 4,
+    }}
+
+<span id="rhythm_example3">**Example:**
+`docs/examples/rhythm_example3.py`</span><br>\[&#1;
+notation\](docs/resources/svgs/rhythm\_example3.svg){class=“notation”}
+\[&#1; piano
+roll\](docs/resources/pngs/rhythm\_example3\_00001.png){class=“piano\_roll”
+style=“max-height: 300px”} \[&#1;
+audio\](docs/resources/m4as/rhythm\_example3.m4a)
+
+To obtain a *staccato* effect, we can make `dur_density` still shorter,
+but to obtain *really* short notes, we may have to adjust `min_dur` as
+well, which sets the minimum duration of each pitch as well.
+
+    {
+        "num_voices": 1,
+        "attack_density": 0.5,
+        "dur_density": 0.25,
+        "min_dur": 1/8,
+        "attack_subdivision": 1 / 4,
+    }
+
+<span id="rhythm_example4">**Example:**
+`docs/examples/rhythm_example4.py`</span><br>\[&#1;
+notation\](docs/resources/svgs/rhythm\_example4.svg){class=“notation”}
+\[&#1; piano
+roll\](docs/resources/pngs/rhythm\_example4\_00001.png){class=“piano\_roll”
+style=“max-height: 300px”} \[&#1;
+audio\](docs/resources/m4as/rhythm\_example4.m4a)
+
+We can change `"attack_subdivision"` as well. For example, to have a
+grid of eighth-note triplets, we would set `"attack_subdivision" = 1/3`.
+And since computers have no problem with precise, strange rhythms, we
+could also set it to unusual values like `5/13` or `math.pi / 12`.\[5\]
+
+    {
+        "num_voices": 1,
+        "attack_density": 0.75,
+        "dur_density": 0.25,
+        "min_dur": 1/8,
+        "attack_subdivision": 3/ 13,
+    }
+
+<span id="rhythm_example5">**Example:**
+`docs/examples/rhythm_example5.py`</span><br>\[&#1; piano
+roll\](docs/resources/pngs/rhythm\_example5\_00001.png){class=“piano\_roll”
+style=“max-height: 300px”} \[&#1;
+audio\](docs/resources/m4as/rhythm\_example5.m4a)
+
+All of the settings we have been looking at so far are “per-voice”,
+meaning that they can be set to a different value in each voice. If we
+set `attack_subdivision` to a different unusual value in each voice, we
+get a particularly chaotic effect. (I find that the chaos can be reined
+in a bit by setting `rhythm_len` to a short value, creating a brief
+rhythmic loop.)
+
+    {
+        "rhythm_len": 1,
+        "num_voices": 3,
+        "attack_density": [0.25, 0.5, 0.75],
+        "dur_density": [0.25, 0.5, 0.25],
+        "min_dur": [0.25, 0.25, 1/8],
+        "attack_subdivision": [3/ 13, 5/12, 6/11],
+    }
+
+<span id="rhythm_example6">**Example:**
+`docs/examples/rhythm_example6.py`</span><br>\[&#1; piano
+roll\](docs/resources/pngs/rhythm\_example6\_00001.png){class=“piano\_roll”
+style=“max-height: 300px”} \[&#1;
+audio\](docs/resources/m4as/rhythm\_example6.m4a)
+
+There are also a few settings that govern the relation between different
+voices. If `hocketing` is `True`, then, to the extent possible, the
+attacks of each voice will occur when there is no attack in any other
+voice. (In textures with many voices, it is also possible to assign
+specific pairs of voices to hocket with one another.)
+
+    {
+        "num_voices": 2,
+        "attack_density": 0.4,
+        "dur_density": 0.4,
+        "min_dur": 0.25,
+        "attack_subdivision": 0.25,
+        "hocketing": True,
+    }
+
+<span id="rhythm_example7">**Example:**
+`docs/examples/rhythm_example7.py`</span><br>\[&#1;
+notation\](docs/resources/svgs/rhythm\_example7.svg){class=“notation”}
+\[&#1; piano
+roll\](docs/resources/pngs/rhythm\_example7\_00001.png){class=“piano\_roll”
+style=“max-height: 300px”} \[&#1;
+audio\](docs/resources/m4as/rhythm\_example7.m4a)
+
+Another setting that governs the rhythmic relation between voices is
+`rhythmic_unison`, which causes voices to have exactly the same rhythm.
+(Like `hocketing`, it can be provided a boolean, or a list of tuples of
+voices; see the settings documentation for more details.)
+
+    {
+        "num_voices": 3,
+        "rhythmic_unison": True,
+        "attack_density": .7,
+        "dur_density": 0.6,
+        "min_dur": 0.25,
+        "attack_subdivision": 1/4,
+    }
+
+<span id="rhythm_example8">**Example:**
+`docs/examples/rhythm_example8.py`</span><br>\[&#1; piano
+roll\](docs/resources/pngs/rhythm\_example8\_00001.png){class=“piano\_roll”
+style=“max-height: 300px”} \[&#1;
+audio\](docs/resources/m4as/rhythm\_example8.m4a)
+
+When `rhythmic_unison` is applied, rhythmic settings like
+`attack_density` only have any effect in the “leader” voice, whose
+rhythm is simply copied into the other voices. If we wanted to specify a
+different `attack_density` in a “follower” voice, it would be ignored.
+This situation would call for the related setting
+`rhythmic_quasi_unison`. When `rhythmic_quasi_unison` applies, then,
+instead of copying the “leader” rhythm into the “follower” voices, the
+attacks of the “follower” voices are constrained so far as possible to
+coincide with those of the “leader.” In
+<a href="#rhythm_example9">`docs/examples/rhythm_example9.py`</a>, the
+leader is the bass voice (midi guitar). The middle voice (midi piano)
+has a *lower* `attack_density`, and the top voice (midi electric piano)
+has a *higher* `attack_density`.
+
+    {
+        "num_voices": 3,
+        "rhythmic_quasi_unison": True,
+        "attack_density": [0.5, 0.4, 0.6],
+        "dur_density": [0.5, 0.4, 0.6],
+        "min_dur": 0.25,
+        "attack_subdivision": 1 / 4,
+    }
+
+<span id="rhythm_example9">**Example:**
+`docs/examples/rhythm_example9.py`</span><br>\[&#1;
+notation\](docs/resources/svgs/rhythm\_example9.svg){class=“notation”}
+\[&#1; piano
+roll\](docs/resources/pngs/rhythm\_example9\_00001.png){class=“piano\_roll”
+style=“max-height: 300px”} \[&#1;
+audio\](docs/resources/m4as/rhythm\_example9.m4a)
 
 ## Filters and transformers
 
@@ -455,8 +660,9 @@ audio\](docs/resources/m4as/harmony\_example9.m4a)
     these examples contain plentiful parallel fifths (for example, the
     first two sixteenth-notes in
     <a href="#example2">`docs/examples/example2.py`</a>). If desired,
-    parallel fifths could be avoided by including `7` in the sequence
-    provided to the setting `prohibit_parallels`.
+    parallel fifths could be avoided by including `7` (i.e., the number
+    of semitones in a perfect fifth) in the sequence provided to the
+    setting `prohibit_parallels`.
 
 3.  The settings files that generated the examples in this section all
     begin with `harmony_example` and are found in the `docs/examples`
@@ -465,3 +671,12 @@ audio\](docs/resources/m4as/harmony\_example9.m4a)
     `python3 efficient_rhythms.py --settings
     docs/examples/harmony_example_base.py
     docs/examples/harmony_example1.py`.
+
+4.  There is a technical reason for this constraint, (namely, that the
+    script works by finding bijective voice-leadings between chords and
+    scales), but in the longterm, I would very much like to remove it.
+
+5.  However, we’ll have to give up on representing these in conventional
+    music notation. In fact, for the time being only duple note-values
+    (i.e., eighth-notes, quarter-notes, and the like) can be exported to
+    notation.

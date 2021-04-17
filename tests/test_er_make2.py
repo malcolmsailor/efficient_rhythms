@@ -24,15 +24,46 @@ def test_check_harmonic_intervals():
         (0, 60, 1.5, 0.5, True),
         (1, 64, 1.75, 0.25, True),
         (0, 64, 2, 0.25, True),
-        (1, 64, 2, 0.5, False),
+        (1, 76, 2, 0.5, False),
     ]
     notes2 = [
-        (1, 64, 1.75, 0.25, True),
+        (1, 52, 1.75, 0.25, True),
         (0, 60, 1.5, 0.5, True),
         (1, 64, 2, 0.5, True),
         (0, 64, 2, 0.25, False),
     ]
     for notes in (notes1, notes2):
+        score = er_notes.Score(num_voices=er.num_voices, tet=er.tet)
+        for (v, p, a, d, b) in notes:  # pylint: disable=invalid-name
+            try:
+                assert (
+                    er_make2.check_harmonic_intervals(er, score, p, a, d, v)
+                    is b
+                ), (
+                    "er_make2.check_harmonic_intervals"
+                    f"(er, score, {p}, {a}, {d}, {v}) is not {b}"
+                )
+            except:  # pylint: disable=bare-except
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                traceback.print_exception(
+                    exc_type, exc_value, exc_traceback, file=sys.stdout
+                )
+                breakpoint()
+            score.add_note(v, p, a, d)
+    settingsdict = {
+        "num_voices": 3,
+        "tet": 12,
+        "forbidden_intervals": [0,],
+        "forbidden_interval_classes": [],
+    }
+    er = er_preprocess.preprocess_settings(settingsdict)
+    notes1 = [
+        (0, 60, 0, 1.0, True),
+        (1, 72, 0, 1.0, True),
+        (2, 60, 0, 0.5, False),
+        (2, 72, 0, 0.5, False),
+    ]
+    for notes in (notes1,):
         score = er_notes.Score(num_voices=er.num_voices, tet=er.tet)
         for (v, p, a, d, b) in notes:  # pylint: disable=invalid-name
             try:
