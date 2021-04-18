@@ -826,7 +826,7 @@ class ERSettings:
             "order" refers to order by pitch height, and not by voice number. So
             if voice 0 has E3 and voice 1 has C3, the order is (C3, E3), because
             C3 is lower in pitch than E3, and not (E3, C3), because voice 0 is
-            lower than voice\ 1.
+            lower than voice 1.
             Default: "all"
         chord_permit_doublings: string. If `consonance_type` is `"chordwise"`,
             controls when octave doublings of chord members are permitted.
