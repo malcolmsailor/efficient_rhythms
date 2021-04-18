@@ -608,7 +608,9 @@ voices; see the settings documentation for more details.)
     }
 
 <span id="rhythm_example8">**Example:**
-`docs/examples/rhythm_example8.py`</span><br>\[&#1; piano
+`docs/examples/rhythm_example8.py`</span><br>\[&#1;
+notation\](docs/resources/svgs/rhythm\_example8.svg){class=“notation”}
+\[&#1; piano
 roll\](docs/resources/pngs/rhythm\_example8\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/rhythm\_example8.m4a)

@@ -826,7 +826,7 @@ class ERSettings:
             "order" refers to order by pitch height, and not by voice number. So
             if voice 0 has E3 and voice 1 has C3, the order is (C3, E3), because
             C3 is lower in pitch than E3, and not (E3, C3), because voice 0 is
-            lower than voice 1.
+            lower than voice\ 1.
             Default: "all"
         chord_permit_doublings: string. If `consonance_type` is `"chordwise"`,
             controls when octave doublings of chord members are permitted.
@@ -928,6 +928,10 @@ class ERSettings:
             0, 2, and 3, repeating every 4 beats; in musical terms, we could
             think of this as attacks on the first, third, and fourth beats of
             every measure of 4/4.
+
+            If `obligatory_attacks` specifies more attacks than would be
+            implied by `attack_density`, `obligatory_attacks` takes precedence.
+
             Default: ()
         obligatory_attacks_modulo: a number, or a sequence of numbers.
             Specifies which times (if any) should be understood as equivalent

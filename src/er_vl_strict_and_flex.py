@@ -277,7 +277,6 @@ def voice_lead_pattern_flexibly(
 def voice_lead_pattern_strictly(
     er, super_pattern, voice_lead_error, pattern_voice_leading_i=0
 ):
-
     voice_lead_error.status()
 
     try:
@@ -403,7 +402,7 @@ def voice_lead_pattern_strictly(
                 # I was doing the next check but I am guessing it is not
                 #   necessary based on the fact that I don't check it anywhere
                 #   else (e.g., in voice_lead_pattern_flexibly)
-                # or new_attack_time >= er.total_len
+                or new_attack_time >= er.total_len
             ):
                 break
 

@@ -43,6 +43,9 @@ class RhythmicDict(collections.UserDict):
     def attack_times_and_durs(self):
         return list(self.items())
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.data})"
+
 
 class Rhythm(RhythmicDict):
     # LONGTERM provide "re-generate" method, rather than
@@ -769,7 +772,6 @@ def _fill_attack_durs(
             ):
                 available.remove(choose)
 
-        # breakpoint()
         return actual_total_dur
 
     dur_subdivision = er.get(voice_i, "dur_subdivision")

@@ -689,6 +689,7 @@ def rhythm_preprocessing(er):
         return out_dict
 
     def _num_notes(voice_i):
+
         if voice_i in er.rhythmic_unison_followers:
             leader_i = er.rhythmic_unison_followers[voice_i]
             er.num_notes[voice_i] = er.num_notes[leader_i]
@@ -696,6 +697,7 @@ def rhythm_preprocessing(er):
         rhythm_len = er.rhythm_len[voice_i]
         density = er.attack_density[voice_i]
         attack_div = er.attack_subdivision[voice_i]
+
         len_sub_subdiv = (
             len(er.sub_subdiv_props[voice_i])
             if er.cont_rhythms == "none"
@@ -713,7 +715,9 @@ def rhythm_preprocessing(er):
         else:
             # if isinstance(density, float):
             num_notes = min(round(density * num_div), num_div)
-        er.num_notes[voice_i] = max(num_notes, 1)
+        er.num_notes[voice_i] = max(
+            num_notes, 1, len(er.obligatory_attacks[voice_i])
+        )
 
     if er.rhythms_specified_in_midi:
         return
