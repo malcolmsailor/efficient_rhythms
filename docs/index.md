@@ -646,6 +646,89 @@ roll\](docs/resources/pngs/rhythm\_example9\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/rhythm\_example9.m4a)
 
+We can obtain more explicit control of the rhythms through the
+`obligatory_attacks` setting, which specifies a sequence of times at
+which the rhythms will be “obliged” to have a note onset. It’s also
+necessary to specify `obligatory_attacks_modulo` in order to specify
+when these attacks should repeat (e.g., every two beats).
+
+For example, in
+<a href="#rhythm_example10">`docs/examples/rhythm_example10.py`</a>,
+I’ve set `obligatory_attacks` to `[0, 0.75, 1.5]` and
+`obligatory_attacks_modulo` to `2` in order to specify a *tresillo*
+3–3–2 rhythm. Since the value of `attack_density` implies more than
+three attacks every two beats, additional attacks are added to the
+underlying scaffold supplied by the values in `obligatory_attacks`.
+
+    {
+        "num_voices": 3,
+        "obligatory_attacks": [0, 0.75, 1.5],
+        "obligatory_attacks_modulo": 2,
+        "attack_density": 0.5,
+        "dur_density": 0.5,
+        "min_dur": 0.25,
+        "attack_subdivision": 0.25,
+    }
+
+<span id="rhythm_example10">**Example:**
+`docs/examples/rhythm_example10.py`</span><br>\[&#1;
+notation\](docs/resources/svgs/rhythm\_example10.svg){class=“notation”}
+\[&#1; piano
+roll\](docs/resources/pngs/rhythm\_example10\_00001.png){class=“piano\_roll”
+style=“max-height: 300px”} \[&#1;
+audio\](docs/resources/m4as/rhythm\_example10.m4a)
+
+It is possible to specify an irregular grid upon which note attacks will
+take place using `sub_subdivisions`. This setting takes a sequence of
+integers and subdivides the grid specified by `attack_subdivision` into
+parts defined by the ratio of these integers. For example, in
+<a href="#rhythm_example11">`docs/examples/rhythm_example11.py`</a>
+below, `sub_subdivisions` is `[4,3]`, which creates an uneven “swing”
+feel where every first note is 4/3rds as long as every second note.\[^To
+keep the number of total attacks consistent, you’ll probably want to
+increase `attack_subdivision` by taking the value you otherwise would
+have chosen and multiplying it by the length of `sub_subdivisions`.\]
+You’ll notice that
+<a href="#rhythm_example11">`docs/examples/rhythm_example11.py`</a> is
+precisely the same as
+<a href="#rhythm_example1">`docs/examples/rhythm_example1.py`</a>,
+except for the uneven rhythms.
+
+    {
+        "num_voices": 1,
+        "attack_density": 1.0,
+        "attack_subdivision": 0.5,
+        "sub_subdivisions": [4, 3],
+    }
+
+<span id="rhythm_example11">**Example:**
+`docs/examples/rhythm_example11.py`</span><br>\[&#1; piano
+roll\](docs/resources/pngs/rhythm\_example11\_00001.png){class=“piano\_roll”
+style=“max-height: 300px”} \[&#1;
+audio\](docs/resources/m4as/rhythm\_example11.m4a)
+
+I think, however, that it is more interesting to experiment with values
+of `sub_subdivisions` that are further from what a human would be likely
+to produce. In
+<a href="#rhythm_example12">`docs/examples/rhythm_example12.py`</a>, I
+use a segment of the Fibonacci sequence in reverse.
+
+    {
+        "num_voices": 3,
+        "attack_density": 0.4,
+        "attack_subdivision": 1,
+        "sub_subdivisions": [8, 5, 3],
+        "obligatory_attacks": 0,
+        "obligatory_attacks_modulo": 2,
+        "hocketing": True,
+    }
+
+<span id="rhythm_example12">**Example:**
+`docs/examples/rhythm_example12.py`</span><br>\[&#1; piano
+roll\](docs/resources/pngs/rhythm\_example12\_00001.png){class=“piano\_roll”
+style=“max-height: 300px”} \[&#1;
+audio\](docs/resources/m4as/rhythm\_example12.m4a)
+
 ## Filters and transformers
 
 `TODO`

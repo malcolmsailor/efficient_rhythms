@@ -16,7 +16,7 @@ import src.er_midi_settings as er_midi_settings
 import src.er_notes as er_notes
 import src.er_tuning as er_tuning
 
-# midi macros
+# midi constants
 META_TRACK = 0
 CLOCKS_PER_TICK = 24
 DEFAULT_CHANNEL = 0
@@ -24,18 +24,23 @@ DEFAULT_TRACK = 0
 DEFAULT_VELOCITY = er_notes.DEFAULT_VELOCITY
 NUM_CHANNELS = 16
 
-# pitch_bend_tuple macros
+# pitch_bend_tuple constants
 MIDI_NUM = 0
 PITCH_BEND = 1
 
 # LONGTERM transpose notes up an octave as they voice-lead out of range
+
+TIME_PRECISION = 12
 
 
 def abs_to_delta_times(mf, skip=()):
     for track_i, track in enumerate(mf.tracks):
         if track_i in skip:
             continue
-        track.sort(key=lambda x: x.time)
+        # it's important that note-offs don't go after note-ons that should be
+        #   at the same instant. Numerical error with floats sometimes leads to
+        #   that happening, so we round to TIME_PRECISION when sorting here.
+        track.sort(key=lambda x: round(x.time, TIME_PRECISION))
         current_tick_time = 0  # unrounded
         for msg in track:
             abs_tick_time = mf.ticks_per_beat * msg.time

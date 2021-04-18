@@ -265,6 +265,37 @@ pip3 install img2pdf</code></pre>
     &quot;attack_subdivision&quot;: 1 / 4,
 }</code></pre>
 <p><span id="rhythm_example9"><strong>Example:</strong> <code>docs/examples/rhythm_example9.py</code></span><br><img src="resources/svgs/rhythm_example9.svg" class="notation" alt=" notation" /> <img src="resources/pngs/rhythm_example9_00001.png" class="piano_roll" style="max-height: 300px" alt=" piano roll" /> <audio src="resources/m4as/rhythm_example9.m4a" controls=""><a href="resources/m4as/rhythm_example9.m4a"> audio</a></audio></p>
+<p>We can obtain more explicit control of the rhythms through the <code>obligatory_attacks</code> setting, which specifies a sequence of times at which the rhythms will be “obliged” to have a note onset. It’s also necessary to specify <code>obligatory_attacks_modulo</code> in order to specify when these attacks should repeat (e.g., every two beats).</p>
+<p>For example, in <a href="#rhythm_example10"><code>docs/examples/rhythm_example10.py</code></a>, I’ve set <code>obligatory_attacks</code> to <code>[0, 0.75, 1.5]</code> and <code>obligatory_attacks_modulo</code> to <code>2</code> in order to specify a <em>tresillo</em> 3–3–2 rhythm. Since the value of <code>attack_density</code> implies more than three attacks every two beats, additional attacks are added to the underlying scaffold supplied by the values in <code>obligatory_attacks</code>.</p>
+<pre><code>{
+    &quot;num_voices&quot;: 3,
+    &quot;obligatory_attacks&quot;: [0, 0.75, 1.5],
+    &quot;obligatory_attacks_modulo&quot;: 2,
+    &quot;attack_density&quot;: 0.5,
+    &quot;dur_density&quot;: 0.5,
+    &quot;min_dur&quot;: 0.25,
+    &quot;attack_subdivision&quot;: 0.25,
+}</code></pre>
+<p><span id="rhythm_example10"><strong>Example:</strong> <code>docs/examples/rhythm_example10.py</code></span><br><img src="resources/svgs/rhythm_example10.svg" class="notation" alt=" notation" /> <img src="resources/pngs/rhythm_example10_00001.png" class="piano_roll" style="max-height: 300px" alt=" piano roll" /> <audio src="resources/m4as/rhythm_example10.m4a" controls=""><a href="resources/m4as/rhythm_example10.m4a"> audio</a></audio></p>
+<p>It is possible to specify an irregular grid upon which note attacks will take place using <code>sub_subdivisions</code>. This setting takes a sequence of integers and subdivides the grid specified by <code>attack_subdivision</code> into parts defined by the ratio of these integers. For example, in <a href="#rhythm_example11"><code>docs/examples/rhythm_example11.py</code></a> below, <code>sub_subdivisions</code> is <code>[4,3]</code>, which creates an uneven “swing” feel where every first note is 4/3rds as long as every second note.[^To keep the number of total attacks consistent, you’ll probably want to increase <code>attack_subdivision</code> by taking the value you otherwise would have chosen and multiplying it by the length of <code>sub_subdivisions</code>.] You’ll notice that <a href="#rhythm_example11"><code>docs/examples/rhythm_example11.py</code></a> is precisely the same as <a href="#rhythm_example1"><code>docs/examples/rhythm_example1.py</code></a>, except for the uneven rhythms.</p>
+<pre><code>{
+    &quot;num_voices&quot;: 1,
+    &quot;attack_density&quot;: 1.0,
+    &quot;attack_subdivision&quot;: 0.5,
+    &quot;sub_subdivisions&quot;: [4, 3],
+}</code></pre>
+<p><span id="rhythm_example11"><strong>Example:</strong> <code>docs/examples/rhythm_example11.py</code></span><br><img src="resources/pngs/rhythm_example11_00001.png" class="piano_roll" style="max-height: 300px" alt=" piano roll" /> <audio src="resources/m4as/rhythm_example11.m4a" controls=""><a href="resources/m4as/rhythm_example11.m4a"> audio</a></audio></p>
+<p>I think, however, that it is more interesting to experiment with values of <code>sub_subdivisions</code> that are further from what a human would be likely to produce. In <a href="#rhythm_example12"><code>docs/examples/rhythm_example12.py</code></a>, I use a segment of the Fibonacci sequence in reverse.</p>
+<pre><code>{
+    &quot;num_voices&quot;: 3,
+    &quot;attack_density&quot;: 0.4,
+    &quot;attack_subdivision&quot;: 1,
+    &quot;sub_subdivisions&quot;: [8, 5, 3],
+    &quot;obligatory_attacks&quot;: 0,
+    &quot;obligatory_attacks_modulo&quot;: 2,
+    &quot;hocketing&quot;: True,
+}</code></pre>
+<p><span id="rhythm_example12"><strong>Example:</strong> <code>docs/examples/rhythm_example12.py</code></span><br><img src="resources/pngs/rhythm_example12_00001.png" class="piano_roll" style="max-height: 300px" alt=" piano roll" /> <audio src="resources/m4as/rhythm_example12.m4a" controls=""><a href="resources/m4as/rhythm_example12.m4a"> audio</a></audio></p>
 <h2 id="filters-and-transformers">Filters and transformers</h2>
 <p><code>TODO</code></p>
 <section class="footnotes" role="doc-endnotes">
