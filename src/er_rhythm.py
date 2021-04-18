@@ -106,6 +106,7 @@ class Rhythm(RhythmicDict):
         self._check_min_dur()
 
     def _check_min_dur(self):
+        # TODO these warnings mess with the printing of the current state, fix
         if self.rhythm_len < self.min_dur * self.num_notes:
             new_min_dur = er_misc_funcs.convert_to_fractions(
                 self.rhythm_len / self.num_notes

@@ -43,7 +43,14 @@ def check_rhythms(er):
     # the kern function only works if all rhythms have denominator that is a
     # power of 2, so we want to check that first
     # As a heuristic, we just check if the rhythms are divisible by 128.
-    # TODO check other rhythmic features besides attack_subdivision
+    # TODO check other rhythmic features besides attack_subdivision,
+    #   sub_subdivisions?
+    if any([len(x) > 1 for x in er.sub_subdivisions]):
+        print(
+            "Sorry, exporting to notation is not compatible with non-empty "
+            "values of er.sub_subdivisions"
+        )
+        return False
     if all([n % (1 / 128) == 0 for n in er.attack_subdivision]):
         return True
     print("Can't export notation because not all rhythms are divisible by 128")
