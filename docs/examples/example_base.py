@@ -1,7 +1,5 @@
 {
     "choirs": ("CELESTA", "VIBRAPHONE"),
-    # TODO delete next line after default setting is updated appropriately
-    "choir_assignments": (0, 1),
     "seed": 2,
     "num_voices": 2,
     "foot_pcs": [0],

@@ -71,13 +71,22 @@ There are many configurable settings that shape the output. Full
 documentation is available in \[`settings.html`\](docs/settings.md). But
 a gentler introduction is provided in the next section.
 
+In general, custom settings are applied by putting them into a Python
+dictionary, saving them in a file, and then passing that file as an
+argument to the script with the `--settings` flag. For examples, see
+`docs/examples`. (A long-term goal for this project would be to provide
+a GUI or other more user-friendly interface.)
+
 ## How it works
 
 The basic settings that control the script are
 
-  - `rhythm_len`: the length of the basic rhythm
-  - `pattern_len`: the length of the initial pattern
-  - `harmony_len`: the length of each harmony (i.e., chord)
+  - \[`rhythm_len`\](docs/settings.md\#rhythm\_len): the length of the
+    basic rhythm
+  - \[`pattern_len`\](docs/settings.md\#pattern\_len): the length of the
+    initial pattern
+  - \[`harmony_len`\](docs/settings.md\#harmony\_len): the length of
+    each harmony (i.e., chord)
 
 For instance, in <a href="#example1">`docs/examples/example1.py`</a>,
 the initial pattern is two beats long (i.e., `pattern_len = 2`). Each
@@ -93,15 +102,20 @@ roll\](docs/resources/pngs/example1\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/example1.m4a)
 
-Whenever `rhythm_len` is not set explicitly, it is implicitly assigned
-the value of `pattern_len`. So in the example above, `rhythm_len` was
-implicitly assigned `2`. In
-<a href="#example2">`docs/examples/example2.py`</a>, in contrast, we set
-`pattern_len = 4`, but `rhythm_len = 2`. Thus, if you look and/or listen
-carefully, you’ll find that the same rhythm repeats twice on each
-harmony, but with different notes each time—the entire pattern of
-pitches takes four beats to repeat, and by the time it does, its pitches
-are somewhat different, having been adjusted to the new harmony.\[2\]
+(By the way, I made the piano-roll figures throughout this documentation
+with [midani](https://github.com/malcolmsailor/midani).)
+
+Whenever \[`rhythm_len`\](docs/settings.md\#rhythm\_len) is not set
+explicitly, it is implicitly assigned the value of
+\[`pattern_len`\](docs/settings.md\#pattern\_len). So in the example
+above, \[`rhythm_len`\](docs/settings.md\#rhythm\_len) was implicitly
+assigned `2`. In <a href="#example2">`docs/examples/example2.py`</a>, in
+contrast, we set `pattern_len = 4`, but `rhythm_len = 2`. Thus, if you
+look and/or listen carefully, you’ll find that the same rhythm repeats
+twice on each harmony, but with different notes each time—the entire
+pattern of pitches takes four beats to repeat, and by the time it does,
+its pitches are somewhat different, having been adjusted to the new
+harmony.\[2\]
 
 <span id="example2">**Example:**
 `docs/examples/example2.py`</span><br>\[&#1;
@@ -111,11 +125,13 @@ roll\](docs/resources/pngs/example2\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/example2.m4a)
 
-We aren’t constrained to have `pattern_len` be a whole multiple of
-`rhythm_len`. In <a href="#example3">`docs/examples/example3.py`</a>,
-`pattern_len` is still `4`, but `rhythm_len = 1.5`, so now every third
-time the rhythm occurs, it is truncated (a bit like a 3–3–2 *tresillo*
-pattern).
+We aren’t constrained to have
+\[`pattern_len`\](docs/settings.md\#pattern\_len) be a whole multiple of
+\[`rhythm_len`\](docs/settings.md\#rhythm\_len). In
+<a href="#example3">`docs/examples/example3.py`</a>,
+\[`pattern_len`\](docs/settings.md\#pattern\_len) is still `4`, but
+`rhythm_len = 1.5`, so now every third time the rhythm occurs, it is
+truncated (a bit like a 3–3–2 *tresillo* pattern).
 
 <span id="example3">**Example:**
 `docs/examples/example3.py`</span><br>\[&#1;
@@ -139,7 +155,8 @@ roll\](docs/resources/pngs/example4\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/example4.m4a)
 
-We can also have different values of `pattern_len` in each voice, as in
+We can also have different values of
+\[`pattern_len`\](docs/settings.md\#pattern\_len) in each voice, as in
 <a href="#example5">`docs/examples/example5.py`</a>. However, if we do
 so, the script has to work quite a bit harder to find a solution. To
 help it do so, I made its task a little easier by changing
@@ -176,9 +193,10 @@ roll\](docs/resources/pngs/example6\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/example6.m4a)
 
-Another feature of all the examples up to now is that `harmony_len` has
-always been at least as long as `pattern_len`. But there’s no reason why
-this has to be so. In
+Another feature of all the examples up to now is that
+\[`harmony_len`\](docs/settings.md\#harmony\_len) has always been at
+least as long as \[`pattern_len`\](docs/settings.md\#pattern\_len). But
+there’s no reason why this has to be so. In
 <a href="#example7">`docs/examples/example7.py`</a>, I’ve set
 `harmony_len = 2` but `pattern_len = 4` so that each pattern covers two
 harmonies.
@@ -219,12 +237,14 @@ audio\](docs/resources/m4as/harmony\_example1.m4a)
 There’s a lot to explain here:
 
 1.  Strings like `"C"` and `"MAJOR_TRIAD"` name constants that are
-    defined in `src\er_constants.py`. If you know any music theory, the
+    defined in `src\er_constants.py` and documented
+    \[here\](docs/constants.md). If you know any music theory, the
     meaning of the constants above shouldn’t require any further
-    explanation now. `TODO document er_constants and add a link to it
-    here`
-2.  We call the “main bass note” of each chord its “foot”. `TODO
-    document "foots" and add a link here`
+    explanation for now.
+2.  In this script, we call the main bass pitch of each chord its
+    “foot”. The main bass pitch is a little like the “root” of a
+    chord, except that the main bass pitch doesn’t have to be the root
+    of a chord (as in the case of inverted chords).
 3.  Each foot is associated with the chord and the scale in the same
     serial position. Both the chord and the scale will be transposed so
     that they begin on the foot. Thus, there is a one-to-one
@@ -232,16 +252,19 @@ There’s a lot to explain here:
     “chord-scale” approach sometimes used in jazz pedagogy).
 
 We can easily put the progression into another key by changing
-`foot_pcs`. For instance, here it is in E major:
+\[`foot_pcs`\](docs/settings.md\#foot\_pcs). For instance, here it is in
+E major:
 
     "foot_pcs": ("E", "B", "C#", "A"),
     "chords": ("MAJOR_TRIAD", "MAJOR_TRIAD", "MINOR_TRIAD", "MAJOR_TRIAD"),
     "scales": ("MAJOR_SCALE", "MIXOLYDIAN", "AEOLIAN", "LYDIAN"),
 
-There are no constraints on `foot_pcs`, so we can get a different
-progression by changing `foot_pcs` arbitrarily. For example, in
+There are no constraints on \[`foot_pcs`\](docs/settings.md\#foot\_pcs),
+so we can get a different progression by changing
+\[`foot_pcs`\](docs/settings.md\#foot\_pcs) arbitrarily. For example, in
 <a href="#harmony_example2">`docs/examples/harmony_example2.py`</a> I’ve
-changed the middle two members of `foot_pcs` to create a more chromatic
+changed the middle two members of
+\[`foot_pcs`\](docs/settings.md\#foot\_pcs) to create a more chromatic
 progression:
 
     "foot_pcs": ("E", "G", "D", "A"), # was ("E", "B", "C#", "A")
@@ -256,14 +279,17 @@ roll\](docs/resources/pngs/harmony\_example2\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/harmony\_example2.m4a)
 
-There are, however, two important constraints on `chords` and `scales`.
+There are, however, two important constraints on
+\[`chords`\](docs/settings.md\#chords) and
+\[`scales`\](docs/settings.md\#scales).
 
-1.  All the items of `chords` must have the same number of
-    pitch-classes, and all the items of `scales` must as well. This
-    means, for example, you can’t go from a major triad to a seventh
-    chord, or from a major scale to a whole-tone scale. (You can,
-    however, use scales or chords with any number of pitch-classes you
-    like—as long as that number remains the same.)\[4\]
+1.  All the items of \[`chords`\](docs/settings.md\#chords) must have
+    the same number of pitch-classes, and all the items of
+    \[`scales`\](docs/settings.md\#scales) must as well. This means, for
+    example, you can’t go from a major triad to a seventh chord, or from
+    a major scale to a whole-tone scale. (You can, however, use scales
+    or chords with any number of pitch-classes you like—as long as that
+    number remains the same.)\[4\]
 2.  Every scale must be a superset of the associated chord. So, for
     example
       - `"MAJOR_TRIAD"` will work with `"MAJOR_SCALE"`, `"MIXOLYDIAN"`,
@@ -273,8 +299,9 @@ There are, however, two important constraints on `chords` and `scales`.
         etc., because these scales contain a minor triad beginning on
         their first pitch
 
-Both `chords` and `scales` will be looped through if they are shorter
-than `foot_pcs`.
+Both \[`chords`\](docs/settings.md\#chords) and
+\[`scales`\](docs/settings.md\#scales) will be looped through if they
+are shorter than \[`foot_pcs`\](docs/settings.md\#foot\_pcs).
 <a href="#harmony_example3">`docs/examples/harmony_example3.py`</a>
 illustrates with the following short loop:
 
@@ -292,8 +319,9 @@ roll\](docs/resources/pngs/harmony\_example3\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/harmony\_example3.m4a)
 
-`chords` and `scales` do not have to be the same length as
-<a href="#harmony_example4">`docs/examples/harmony_example4.py`</a>
+\[`chords`\](docs/settings.md\#chords) and
+\[`scales`\](docs/settings.md\#scales) do not have to be the same length
+as <a href="#harmony_example4">`docs/examples/harmony_example4.py`</a>
 demonstrates:
 
 ``` 
@@ -311,8 +339,9 @@ style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/harmony\_example4.m4a)
 
 So far, the length of the progression has always been taken implicitly
-from the length of `foot_pcs`. But it is also possible to set the length
-of the progression explicitly, using `num_harmonies`, as in
+from the length of \[`foot_pcs`\](docs/settings.md\#foot\_pcs). But it
+is also possible to set the length of the progression explicitly, using
+\[`num_harmonies`\](docs/settings.md\#num\_harmonies), as in
 <a href="#harmony_example5">`docs/examples/harmony_example5.py`</a>.
 Doing so allows us to create “pedal points” on a repeated bass note:
 
@@ -334,10 +363,13 @@ style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/harmony\_example5.m4a)
 
 Another useful setting for creating harmonic progressions is
-`interval_cycle`. If we pass `interval_cycle` to the script, then any
-values of `foot_pcs` beyond the first are ignored. Instead, the
-progression of `foot_pcs` is created by repeatedly progressing upwards
-by `interval_cycle`. See
+\[`interval_cycle`\](docs/settings.md\#interval\_cycle). If we pass
+\[`interval_cycle`\](docs/settings.md\#interval\_cycle) to the script,
+then any values of \[`foot_pcs`\](docs/settings.md\#foot\_pcs) beyond
+the first are ignored. Instead, the progression of
+\[`foot_pcs`\](docs/settings.md\#foot\_pcs) is created by repeatedly
+progressing upwards by
+\[`interval_cycle`\](docs/settings.md\#interval\_cycle). See
 <a href="#harmony_example6">`docs/examples/harmony_example6.py`</a>:
 
 ``` 
@@ -358,9 +390,11 @@ roll\](docs/resources/pngs/harmony\_example6\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/harmony\_example6.m4a)
 
-`interval_cycle` can also consist of more than one interval, as in
+\[`interval_cycle`\](docs/settings.md\#interval\_cycle) can also consist
+of more than one interval, as in
 <a href="#harmony_example7">`docs/examples/harmony_example7.py`</a>.
-(Note that, since the intervals in `interval_cycle` are always
+(Note that, since the intervals in
+\[`interval_cycle`\](docs/settings.md\#interval\_cycle) are always
 understood *upwards*, `"MINOR_6TH"` in this example is equivalent to a
 descending major third.)
 
@@ -383,33 +417,40 @@ style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/harmony\_example7.m4a)
 
 Before concluding this introduction to specifying harmonies, I should
-add a few words about what the script actually does with `chords` and
-`scales`.
+add a few words about what the script actually does with
+\[`chords`\](docs/settings.md\#chords) and
+\[`scales`\](docs/settings.md\#scales).
 
-  - `scales` are used unconditionally: during each harmony, pitches are
-    drawn exclusively from the associated scale. When a pattern is
-    voice-led from one harmony to another, a bijective mapping is
-    effected between the associated scales.
-  - the use of `chords` is more contingent. The most important relevant
-    settings are
-      - if `chord_tone_selection` is `True`, then when constructing the
-        initial pattern, the script probabilistically decides whether
-        each note should be a chord-tone (according to \[parameters that
-        you specify\](docs/settings.md\#chord-tone-settings)).
-      - if `voice_lead_chord_tones` is `True`, then when voice-leading
-        the pattern over subsequent harmonies, the script will ensure
-        that chord-tones are mapped to chord-tones (and non-chord-tones
-        to non-chord-tones).
+  - \[`scales`\](docs/settings.md\#scales) are used unconditionally:
+    during each harmony, pitches are drawn exclusively from the
+    associated scale. When a pattern is voice-led from one harmony to
+    another, a bijective mapping is effected between the associated
+    scales.
+  - the use of \[`chords`\](docs/settings.md\#chords) is more
+    contingent. The most important relevant settings are
+      - if
+        \[`chord_tone_selection`\](docs/settings.md\#chord\_tone\_selection)
+        is `True`, then when constructing the initial pattern, the
+        script probabilistically decides whether each note should be a
+        chord-tone (according to \[parameters that you
+        specify\](docs/settings.md\#chord-tone-settings)).
+      - if
+        \[`voice_lead_chord_tones`\](docs/settings.md\#voice\_lead\_chord\_tones)
+        is `True`, then when voice-leading the pattern over subsequent
+        harmonies, the script will ensure that chord-tones are mapped to
+        chord-tones (and non-chord-tones to non-chord-tones).
 
-In the preceding examples of this section both `chord_tone_selection`
-and `voice_lead_chord_tones` have been `True`. As a contrasting
-illustration,
+In the preceding examples of this section both
+\[`chord_tone_selection`\](docs/settings.md\#chord\_tone\_selection) and
+\[`voice_lead_chord_tones`\](docs/settings.md\#voice\_lead\_chord\_tones)
+have been `True`. As a contrasting illustration,
 <a href="#harmony_example8">`docs/examples/harmony_example8.py`</a>
 repeats the settings of
 <a href="#harmony_example6">`docs/examples/harmony_example6.py`</a>,
-with the sole difference that `voice_lead_chord_tones` is now set to
-`False`. (Note, however, that the settings `force_foot_in_bass = True`
-and `extend_bass_range_for_foots = 7` in
+with the sole difference that
+\[`voice_lead_chord_tones`\](docs/settings.md\#voice\_lead\_chord\_tones)
+is now set to `False`. (Note, however, that the settings
+`force_foot_in_bass = True` and `extend_bass_range_for_foots = 7` in
 `examples/harmony_example_base.py` are still causing the foot of each
 scale/chord to sound on beat one of each harmony.)
 
@@ -434,15 +475,19 @@ audio\](docs/resources/m4as/harmony\_example9.m4a)
 
 ### Specifying rhythms
 
-Besides setting `rhythm_len` as we did [above](#how-it-works), there are
-many other ways of controlling the rhythms that are produced.
+Besides setting \[`rhythm_len`\](docs/settings.md\#rhythm\_len) as we
+did [above](#how-it-works), there are many other ways of controlling the
+rhythms that are produced.\[5\]
 
-To begin with, we have `attack_subdivision` and `attack_density`:
+To begin with, we have
+\[`attack_subdivision`\](docs/settings.md\#attack\_subdivision) and
+\[`attack_density`\](docs/settings.md\#attack\_density):
 
-  - `attack_subdivision` indicates the basic “grid” on which note
-    attacks can take place, measured in quarter notes.
-  - `attack_density` indicates the proportion of grid points that should
-    have an attack.
+  - \[`attack_subdivision`\](docs/settings.md\#attack\_subdivision)
+    indicates the basic “grid” on which note attacks can take place,
+    measured in quarter notes.
+  - \[`attack_density`\](docs/settings.md\#attack\_density) indicates
+    the proportion of grid points that should have an attack.
 
 So for example, in
 <a href="#rhythm_example1">`docs/examples/rhythm_example1.py`</a>,
@@ -465,9 +510,9 @@ roll\](docs/resources/pngs/rhythm\_example1\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/rhythm\_example1.m4a)
 
-If we reduce `attack_density`, as in
-<a href="#rhythm_example2">`docs/examples/rhythm_example2.py`</a>, the
-proportion of the sixteenth-grid that is filled with attacks will be
+If we reduce \[`attack_density`\](docs/settings.md\#attack\_density), as
+in <a href="#rhythm_example2">`docs/examples/rhythm_example2.py`</a>,
+the proportion of the sixteenth-grid that is filled with attacks will be
 correspondingly reduced.
 
     {
@@ -484,12 +529,14 @@ roll\](docs/resources/pngs/rhythm\_example2\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/rhythm\_example2.m4a)
 
-Another important rhythmic parameter is `dur_density`. It specifies the
+Another important rhythmic parameter is
+\[`dur_density`\](docs/settings.md\#dur\_density). It specifies the
 proportion of time that should be filled by note durations, irrespective
-of how many attacks there are. So far we have left `dur_density` at the
-default value of `1.0`, which means that all notes last until the next
-attack in that voice. (In musical terms, all notes are *legato*.) If we
-decrease it to 0.75, as in
+of how many attacks there are. So far we have left
+\[`dur_density`\](docs/settings.md\#dur\_density) at the default value
+of `1.0`, which means that all notes last until the next attack in that
+voice. (In musical terms, all notes are *legato*.) If we decrease it to
+0.75, as in
 <a href="#rhythm_example3">`docs/examples/rhythm_example3.py`</a>, some
 of the notes will become shorter, so that 75% of the total time of the
 rhythm is filled by sounding notes.
@@ -509,9 +556,11 @@ roll\](docs/resources/pngs/rhythm\_example3\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/rhythm\_example3.m4a)
 
-To obtain a *staccato* effect, we can make `dur_density` still shorter,
-but to obtain *really* short notes, we may have to adjust `min_dur` as
-well, which sets the minimum duration of each pitch as well.
+To obtain a *staccato* effect, we can make
+\[`dur_density`\](docs/settings.md\#dur\_density) still shorter, but to
+obtain *really* short notes, we may have to adjust
+\[`min_dur`\](docs/settings.md\#min\_dur) as well, which sets the
+minimum duration of each pitch as well.
 
     {
         "num_voices": 1,
@@ -532,7 +581,7 @@ audio\](docs/resources/m4as/rhythm\_example4.m4a)
 We can change `"attack_subdivision"` as well. For example, to have a
 grid of eighth-note triplets, we would set `"attack_subdivision" = 1/3`.
 And since computers have no problem with precise, strange rhythms, we
-could also set it to unusual values like `5/13` or `math.pi / 12`.\[5\]
+could also set it to unusual values like `5/13` or `math.pi / 12`.\[6\]
 
     {
         "num_voices": 1,
@@ -550,10 +599,11 @@ audio\](docs/resources/m4as/rhythm\_example5.m4a)
 
 All of the settings we have been looking at so far are “per-voice”,
 meaning that they can be set to a different value in each voice. If we
-set `attack_subdivision` to a different unusual value in each voice, we
-get a particularly chaotic effect. (I find that the chaos can be reined
-in a bit by setting `rhythm_len` to a short value, creating a brief
-rhythmic loop.)
+set \[`attack_subdivision`\](docs/settings.md\#attack\_subdivision) to a
+different unusual value in each voice, we get a particularly chaotic
+effect. (I find that the chaos can be reined in a bit by setting
+\[`rhythm_len`\](docs/settings.md\#rhythm\_len) to a short value,
+creating a brief rhythmic loop.)
 
     {
         "rhythm_len": 1,
@@ -571,10 +621,11 @@ style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/rhythm\_example6.m4a)
 
 There are also a few settings that govern the relation between different
-voices. If `hocketing` is `True`, then, to the extent possible, the
-attacks of each voice will occur when there is no attack in any other
-voice. (In textures with many voices, it is also possible to assign
-specific pairs of voices to hocket with one another.)
+voices. If \[`hocketing`\](docs/settings.md\#hocketing) is `True`, then,
+to the extent possible, the attacks of each voice will occur when there
+is no attack in any other voice. (In textures with many voices, it is
+also possible to assign specific pairs of voices to hocket with one
+another.)
 
     {
         "num_voices": 2,
@@ -594,9 +645,11 @@ style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/rhythm\_example7.m4a)
 
 Another setting that governs the rhythmic relation between voices is
-`rhythmic_unison`, which causes voices to have exactly the same rhythm.
-(Like `hocketing`, it can be provided a boolean, or a list of tuples of
-voices; see the settings documentation for more details.)
+\[`rhythmic_unison`\](docs/settings.md\#rhythmic\_unison), which causes
+voices to have exactly the same rhythm. (Like
+\[`hocketing`\](docs/settings.md\#hocketing), it can be provided a
+boolean, or a list of tuples of voices; see the settings documentation
+for more details.)
 
     {
         "num_voices": 3,
@@ -615,19 +668,26 @@ roll\](docs/resources/pngs/rhythm\_example8\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/rhythm\_example8.m4a)
 
-When `rhythmic_unison` is applied, rhythmic settings like
-`attack_density` only have any effect in the “leader” voice, whose
-rhythm is simply copied into the other voices. If we wanted to specify a
-different `attack_density` in a “follower” voice, it would be ignored.
-This situation would call for the related setting
-`rhythmic_quasi_unison`. When `rhythmic_quasi_unison` applies, then,
-instead of copying the “leader” rhythm into the “follower” voices, the
-attacks of the “follower” voices are constrained so far as possible to
-coincide with those of the “leader.” In
-<a href="#rhythm_example9">`docs/examples/rhythm_example9.py`</a>, the
-leader is the bass voice (midi guitar). The middle voice (midi piano)
-has a *lower* `attack_density`, and the top voice (midi electric piano)
-has a *higher* `attack_density`.
+When \[`rhythmic_unison`\](docs/settings.md\#rhythmic\_unison) is
+applied, rhythmic settings like
+\[`attack_density`\](docs/settings.md\#attack\_density) only have any
+effect in the “leader” voice, whose rhythm is simply copied into the
+other voices. If we wanted to specify a different
+\[`attack_density`\](docs/settings.md\#attack\_density) in a “follower”
+voice, it would be ignored. This situation would call for the related
+setting
+\[`rhythmic_quasi_unison`\](docs/settings.md\#rhythmic\_quasi\_unison).
+When
+\[`rhythmic_quasi_unison`\](docs/settings.md\#rhythmic\_quasi\_unison)
+applies, then, instead of copying the “leader” rhythm into the
+“follower” voices, the attacks of the “follower” voices are
+constrained so far as possible to coincide with those of the “leader.”
+In <a href="#rhythm_example9">`docs/examples/rhythm_example9.py`</a>,
+the leader is the bass voice (midi guitar). The middle voice (midi
+piano) has a *lower*
+\[`attack_density`\](docs/settings.md\#attack\_density), and the top
+voice (midi electric piano) has a *higher*
+\[`attack_density`\](docs/settings.md\#attack\_density).
 
     {
         "num_voices": 3,
@@ -647,18 +707,24 @@ style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/rhythm\_example9.m4a)
 
 We can obtain more explicit control of the rhythms through the
-`obligatory_attacks` setting, which specifies a sequence of times at
-which the rhythms will be “obliged” to have a note onset. It’s also
-necessary to specify `obligatory_attacks_modulo` in order to specify
-when these attacks should repeat (e.g., every two beats).
+\[`obligatory_attacks`\](docs/settings.md\#obligatory\_attacks) setting,
+which specifies a sequence of times at which the rhythms will be
+“obliged” to have a note onset. It’s also necessary to specify
+\[`obligatory_attacks_modulo`\](docs/settings.md\#obligatory\_attacks\_modulo)
+in order to specify when these attacks should repeat (e.g., every two
+beats).
 
 For example, in
 <a href="#rhythm_example10">`docs/examples/rhythm_example10.py`</a>,
-I’ve set `obligatory_attacks` to `[0, 0.75, 1.5]` and
-`obligatory_attacks_modulo` to `2` in order to specify a *tresillo*
-3–3–2 rhythm. Since the value of `attack_density` implies more than
-three attacks every two beats, additional attacks are added to the
-underlying scaffold supplied by the values in `obligatory_attacks`.
+I’ve set
+\[`obligatory_attacks`\](docs/settings.md\#obligatory\_attacks) to
+`[0, 0.75, 1.5]` and
+\[`obligatory_attacks_modulo`\](docs/settings.md\#obligatory\_attacks\_modulo)
+to `2` in order to specify a *tresillo* 3–3–2 rhythm. Since the value of
+\[`attack_density`\](docs/settings.md\#attack\_density) implies more
+than three attacks every two beats, additional attacks are added to the
+underlying scaffold supplied by the values in
+\[`obligatory_attacks`\](docs/settings.md\#obligatory\_attacks).
 
     {
         "num_voices": 3,
@@ -679,16 +745,21 @@ style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/rhythm\_example10.m4a)
 
 It is possible to specify an irregular grid upon which note attacks will
-take place using `sub_subdivisions`. This setting takes a sequence of
-integers and subdivides the grid specified by `attack_subdivision` into
+take place using
+\[`sub_subdivisions`\](docs/settings.md\#sub\_subdivisions). This
+setting takes a sequence of integers and subdivides the grid specified
+by \[`attack_subdivision`\](docs/settings.md\#attack\_subdivision) into
 parts defined by the ratio of these integers. For example, in
 <a href="#rhythm_example11">`docs/examples/rhythm_example11.py`</a>
-below, `sub_subdivisions` is `[4,3]`, which creates an uneven “swing”
-feel where every first note is 4/3rds as long as every second note.\[^To
-keep the number of total attacks consistent, you’ll probably want to
-increase `attack_subdivision` by taking the value you otherwise would
-have chosen and multiplying it by the length of `sub_subdivisions`.\]
-You’ll notice that
+below, \[`sub_subdivisions`\](docs/settings.md\#sub\_subdivisions) is
+`[4,3]`, which creates an uneven “swing” feel where every first note is
+4/3rds as long as every second note.\[^To keep the number of total
+attacks consistent, you’ll probably want to increase
+\[`attack_subdivision`\](docs/settings.md\#attack\_subdivision) by
+taking the value you otherwise would have chosen and multiplying it by
+the length of
+\[`sub_subdivisions`\](docs/settings.md\#sub\_subdivisions).\] You’ll
+notice that
 <a href="#rhythm_example11">`docs/examples/rhythm_example11.py`</a> is
 precisely the same as
 <a href="#rhythm_example1">`docs/examples/rhythm_example1.py`</a>,
@@ -708,16 +779,16 @@ style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/rhythm\_example11.m4a)
 
 I think, however, that it is more interesting to experiment with values
-of `sub_subdivisions` that are further from what a human would be likely
-to produce. In
-<a href="#rhythm_example12">`docs/examples/rhythm_example12.py`</a>, I
-use a segment of the Fibonacci sequence in reverse.
+of \[`sub_subdivisions`\](docs/settings.md\#sub\_subdivisions) that are
+further from what a human would be likely to produce, as I have tried to
+do in
+<a href="#rhythm_example12">`docs/examples/rhythm_example12.py`</a>.
 
     {
         "num_voices": 3,
         "attack_density": 0.4,
-        "attack_subdivision": 1,
-        "sub_subdivisions": [8, 5, 3],
+        "attack_subdivision": 2,
+        "sub_subdivisions": [12, 13, 11, 15, 17, 10],
         "obligatory_attacks": 0,
         "obligatory_attacks_modulo": 2,
         "hocketing": True,
@@ -747,7 +818,8 @@ audio\](docs/resources/m4as/rhythm\_example12.m4a)
     <a href="#example2">`docs/examples/example2.py`</a>). If desired,
     parallel fifths could be avoided by including `7` (i.e., the number
     of semitones in a perfect fifth) in the sequence provided to the
-    setting `prohibit_parallels`.
+    setting
+    \[`prohibit_parallels`\](docs/settings.md\#prohibit\_parallels).
 
 3.  The settings files that generated the examples in this section all
     begin with `harmony_example` and are found in the `docs/examples`
@@ -761,7 +833,15 @@ audio\](docs/resources/m4as/rhythm\_example12.m4a)
     script works by finding bijective voice-leadings between chords and
     scales), but in the longterm, I would very much like to remove it.
 
-5.  However, we’ll have to give up on representing these in conventional
+5.  The settings files that generated the examples in this section all
+    begin with `rhythm_example` and are found in the `docs/examples`
+    folder. `docs/examples/rhythm_example_base.py` is shared among each
+    example. So you can build the first example with the command
+    `python3 efficient_rhythms.py --settings
+    docs/examples/rhythm_example_base.py
+    docs/examples/rhythm_example1.py`.
+
+6.  However, we’ll have to give up on representing these in conventional
     music notation. In fact, for the time being only duple note-values
     (i.e., eighth-notes, quarter-notes, and the like) can be exported to
     notation.

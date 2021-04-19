@@ -10,6 +10,6 @@ In settings files, these constants can be indicated in either of the following w
 1. As Python identifiers, e.g., `C * MAJOR_SCALE`
 2. As strings, e.g., `"C * MAJOR_SCALE"`
 
-The only advantage of using strings is that you can use the `#` character to indicate sharps. So `"C# * MAJOR_SCALE"` or `"C## * MAJOR_SCALE"` will work as expected, but `C# * MAJOR_SCALE` won't work because `#` is not a legal character in Python identifiers.
+The only advantage of using strings is that you can use the `#` character to indicate sharps. So `"C# * MAJOR_SCALE"` or `"C## * MAJOR_SCALE"` will work as expected, but `C# * MAJOR_SCALE` won't work because `#` is not a legal character in Python identifiers. (Everything after `#` will be understood as a comment.)
 
 TODO document just and tempered pitch constants.

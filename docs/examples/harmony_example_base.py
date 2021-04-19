@@ -1,5 +1,7 @@
 {
-    # TODO document that some of these programs are missing from freepats
+    # NB MARIMBA and VIBRAPHONE patches are missing from freepats, used by
+    #   pygame in Ubuntu (and possibly with other Linux distributions),
+    #   so those voices do not play back
     "choirs": ("MARIMBA", "VIBRAPHONE", "ELECTRIC_PIANO"),
     "seed": 2,
     "pattern_len": 4,

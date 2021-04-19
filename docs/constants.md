@@ -1,3 +1,13 @@
+  - [Pitch-class constants](#pitch-class-constants)
+      - [Just pitch-class constants](#just-pitch-class-constants)
+  - [Interval constants](#interval-constants)
+  - [Chord constants](#chord-constants)
+  - [Scale constants](#scale-constants)
+  - [Voice range constants](#voice-range-constants)
+  - [Octave constants](#octave-constants)
+  - [Consonances constants](#consonances-constants)
+  - [General-midi program constants](#general-midi-program-constants)
+
 When specifying pitch materials like chords, scales, and intervals, as
 well as when specifying general-midi instruments, the constants defined
 in `src/er_constants.py` can be used. For ease of reference, these
@@ -12,7 +22,8 @@ following ways:
 The only advantage of using strings is that you can use the `#`
 character to indicate sharps. So `"C# * MAJOR_SCALE"` or `"C## *
 MAJOR_SCALE"` will work as expected, but `C# * MAJOR_SCALE` won’t work
-because `#` is not a legal character in Python identifiers.
+because `#` is not a legal character in Python identifiers. (Everything
+after `#` will be understood as a comment.)
 
 TODO document just and tempered pitch constants.
 

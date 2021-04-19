@@ -63,7 +63,7 @@ You can also try running it with randomized settings, although be warned that th
 
 There are many configurable settings that shape the output. Full documentation is available in [`settings.html`](settings.html). But a gentler introduction is provided in the next section.
 
-<!-- TODO How to use custom settings here. -->
+In general, custom settings are applied by putting them into a Python dictionary, saving them in a file, and then passing that file as an argument to the script with the `--settings` flag. For examples, see `docs/examples`. (A long-term goal for this project would be to provide a GUI or other more user-friendly interface.)
 
 ## How it works
 
@@ -79,15 +79,13 @@ For instance, in REF:example1, the initial pattern is two beats long (i.e., `pat
 
 EXAMPLE:example1
 
-<!-- TODO link to midani somewhere -->
+(By the way, I made the piano-roll figures throughout this documentation with [midani](https://github.com/malcolmsailor/midani).)
 
 Whenever `rhythm_len` is not set explicitly, it is implicitly assigned the value of `pattern_len`. So in the example above, `rhythm_len`  was implicitly assigned `2`. In REF:example2, in contrast, we set `pattern_len = 4`, but `rhythm_len = 2`. Thus, if you look and/or listen carefully, you'll find that the same rhythm repeats twice on each harmony, but with different notes each time---the entire pattern of pitches takes four beats to repeat, and by the time it does, its pitches are somewhat different, having been adjusted to the new harmony.[^parallel_fifths]
 
-[^parallel_fifths]: The music-theoretically fastidious among you may have observed that these examples contain plentiful parallel fifths (for example, the first two sixteenth-notes in REF:example2). If desired, parallel fifths could be avoided by including `7` in the sequence provided to the setting `prohibit_parallels`.
+[^parallel_fifths]: The music-theoretically fastidious among you may have observed that these examples contain plentiful parallel fifths (for example, the first two sixteenth-notes in REF:example2). If desired, parallel fifths could be avoided by including `7` (i.e., the number of semitones in a perfect fifth) in the sequence provided to the setting `prohibit_parallels`.
 
 EXAMPLE:example2
-
-<!-- TODO why do piano rolls appear to have a grey ouline? -->
 
 We aren't constrained to have `pattern_len` be a whole multiple of `rhythm_len`. In REF:example3, `pattern_len` is still `4`, but `rhythm_len = 1.5`, so now every third time the rhythm occurs, it is truncated (a bit like a 3--3--2 *tresillo* pattern).
 
@@ -97,12 +95,12 @@ Up to now, we've always specified the same settings in both voices. But we need 
 
 EXAMPLE:example4
 
-We can also have different values of `pattern_len` in each voice, as in REF:example5. However, if we do so, the script has to work quite a bit harder to find a solution. To help it do so, I made its task a little easier by changing  [`consonance_treatment`](settings.html#consonance_treatment) from `"all_attacks"` to `"none"`. Thus whereas in the previous examples, the simultaneously attacked notes all formed intervals like 3rds and fifths, in REF:example5, there are also dissonances like 7ths and 9ths.
+We can also have different values of `pattern_len` in each voice, as in REF:example5. However, if we do so, the script has to work quite a bit harder to find a solution. To help it do so, I made its task a little easier by changing  `consonance_treatment` from `"all_attacks"` to `"none"`. Thus whereas in the previous examples, the simultaneously attacked notes all formed intervals like 3rds and fifths, in REF:example5, there are also dissonances like 7ths and 9ths.
 
 
 EXAMPLE:example5
 
-Up until now, whenever one pattern or rhythm didn't line up with the other, we have truncated the shorter one, so that subsequent repetitions began together in both voices. But the script doesn't require this. In REF:example6, I have changed [`truncate_patterns`](settings.html#truncate_patterns) to `False`. Now the 1.5-beat pattern in the lower part isn't truncated after 4 beats. Instead, it is displaced relative to both the 4-beat pattern in the upper part, as well as the 4-beat harmony changes. (The two patterns finally come into sync after 12 beats, the least-common-multiple of 1.5 and 4.)
+Up until now, whenever one pattern or rhythm didn't line up with the other, we have truncated the shorter one, so that subsequent repetitions began together in both voices. But the script doesn't require this. In REF:example6, I have changed `truncate_patterns` to `False`. Now the 1.5-beat pattern in the lower part isn't truncated after 4 beats. Instead, it is displaced relative to both the 4-beat pattern in the upper part, as well as the 4-beat harmony changes. (The two patterns finally come into sync after 12 beats, the least-common-multiple of 1.5 and 4.)
 
 EXAMPLE:example6
 
@@ -118,8 +116,6 @@ In the preceding sections, we looked at how to adjust the lengths of patterns, r
 
 The most straightforward way is to specify all chords and scales explicitly. As a first example, I've specified [one of the most (over?-)used chord progressions](https://youtu.be/5pidokakU4I) in pop music, the I-V-vi-IV progression, in C major. The results are in REF:harmony_example1. The relevant lines in `harmony_example1.py` are
 
-<!-- TODO mention that I've changed some other things -->
-
 ```
 "foot_pcs": ("C", "G", "A", "F"),
 "chords": ("MAJOR_TRIAD", "MAJOR_TRIAD", "MINOR_TRIAD", "MAJOR_TRIAD"),
@@ -130,8 +126,8 @@ EXAMPLE:harmony_example1
 
 There's a lot to explain here:
 
-1. Strings like `"C"` and `"MAJOR_TRIAD"` name constants that are defined in `src\er_constants.py`. If you know any music theory, the meaning of the constants above shouldn't require any further explanation now. `TODO document er_constants and add a link to it here`
-2. We call the "main bass note" of each chord its "foot". `TODO document "foots" and add a link here`
+1. Strings like `"C"` and `"MAJOR_TRIAD"` name constants that are defined in `src\er_constants.py` and documented [here](constants.html). If you know any music theory, the meaning of the constants above shouldn't require any further explanation for now.
+2. In this script, we call the main bass pitch of each chord its "foot". The main bass pitch is a little like the "root" of a chord, except that the main bass pitch doesn't have to be the root of a chord (as in the case of inverted chords).
 3. Each foot is associated with the chord and the scale in the same serial position. Both the chord and the scale will be transposed so that they begin on the foot. Thus, there is a one-to-one correspondence between chords and scales (much like the "chord-scale" approach sometimes used in jazz pedagogy).
 
 We can easily put the progression into another key by changing `foot_pcs`. For instance, here it is in E major:
@@ -142,7 +138,7 @@ We can easily put the progression into another key by changing `foot_pcs`. For i
 "scales": ("MAJOR_SCALE", "MIXOLYDIAN", "AEOLIAN", "LYDIAN"),
 ```
 
-There are no constaints on `foot_pcs`, so we can get a different progression by changing `foot_pcs` arbitrarily. For example, in REF:harmony_example2 I've changed the middle two members of `foot_pcs` to create a more chromatic progression:
+There are no constraints on `foot_pcs`, so we can get a different progression by changing `foot_pcs` arbitrarily. For example, in REF:harmony_example2 I've changed the middle two members of `foot_pcs` to create a more chromatic progression:
 
 ```
 "foot_pcs": ("E", "G", "D", "A"), # was ("E", "B", "C#", "A")
@@ -154,10 +150,13 @@ EXAMPLE:harmony_example2
 
 There are, however, two important constraints on `chords` and `scales`.
 
-1. All the items of `chords` must have the same number of pitch-classes, and all the items of `scales` must as well. This means, for example, you can't go from a major triad to a seventh chord, or from a major scale to a whole-tone scale. (You can, however, use scales or chords with any number of pitch-classes you like---as long as that number remains the same.) There is a technical reason for this constraint, (namely, that the script works by finding bijective voice-leadings between chords and scales), but in the longterm, I would very much like to remove it.
+1. All the items of `chords` must have the same number of pitch-classes, and all the items of `scales` must as well. This means, for example, you can't go from a major triad to a seventh chord, or from a major scale to a whole-tone scale. (You can, however, use scales or chords with any number of pitch-classes you like---as long as that number remains the same.)[^bijective]
 2. Every scale must be a superset of the associated chord. So, for example
     - `"MAJOR_TRIAD"` will work with `"MAJOR_SCALE"`, `"MIXOLYDIAN"`, or any other scale that contains a major triad beginning on its first pitch
     - `"MAJOR_TRIAD"` will *not* work with `"AEOLIAN"`, `"DORIAN"`, etc., because these scales contain a minor triad beginning on their first pitch
+
+
+[^bijective]: There is a technical reason for this constraint, (namely, that the script works by finding bijective voice-leadings between chords and scales), but in the longterm, I would very much like to remove it.
 
 Both `chords` and `scales` will be looped through if they are shorter than `foot_pcs`. REF:harmony_example3 illustrates with the following short loop:
 
@@ -209,6 +208,7 @@ EXAMPLE:harmony_example6
 `interval_cycle` can also consist of more than one interval, as in REF:harmony_example7. (Note that, since the intervals in `interval_cycle` are always understood *upwards*, `"MINOR_6TH"` in this example is equivalent to a descending major third.)
 
 ```
+{
     "num_harmonies": 4,
     "interval_cycle": ("PERFECT_4TH", "MINOR_6TH"),
     "foot_pcs": ("Eb",),
@@ -216,6 +216,7 @@ EXAMPLE:harmony_example6
     #   `"foot_pcs": ("Eb", "Ab", "E", "A")`
     "chords": ("MAJOR_TRIAD",),
     "scales": ("MAJOR_SCALE",),
+}
 ```
 
 EXAMPLE:harmony_example7
@@ -237,7 +238,183 @@ EXAMPLE:harmony_example9
 
 ### Specifying rhythms
 
-`TODO`
+Besides setting `rhythm_len` as we did [above](#how-it-works), there are many other ways of controlling the rhythms that are produced.[^rhythm_example_settings]
+
+[^rhythm_example_settings]: The settings files that generated the examples in this section all begin with `rhythm_example` and are found in the `docs/examples` folder. `docs/examples/rhythm_example_base.py` is shared among each example. So you can build the first example with the command `python3 efficient_rhythms.py --settings docs/examples/rhythm_example_base.py docs/examples/rhythm_example1.py`.
+
+
+To begin with, we have `attack_subdivision` and `attack_density`:
+
+- `attack_subdivision` indicates the basic "grid" on which note attacks can take place, measured in quarter notes.
+- `attack_density` indicates the proportion of grid points that should have an attack.
+
+So for example, in REF:rhythm_example1, `"attack_subdivision" = 1/4` indicates a sixteenth-note grid, and `"attack_density" = 1.0` indicates that every point in the grid should have an attack, creating a *moto perpetuo* texture. (For clarity/brevity, this example has only one voice.)
+
+```
+{
+"num_voices": 1,
+"attack_density": 0.5,
+"attack_subdivision": 1/4,
+}
+```
+
+EXAMPLE:rhythm_example1
+
+If we reduce `attack_density`, as in REF:rhythm_example2, the proportion of the sixteenth-grid that is filled with attacks will be correspondingly reduced.
+
+```
+{
+    "num_voices": 1,
+    "attack_density": 0.5,
+    "attack_subdivision": 1 / 4,
+}
+```
+
+EXAMPLE:rhythm_example2
+
+Another important rhythmic parameter is `dur_density`. It specifies the proportion of time that should be filled by note durations, irrespective of how many attacks there are. So far we have left `dur_density` at the default value of `1.0`, which means that all notes last until the next attack in that voice. (In musical terms, all notes are *legato*.) If we decrease it to 0.75, as in REF:rhythm_example3, some of the notes will become shorter, so that 75% of the total time of the rhythm is filled by sounding notes.
+```
+{
+    "num_voices": 1,
+    "attack_density": 0.5,
+    "dur_density": 0.75,
+    "attack_subdivision": 1 / 4,
+}}
+```
+
+EXAMPLE:rhythm_example3
+
+To obtain a *staccato* effect, we can make `dur_density` still shorter, but to obtain *really* short notes, we may have to adjust `min_dur` as well, which sets the minimum duration of each pitch as well.
+```
+{
+    "num_voices": 1,
+    "attack_density": 0.5,
+    "dur_density": 0.25,
+    "min_dur": 1/8,
+    "attack_subdivision": 1 / 4,
+}
+```
+
+EXAMPLE:rhythm_example4
+
+We can change `"attack_subdivision"` as well. For example, to have a grid of eighth-note triplets, we would set `"attack_subdivision" = 1/3`. And since computers have no problem with precise, strange rhythms, we could also set it to unusual values like `5/13` or `math.pi / 12`.[^Notation]
+
+[^Notation]: However, we'll have to give up on representing these in conventional music notation. In fact, for the time being only duple note-values (i.e., eighth-notes, quarter-notes, and the like) can be exported to notation.
+
+```
+{
+    "num_voices": 1,
+    "attack_density": 0.75,
+    "dur_density": 0.25,
+    "min_dur": 1/8,
+    "attack_subdivision": 3/ 13,
+}
+```
+
+EXAMPLE:rhythm_example5
+
+All of the settings we have been looking at so far are "per-voice", meaning that they can be set to a different value in each voice. If we set `attack_subdivision` to a different unusual value in each voice, we get a particularly chaotic effect. (I find that the chaos can be reined in a bit by setting `rhythm_len` to a short value, creating a brief rhythmic loop.)
+```
+{
+    "rhythm_len": 1,
+    "num_voices": 3,
+    "attack_density": [0.25, 0.5, 0.75],
+    "dur_density": [0.25, 0.5, 0.25],
+    "min_dur": [0.25, 0.25, 1/8],
+    "attack_subdivision": [3/ 13, 5/12, 6/11],
+}
+```
+
+EXAMPLE:rhythm_example6
+
+There are also a few settings that govern the relation between different voices. If `hocketing` is `True`, then, to the extent possible, the attacks of each voice will occur when there is no attack in any other voice. (In textures with many voices, it is also possible to assign specific pairs of voices to hocket with one another.)
+```
+{
+    "num_voices": 2,
+    "attack_density": 0.4,
+    "dur_density": 0.4,
+    "min_dur": 0.25,
+    "attack_subdivision": 0.25,
+    "hocketing": True,
+}
+```
+
+EXAMPLE:rhythm_example7
+
+Another setting that governs the rhythmic relation between voices is `rhythmic_unison`, which causes voices to have exactly the same rhythm. (Like `hocketing`, it can be provided a boolean, or a list of tuples of voices; see the settings documentation for more details.)
+```
+{
+    "num_voices": 3,
+    "rhythmic_unison": True,
+    "attack_density": .7,
+    "dur_density": 0.6,
+    "min_dur": 0.25,
+    "attack_subdivision": 1/4,
+}
+```
+
+EXAMPLE:rhythm_example8
+
+When `rhythmic_unison` is applied, rhythmic settings like `attack_density` only have any effect in the "leader" voice, whose rhythm is simply copied into the other voices. If we wanted to specify a different `attack_density` in a "follower" voice, it would be ignored. This situation would call for the related setting `rhythmic_quasi_unison`. When `rhythmic_quasi_unison` applies, then, instead of copying the "leader" rhythm into the "follower" voices, the attacks of the "follower" voices are constrained so far as possible to coincide with those of the "leader." In REF:rhythm_example9, the leader is the bass voice (midi guitar). The middle voice (midi piano) has a *lower* `attack_density`, and the top voice (midi electric piano) has a *higher* `attack_density`.
+
+```
+{
+    "num_voices": 3,
+    "rhythmic_quasi_unison": True,
+    "attack_density": [0.5, 0.4, 0.6],
+    "dur_density": [0.5, 0.4, 0.6],
+    "min_dur": 0.25,
+    "attack_subdivision": 1 / 4,
+}
+```
+
+EXAMPLE:rhythm_example9
+
+We can obtain more explicit control of the rhythms through the `obligatory_attacks` setting, which specifies a sequence of times at which the rhythms will be "obliged" to have a note onset. It's also necessary to specify `obligatory_attacks_modulo` in order to specify when these attacks should repeat (e.g., every two beats).
+
+For example, in REF:rhythm_example10, I've set `obligatory_attacks` to `[0, 0.75, 1.5]` and `obligatory_attacks_modulo` to `2` in order to specify a *tresillo* 3--3--2 rhythm. Since the value of `attack_density` implies more than three attacks every two beats, additional attacks are added to the underlying scaffold supplied by the values in `obligatory_attacks`.
+
+```
+{
+    "num_voices": 3,
+    "obligatory_attacks": [0, 0.75, 1.5],
+    "obligatory_attacks_modulo": 2,
+    "attack_density": 0.5,
+    "dur_density": 0.5,
+    "min_dur": 0.25,
+    "attack_subdivision": 0.25,
+}
+```
+
+EXAMPLE:rhythm_example10
+
+It is possible to specify an irregular grid upon which note attacks will take place using `sub_subdivisions`. This setting takes a sequence of integers and subdivides the grid specified by `attack_subdivision` into parts defined by the ratio of these integers. For example, in REF:rhythm_example11 below, `sub_subdivisions` is `[4,3]`, which creates an uneven "swing" feel where every first note is 4/3rds as long as every second note.[^To keep the number of total attacks consistent, you'll probably want to increase `attack_subdivision` by taking the value you otherwise would have chosen and multiplying it by the length of `sub_subdivisions`.] You'll notice that REF:rhythm_example11 is precisely the same as REF:rhythm_example1, except for the uneven rhythms.
+
+```
+{
+    "num_voices": 1,
+    "attack_density": 1.0,
+    "attack_subdivision": 0.5,
+    "sub_subdivisions": [4, 3],
+}
+```
+
+EXAMPLE:rhythm_example11
+
+I think, however, that it is more interesting to experiment with values of `sub_subdivisions` that are further from what a human would be likely to produce, as I have tried to do in REF:rhythm_example12.
+```
+{
+    "num_voices": 3,
+    "attack_density": 0.4,
+    "attack_subdivision": 2,
+    "sub_subdivisions": [12, 13, 11, 15, 17, 10],
+    "obligatory_attacks": 0,
+    "obligatory_attacks_modulo": 2,
+    "hocketing": True,
+}
+```
+
+EXAMPLE:rhythm_example12
 
 <!-- If you're interested in exploring the script further, some next steps could be:
 
@@ -419,8 +596,6 @@ vl_maintain_limit_intervals = "across_harmonies" or (more permissive still) "non
 vl_maintain_forbidden_intervals = False
 ```
 TODO -->
-
-<!-- TODO document constants -->
 
 <!-- TODO document fact that voice-leading is applied to individual voices -->
 

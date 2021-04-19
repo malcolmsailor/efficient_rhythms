@@ -105,12 +105,18 @@ def get_settings_docstring():
         docstring,
     )
     pitches_pattern = re.compile(
-        r"([Ss]ee\s+the\s+note\s+above\s+on\s+specifying\s+pitches\s+and\s+intervals)",
+        r"([Ss]ee\s+(also\s+)?the\s+note\s+above\s+on\s+specifying\s+pitches\s+and\s+intervals)",
         flags=re.MULTILINE + re.DOTALL,
     )
     docstring = re.sub(
         pitches_pattern,
         r"[\1](#note-on-specifying-pitches-and-intervals)",
+        docstring,
+    )
+    er_constants_doc_pattern = re.compile(r"docs/constants\.html")
+    docstring = re.sub(
+        er_constants_doc_pattern,
+        r"[docs/constants.html](constants.html)",
         docstring,
     )
     return docstring
@@ -134,6 +140,7 @@ def main():
             "--strip-comments",
             f"--css={CSS_PATH1}",
             f"--css={CSS_PATH2}",
+            "--toc",
             "-i",
             SETTINGS_MD_PATH,
             "-t",

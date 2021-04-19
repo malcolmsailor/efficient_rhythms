@@ -32,8 +32,8 @@ as “looping sequences”.
 For most use cases, it will be most convenient to specify pitch
 materials using strings denoting constants which are provided in
 `src/er_constants.py` and documented in `docs/constants.md` and
-`docs/constants.html`. A few examples: `"PERFECT_4TH"`, `"C# *
-OCTAVE4"`, `"F * PHRYGIAN"`, etc.
+`[docs/constants.html](constants.html)`. A few examples:
+`"PERFECT_4TH"`, `"C# * OCTAVE4"`, `"F * PHRYGIAN"`, etc.
 
 Otherwise, pitch materials can be specified either as integers, or as
 other numeric types (e.g., floats). **If you don’t care about tuning or
@@ -86,10 +86,6 @@ than one generic interval + quality that correspond to one specific
 interval. For example, both “minor thirds” and “augmented seconds”
 comprise 3 semitones. (Thus, the mapping from generic intervals with
 qualities to specific intervals is onto but not one-to-one.)
-
-Note that “root” below doesn’t strictly mean root, in music-theoretic
-sense. See <a href="#foot_pcs">`foot_pcs`</a> below for more
-explanation. \# TODO complete this note
 
 ### General settings
 
@@ -206,9 +202,7 @@ Less often used general settings are under
     *Default*: `4`
 
   - <span id="voice_ranges">**`voice_ranges`**</span>: a sequence of
-    2-tuples. Each tuple is of form (lowest\_note, highest\_note). ([See
-    the note above on specifying pitches and
-    intervals](#note-on-specifying-pitches-and-intervals).)
+    2-tuples. Each tuple is of form (lowest\_note, highest\_note).
     `er_constants.py` provides a number of useful values for this
     purpose. The sequence must be at least
     <a href="#num_voices">`num_voices`</a> length. (If it is longer,
@@ -217,8 +211,12 @@ Less often used general settings are under
     if it is not. Note that if
     <a href="#constrain_voice_leading_to_ranges">`constrain_voice_leading_to_ranges`</a>
     is False, than these ranges will only be enforced for the initial
-    pattern. See also <a href="#hard_bounds">`hard_bounds`</a>. TODO
-    document er\_constants
+    pattern. See also <a href="#hard_bounds">`hard_bounds`</a>.
+    
+    For a list of pre-defined constants that can be used with this
+    setting, see [docs/constants.html](constants.html). [See also the
+    note above on specifying pitches and
+    intervals](#note-on-specifying-pitches-and-intervals).
     
     *Default*: `"CONTIGUOUS_OCTAVES * OCTAVE3 * C"`
 
@@ -248,14 +246,14 @@ Less often used general settings are under
     scales; i.e., that the scales are supersets of the chords), or an
     `InconsistentChordsAndScalesError` will be raised.
 
-  - <span id="foot_pcs">**`foot_pcs`**</span>: sequence of numbers.
-    Specifies the “foots” of each item in <a href="#scales">`scales`</a>
-    and <a href="#chords">`chords`</a>—i.e., the pitch-classes that will
-    correspond to `0` in each item of <a href="#scales">`scales`</a> and
-    <a href="#chords">`chords`</a>.
-    
-    TODO refer to explanation of <a href="#foot_pcs">`foot_pcs`</a>
-    elsewhere?
+  - <span id="foot_pcs">**`foot_pcs`**</span>: sequence of numbers. In
+    this script, we call the main bass pitch of each chord its “foot”.
+    The main bass pitch is a little like the “root” of a chord, except
+    that the main bass pitch doesn’t have to be the root of a chord (as
+    in the case of inverted chords). <a href="#foot_pcs">`foot_pcs`</a>
+    specifies the “foots” of each harmony. These are the pitch-classes
+    that will correspond to `0` in each item of
+    <a href="#scales">`scales`</a> and <a href="#chords">`chords`</a>.
     
     For example, if `foot_pcs == [2, 4]` and `chords == [[0, 4, 7],
     [0, 3, 8]]`, then the actually realized chords will have
@@ -304,9 +302,10 @@ Less often used general settings are under
     <a href="#scales">`scales`</a>, then <a href="#scales">`scales`</a>
     will be looped through.
     
-    ([See the note above on specifying pitches and
-    intervals](#note-on-specifying-pitches-and-intervals).) TODO
-    document er\_constants
+    For a list of pre-defined constants that can be used with this
+    setting, see [docs/constants.html](constants.html). [See also the
+    note above on specifying pitches and
+    intervals](#note-on-specifying-pitches-and-intervals).
     
     *Default*: `["DIATONIC_SCALE"]`
 
@@ -325,9 +324,10 @@ Less often used general settings are under
     <a href="#chords">`chords`</a>, then <a href="#chords">`chords`</a>
     will be looped through.
     
-    ([See the note above on specifying pitches and
-    intervals](#note-on-specifying-pitches-and-intervals).) TODO
-    document er\_constants
+    For a list of pre-defined constants that can be used with this
+    setting, see [docs/constants.html](constants.html). [See also the
+    note above on specifying pitches and
+    intervals](#note-on-specifying-pitches-and-intervals).
     
     *Default*: `["MAJOR_TRIAD"]`
 
@@ -810,7 +810,10 @@ the only setting that \# begins
     
     (If you *DO* want unisons to be the most common melodic interval,
     set to “GENERIC\_UNISON” – you can’t use “UNISON” because that’s a
-    just interval constant.) TODO document er\_constants
+    just interval constant.)
+    
+    For a list of pre-defined constants that can be used with this
+    setting, see [docs/constants.html](constants.html).
     
     *Default*: `"FIFTH"`
 
@@ -1005,12 +1008,23 @@ the only setting that \# begins
     
     *Default*: `0`
 
-  - <span id="forbidden_interval_classes">**`forbidden_interval_classes`**</span>:
-    a sequence of numbers. The intervals in this sequence (interpreted
-    as harmonic intervals) will be entirely avoided, regardless of
-    consonance settings, at least in the initial pattern. Whether this
+  - <span id="forbidden_intervals">**`forbidden_intervals`**</span>: a
+    sequence of numbers. The harmonic intervals specified by this
+    sequence will be avoided. Octave-equivalent intervals are NOT
+    avoided. The main expected use is to avoid unisons. Whether this
     setting persists after the initial pattern depends on the value of
     <a href="#vl_maintain_consonance">`vl_maintain_consonance`</a>.
+    ([See the note above on specifying pitches and
+    intervals](#note-on-specifying-pitches-and-intervals).)
+    
+    *Default*: `()`
+
+  - <span id="forbidden_interval_classes">**`forbidden_interval_classes`**</span>:
+    a sequence of numbers. The harmonic interval classes specified by
+    this sequence will be avoided. will be entirely avoided, regardless
+    of consonance settings, at least in the initial pattern. Whether
+    this setting persists after the initial pattern depends on the value
+    of <a href="#vl_maintain_consonance">`vl_maintain_consonance`</a>.
     ([See the note above on specifying pitches and
     intervals](#note-on-specifying-pitches-and-intervals).)
     
@@ -1037,9 +1051,12 @@ the only setting that \# begins
     (But see <a href="#invert_consonances">`invert_consonances`</a>
     below.) Since it’s just a sequence of numbers, you can specify any
     intervals you like—it does not have to conform to the usual set of
-    consonances. ([See the note above on specifying pitches and
-    intervals](#note-on-specifying-pitches-and-intervals).) TODO
-    document er\_constants
+    consonances.
+    
+    For a list of pre-defined constants that can be used with this
+    setting, see [docs/constants.html](constants.html). [See also the
+    note above on specifying pitches and
+    intervals](#note-on-specifying-pitches-and-intervals).
     
     *Default*: `"CONSONANCES"`
 
@@ -1058,9 +1075,11 @@ the only setting that \# begins
     sequence of sequences of numbers. Each sub-sequence specifies a
     chord to be understood as consonant if
     <a href="#consonance_type">`consonance_type`</a> is `"chordwise"`.
-    ([See the note above on specifying pitches and
-    intervals](#note-on-specifying-pitches-and-intervals).) TODO
-    document er\_constants
+    
+    For a list of pre-defined constants that can be used with this
+    setting, see [docs/constants.html](constants.html). [See also the
+    note above on specifying pitches and
+    intervals](#note-on-specifying-pitches-and-intervals).
     
     *Default*: `("MAJOR_TRIAD", "MINOR_TRIAD")`
 
@@ -1238,6 +1257,12 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
     would enforce attacks on beats 0, 2, and 3, repeating every 4 beats;
     in musical terms, we could think of this as attacks on the first,
     third, and fourth beats of every measure of 4/4.
+    
+    If <a href="#obligatory_attacks">`obligatory_attacks`</a> specifies
+    more attacks than would be implied by
+    <a href="#attack_density">`attack_density`</a>,
+    <a href="#obligatory_attacks">`obligatory_attacks`</a> takes
+    precedence.
     
     *Default*: `()`
 
@@ -1449,7 +1474,8 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
     Strings specify integer constants defining GM midi instruments
     defined in `er_constants.py`.
     
-    TODO document er\_constants
+    For a list of pre-defined constants that can be used with this
+    setting, see [docs/constants.html](constants.html).
     
     *Default*: `("GUITAR", "ELECTRIC_PIANO", "PIANO", "XYLOPHONE")`
 
@@ -1459,9 +1485,10 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
     For example, if `choir_assignments == [1, 0]`, voice 0 will be
     assigned to `choirs[1]`, voice 1 will be assigned to `choirs[0]`,
     voice 2 (if it exists) will be assigned to `choirs[1]`, and so on.
-    By default, or if passed an empty sequence, all voices are assigned
-    to choir 0. \# TODO change this default to loop through choirs by
-    default
+    By default, or if passed an empty sequence, voices are assigned to
+    choirs in counting order (i.e., voice 0 is assigned to choir 0,
+    voice 1 to choir 1, etc.), except that if there are more voices than
+    choirs, the choirs are looped through.
     
     If
     <a href="#randomly_distribute_between_choirs">`randomly_distribute_between_choirs`</a>
