@@ -106,16 +106,6 @@ class Rhythm(RhythmicDict):
         self._check_min_dur()
 
     def _check_min_dur(self):
-        # TODO these warnings mess with the printing of the current state, fix
-        if self.rhythm_len < self.min_dur * self.num_notes:
-            new_min_dur = er_misc_funcs.convert_to_fractions(
-                self.rhythm_len / self.num_notes
-            )
-            print(
-                f"Notice: min_dur too long in voice {self.voice_i} rhythm; "
-                f"reducing from {self.min_dur} to {new_min_dur}."
-            )
-            self.min_dur = new_min_dur
         if self.rhythm_len <= self.min_dur * self.num_notes:
             # LONGTERM move this notice outside of the initial_pattern loop
             if isinstance(self, (Grid, ContinuousRhythm)):

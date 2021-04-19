@@ -194,6 +194,19 @@ def notify_user_of_unusual_settings(er):
         )
 
 
+def check_min_dur(er):
+    for voice_i, rhythm_len in enumerate(er.rhythm_len):
+        if rhythm_len < er.min_dur[voice_i] * er.num_notes[voice_i]:
+            new_min_dur = er_misc_funcs.convert_to_fractions(
+                rhythm_len / er.num_notes[voice_i]
+            )
+            print(
+                f"Notice: min_dur too long in voice {voice_i} rhythm; "
+                f"reducing from {er.min_dur[voice_i]} to {new_min_dur}."
+            )
+            er.min_dur[voice_i] = new_min_dur
+
+
 def prepare_warnings(er):
     """Certain warnings should only occur once, even though the situation
     that provokes them may occur many times. This function initializes
@@ -1270,9 +1283,12 @@ def preprocess_settings(
 
     cum_mod_lists(er)
 
+    check_min_dur(er)
+
     # There are a few calls to random in the preceding pre-processing functions,
     # so we re-set the seed once more in the hopes of making files produced
-    # with the --random flag reproducible
+    # with the --random flag reproducible, even if the above code changes
+    # slightly
     er_misc_funcs.set_seed(er.seed, print_out=False)
 
     er.build_status_printer = er_interface.BuildStatusPrinter(er)
