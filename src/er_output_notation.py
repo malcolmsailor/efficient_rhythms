@@ -26,8 +26,6 @@ TEMP_NOTATION_DIR = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), "../.temp_notation_dir"
 )
 
-# TODO warning if trying to output notation with complex rhythms
-
 
 # def dur_to_kern2(dur, offset, time_sig_dur, unbreakable_value=1):
 #     out = []
@@ -43,7 +41,7 @@ def check_rhythms(er):
     # the kern function only works if all rhythms have denominator that is a
     # power of 2, so we want to check that first
     # As a heuristic, we just check if the rhythms are divisible by 128.
-    # TODO check other rhythmic features besides attack_subdivision,
+    # LONGTERM check other rhythmic features besides attack_subdivision,
     #   sub_subdivisions?
     if any([len(x) > 1 for x in er.sub_subdivisions]):
         print(

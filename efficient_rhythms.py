@@ -19,8 +19,6 @@ import src.er_preprocess as er_preprocess
 # MAYBE wait a moment when sending midi messages, see if this solves
 #   issue of first messages sometimes not sounding?
 
-# TODO fix printing of scores to include note octave
-
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 MAX_RANDOM_TRIES = 10
 

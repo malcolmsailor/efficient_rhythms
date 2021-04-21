@@ -497,7 +497,9 @@ def process_choir_settings(er):
         raise SettingsError("'choirs' cannot be empty")
     if not er.randomly_distribute_between_choirs:
         if not er.choir_assignments:
-            er.choir_assignments = [0 for _ in range(er.num_voices)]
+            er.choir_assignments = [
+                i % len(er.choirs) for i in range(er.num_voices)
+            ]
         if max(er.choir_assignments) > len(er.choirs) - 1:
             raise SettingsError(
                 "'choir_assignments' assigns a voice to choir "
@@ -916,6 +918,13 @@ def preprocess_settings(
 
     if not er.overwrite and os.path.exists(er.output_path):
         er.output_path = er_misc_funcs.increment_fname(er.output_path)
+
+    if er.max_super_pattern_len is None:
+        er.max_super_pattern_len = (
+            er_settings.MAX_SUPER_PATTERN_LEN_RANDOM
+            if random_settings
+            else er_settings.MAX_SUPER_PATTERN_LEN
+        )
 
     if random_settings:
         randomize = er_randomize.ERRandomize(er)

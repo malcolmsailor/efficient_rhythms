@@ -103,7 +103,7 @@ class Voice(collections.UserDict):
         self.voice_i = voice_i
         self.tet = tet
         try:
-            self.speller = er_spelling.Speller(tet)
+            self.speller = er_spelling.Speller(tet, pitches=True)
         except ValueError:
             self.speller = lambda x: x
         self.range = voice_range
@@ -136,10 +136,10 @@ class Voice(collections.UserDict):
 
     def __str__(self):
         strings = []
-        strings.append("#" * 51)
+        strings.append("#" * 52)
         for note in self:
             strings.append(
-                "Attack:{:>10.3}  Pitch:{:>5}  Duration:{:>10.3}"
+                "Attack:{:>10.3}  Pitch:{:>6}  Duration:{:>10.3}"
                 "".format(
                     float(note.attack_time),
                     self.speller(note.pitch),
@@ -769,9 +769,9 @@ class Score:
             ("VOICE", self.voices),
         ):
             for voice_i, voice in enumerate(voice_list):
-                strings.append("#" * 51)
+                strings.append("#" * 52)
                 strings.append(f"{voice_type} {voice_i}")
-                strings.append("#" * 51)
+                strings.append("#" * 52)
                 n = 0
                 for note in voice:
                     if head > 0:
@@ -779,7 +779,7 @@ class Score:
                             break
                         n += 1
                     strings.append(
-                        "Attack:{:>10.3}  Pitch:{:>5}  Duration:{:>10.3}"
+                        "Attack:{:>10.3}  Pitch:{:>6}  Duration:{:>10.3}"
                         "".format(
                             float(note.attack_time),
                             self.speller(note.pitch),
@@ -1255,7 +1255,7 @@ class Score:
             self.harmony_times_dict = None
         self.tet = tet
         try:
-            self.speller = er_spelling.Speller(tet)
+            self.speller = er_spelling.Speller(tet, pitches=True)
         except ValueError:
             self.speller = lambda x: x
         self.existing_voices = []

@@ -90,32 +90,31 @@ def test_fill_attack_durs():
 
 
 def test_get_attack_time_and_dur():
-    # TODO uncomment
-    # pattern_lens_list = [(2.5, 3, 3.5, 4), (2, 3, 5)]
-    # for pattern_lens in pattern_lens_list:
-    #     for truncate in (True, False):
-    #         settingsdict = {
-    #             "num_voices": len(pattern_lens),
-    #             "tet": 12,
-    #             "pattern_len": pattern_lens,
-    #             "truncate_patterns": truncate,
-    #         }
-    #         er = er_preprocess.preprocess_settings(settingsdict)
-    #         er.rhythms = er_rhythm.rhythms_handler(er)
-    #         for rhythm in er.rhythms:
-    #             prev_attack = -10
-    #             for i in range(1000):
-    #                 attack, _ = rhythm.get_attack_time_and_dur(i)
-    #                 try:
-    #                     assert attack > prev_attack, "attack <= prev_attack"
-    #                 except:  # pylint: disable=bare-except
-    #                     exc_type, exc_value, exc_traceback = sys.exc_info()
-    #                     traceback.print_exception(
-    #                         exc_type, exc_value, exc_traceback, file=sys.stdout
-    #                     )
-    #                     breakpoint()
-    #
-    #                 prev_attack = attack
+    pattern_lens_list = [(2.5, 3, 3.5, 4), (2, 3, 5)]
+    for pattern_lens in pattern_lens_list:
+        for truncate in (True, False):
+            settingsdict = {
+                "num_voices": len(pattern_lens),
+                "tet": 12,
+                "pattern_len": pattern_lens,
+                "truncate_patterns": truncate,
+            }
+            er = er_preprocess.preprocess_settings(settingsdict)
+            er.rhythms = er_rhythm.rhythms_handler(er)
+            for rhythm in er.rhythms:
+                prev_attack = -10
+                for i in range(1000):
+                    attack, _ = rhythm.get_attack_time_and_dur(i)
+                    try:
+                        assert attack > prev_attack, "attack <= prev_attack"
+                    except:  # pylint: disable=bare-except
+                        exc_type, exc_value, exc_traceback = sys.exc_info()
+                        traceback.print_exception(
+                            exc_type, exc_value, exc_traceback, file=sys.stdout
+                        )
+                        breakpoint()
+
+                    prev_attack = attack
     obligatory_attacks = [0, 0.75, 1.5]
     obligatory_attacks_modulo = 2
     settingsdict = {
@@ -146,6 +145,6 @@ def test_get_attack_time_and_dur():
 
 
 if __name__ == "__main__":
-    # test_update_pattern_voice_leading_order()
-    # test_fill_attack_durs()
+    test_update_pattern_voice_leading_order()
+    test_fill_attack_durs()
     test_get_attack_time_and_dur()

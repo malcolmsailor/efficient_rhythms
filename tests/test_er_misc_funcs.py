@@ -3,7 +3,6 @@ import os
 import sys
 import traceback
 
-# TODO is there a way to add these to requirements only for testing?
 import hypothesis
 import hypothesis.strategies as st
 

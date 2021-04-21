@@ -6,8 +6,12 @@ from fractions import Fraction
 # import src.er_type_check as er_type_check
 
 DEFAULT_NUM_HARMONIES = 4
-# TODO reduce for random settings ( to make success more likely)
+
+# The user can override MAX_SUPER_PATTERN_LEN
+# We use a lower default when script is invoked with --random to make success
+# somewhat more likely
 MAX_SUPER_PATTERN_LEN = 128
+MAX_SUPER_PATTERN_LEN_RANDOM = 64
 
 # TODO use this type annotation for sequences that can be ndarrays as well
 # Note that Seq_or_arr will match strings
@@ -108,9 +112,6 @@ class ERSettings:
     comprise 3 semitones. (Thus, the mapping from generic intervals with
     qualities to specific intervals is onto but not one-to-one.)
 
-    Note that "root" below doesn't strictly mean root, in music-theoretic sense.
-    See `foot_pcs` below for more explanation. # TODO complete this note
-
     Keyword args:
 
         General settings
@@ -188,8 +189,7 @@ class ERSettings:
             harmony_lengths to different voices.)
             Default: 4
         voice_ranges: a sequence of 2-tuples. Each tuple is of form
-            (lowest_note, highest_note). (See the note above on specifying
-            pitches and intervals.) `er_constants.py` provides a number of
+            (lowest_note, highest_note). `er_constants.py` provides a number of
             useful values for this purpose. The sequence must be at least
             `num_voices` length. (If it is longer, excess items will be
             ignored.) It is not enforced that the sequence be in ascending order
@@ -197,7 +197,11 @@ class ERSettings:
             that if `constrain_voice_leading_to_ranges` is False, than these
             ranges will only be enforced for the initial pattern. See also
             `hard_bounds`.
-            TODO document er_constants
+
+            For a list of pre-defined constants that can be used with this
+            setting, see docs/constants.html. See also the note above on
+            specifying pitches and intervals.
+
             Default: "CONTIGUOUS_OCTAVES * OCTAVE3 * C"
 
 
@@ -224,11 +228,13 @@ class ERSettings:
             that the chords do not contain pitch-classes that do not belong to
             the  scales; i.e., that the scales are supersets of the chords),
             or an `InconsistentChordsAndScalesError` will be raised.
-        foot_pcs: sequence of numbers. Specifies the "foots" of each item in
-            `scales` and `chords`---i.e., the pitch-classes that
-            will correspond to `0` in each item of `scales` and `chords`.
-
-            TODO refer to explanation of `foot_pcs` elsewhere?
+        foot_pcs: sequence of numbers. In this script, we call the main bass
+            pitch of each chord its "foot". The main bass pitch is a little like
+            the "root" of a chord, except that the main bass pitch doesn't have
+            to be the root of a chord (as in the case of inverted chords).
+            `foot_pcs` specifies the "foots" of each harmony. These are the
+            pitch-classes that will correspond to `0` in each item of
+            `scales` and `chords`.
 
             For example, if `foot_pcs == [2, 4]` and `chords == [[0, 4, 7], [0,
             3, 8]]`, then the actually realized chords will have pitch-classes
@@ -266,8 +272,10 @@ class ERSettings:
             If `foot_pcs` has more items than `scales`, then `scales` will be
             looped through.
 
-            (See the note above on specifying pitches and intervals.)
-            TODO document er_constants
+            For a list of pre-defined constants that can be used with this
+            setting, see docs/constants.html. See also the note above on
+            specifying pitches and intervals.
+
             Default: ["DIATONIC_SCALE"]
         chords: a sequence of sequences of numbers. Each subsequence specifies
             a chord. Scales should always be specified starting from pitch-class
@@ -280,8 +288,10 @@ class ERSettings:
             If `foot_pcs` has more items than `chords`, then `chords` will be
             looped through.
 
-            (See the note above on specifying pitches and intervals.)
-            TODO document er_constants
+            For a list of pre-defined constants that can be used with this
+            setting, see docs/constants.html. See also the note above on
+            specifying pitches and intervals.
+
             Default: ["MAJOR_TRIAD"]
 
         Midi settings
@@ -615,7 +625,10 @@ class ERSettings:
             (If you *DO* want unisons to be the most common melodic interval,
             set to "GENERIC_UNISON" -- you can't use "UNISON" because that's a just
             interval constant.)
-            TODO document er_constants
+
+            For a list of pre-defined constants that can be used with this
+            setting, see docs/constants.html.
+
             Default: "FIFTH"
         max_interval: number, or a per-voice sequence of numbers. If `None`, does
             not apply.  If positive, indicates a generic interval. Otherwise,
@@ -783,8 +796,11 @@ class ERSettings:
             is `"pairwise"`. (But see `invert_consonances` below.) Since it's
             just a sequence of numbers, you can specify any intervals you
             like---it does not have to conform to the usual set of consonances.
-            (See the note above on specifying pitches and intervals.)
-            TODO document er_constants
+
+            For a list of pre-defined constants that can be used with this
+            setting, see docs/constants.html. See also the note above on
+            specifying pitches and intervals.
+
             Default: `"CONSONANCES"`
         invert_consonances: bool. If True, then the contents of `consonances`
             are replaced by their setwise complement. (E.g., if `tet` is 12,
@@ -794,9 +810,12 @@ class ERSettings:
             Default: False
         consonant_chords: a sequence of sequences of numbers. Each sub-sequence
             specifies a chord to be understood as consonant if `consonance_type`
-            is `"chordwise"`. (See the note above on specifying pitches and
-            intervals.)
-            TODO document er_constants
+            is `"chordwise"`.
+
+            For a list of pre-defined constants that can be used with this
+            setting, see docs/constants.html. See also the note above on
+            specifying pitches and intervals.
+
             Default: `("MAJOR_TRIAD", "MINOR_TRIAD")`
         chord_octave_equi_type: string. If `consonance_type` is `"chordwise"`,
             controls how the items in `consonant_chords` are interpreted
@@ -1089,7 +1108,8 @@ class ERSettings:
             Strings specify integer constants defining GM midi instruments
             defined in `er_constants.py`.
 
-            TODO document er_constants
+            For a list of pre-defined constants that can be used with this
+            setting, see docs/constants.html.
 
             Default: ("GUITAR", "ELECTRIC_PIANO", "PIANO", "XYLOPHONE")
         choir_assignments: sequence of ints. Assigns voices to the given index
@@ -1097,8 +1117,10 @@ class ERSettings:
             `choir_assignments == [1, 0]`, voice 0 will be assigned to
             `choirs[1]`, voice 1 will be assigned to `choirs[0]`, voice 2 (if it
             exists) will be assigned to `choirs[1]`, and so on.  By default, or
-            if passed an empty sequence, all voices are assigned to choir 0.
-            # TODO change this default to loop through choirs by default
+            if passed an empty sequence, voices are assigned to choirs in
+            counting order (i.e., voice 0 is assigned to choir 0, voice 1 to
+            choir 1, etc.), except that if there are more voices than choirs,
+            the choirs are looped through.
 
             If `randomly_distribute_between_choirs` is True, then this
             setting is ignored.
@@ -1369,7 +1391,7 @@ class ERSettings:
         numbers.Number, typing.Sequence[numbers.Number]
     ] = 4
     truncate_patterns: bool = False
-    max_super_pattern_len: numbers.Number = MAX_SUPER_PATTERN_LEN
+    max_super_pattern_len: numbers.Number = None
     voice_ranges: typing.Union[
         typing.Sequence[typing.Tuple[numbers.Number, numbers.Number]], str
     ] = "CONTIGUOUS_OCTAVES * OCTAVE3 * C"
