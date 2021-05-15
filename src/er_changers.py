@@ -5,9 +5,9 @@ import itertools
 import math
 import random
 
+import src.er_classes as er_classes
 import src.er_misc_funcs as er_misc_funcs
 import src.er_prob_funcs as er_prob_funcs
-import src.er_notes as er_notes
 
 # QUESTION why does program change sometimes not apply to first note when
 #           changing midi files imported from logic?
@@ -33,9 +33,7 @@ first beat is 0). See also 'Exempt beats modulo' and 'Exempt comma'."""
 
 
 def _get_prob_funcs():
-    """Gets the possible probability functions from er_prob_funcs.py.
-
-    """
+    """Gets the possible probability functions from er_prob_funcs.py."""
     out = []
     for var in vars(er_prob_funcs):
         if var == "NullProbFunc":
@@ -183,11 +181,14 @@ class Changer(er_prob_funcs.AttributeAdder):
             exemptions = list(
                 itertools.accumulate(self.exempt_n)  # pylint: disable=no-member
             )
-            self.mod_n = exemptions[  # pylint: disable=attribute-defined-outside-init
+            self.mod_n = exemptions[
                 -1
-            ]
-            self.exemptions_n = (  # pylint: disable=attribute-defined-outside-init
-                [0,] + exemptions[:-1]
+            ]  # pylint: disable=attribute-defined-outside-init
+            self.exemptions_n = (
+                [  # pylint: disable=attribute-defined-outside-init
+                    0,
+                ]
+                + exemptions[:-1]
             )
         else:
             self.mod_n = None  # pylint: disable=attribute-defined-outside-init
@@ -198,7 +199,7 @@ class Changer(er_prob_funcs.AttributeAdder):
             except IndexError:
                 skip_marked_by_validation = True
             if not skip_marked_by_validation:
-                if not isinstance(score, er_notes.Score):
+                if not isinstance(score, er_classes.Score):
                     raise NotImplementedError()
                 no_marked_transformations = True
                 for note in score:
@@ -293,8 +294,10 @@ class Changer(er_prob_funcs.AttributeAdder):
                     continue
 
                 filter_time = attack_time - start_time
-                func_result = self.prob_func.calculate(  # pylint: disable=no-member
-                    filter_time, random.random(), voice_i
+                func_result = (
+                    self.prob_func.calculate(  # pylint: disable=no-member
+                        filter_time, random.random(), voice_i
+                    )
                 )
                 if func_result:
                     notes_to_change.append(note_object)
@@ -481,8 +484,10 @@ class Mediator(er_prob_funcs.AttributeAdder):
         if self.func_str == "thru":  # pylint: disable=no-member
             return True
         try:
-            self.mediating_func = getattr(  # pylint: disable=attribute-defined-outside-init
-                er_prob_funcs, self.func_str  # pylint: disable=no-member
+            self.mediating_func = (
+                getattr(  # pylint: disable=attribute-defined-outside-init
+                    er_prob_funcs, self.func_str  # pylint: disable=no-member
+                )
             )
             # vars(er_prob_funcs)[
             #     self.func_str
@@ -619,7 +624,7 @@ class Filter(Changer):
                 )
             )
 
-        voice.filtered_notes = er_notes.Voice(
+        voice.filtered_notes = er_classes.Voice(
             voice_i=voice.voice_i, tet=voice.tet, voice_range=voice.range
         )
 

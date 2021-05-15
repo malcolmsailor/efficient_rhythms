@@ -1,6 +1,6 @@
 import src.er_make2 as er_make2
 import src.er_misc_funcs as er_misc_funcs
-import src.er_notes as er_notes
+import src.er_classes as er_classes
 
 
 def apply_voice_leading(
@@ -25,7 +25,7 @@ def apply_voice_leading(
         foot = er_make2.get_foot_to_force(er, voice_i, new_harmony_i)
         if foot is not None:
             new_pitch = foot
-            new_note = er_notes.Note(new_pitch, new_attack_time, new_dur)
+            new_note = er_classes.Note(new_pitch, new_attack_time, new_dur)
             return new_note
         return None
 
@@ -48,7 +48,7 @@ def apply_voice_leading(
         )
         if repeated_pitch is not None:
             new_pitch = repeated_pitch
-            new_note = er_notes.Note(new_pitch, new_attack_time, new_dur)
+            new_note = er_classes.Note(new_pitch, new_attack_time, new_dur)
             return new_note, None
 
     if (
@@ -86,7 +86,7 @@ def apply_voice_leading(
         new_pitch -= er.tet
 
     if er.parallel_voice_leading:
-        new_note = er_notes.Note(new_pitch, new_attack_time, new_dur)
+        new_note = er_classes.Note(new_pitch, new_attack_time, new_dur)
         return new_note, (prev_pitch_index, voice_leading_interval)
 
     if er.vl_maintain_prohibit_parallels:
@@ -148,5 +148,5 @@ def apply_voice_leading(
             voice_lead_error.limit_intervals()
             return _fail()
 
-    new_note = er_notes.Note(new_pitch, new_attack_time, new_dur)
+    new_note = er_classes.Note(new_pitch, new_attack_time, new_dur)
     return new_note, (prev_pitch_index, voice_leading_interval)

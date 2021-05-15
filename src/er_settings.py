@@ -474,12 +474,9 @@ class ERSettings:
         Chord-tone settings
         ===================
 
-        Parameters that begin "force_chord_tone" (though not
-        "force_non_chord_tone") apply regardless of whether
-        `chord_tone_selection` is true. Other chord tone settings modify the
-        behavior activated by `chord_tone_selection`.
-        # TODO it seems to me that `force_chord_tone` is the only setting that
-        #   begins `force_chord_tone`?
+        Most chord tone settings only have an effect if `chord_tone_selection`
+        is `True`. Only `force_chord_tone` applies irrespective of
+        `chord_tone_selection`.
 
         chord_tone_and_foot_disable: bool. If True, disables all chord-tone and
             foot specific behavior. Specifically, disables

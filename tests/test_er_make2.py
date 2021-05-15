@@ -7,7 +7,7 @@ sys.path.insert(
 )
 
 import src.er_make2 as er_make2  # pylint: disable=wrong-import-position
-import src.er_notes as er_notes  # pylint: disable=wrong-import-position
+import src.er_classes as er_classes  # pylint: disable=wrong-import-position
 import src.er_preprocess as er_preprocess  # pylint: disable=wrong-import-position
 
 
@@ -33,7 +33,7 @@ def test_check_harmonic_intervals():
         (0, 64, 2, 0.25, False),
     ]
     for notes in (notes1, notes2):
-        score = er_notes.Score(num_voices=er.num_voices, tet=er.tet)
+        score = er_classes.Score(num_voices=er.num_voices, tet=er.tet)
         for (v, p, a, d, b) in notes:  # pylint: disable=invalid-name
             try:
                 assert (
@@ -64,7 +64,7 @@ def test_check_harmonic_intervals():
         (2, 72, 0, 0.5, False),
     ]
     for notes in (notes1,):
-        score = er_notes.Score(num_voices=er.num_voices, tet=er.tet)
+        score = er_classes.Score(num_voices=er.num_voices, tet=er.tet)
         for (v, p, a, d, b) in notes:  # pylint: disable=invalid-name
             try:
                 assert (

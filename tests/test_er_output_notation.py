@@ -9,7 +9,7 @@ sys.path.insert(
 
 import src.er_output_notation as er_output_notation  # pylint: disable=wrong-import-position
 import src.er_misc_funcs as er_misc_funcs  # pylint: disable=wrong-import-position
-import src.er_notes as er_notes  # pylint: disable=wrong-import-position
+import src.er_classes as er_classes  # pylint: disable=wrong-import-position
 
 
 def test_get_kern():
@@ -18,7 +18,7 @@ def test_get_kern():
         ((60, 0, 1.75), (61, 1.75, 1.5), (62, 3.25, 0.75), (63, 4, 1)),
         ((48, 0, 1), (49, 1, 1), (50, 2, 1), (51, 3, 1), (52, 4, 1)),
     )
-    score = er_notes.Score(
+    score = er_classes.Score(
         num_voices=len(notes),
         tet=12,
         time_sig=(2, 4),
@@ -42,7 +42,7 @@ def test_get_kern():
 
 
 def test_dur_to_kern():
-    # TODO write more tests
+    # LONGTERM write more tests
     time_sig_dur = 2
     tests = {
         1.5: {  # duration
@@ -67,9 +67,6 @@ def test_dur_to_kern():
                     exc_type, exc_value, exc_traceback, file=sys.stdout
                 )
                 breakpoint()
-
-    # print(er_output_notation.dur_to_kern(1.5, offset=1.75, time_sig_dur=2))
-    # print(er_output_notation.dur_to_kern(2.5, offset=1.75, time_sig_dur=2))
 
 
 if __name__ == "__main__":

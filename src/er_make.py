@@ -9,10 +9,10 @@ import random
 
 import numpy as np
 
+import src.er_classes as er_classes
 import src.er_exceptions as er_exceptions
 import src.er_make2 as er_make2
 import src.er_misc_funcs as er_misc_funcs
-import src.er_notes as er_notes
 import src.er_rhythm as er_rhythm
 import src.er_vl_strict_and_flex as er_vl_strict_and_flex
 
@@ -22,8 +22,7 @@ class PossibleNoteError(Exception):
 
 
 class PossibleNote:
-    """A class for storing the properties of a possible note.
-    """
+    """A class for storing the properties of a possible note."""
 
     def __init__(self, er, super_pattern, attack_i):
         self.attack_i = attack_i
@@ -65,14 +64,30 @@ def _pitch_loop(er, poss_note):
             pitch_to_test = pitch_to_loop + look_first * i
             if (
                 pitch_to_test in scale
-                and len(set([pitch_to_test,] + prev_n_pitches[1:])) != 1
+                and len(
+                    set(
+                        [
+                            pitch_to_test,
+                        ]
+                        + prev_n_pitches[1:]
+                    )
+                )
+                != 1
             ):
                 pitch_to_loop = pitch_to_test
                 break
             pitch_to_test = pitch_to_loop + look_second * i
             if (
                 pitch_to_test in scale
-                and len(set([pitch_to_test,] + prev_n_pitches[1:])) != 1
+                and len(
+                    set(
+                        [
+                            pitch_to_test,
+                        ]
+                        + prev_n_pitches[1:]
+                    )
+                )
+                != 1
             ):
                 pitch_to_loop = pitch_to_test
                 break
@@ -260,7 +275,9 @@ def _choose_whether_chord_tone(er, super_pattern, poss_note):
 
     if er.chord_tones_sync_attack_in_all_voices:
         prev_voices = er_misc_funcs.get_prev_voice_indices(
-            super_pattern, poss_note.attack_time, poss_note.dur,
+            super_pattern,
+            poss_note.attack_time,
+            poss_note.dur,
         )
         if prev_voices:
             if _check_other_voices_for_chord_tones(
@@ -875,7 +892,7 @@ def make_initial_pattern(er, available_pitch_error):
             available_pitch_error.status()
             er.rhythms = er_rhythm.rhythms_handler(er)
             er.initial_pattern_order = er_rhythm.get_attack_order(er)
-            super_pattern = er_notes.Score(
+            super_pattern = er_classes.Score(
                 num_voices=er.num_voices,
                 tet=er.tet,
                 harmony_len=er.harmony_len,
@@ -935,8 +952,14 @@ def transpose_foots(er, super_pattern):
             harmony_i = super_pattern.get_harmony_i(attack_time)
             harmony_times = super_pattern.get_harmony_times(harmony_i)
             harmony_dur = harmony_times.end_time - harmony_times.start_time
-            all_pitches = super_pattern.get_all_pitches_attacked_during_duration(
-                harmony_times.start_time, dur=harmony_dur, voices=[BASS,]
+            all_pitches = (
+                super_pattern.get_all_pitches_attacked_during_duration(
+                    harmony_times.start_time,
+                    dur=harmony_dur,
+                    voices=[
+                        BASS,
+                    ],
+                )
             )
             foot_pc = er.get(harmony_i, "pc_chords")[FOOT]
 
@@ -979,14 +1002,12 @@ def voice_lead_pattern(er, super_pattern, voice_lead_error):
 
 
 def make_super_pattern(er):
-    """Makes the super pattern.
-    """
+    """Makes the super pattern."""
 
     voice_lead_error = er_exceptions.VoiceLeadingError(er)
     available_pitch_error = er_exceptions.AvailablePitchMaterialsError(er)
 
     for rep in itertools.count(start=1):
-        # TODO change name of this variable
         for _ in range(er.voice_leading_attempts):
             er.build_status_printer.increment_total_attempt_count()
             super_pattern = make_initial_pattern(er, available_pitch_error)
@@ -1019,8 +1040,7 @@ def make_super_pattern(er):
 
 
 def repeat_super_pattern(er, super_pattern, apply_to_existing_voices=False):
-    """Repeats the super pattern the indicated number of times.
-    """
+    """Repeats the super pattern the indicated number of times."""
 
     super_pattern.remove_passage(
         er.super_pattern_len,
@@ -1044,9 +1064,8 @@ def repeat_super_pattern(er, super_pattern, apply_to_existing_voices=False):
     for voice_i, voice in enumerate(super_pattern.voices):
         rhythm = er.rhythms[voice_i]
         rhythm_list = list(rhythm.items())
-        # rhythm_list_len = er.total_rhythm_len[voice_i]
         num_notes_in_super_pattern = len(voice)
-        new_voice = er_notes.Voice()
+        new_voice = er_classes.Voice()
         for repetition in range(1, er.num_reps_super_pattern):
             repetition_start_time = repetition * er.super_pattern_len
             last_attack_time = -1

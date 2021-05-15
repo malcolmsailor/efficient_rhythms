@@ -43,10 +43,7 @@ PITCH_MATERIAL_LISTS = (
     "min_interval_for_non_chord_tones",
 )
 
-PITCH_MATERIALS = (
-    # TODO finish populating this list?
-    "unison_weighted_as",
-)
+PITCH_MATERIALS = ("unison_weighted_as",)
 
 
 # INTERNET_TODO either replace `warnings` module with simple print statements
@@ -217,60 +214,10 @@ def prepare_warnings(er):
     }
 
 
-# PITCH_CONSTANT_OP_MAP = {
-#     "*": ("__mul__", "__rmul__"),
-#     "+": ("__add__", "__radd__"),
-#     "-": ("__sub__", "__rsub__"),
-#     "/": ("__truediv__", "__rtruediv__"),  # MAYBE test
-# }
-
-
 def replace_pitch_constants(er):
-    # class PitchConstantError(Exception):
-    #     pass
-
     def _process_str(pitch_str):
         pitch_str = pitch_str.replace("#", "_SHARP")
         return eval(pitch_str, vars(er_constants))
-        # bits = pitch_str.split()
-        # val = 1
-        # next_op, rnext_op = "__mul__", "__rmul__"
-        # for bit in bits:
-        #     if next_op is None:
-        #         try:
-        #             next_op, rnext_op = PITCH_CONSTANT_OP_MAP[bit]
-        #         except KeyError:
-        #             raise PitchConstantError(  # pylint: disable=raise-missing-from
-        #                 f"{bit} is not an implemented operation on pitch "
-        #                 "constants. Implemented pitch constant operations are "
-        #                 f"{tuple(PITCH_CONSTANT_OP_MAP.keys())}."
-        #                 # MAYBE see documentation for more help
-        #             )
-        #     else:
-        #         # MAYBE document sign flip with "-" for descending intervals
-        #         if bit[0] == "-":
-        #             sign = -1
-        #             bit = bit[1:]
-        #         else:
-        #             sign = 1
-        #         try:
-        #             constant = sign * getattr(er_constants, bit)
-        #         except AttributeError:
-        #             raise PitchConstantError(  # pylint: disable=raise-missing-from
-        #                 f"{bit} is not an implemented pitch constant."
-        #             )
-        #             # TODO see documentation for more help
-        #         next_val = getattr(val, next_op)(constant)
-        #         if next_val is NotImplemented:
-        #             val = getattr(constant, rnext_op)(val)
-        #         else:
-        #             val = next_val
-        #         next_op = None
-        # if next_op is not None:
-        #     raise PitchConstantError(
-        #         f"Trailing operation in pitch constant {pitch_str}"
-        #     )
-        # return val
 
     def _replace(pitch_material, i):
         if isinstance(pitch_material[i], str):
@@ -286,7 +233,6 @@ def replace_pitch_constants(er):
             if isinstance(pitch_material, str):
                 pitch_material = _process_str(pitch_material)
             elif isinstance(pitch_material, typing.Sequence):
-                # LONGTERM handle list conversion elsewhere?
                 pitch_material = list(pitch_material)
                 for i in range(len(pitch_material)):
                     _replace(pitch_material, i)
@@ -544,9 +490,9 @@ def process_choir_settings(er):
             return getattr(er_constants, choir)
         except AttributeError:
             raise ValueError(  # pylint: disable=raise-missing-from
-                f"{choir} is not an implemented choir constant."
+                f"{choir} is not an implemented choir constant. See "
+                "docs/er_constants.html for a list of available constants."
             )
-            # TODO see documentation for more help
 
     er.choir_programs = []
     for choir_i in range(er.num_choirs):

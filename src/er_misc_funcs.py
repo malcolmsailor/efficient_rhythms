@@ -1076,9 +1076,13 @@ def chord_in_list(
     the octave equivalence and doubling settings).
 
     The first pc in all the chords in `list_of_chords` should be 0.
-    # TODO What if chords in `list_of_chords` contain doublings?
-    # TODO enforce this elsewhere?
-    # TODO can we count on passed chord being sorted? What about list of chords?
+
+    Arguments:
+        chord: a sequence of ints representing pitch-classes or pitches.
+        list_of_chords: a sequence of sequences of ints representing
+            pitch-classes. The first pitch-class of each chord should be 0,
+            and all ints should be < tet (i.e., they should be pitch-*classes*,
+            rather than pitches).
 
     Keyword arguments:
         tet: int.
@@ -1089,12 +1093,9 @@ def chord_in_list(
                 except that bass note must be preserved (the bass note being
                 assumed to be the first listed pitch/pitch-class of the
                 chords in the list)
-            "order": octave equivalence is allowed but pitch-classes must be
-                in the order listed. (This is order from lowest to highest,
-                not by voice. So if the alto is lower than the tenor, the
-                alto's pitch-class comes first.)
-                # TODO How do we even know what the order by voice is here?
-                # TODO how are pitch-class doublings treated here?
+            "order": octave equivalence is allowed but the pitches in
+                `chord`, when sorted from lowest to highest, must be in the
+                order pitch classes are given in `list_of_chords`.
             "none": no octave equivalence, in the sense that (C3, E4, G4) is
                 not considered the same as (C4, E4, G4) because of the tenth/
                 third. Nevertheless, transpositional equivalence still applies,
@@ -1105,8 +1106,8 @@ def chord_in_list(
             "complete": doublings only permitted after the chord is complete.
             "none": no doublings permitted.
 
-    Examples:
-        Suppose `list_of_chords` is [[0, 4, 7]]. # TODO
+    For many examples of input and expected output, see
+    `tests/test_er_misc_funcs.py`
     """
     chord = sorted(chord)
     for pitch in chord:

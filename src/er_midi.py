@@ -13,7 +13,7 @@ import mido
 
 import src.er_choirs as er_choirs
 import src.er_midi_settings as er_midi_settings
-import src.er_notes as er_notes
+import src.er_classes as er_classes
 import src.er_tuning as er_tuning
 
 # midi constants
@@ -21,7 +21,7 @@ META_TRACK = 0
 CLOCKS_PER_TICK = 24
 DEFAULT_CHANNEL = 0
 DEFAULT_TRACK = 0
-DEFAULT_VELOCITY = er_notes.DEFAULT_VELOCITY
+DEFAULT_VELOCITY = er_classes.DEFAULT_VELOCITY
 NUM_CHANNELS = 16
 
 # pitch_bend_tuple constants
@@ -226,7 +226,11 @@ def _build_track_dict(er, score_num_voices):
 
 
 def add_note_and_pitch_bend(
-    mido_track, pitch_bend_tuple, note, channel, pitch_bend_time=None,
+    mido_track,
+    pitch_bend_tuple,
+    note,
+    channel,
+    pitch_bend_time=None,
 ):
     if 0 <= pitch_bend_tuple[MIDI_NUM] <= 127:
         mido_track.append(
@@ -240,7 +244,10 @@ def add_note_and_pitch_bend(
             )
         )
         add_note(
-            mido_track, note, pitch=pitch_bend_tuple[MIDI_NUM], channel=channel,
+            mido_track,
+            note,
+            pitch=pitch_bend_tuple[MIDI_NUM],
+            channel=channel,
         )
 
 
@@ -269,8 +276,7 @@ def humanize(er, note=None, tuning=None):
 
 
 def add_er_voice(er, voice_i, voice, mf, force_choir=None):
-    """Adds a Voice object to the midi file object.
-    """
+    """Adds a Voice object to the midi file object."""
     empty = True
     for note in voice:
         if force_choir is not None:
@@ -300,7 +306,10 @@ def add_er_voice(er, voice_i, voice, mf, force_choir=None):
 
         midi_num, pitch_bend = er.pitch_bend_tuple_dict[note.pitch]
         if er.humanize:
-            pitch_bend = humanize(er, tuning=pitch_bend,)
+            pitch_bend = humanize(
+                er,
+                tuning=pitch_bend,
+            )
         if not er.logic_type_pitch_bend or er.tet == 12:
             # er.tet == 12 seems to be an unnecessary condition here!
             add_note_and_pitch_bend(
@@ -697,7 +706,7 @@ def _note_off_handler(
         max_denominator=max_denominator
     )
 
-    note_object = er_notes.Note(
+    note_object = er_classes.note.Note(
         pitch, attack, dur, velocity=velocity, choir=channel
     )
 
@@ -804,7 +813,7 @@ def read_midi_to_internal_data(
     if max_denominator == 0:
         max_denominator = 8192
 
-    internal_data = er_notes.Score(
+    internal_data = er_classes.Score(
         tet=tet, num_voices=num_tracks - 1, time_sig=time_sig
     )
     if track_num_offset:
@@ -887,16 +896,14 @@ def read_midi_to_internal_data(
 
 
 class Breaker:
-    """Used to break the midi playback thread.
-    """
+    """Used to break the midi playback thread."""
 
     def __init__(self):
         self.break_ = False
         self.on_count = 0
 
     def reset(self):
-        """Call to interrupt playback.
-        """
+        """Call to interrupt playback."""
         self.break_ = True
         while self.on_count > 0:
             pass

@@ -6,7 +6,7 @@ sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 )
 
-import src.er_notes as er_notes  # pylint: disable=wrong-import-position
+import src.er_classes as er_classes  # pylint: disable=wrong-import-position
 import src.er_preprocess as er_preprocess  # pylint: disable=wrong-import-position
 
 
@@ -20,7 +20,7 @@ def test_score_get_prev_and_last_notes():
         (1, 59, 0.5, 0.75, 58),
         (0, 60, 0.75, 0.75, 57),
     ]
-    score = er_notes.Score(num_voices=er.num_voices, tet=er.tet)
+    score = er_classes.Score(num_voices=er.num_voices, tet=er.tet)
     for (v, p, a, d, ev) in notes:  ##pylint: disable=invalid-name
         if ev is None:
             assert (
@@ -73,7 +73,7 @@ def test_score_get_prev_and_last_notes():
 def test_score_get_sounding_pitches():
     settingsdict = {"num_voices": 2, "tet": 12}
     er = er_preprocess.preprocess_settings(settingsdict)
-    score = er_notes.Score(num_voices=er.num_voices, tet=er.tet)
+    score = er_classes.Score(num_voices=er.num_voices, tet=er.tet)
     # voice, pitch, attack, dur
     notes = [
         (0, 57, 0, 0.75),
