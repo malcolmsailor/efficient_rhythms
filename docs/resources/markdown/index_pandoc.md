@@ -29,6 +29,7 @@ The script requires Python >= 3.8 and has the following Python dependencies:
 - numpy
 - pygame
 - python-rtmidi
+- sortedcontainers
 
 These can be installed by running `pip3 install -r requirements.txt` in the script directory.
 
