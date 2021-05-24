@@ -60,6 +60,19 @@ class VoiceLeadingOrderItem:
         return self._prev.start_i + self.len
 
 
+def indices_to_vl(indices, chord1, chord2, tet):
+    voice_leading = []
+    for i, j in enumerate(indices):
+        interval = chord2[j] - chord1[i]
+        if abs(interval) <= tet // 2:
+            voice_leading.append(interval)
+        elif interval > 0:
+            voice_leading.append(interval - tet)
+        else:
+            voice_leading.append(interval + tet)
+    return tuple(voice_leading)
+
+
 def efficient_voice_leading(
     chord1, chord2, tet=12, displacement_more_than=-1, exclude_motions=None
 ):
@@ -82,6 +95,7 @@ def efficient_voice_leading(
             chord2
             best_sum
             best_vl_indices
+            halftet
             tet
             displacement_more_than
 
@@ -100,61 +114,35 @@ def efficient_voice_leading(
                 elif best_sum == current_sum:
                     best_vl_indices.append(out_indices)
         else:
-            chord1_index = len(out_indices)
-            chord1_pc = chord1[chord1_index]
-            for i, chord2_index in enumerate(in_indices):
-                chord2_pc = chord2[chord2_index]
-                displacement = abs(chord2_pc - chord1_pc)
-                if displacement in exclude_motions[chord1_index]:
-                    #      MAYBE expand to include combinations of
-                    #       multiple voice leading motions
-                    continue
-                if displacement > tet // 2:
+            chord1_i = len(out_indices)
+            for i, chord2_i in enumerate(in_indices):
+                displacement = abs(chord2[chord2_i] - chord1[chord1_i])
+                if chord1_i in exclude_motions:
+                    if displacement in exclude_motions[chord1_i]:
+                        #      MAYBE expand to include combinations of
+                        #       multiple voice leading motions
+                        continue
+                if displacement > halftet:
                     displacement = tet - displacement
                 present_sum = current_sum + displacement
                 if present_sum > best_sum:
                     continue
                 _voice_leading_sub(
                     in_indices[:i] + in_indices[i + 1 :],
-                    out_indices
-                    + [
-                        chord2_index,
-                    ],
+                    out_indices + [chord2_i],
                     present_sum,
                 )
 
-    def _indices_to_voice_leading(indices):
-        voice_leading = []
-        for i, j in enumerate(indices):
-            chord1_pc = chord1[i]
-            chord2_pc = chord2[j]
-            interval = chord2_pc - chord1_pc
-            if abs(interval) <= tet // 2:
-                voice_leading.append(interval)
-            elif interval > 0:
-                voice_leading.append(interval - tet)
-            else:
-                voice_leading.append(interval + tet)
-        return tuple(voice_leading)
-
     card = len(chord1)
     if card != len(chord2):
-
-        class CardinalityError(Exception):
-            pass
-
-        raise CardinalityError(
-            f"Cardinality of {chord1} and {chord2} does not agree."
-        )
+        raise ValueError(f"{chord1} and {chord2} have different lengths.")
 
     if exclude_motions is None:
         exclude_motions = {}
-    for i in range(card):
-        if i not in exclude_motions:
-            exclude_motions[i] = []
 
     best_sum = starting_sum = tet ** 8
     best_vl_indices = []
+    halftet = tet // 2
 
     _voice_leading_sub(list(range(card)), [], 0)
 
@@ -163,17 +151,20 @@ def efficient_voice_leading(
     if best_sum == starting_sum:
         raise er_exceptions.NoMoreVoiceLeadingsError
 
-    voice_leading_intervals = set()
+    # My original code here created voice_leading_intervals as a set and then
+    # cast to a list afterwards. The only reason I can see for doing this
+    # would be if there could be duplicate items in the list otherwise, but
+    # it doesn't seem to me that this is possible, and fairly extensive testing
+    # didn't turn up any cases. So I removed the set but leaving this note
+    # just in case any future problems turn up as a result.
 
-    for indices in best_vl_indices:
-        intervals = _indices_to_voice_leading(indices)
-        voice_leading_intervals.add(intervals)
+    voice_leading_intervals = [
+        indices_to_vl(indices, chord1, chord2, tet)
+        for indices in best_vl_indices
+    ]
 
-    voice_leading_intervals = list(voice_leading_intervals)
-
-    if len(voice_leading_intervals) != 1:
-        voice_leading_intervals.sort(key=np.std)
-        voice_leading_intervals.sort(key=max)
+    if len(voice_leading_intervals) > 1:
+        voice_leading_intervals.sort(key=np.var)
 
     return voice_leading_intervals, best_sum
 
@@ -187,15 +178,14 @@ class VoiceLeader:
 
     Voice-leadings are sorted by total displacement. If there is more
     than one voice-leading of equivalent displacement, these are sorted
-    by:
+    by the following two condiitions (the second condition in fact
+    enforces the first as well):
         1) the least maximum displacement of any individual voice
            (so [0, 0, 0, 2, 2, 2] ahead of [0, 0, 0, 0, 0, 6]).
         2) the voice-leading motion spread most evenly between the
            different voices (so [0, 0, 1, 2, 2, 1] ahead of
            [0, 0, 0, 2, 2, 2]. (This is measured by taking the standard
-           deviation of the absolute intervals. In fact, I think that
-           sorting by standard deviation sorts by both of these at once,
-           although I'm not certain.)
+           deviation of the intervals.)
 
     Arguments:
         er: the settings object.
