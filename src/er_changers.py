@@ -1,5 +1,4 @@
 import collections
-import copy
 import fractions
 import itertools
 import math
@@ -78,10 +77,10 @@ class Changer(er_prob_funcs.AttributeAdder):
             changer_counter[self.pretty_name] += 1
             self.pretty_name += " " + str(changer_counter[self.pretty_name])
         self.condition = condition
-        self.total_len = float(score.get_total_len())
+        self.total_len = float(score.total_dur)
         super().__init__()
-        self.all_voice_is = score.all_voice_is
-        self.num_voices = len(self.all_voice_is)
+        self.all_voice_idxs = score.all_voice_idxs
+        self.num_voices = len(self.all_voice_idxs)
         self.tet = score.tet
         prob_funcs = vars(er_prob_funcs)
         self.require_score = False
@@ -202,13 +201,17 @@ class Changer(er_prob_funcs.AttributeAdder):
                 if not isinstance(score, er_classes.Score):
                     raise NotImplementedError()
                 no_marked_transformations = True
-                for note in score:
-                    try:
-                        if self.marked_by in note.transformations_:
-                            no_marked_transformations = False
-                            break
-                    except AttributeError:
-                        continue
+                # TODO it seems this is expecting single notes but iterating
+                #   over the score will return a list of notes?
+                # TODO iterate over voices separately
+                for voice in score:
+                    for note in voice:
+                        try:
+                            if self.marked_by in note.transformations_:
+                                no_marked_transformations = False
+                                break
+                        except AttributeError:
+                            continue
                 if no_marked_transformations:
                     raise ChangeFuncError(
                         f"No notes transformed by {self.marked_by}"  # pylint: disable=no-member
@@ -258,7 +261,7 @@ class Changer(er_prob_funcs.AttributeAdder):
             and self.exempt[0] is not None  # pylint: disable=no-member
         )
         for interface_voice_i in self.voices:  # pylint: disable=no-member
-            voice_i = self.all_voice_is[interface_voice_i]
+            voice_i = self.all_voice_idxs[interface_voice_i]
             try:
                 voice = score.voices[voice_i]
             except IndexError:
@@ -322,6 +325,7 @@ class Changer(er_prob_funcs.AttributeAdder):
             self.prob_func.length = (  # pylint: disable=no-member
                 end_time - start_time
             )
+        # TODO replace or implement score iteration
         for notes in score:
             attack_time = notes[0].attack_time
             if attack_time < start_time:
@@ -665,11 +669,9 @@ class Filter(Changer):
                 dur_adjustment -= note.dur
                 self.dur_adjust_attack_times.append(note.attack_time)
                 self.dur_adjust_durs.append(dur_adjustment)
-            voice.filtered_notes.add_note_object(
-                copy.copy(note), update_sort=False
-            )
-            voice.remove_note_object(note)
-        voice.filtered_notes.update_sort()
+            voice.filtered_notes.add_note(note.copy())
+            voice.remove_note(note)
+        # voice.filtered_notes.update_sort()
         if self.adjust_dur == "Subtract_duration":  # pylint: disable=no-member
             i = -1
             notes_to_move = []
@@ -685,8 +687,7 @@ class Filter(Changer):
                     pass
                 notes_to_move.append((note, note.attack_time + dur_adjustment))
             for note, new_attack_time in notes_to_move:
-                voice.move_note(note, new_attack_time, update_sort=False)
-            voice.update_sort()
+                voice.move_note(note, new_attack_time)
 
 
 class RangeFilter(Filter):
@@ -1225,7 +1226,7 @@ class ChangeDurationsTransformer(TransformBase, Mediator):
             return
 
         for note in notes_to_remove:
-            voice.remove_note_object(note)
+            voice.remove_note(note)
 
 
 class RandomOctaveTransformer(TransformBase):
@@ -1379,16 +1380,14 @@ class TransposeTransformer(TransformBase):
         transpose, preserve = self.get(voice_i, "transpose", "preserve")
         for note in notes_to_change:
             if preserve:
-                note_copy = copy.copy(note)
+                note_copy = note.copy()
                 note_copy.pitch += transpose
-                voice.add_note_object(note_copy, update_sort=False)
+                voice.add_note(note_copy)
                 self.mark_note(note_copy)
                 self.mark_note(note)
             else:
                 note.pitch += transpose
                 self.mark_note(note)
-        if preserve:
-            voice.update_sort()
 
     def get_seg_i(self, voice_i, note):
         seg_dur, seg_card = self.get(voice_i, "seg_dur", "seg_card")
@@ -1417,16 +1416,14 @@ class TransposeTransformer(TransformBase):
                         cum_trans += voice.tet
             # note.pitch += cum_trans
             if preserve:
-                note_copy = copy.copy(note)
+                note_copy = note.copy()
                 note_copy.pitch += cum_trans
-                voice.add_note_object(note_copy, update_sort=False)
+                voice.add_note(note_copy)
                 self.mark_note(note_copy)
                 self.mark_note(note)
             else:
                 note.pitch += cum_trans
                 self.mark_note(note)
-        if preserve:
-            voice.update_sort()
 
     def build_rand_trans(self):
         self.rand_trans = []  # pylint: disable=attribute-defined-outside-init
@@ -1473,17 +1470,15 @@ class TransposeTransformer(TransformBase):
             seg_i = self.get_seg_i(voice_i, note)
             transpose = rand_trans[seg_i % len(rand_trans)]
             if preserve:
-                note_copy = copy.copy(note)
+                note_copy = note.copy()
                 note_copy.pitch += transpose
-                voice.add_note_object(note_copy, update_sort=False)
+                voice.add_note(note_copy)
                 self.mark_note(note_copy)
                 # QUESTION should the original note be marked in this case?
                 self.mark_note(note)
             else:
                 note.pitch += transpose
                 self.mark_note(note)
-        if preserve:
-            voice.update_sort()
 
     def change_func(self, voice, notes_to_change):
         if self.trans_type == "Standard":  # pylint: disable=no-member
@@ -1744,13 +1739,12 @@ class ShepherdTransformer(TransformBase):
                     # LONGTERM
                     pass
                 else:
-                    new_note = copy.copy(note)
+                    new_note = note.copy()
                     new_note.velocity = new_vel
                     new_note.pitch = pitch
-                    voice.add_note_object(new_note, update_sort=False)
+                    voice.add_note(new_note)
                 # ...
                 pitch += self.tet
-        voice.update_sort()
 
 
 class TrackExchangerTransformer(TransformBase):
@@ -1802,11 +1796,10 @@ class TrackExchangerTransformer(TransformBase):
             score.add_voice()
 
         for note in notes_to_change:
-            score.voices[dest_voice_i].add_note_object(note, update_sort=False)
-            score.voices[voice_i].remove_note_object(note)
+            score.voices[dest_voice_i].add_note(note)
+            score.voices[voice_i].remove_note(note)
             self.mark_note(note)
-        score.voices[dest_voice_i].update_sort()
-        # score.voices[voice_i].update_sort()
+        # score.voices[dest_voice_i].update_sort()
 
 
 class InvertTransformer(TransformBase):
@@ -1858,7 +1851,7 @@ class InvertTransformer(TransformBase):
                 )
             )
             for note in notes_to_remove:
-                voice.remove_note_object(note)
+                voice.remove_note(note)
 
 
 class TrackRandomizerTransformer(TransformBase):
@@ -1906,12 +1899,12 @@ class TrackRandomizerTransformer(TransformBase):
             dest_voice_i = random.choice(
                 self.dest_voices  # pylint: disable=no-member
             )
-            score.voices[dest_voice_i].add_note_object(note, update_sort=False)
-            score.voices[voice_i].remove_note_object(note)
+            score.voices[dest_voice_i].add_note(note)
+            score.voices[voice_i].remove_note(note)
             self.mark_note(note)
 
-        for dest_voice_i in self.dest_voices:  # pylint: disable=no-member
-            score.voices[dest_voice_i].update_sort()
+        # for dest_voice_i in self.dest_voices:  # pylint: disable=no-member
+        #     score.voices[dest_voice_i].update_sort()
         # score.voices[voice_i].update_sort()
 
 
@@ -1997,16 +1990,16 @@ class SubdivideTransformer(TransformBase):
             note.dur = to_add
             time += to_add
             while time < end:
-                new_note = copy.copy(note)
+                new_note = note.copy()
                 new_note.attack_time = time
                 to_add = min((subdivision, end - time))
                 if to_add == 0:
                     break
                 new_note.dur = to_add
-                voice.add_note_object(new_note, update_sort=False)
+                voice.add_note(new_note)
                 time += to_add
             self.mark_note(note)
-        voice.update_sort()
+        # voice.update_sort()
 
 
 class LoopTransformer(TransformBase):

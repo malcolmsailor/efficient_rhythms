@@ -1,5 +1,5 @@
 {
-    "choirs": ("CELESTA", "VIBRAPHONE"),
+    "choirs": ("ELECTRIC_PIANO", "VIBRAPHONE"),
     "seed": 2,
     "num_voices": 2,
     "foot_pcs": [0],

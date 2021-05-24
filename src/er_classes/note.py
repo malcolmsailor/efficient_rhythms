@@ -1,3 +1,6 @@
+import copy
+import operator
+
 # constants for writing notes
 DEFAULT_VELOCITY = 96
 DEFAULT_CHOIR = 0
@@ -5,6 +8,10 @@ DEFAULT_CHOIR = 0
 
 class Note:
     """Stores a note.
+
+    For sorting, notes can be compared with the standard comparison operators
+    like <, >=, etc. They are compared on the following attributes, in this
+    order: attack_time, dur, pitch, finetune, velocity
 
     Attributes:
         pitch: an integer.
@@ -60,3 +67,71 @@ class Note:
     @spelling.setter
     def spelling(self, value):
         self._spelling = value
+
+    def _comparison_sequence(self, other, op):
+        def _compare_attr(attr):
+            self_attr = getattr(self, attr)
+            other_attr = getattr(other, attr)
+            if self_attr == other_attr:
+                return None
+            return op(self_attr, other_attr)
+
+        if not isinstance(other, Note):
+            raise ValueError
+
+        for attr in ("attack_time", "dur", "pitch", "finetune", "velocity"):
+            result = _compare_attr(attr)
+            if result is not None:
+                return result
+        if result is None and op in (operator.eq, operator.le, operator.ge):
+            return True
+        return False
+
+    def copy(self):
+        # note should not have any data that requires deep copy
+        return copy.copy(self)
+
+    def __lt__(self, other):
+        return self._comparison_sequence(other, operator.lt)
+
+    def __le__(self, other):
+        return self._comparison_sequence(other, operator.le)
+
+    def __eq__(self, other):
+        return self._comparison_sequence(other, operator.eq)
+
+    def __ne__(self, other):
+        return self._comparison_sequence(other, operator.ne)
+
+    def __ge__(self, other):
+        return self._comparison_sequence(other, operator.ge)
+
+    def __gt__(self, other):
+        return self._comparison_sequence(other, operator.gt)
+
+    def partial_equality(
+        self,
+        other,
+        pitch=True,
+        attack_time=True,
+        dur=True,
+        velocity=True,
+        choir=True,
+        voice=True,
+        finetune=True,
+    ):
+        if pitch and not self.pitch == other.pitch:
+            return False
+        if attack_time and not self.attack_time == other.attack_time:
+            return False
+        if dur and not self.dur == other.dur:
+            return False
+        if velocity and not self.velocity == other.velocity:
+            return False
+        if choir and not self.choir == other.choir:
+            return False
+        if voice and not self.voice == other.voice:
+            return False
+        if finetune and not self.finetune == other.finetune:
+            return False
+        return True

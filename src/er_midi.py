@@ -2,7 +2,6 @@
 """
 
 import collections
-import copy
 import fractions
 import os
 import random
@@ -258,7 +257,7 @@ def humanize(er, note=None, tuning=None):
         return random.random() * (humanize_amount) * 2 + 1 - humanize_amount
 
     if note is not None:
-        new_note = copy.copy(note)
+        new_note = note.copy()
         new_note.attack_time = max(
             0, note.attack_time - 1 + _get_value(er.humanize_attack)
         )
@@ -859,28 +858,27 @@ def read_midi_to_internal_data(
                     ticks_per_beat,
                     max_denominator=max_denominator,
                 )
-                internal_data.add_note_object(
-                    track_i - 1, note_object, update_sort=False
-                )
+                internal_data.add_note(track_i - 1, note_object)
             else:
                 msg.time = fractions.Fraction(msg.time, ticks_per_beat)
                 if track_i == 0:
                     internal_data.add_meta_message(msg)
                 else:
                     internal_data.add_other_message(track_i - 1, msg)
-        if track_i != 0:
-            internal_data.voices[track_i - 1].update_sort()
+        # if track_i != 0:
+        #     internal_data.voices[track_i - 1].update_sort()
 
     internal_data.remove_empty_voices()
 
     if first_note_at_0 is False:
         return internal_data
 
-    first_attack = internal_data.get_total_len()
-    for voice in internal_data.voices:
-        first_attack_in_voice = min(voice.data.keys())
-        if first_attack_in_voice < first_attack:
-            first_attack = first_attack_in_voice
+    # first_attack = internal_data.total_dur
+    # for voice in internal_data.voices:
+    #     first_attack_in_voice = min(voice.data.keys())
+    #     if first_attack_in_voice < first_attack:
+    #         first_attack = first_attack_in_voice
+    first_attack, _ = internal_data.first_attack_and_notes
 
     # If the first attack is smaller than min_attack_to_adjust, don't
     # displace the score.

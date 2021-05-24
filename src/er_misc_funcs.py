@@ -45,9 +45,9 @@ def silently_run_process(commands, stdin=None):
 
 
 def check_modulo(n, mod):
-    """ arguments:
-            mod: an int, or a list. If an int just returns n % mod.
-                If a list, needs to be in 'cumulative' format.
+    """arguments:
+    mod: an int, or a list. If an int just returns n % mod.
+        If a list, needs to be in 'cumulative' format.
     """
     try:
         return n % mod
@@ -518,7 +518,12 @@ def fraction_gcd(frac1, frac2, min_n=2 ** (-15)):
 
     result = fractions.Fraction(
         math.gcd(frac1.numerator, frac2.numerator),
-        lcm([frac1.denominator, frac2.denominator,]),
+        lcm(
+            [
+                frac1.denominator,
+                frac2.denominator,
+            ]
+        ),
     )
 
     if result < min_n:
@@ -903,7 +908,8 @@ def get_scale_index(scale, pitch, up_or_down=0, return_adjustment_sign=False):
 
 def get_generic_interval(er, harmony_i, pitch, prev_pitch):
     scale = er.get(harmony_i, "scales")
-    prev_scale_index = get_scale_index(scale, prev_pitch)
+    # TODO consider restoring random behavior of get_scale_index
+    prev_scale_index = get_scale_index(scale, prev_pitch, up_or_down=1)
     scale_index = scale.index(pitch)
 
     return scale_index - prev_scale_index
@@ -911,14 +917,14 @@ def get_generic_interval(er, harmony_i, pitch, prev_pitch):
 
 def apply_generic_interval(er, harmony_i, generic_interval, prev_pitch):
     scale = er.get(harmony_i, "scales")
-    prev_scale_index = get_scale_index(scale, prev_pitch)
+    # TODO consider restoring random behavior of get_scale_index
+    prev_scale_index = get_scale_index(scale, prev_pitch, up_or_down=-1)
     new_pitch = scale[prev_scale_index + generic_interval]
     return new_pitch
 
 
 def same_set_class(pcset1, pcset2, tet=12):
-    """Doesn't check for inversional equivalence.
-    """
+    """Doesn't check for inversional equivalence."""
     pcset1_min = min(pcset1)
     pcset1 = {pc - pcset1_min for pc in pcset1}
     for adjust_pc in pcset2:
@@ -1030,6 +1036,22 @@ def pitches_consonant(
     return True
 
 
+def get_lowest_of_each_pc_in_set(pitch_set, tet=12):
+    """Returns a dictionary of form {pc: lowest instance of pc in pitch set}"""
+    out = {}
+    if len(pitch_set) > tet:
+        for pc in range(tet):
+            pitches = [p for p in pitch_set if p % tet == pc]
+            if pitches:
+                out[pc] = min(pitches)
+    else:
+        for pitch in pitch_set:
+            out[pitch % tet] = min(
+                p for p in pitch_set if p % tet == pitch % tet
+            )
+    return out
+
+
 def lowest_occurrence_of_pc_in_set(pitch, pitch_set, tet=12):
     """Check if a pitch is the lowest occurence of its pitch-class
     in given pitch-set.
@@ -1047,8 +1069,7 @@ def lowest_occurrence_of_pc_in_set(pitch, pitch_set, tet=12):
 
 
 def _get_consec_intervals(chord, tet, octave_equi):
-    """Used by chord_in_list()
-    """
+    """Used by chord_in_list()"""
     out = []
     if octave_equi in ("all", "bass"):
         chord = [(pitch - chord[0]) % tet for pitch in chord]
@@ -1169,8 +1190,7 @@ def chord_in_list(
 
 
 def remove_interval_class(interval_class, given_pitch, other_pitches, tet=12):
-    """Returns pitches that don't form given interval class from given pitch.
-    """
+    """Returns pitches that don't form given interval class from given pitch."""
     out = []
     for other_pitch in other_pitches:
         if (given_pitch - other_pitch) % tet != interval_class % tet and (
@@ -1231,65 +1251,6 @@ def check_interval(interval, given_pitch, other_pitches):
     return False
 
 
-def generic_transpose(
-    er,
-    score,
-    interval,
-    max_interval,
-    start_time,
-    end_time,
-    apply_to_existing_voices=False,
-):
-    """Transposes a passage diatonically.
-    """
-    # (specific) "transpose" is a method of the Score class. Perhaps
-    #   this should be as well but because it requires the ERSettings
-    #   object as well I've made it an independent function...
-    def _update_harmony(time):
-        harmony_i = score.get_harmony_i(time)
-        harmony_end_time = score.get_harmony_times(harmony_i)[1]
-        scale = er.get(harmony_i, "scales")
-        adjusted_interval = interval
-        while adjusted_interval > max_interval:
-            adjusted_interval -= len(er.get(harmony_i, "pc_scales"))
-        while adjusted_interval < min_interval:
-            adjusted_interval += len(er.get(harmony_i, "pc_scales"))
-        return harmony_i, harmony_end_time, scale, adjusted_interval
-
-    def _apply_generic_transpose(voice):
-        (
-            # I don't know why pylint thinks harmony_i is unused
-            harmony_i,  # pylint: disable=unused-variable
-            harmony_end_time,
-            scale,
-            adjusted_interval,
-        ) = _update_harmony(start_time)
-        for note in voice:
-            if note.attack_time < start_time:
-                continue
-            if note.attack_time >= harmony_end_time:
-                (
-                    harmony_i,
-                    harmony_end_time,
-                    scale,
-                    adjusted_interval,
-                ) = _update_harmony(note.attack_time)
-            orig_sd = scale.index(note.pitch)
-            new_pitch = scale[orig_sd + adjusted_interval]
-            note.pitch = new_pitch
-            if note.attack_time > end_time:
-                break
-
-    min_interval = -max_interval
-
-    for voice in score.voices:
-        _apply_generic_transpose(voice)
-
-    if apply_to_existing_voices:
-        for voice in score.existing_voices:
-            _apply_generic_transpose(voice)
-
-
 def nested_method(method):
     """Decorator to extend method arbitrarily deep/nested list-likes.
 
@@ -1312,8 +1273,7 @@ def nested_method(method):
 
 
 def tuplify(item, max_float_p=None):
-    """Prints out all iterables like tuples.
-    """
+    """Prints out all iterables like tuples."""
     if isinstance(item, (typing.Sequence, np.ndarray)) and not isinstance(
         item, str
     ):

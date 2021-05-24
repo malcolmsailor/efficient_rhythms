@@ -223,9 +223,12 @@ def get_kern(super_pattern):
     numer, denom = super_pattern.time_sig
     time_sig_dur = numer * 4 / denom
 
-    for harmony_start_time, harmony_stop_time in super_pattern.harmony_times:
+    # If there are notes in one more voices that extend past the end
+    # of the last harmony, then the other voices will be filled with rests
+    # during the relevant duration of the last harmony.
+    for harmony_time in super_pattern.harmony_times:
         harmony = super_pattern.get_passage(
-            harmony_start_time, harmony_stop_time, make_copy=False
+            harmony_time.start_time, harmony_time.end_time, make_copy=False
         )
         for voice_i, voice in enumerate(harmony.voices):
             spelled = speller.pitches(
@@ -250,7 +253,10 @@ def get_kern(super_pattern):
                     ties[voice_i][attack] = (durs[0][1], note.spelling, "start")
                     for i in range(1, len(durs)):
                         supplementary_attack = sum(
-                            [attack,] + [durs[j][0] for j in range(i)]
+                            [
+                                attack,
+                            ]
+                            + [durs[j][0] for j in range(i)]
                         )
                         attacks.append(supplementary_attack)
                         ties[voice_i][supplementary_attack] = (
@@ -379,8 +385,7 @@ def tidy_up(temp_paths, permanent_dirname):
 
 
 def write_notation(kern_file, dirname, filetype=".pdf", verovio_arguments=None):
-    """Runs shell commands to convert a kern file to pdf.
-    """
+    """Runs shell commands to convert a kern file to pdf."""
 
     if filetype not in [".svg", ".png", ".pdf"]:
         print(f"filetype {filetype} not recognized!")
@@ -406,7 +411,14 @@ def write_notation(kern_file, dirname, filetype=".pdf", verovio_arguments=None):
     print("Writing svgs...")
 
     verovio_proc = er_misc_funcs.silently_run_process(
-        ["verovio", kern_file, "-o", vrv_out, "--no-footer", "--no-header",]
+        [
+            "verovio",
+            kern_file,
+            "-o",
+            vrv_out,
+            "--no-footer",
+            "--no-header",
+        ]
         + verovio_arguments
     )
 
@@ -435,7 +447,11 @@ def write_notation(kern_file, dirname, filetype=".pdf", verovio_arguments=None):
     pdf_path = os.path.splitext(kern_file)[0] + ".pdf"
     print("Converting pngs to pdf...")
     er_misc_funcs.silently_run_process(
-        ["img2pdf",] + png_paths + ["-o", pdf_path]
+        [
+            "img2pdf",
+        ]
+        + png_paths
+        + ["-o", pdf_path]
     )
 
     tidy_up(pdf_path, dirname)
@@ -458,7 +474,7 @@ def run_verovio(super_pattern, midi_path, verovio_arguments, file_type):
         return False
 
     copied_pattern = copy.deepcopy(super_pattern)
-    copied_pattern.fill_with_rests(super_pattern.get_total_len())
+    copied_pattern.fill_with_rests(super_pattern.total_dur)
 
     kern_basename = os.path.basename(os.path.splitext(midi_path)[0] + ".krn")
     kern_path = os.path.join(TEMP_NOTATION_DIR, kern_basename)

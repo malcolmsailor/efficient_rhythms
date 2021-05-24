@@ -582,14 +582,11 @@ Less often used general settings are under
 
 ### Chord-tone settings
 
-Parameters that begin “force\_chord\_tone” (though not
-“force\_non\_chord\_tone”) apply regardless of whether
-<a href="#chord_tone_selection">`chord_tone_selection`</a> is true.
-Other chord tone settings modify the behavior activated by
-<a href="#chord_tone_selection">`chord_tone_selection`</a>. \# TODO it
-seems to me that <a href="#force_chord_tone">`force_chord_tone`</a> is
-the only setting that \# begins
-<a href="#force_chord_tone">`force_chord_tone`</a>?
+Most chord tone settings only have an effect if
+<a href="#chord_tone_selection">`chord_tone_selection`</a> is `True`.
+Only <a href="#force_chord_tone">`force_chord_tone`</a> applies
+irrespective of
+<a href="#chord_tone_selection">`chord_tone_selection`</a>.
 
   - <span id="chord_tone_and_foot_disable">**`chord_tone_and_foot_disable`**</span>:
     bool. If True, disables all chord-tone and foot specific behavior.

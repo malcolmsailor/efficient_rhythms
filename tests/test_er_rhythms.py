@@ -1,3 +1,4 @@
+from fractions import Fraction
 import os
 import sys
 import traceback
@@ -31,13 +32,13 @@ def test_update_pattern_voice_leading_order():
                     truncate_start = truncate_len // pattern_len * pattern_len
                 if voice_i in voice_is:
                     assert (
-                        item.start_rhythm_i == voice_is[voice_i]
-                    ), "item.start_rhythm_i != voice_is[voice_i]"
+                        item.start_i == voice_is[voice_i]
+                    ), "item.start_i != voice_is[voice_i]"
                 try:
-                    assert item.end_rhythm_i - item.start_rhythm_i == len(
+                    assert item.end_i - item.start_i == len(
                         er.rhythms[voice_i]
                     ), (
-                        "item.end_rhythm_i - item.start_rhythm_i "
+                        "item.end_i - item.start_i "
                         "!= len(er.rhythms[voice_i])"
                     )
                 except AssertionError:
@@ -58,7 +59,7 @@ def test_update_pattern_voice_leading_order():
                         )
                         breakpoint()
 
-                voice_is[voice_i] = item.end_rhythm_i
+                voice_is[voice_i] = item.end_i
 
 
 def test_fill_attack_durs():
@@ -144,7 +145,93 @@ def test_get_attack_time_and_dur():
             breakpoint()
 
 
+def test_get_i():
+    # settingsdict = {
+    #     "num_voices": 2,
+    #     "attack_density": 0.5,
+    #     "rhythm_len": [1.5, 7],
+    #     "pattern_len": [4, 7],
+    # }
+    # er = er_preprocess.preprocess_settings(settingsdict)
+    # rhythm = er_rhythm.rhythms_handler(er)[0]
+    # num_reps = 2
+    # rhythm_attacks = []
+    # for rep in range(num_reps):
+    #     rhythm_attacks.extend(
+    #         [a + rep * rhythm.total_rhythm_len for a in rhythm.attack_times]
+    #     )
+    # try:
+    #     for i in range(settingsdict["pattern_len"][0] * 4 * num_reps):
+    #         time = i / 4
+    #         j = rhythm.get_i_at_or_after(time)
+    #         attacks = [a for a in rhythm_attacks if a >= time]
+    #         assert rhythm.get_attack_time_and_dur(j)[0] == min(attacks)
+    #         j = rhythm.get_i_before(time)
+    #         try:
+    #             onset = max([a for a in rhythm_attacks if a < time])
+    #         except ValueError:
+    #             # max() got an empty iterable because time is < all attack times
+    #             assert j == -1
+    #         else:
+    #             assert rhythm.get_attack_time_and_dur(j)[0] == onset
+    #         j = rhythm.get_i_at_or_before(time)
+    #         try:
+    #             onset = max([a for a in rhythm_attacks if a <= time])
+    #         except ValueError:
+    #             # max() got an empty iterable because time is < all attack times
+    #             assert j == -1
+    #         else:
+    #             assert rhythm.get_attack_time_and_dur(j)[0] == onset
+
+    # except:  # pylint: disable=bare-except
+
+    #     exc_type, exc_value, exc_traceback = sys.exc_info()
+    #     traceback.print_exception(
+    #         exc_type, exc_value, exc_traceback, file=sys.stdout
+    #     )
+    #     breakpoint()
+    settingsdict = {
+        "pattern_len": [1.5, 4],
+        "truncate_patterns": True,
+        "harmony_len": 4,
+        "num_harmonies": 4,
+        "num_voices": 2,
+        "attack_density": 0.7,
+    }
+    attacks_and_durs = {
+        Fraction(0, 1): Fraction(1, 4),
+        Fraction(1, 4): Fraction(1, 4),
+        Fraction(1, 2): Fraction(1, 4),
+        Fraction(3, 4): Fraction(3, 4),
+    }
+    er = er_preprocess.preprocess_settings(settingsdict)
+    rhythm = er_rhythm.Rhythm(er, voice_i=0)
+    rhythm.data = attacks_and_durs
+    try:
+        for i in range(25):
+            time = i / 4
+            before = rhythm.get_i_before(time)
+            at_or_after = rhythm.get_i_at_or_after(time)
+            at_or_before = rhythm.get_i_at_or_before(time)
+            after = rhythm.get_i_after(time)
+            assert before + 1 == at_or_after
+            assert at_or_before + 1 == after
+            # if there is a note at time, then both comparisons should be false;
+            # otherwise, they should both be true
+            assert (before == at_or_before) == (at_or_after == after)
+            assert (before == at_or_before) or (at_or_before == at_or_after)
+            assert (after == at_or_after) or (at_or_before == at_or_after)
+    except:  # pylint: disable=bare-except
+
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        traceback.print_exception(
+            exc_type, exc_value, exc_traceback, file=sys.stdout
+        )
+        breakpoint()
+
+
 if __name__ == "__main__":
+    test_get_i()
     test_update_pattern_voice_leading_order()
     test_fill_attack_durs()
     test_get_attack_time_and_dur()

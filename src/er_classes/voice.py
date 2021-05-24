@@ -1,28 +1,71 @@
 import collections
 import copy
 
+
+# TODO how does sortedcontainers compare to just using bisect from the
+#   standard library?
+import sortedcontainers
+
 import src.er_classes as er_classes
-import src.er_misc_funcs as er_misc_funcs
 import src.er_spelling as er_spelling
 
-# TODO is there any reason this needs to actually subclass UserDict?
-# TODO maybe use defaultdict for internal data
-# TODO think about the ideal data type for this class
+
+class DumbSortedList(list):
+    """A list that stays sorted.
+
+    The purpose of this class is to store notes that share a given attack
+    time. I expect that most often there will only be a single note at each
+    attack time, and rarely more than 2. For this reason, any extra overhead
+    from using a binary tree or the like seems not worth it. For any usage
+    where these assumptions don't hold, consider replacing with
+    sortedcontainers.SortedList
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.sort()
+
+    def __setitem__(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def __setslice__(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def append(self, *args, **kwargs):
+        raise NotImplementedError("use 'add()' instead")
+
+    def extend(self, *args, **kwargs):
+        raise NotImplementedError("use 'add()' instead")
+
+    def insert(self, *args, **kwargs):
+        raise NotImplementedError("use 'add()' instead")
+
+    def add(self, *args, **kwargs):
+        super().append(*args, **kwargs)
+        self.sort()
+
+    def __copy__(self):
+        new = DumbSortedList()
+        super(DumbSortedList, new).extend(self)
+        return new
+
+    def copy(self):
+        return self.__copy__()
+
+    def __deepcopy__(self, memo):
+        new = DumbSortedList()
+        for item in self:
+            super(DumbSortedList, new).append(copy.deepcopy(item, memo))
+        return new
 
 
-class Voice(collections.UserDict):
+class BreakWhile(Exception):
+    pass
+
+
+class Voice:
     """A dictionary of lists of Note objects, together with methods for
     working with them.
-
-    TODO I think a better structure for this data would be a list
-        (or maybe a binary tree?)
-        I think sortedcontainers.SortedKeyList is likely ideal
-        - to get the first note at or after a given time, we can use
-            binary search or built-in index (whichever is faster)
-        - to get the last note of a passage, likewise
-        - we can take slices as above
-        - because we need to maintain numerical sort order, but also, two notes
-            can occur at the same time, we need to sort on addition
 
     Can be iterated over (e.g., for note in voice [where "voice" is a
     Voice object]) and reversed (e.g., reversed(voice)). This will
@@ -30,13 +73,11 @@ class Voice(collections.UserDict):
     durations.
 
     Attributes:
+    # TODO update this list
         data: a dictionary. Keys are attack_times (fractions), values are
             lists of Note objects, sorted by duration.
         other_messages: a list in which other midi messages are stored
             when constructing the voice from a midi file.
-        max_attack_time: fraction. Used to monitor whether to re-sort
-            the dictionary (i.e., if a new attack time smaller than
-            max_attack_time is added).
         voice_i: int. The index number of the voice, if stored in a
             Score object.
         tet: int.
@@ -45,40 +86,41 @@ class Voice(collections.UserDict):
 
     Methods:
         is_polyphonic # TODO convert this to a (cached?) property
-        slice_keys
-        update_sort
-        update_attack_time
+        get_notes_by_i
         add_note
-        add_note_object # TODO combine with add_note
         move_note
         remove_note
-        remove_note_object # TODO combine with remove_note
+        remove_attack
         add_rest
         add_other_message
-        append # TODO rename extend or concatenate or something?
+        append
         get_sounding_pitches
         get_all_pitches_attacked_during_duration
         get_prev_n_pitches
         get_prev_pitch
         get_last_n_pitches
+        get_i_at_or_before
+        get_i_before
+        get_i_at_or_after
         get_prev_n_notes
         get_prev_note
         get_last_n_notes
         get_passage
+        remove_passage
         repeat_passage
         transpose
         displace_passage
+        fill_with_rests
+        copy
 
 
 
     """
 
     def __init__(self, voice_i=None, tet=12, voice_range=None):
-        super().__init__()
+        self._data = sortedcontainers.SortedDict()
+        self._releases = sortedcontainers.SortedDict()
         self.other_messages = []
-        # self.max_attack_time is used to check whether to sort the
-        #   dictionary after adding a new note
-        self.max_attack_time = 0
         self.voice_i = voice_i
         self.tet = tet
         try:
@@ -86,32 +128,16 @@ class Voice(collections.UserDict):
         except ValueError:
             self.speller = lambda x: x
         self.range = voice_range
-        self.sort_up_to_date = 0
-        self.reversed_up_to_date = -1
-        self.reversed_voice = None
 
     def __iter__(self):
-        for attack_time in self.data:
-            notes = sorted(self.data[attack_time], key=lambda x: x.pitch)
-            notes = sorted(notes, key=lambda x: x.dur)
-            for note_object in notes:
-                yield note_object
+        for attack_time in self._data:
+            for note in self._data[attack_time]:
+                yield note
 
     def __reversed__(self):
-        if self.reversed_up_to_date != self.sort_up_to_date:
-            self.reversed_voice = dict(
-                sorted(self.data.items(), key=lambda x: x[0], reverse=True)
-            )
-            for attack_time in self.reversed_voice:
-                self.reversed_voice[attack_time].sort(
-                    key=lambda x: x.dur, reverse=True
-                )
-            self.reversed_up_to_date = self.sort_up_to_date
-        for attack_time in self.reversed_voice:
-            # notes = sorted(
-            #     self.data[attack_time], key=lambda x: x.dur, reverse=True)
-            for note_object in self.reversed_voice[attack_time]:
-                yield note_object
+        for attack_time in reversed(self._data):
+            for note in reversed(self._data[attack_time]):
+                yield note
 
     def __str__(self):
         strings = []
@@ -128,229 +154,164 @@ class Voice(collections.UserDict):
         strings.append("\n")
         return "\n".join(strings)[:-2]
 
+    def __contains__(self, *args, **kwargs):
+        return self._data.__contains__(*args, **kwargs)
+
+    def __getitem__(self, *args, **kwargs):
+        return self._data.__getitem__(*args, **kwargs)
+
+    def __delitem__(self, attack_time):
+        self.remove_attack(attack_time)
+
+    def is_empty(self):  # TODO convert to property, document
+        return len(self._data) == 0
+
     def is_polyphonic(self):
-        for attack_time in self.data:
-            if len(self.data[attack_time]) > 1:
+        for attack_time in self._data:
+            if len(self._data[attack_time]) > 1:
                 return True
         return False
 
-    def slice_keys(self, slice_):
-        if isinstance(slice_, int):
-            start = slice_
-            stop = None
-            step = None
-        else:
-            start = slice_.start
-            stop = slice_.stop
-            step = slice_.step
-        return list(self.data.keys())[start:stop:step]
+    @property
+    def first_attack_and_notes(self):
+        return self._data.peekitem(0)
 
-    def update_sort(self):
-        self.data = dict(sorted(self.data.items(), key=lambda x: x[0]))
-        for attack_time in self.data:
-            self.data[attack_time].sort(key=lambda x: x.dur)
+    @property
+    def last_attack_and_notes(self):
+        """Raises an IndexError if the voice is empty."""
+        return self._data.peekitem()
 
-    def update_attack_time(self, attack_time):
-        if attack_time <= self.max_attack_time:
-            # This condition means that update secondary sort will not
-            # necessarily take place, but since nothing depends on the
-            # secondary sort the speed gain is probably worth it.
-            #
-            # changed my mind and commented the condition out:
-            # if attack_time not in self.data:
-            self.update_sort()
-        else:
-            self.max_attack_time = attack_time
+    @property
+    def last_release_and_notes(self):
+        return self._releases.peekitem()
+
+    def get_notes_by_i(self, i):
+        return self._data.peekitem(i)[1]
 
     def add_note(
         self,
-        pitch,
-        attack_time,
-        dur,
+        note_obj_or_pitch,
+        attack_time=None,
+        dur=None,
         velocity=er_classes.DEFAULT_VELOCITY,
         choir=er_classes.DEFAULT_CHOIR,
-        update_sort=True,
     ):
-        """Adds a note."""
-        try:
-            self[attack_time].append(
-                er_classes.Note(
-                    pitch,
-                    attack_time,
-                    dur,
-                    velocity=velocity,
-                    choir=choir,
-                    voice=self.voice_i,
-                )
+        if isinstance(note_obj_or_pitch, er_classes.Note):
+            note_obj = note_obj_or_pitch
+            note_obj.voice = self.voice_i
+        else:
+            # is it worth asserting that attack_time and dur are not None here?
+            note_obj = er_classes.Note(
+                note_obj_or_pitch,
+                attack_time,
+                dur,
+                velocity=velocity,
+                choir=choir,
+                voice=self.voice_i,
             )
-        except KeyError:
-            self[attack_time] = [
-                er_classes.Note(
-                    pitch,
-                    attack_time,
-                    dur,
-                    velocity=velocity,
-                    choir=choir,
-                    voice=self.voice_i,
-                ),
-            ]
-        if update_sort:
-            self.update_attack_time(attack_time)
-        self.sort_up_to_date += update_sort
+        if note_obj.attack_time not in self._data:
+            self._data[note_obj.attack_time] = DumbSortedList([note_obj])
+        else:
+            self._data[note_obj.attack_time].add(note_obj)
+        if (
+            release := note_obj.attack_time + note_obj.dur
+        ) not in self._releases:
+            self._releases[release] = DumbSortedList([note_obj])
+        else:
+            self._releases[release].add(note_obj)
 
-    def add_note_object(self, note_object, update_sort=True):
-        """Adds a note object."""
-        note_object.voice = self.voice_i
-        # if note_object.attack_time not in self:
-        #     self[note_object.attack_time] = []
-        try:
-            self[note_object.attack_time].append(note_object)
-        except KeyError:
-            self[note_object.attack_time] = [
-                note_object,
-            ]
-        if update_sort:
-            self.update_attack_time(note_object.attack_time)
-        self.sort_up_to_date += update_sort
-
-    def move_note(self, note_object, new_attack_time, update_sort=True):
+    def move_note(self, note_object, new_attack_time):
         """Moves a note object to a new attack time."""
-        self.remove_note_object(note_object)
+        self.remove_note(note_object)
         note_object.attack_time = new_attack_time
-        self.add_note_object(note_object, update_sort=update_sort)
+        self.add_note(note_object)
 
-    def remove_note(self, pitch, attack_time, dur=None):
-        """Removes a note from the voice.
+    def remove_note(self, note_obj):
+        """Removes given note object from self."""
+        notes = self._data[note_obj.attack_time]
+        notes.remove(note_obj)  # what kind of exception does this raise?
+        if not notes:
+            del self._data[note_obj.attack_time]
+        release = note_obj.attack_time + note_obj.dur
+        notes = self._releases[release]
+        notes.remove(note_obj)
+        if not notes:
+            del self._releases[release]
 
-        Like list.remove, removes the first note that it finds
-        that matches the specified criteria -- so if there is
-        more than one identical note, the others will remain.
-        If dur is not specified, then matches any dur.
+    def remove_attack(self, attack_time):
+        """Unconditionally removes and returns all notes at `attack_time`.
+
+        `del voice[attack_time] calls this function`
         """
+        # because self.remove_note alters self._data[attack_time], we need
+        # to save a list of the notes to iterate
+        notes = list(self._data[attack_time])
+        for note in notes:
+            self.remove_note(note)
+        return notes
 
-        class RemoveNoteError(Exception):
-            pass
-
-        try:
-            notes = self.data[attack_time]
-        except KeyError as exc:
-            raise RemoveNoteError(
-                f"No notes at attack time {attack_time}"
-            ) from exc
-        remove_i = -1
-        for note_i, note in enumerate(notes):
-            if note.pitch == pitch:
-                if dur and note.dur != dur:
-                    continue
-                remove_i = note_i
-                break
-        if remove_i < 0:
-            if dur:
-                raise RemoveNoteError(
-                    f"No note of pitch {pitch} and dur {dur} at attack "
-                    f"time {attack_time}"
-                )
-            raise RemoveNoteError(
-                f"No note of pitch {pitch} at attack " f"time {attack_time}"
-            )
-        notes.pop(remove_i)
-        if not notes:
-            del self.data[attack_time]
-
-    def remove_note_object(self, note_object):
-        class RemoveNoteObjectError(Exception):
-            pass
-
-        attack_time = note_object.attack_time
-        try:
-            notes = self.data[attack_time]
-        except KeyError as exc:
-            raise RemoveNoteObjectError(
-                f"No attacks at {attack_time} in voice {self.voice_i}."
-            ) from exc
-        notes.remove(note_object)
-        if not notes:
-            del self.data[attack_time]
-
-    def add_rest(self, attack_time, dur, update_sort=True):
-        """Adds a 'rest'."""
-        try:
-            self[attack_time].append(
-                er_classes.Note(
-                    None,
-                    attack_time,
-                    dur,
-                    velocity=None,
-                    choir=None,
-                    voice=self.voice_i,
-                )
-            )
-        except KeyError:
-            self[attack_time] = [
-                er_classes.Note(
-                    None,
-                    attack_time,
-                    dur,
-                    velocity=None,
-                    choir=None,
-                    voice=self.voice_i,
-                ),
-            ]
-        if update_sort:
-            self.update_attack_time(attack_time)
-        self.sort_up_to_date += update_sort
+    def add_rest(self, attack_time, dur):
+        self.add_note(None, attack_time, dur)
 
     def add_other_message(self, message):
         self.other_messages.append(message)
 
-    def append(self, other_voice, offset=0):
+    def append(self, other_voice_or_sequence, offset=0, make_copy=True):
         """Appends the notes of another Voice object."""
-        for note_object in other_voice:
-            note_copy = copy.copy(note_object)
-            note_copy.attack_time += offset
-            self.add_note_object(note_copy, update_sort=False)
-        self.update_sort()
-        self.sort_up_to_date += 1
+        # I would like to rename this as "extend" or "concatenate"
+        # but since list.append is called so often it is hard to search
+        # the project for references to this method in order to change
+        # them!
+        for note in other_voice_or_sequence:
+            if make_copy:
+                note = note.copy()
+            note.attack_time += offset
+            self.add_note(note)
 
     def get_sounding_pitches(
-        self, attack_time, dur=0, min_attack_time=0, min_dur=0
+        self,
+        attack_time,
+        end_time=None,
+        min_attack_time=0,
+        min_dur=0,
+        sort_out=True,
     ):
-
         sounding_pitches = set()
-        end_time = attack_time + dur
-        times = list(self.data.keys())
-        i = er_misc_funcs.binary_search(
-            times, end_time, not_found="force_upper"
+        # end_time = attack_time + dur
+        if end_time is None:
+            end_time = attack_time
+        # # Unfortunately, we seem to need to iterate over all attacks that occur
+        # # before
+        # # the end of the interval (starting from 0), because there is no
+        # constraint on how long
+        # # a note can be. So even if we are now at time 10000, there is no
+        # # guarantee that a note was not struck at time 0 with length 10001.
+        # # This inefficiency can be reduced somewhat by use of min_attack_time.
+        # # If this proves to be a bottleneck there is probably a more clever
+        # # way of performing the search that would be worth looking into.
+
+        ## TODO Maybe this can be refactored using _releases?
+        attacks_during_interval = self._data.irange(
+            min_attack_time, end_time, inclusive=(True, attack_time == end_time)
         )
-        while i is not None:
-            try:
-                time = times[i]
-            except IndexError:
-                i -= 1
-                continue
-            i -= 1
-            notes = self.data[time]
-            break_out = False
-            for note in reversed(notes):
-                if dur > 0 and note.attack_time >= end_time:
-                    continue
-                if note.attack_time > end_time:
-                    continue
-                if note.attack_time < min_attack_time:
-                    break_out = True
-                    break
+        for attack in attacks_during_interval:
+            for note in self._data[attack]:
                 if note.attack_time + note.dur <= attack_time:
                     continue
                 if note.dur >= min_dur:
                     sounding_pitches.add(note.pitch)
-            if i < 0 or break_out:
-                break
+        if sort_out:
+            return list(sorted(sounding_pitches))
+        return list(sounding_pitches)
 
-        return list(sorted(sounding_pitches))
+    # def get_all_pitches_attacked_during_duration(self, attack_time, dur):
+    #     return self.get_sounding_pitches(
+    #         attack_time, dur=dur, min_attack_time=attack_time
+    #     )
 
-    def get_all_pitches_attacked_during_duration(self, attack_time, dur):
+    def get_all_pitches_attacked_during_duration(self, attack_time, end_time):
         return self.get_sounding_pitches(
-            attack_time, dur=dur, min_attack_time=attack_time
+            attack_time, end_time=end_time, min_attack_time=attack_time
         )
 
     def get_prev_n_pitches(
@@ -378,50 +339,6 @@ class Voice(collections.UserDict):
             )
         ]
 
-        # attack_times = list(self.data.keys())
-        # i = er_misc_funcs.binary_search(attack_times, time)
-        # pitches = []
-        # if n <= 0:
-        #     return pitches
-        # if i is not None and include_start_time:
-        #     i += 1
-        # while i is not None:
-        #     i -= 1
-        #     if i < 0:
-        #         break
-        #     attack_time = attack_times[i]
-        #     if attack_time == time and not include_start_time:
-        #         continue
-        #
-        #     notes = self.data[attack_time]
-        #     break_out = False
-        #     last_attack_time = -1  # We want last_attack_time to be smaller
-        #     # than note.attack_time + note.dur at least
-        #     # once.
-        #     # Later: do we actually? Don't we want it to break if there is a
-        #     # rest immediately preceding the initial attack time?
-        #     for note in reversed(notes):
-        #         if note.attack_time < min_attack_time:
-        #             break_out = True
-        #             break
-        #         if (
-        #             stop_at_rest
-        #             and note.attack_time + note.dur < last_attack_time
-        #         ):
-        #             break_out = True
-        #             break
-        #         pitches.insert(0, note.pitch)
-        #         last_attack_time = note.attack_time
-        #         if len(pitches) == n:
-        #             break_out = True
-        #             break
-        #     if break_out:
-        #         break
-        #
-        # for i in range(n - len(pitches)):
-        #     pitches.insert(0, -1)
-        # return pitches
-
     def get_prev_pitch(self, time, min_attack_time=0, stop_at_rest=False):
         """Returns previous pitch from voice."""
         return self.get_prev_n_pitches(
@@ -440,8 +357,28 @@ class Voice(collections.UserDict):
             include_start_time=True,
         )
 
-    class BreakWhile(Exception):
-        pass
+    def get_i_at_or_before(self, time):
+        return self._data.bisect_right(time) - 1
+
+    def get_i_before(self, time):
+        # raises an Exception if called when self._data is empty
+        # does this need to be fixed?
+        i = self._data.bisect_right(time) - 1
+        if time == self._data.peekitem(i)[0]:
+            i -= 1
+        return i
+
+    def get_i_at_or_after(self, time):
+        return self._data.bisect_left(time)
+
+    # I am not using this method
+    # def increment_onset(self, prev_onset_time):
+    #     """Get the first onset time *after* prev_onset_time.
+
+    #     It is assumed that the prev_onset_time is in the voice.
+    #     """
+    #     i = self._data.bisect_left(prev_onset_time)
+    #     return self._data.peekitem(i + 1)[0]
 
     def get_prev_n_notes(
         self,
@@ -451,12 +388,14 @@ class Voice(collections.UserDict):
         stop_at_rest=False,
         include_start_time=False,
     ):
-        attack_times = list(self.data.keys())
-        start_i = er_misc_funcs.binary_search(
-            attack_times, time, not_found="force_lower"
-        )
-        if start_i is None:
+
+        if not self._data:
             return [None for _ in range(n)]
+
+        if include_start_time:
+            start_i = self.get_i_at_or_before(time)
+        else:
+            start_i = self.get_i_before(time)
 
         out_notes = []
         last_attack_time = time
@@ -464,28 +403,27 @@ class Voice(collections.UserDict):
         try:
             while n > 0:
                 i = next(i_iter)
-                attack_time = attack_times[i]
-                if attack_time == time and not include_start_time:
-                    continue
+                attack_time, notes = self._data.peekitem(i)
                 if attack_time < min_attack_time:
                     break
-                notes = self.data[attack_time]
                 for note in reversed(notes):
                     if (
                         stop_at_rest
                         and note.attack_time + note.dur < last_attack_time
                     ):
-                        raise self.BreakWhile
-                    out_notes.insert(0, note)
+                        raise BreakWhile
+                    out_notes.append(note)
                     n -= 1
-                    if n <= 0:
-                        raise self.BreakWhile
-                    last_attack_time = note.attack_time
-        except (StopIteration, self.BreakWhile):
+                    if n == 0:
+                        break
+                    last_attack_time = attack_time
+        except (StopIteration, BreakWhile):
             pass
 
-        for _ in range(n, 0, -1):
-            out_notes.insert(0, None)
+        if n:
+            out_notes.extend([None for _ in range(n)])
+
+        out_notes.reverse()
         return out_notes
 
     def get_prev_note(self, time, min_attack_time=0, stop_at_rest=False):
@@ -504,13 +442,13 @@ class Voice(collections.UserDict):
             include_start_time=True,
         )
 
-    def get_passage(self, passage_start_time, passage_end_time, make_copy=True):
+    def get_passage(self, start_time, end_time, make_copy=True):
 
         """Returns a single voice of a given passage.
 
         Passage includes notes attacked during the given time interval,
         but not notes sounding but attacked earlier. Passage is inclusive
-        of passage_start_time and exclusive of passage_end_time.
+        of start_time and exclusive of end_time.
 
         Doesn't change the "voice" attributes of the notes.
 
@@ -521,77 +459,132 @@ class Voice(collections.UserDict):
         """
 
         new_voice = Voice(tet=self.tet, voice_range=self.range)
+        attacks = self._data.irange(
+            start_time, end_time, inclusive=(True, False)
+        )
+        for attack in attacks:
+            new_voice._data[attack] = [  # pylint: disable=protected-access
+                note.copy() if make_copy else note
+                for note in self._data[attack]
+            ]
+        return new_voice
 
-        for note in self:
-            attack_time = note.attack_time
-            if attack_time < passage_start_time:
-                continue
-            if attack_time >= passage_end_time:
-                break
-            try:
-                new_voice[attack_time].append(
-                    copy.copy(note) if make_copy else note
-                )
-            except KeyError:
-                new_voice[attack_time] = [
-                    copy.copy(note) if make_copy else note,
-                ]
-
+    def remove_passage(self, start_time=None, end_time=None):
+        """Like get_passage, but removes the returned passage from the voice.
+        If either of start_time or end_time are not passed,
+        removes to the start or end of the voice, respectively."""
+        new_voice = Voice(tet=self.tet, voice_range=self.range)
+        # We must cast the return value to a tuple because otherwise, it is
+        # lazily evaluated and this causes problems because we are changing
+        # the underlying data as we iterate through attacks
+        attacks = tuple(
+            self._data.irange(start_time, end_time, inclusive=(True, False))
+        )
+        for attack in attacks:
+            new_voice._data[attack] = self.remove_attack(attack)
         return new_voice
 
     def repeat_passage(
         self, original_start_time, original_end_time, repeat_start_time
     ):
         """Repeats a voice."""
-        repeated_notes = []
-        for note in self:
-            attack_time = note.attack_time
-            # TODO binary search to find first note
-            if attack_time < original_start_time:
-                continue
-            if attack_time >= original_end_time:
-                break
-            repeat_time = repeat_start_time + attack_time - original_start_time
-            repeat_note = copy.copy(note)
-            repeat_note.attack_time = repeat_time
-            repeated_notes.append(repeat_note)
+        original_attacks = self._data.irange(
+            original_start_time, original_end_time, inclusive=(True, False)
+        )
+        for attack in original_attacks:
+            for note in self._data[attack]:
+                repeat_note = note.copy()
+                repeat_note.attack_time = (
+                    repeat_start_time + attack - original_start_time
+                )
+                self.add_note(repeat_note)
 
-        for repeat_note in repeated_notes:
-            self.add_note_object(repeat_note, update_sort=False)
-        self.update_sort()
-        self.sort_up_to_date += 1
-
-    def transpose(self, interval, start_time=0, end_time=None):
+    def transpose(
+        self,
+        interval,
+        er=None,  # triggers generic transposition if passed
+        score=None,  # ignored unless generic transposition
+        max_interval=None,  # ignored unless generic transposition
+        finetune=0,
+        start_time=None,
+        end_time=None,
+    ):
         """Transposes a passage."""
+        attacks = self._data.irange(
+            start_time, end_time, inclusive=(True, False)
+        )
+        if er is None:  # specific transpose
+            for attack in attacks:
+                for note in self._data[attack]:
+                    note.pitch += interval
+                    note.finetune += finetune
+            return
+        # generic transpose
+        harmony_i = harmony_times = scale = adjusted_interval = None
 
-        for note in self:
-            attack_time = note.attack_time
-            # TODO binary search to find first note
-            if attack_time < start_time:
-                continue
-            if end_time is not None and attack_time >= end_time:
-                break
-            note.pitch += interval
+        def _update_harmony_times():
+            nonlocal harmony_i, harmony_times, scale, adjusted_interval
+            if harmony_i is None:
+                harmony_i = score.get_harmony_i(
+                    start_time if start_time is not None else 0
+                )
+            else:
+                harmony_i += 1
+            harmony_times = score.get_harmony_times(harmony_i)
+            scale = er.get(harmony_i, "scales")
+            adjusted_interval = interval
+            while adjusted_interval > abs(max_interval):
+                adjusted_interval -= len(er.get(harmony_i, "pc_scales"))
+            while adjusted_interval < -abs(max_interval):
+                adjusted_interval += len(er.get(harmony_i, "pc_scales"))
+
+        _update_harmony_times()
+        for attack in attacks:
+            if attack >= harmony_times.end_time:
+                _update_harmony_times()
+            for note in self._data[attack]:
+                orig_sd = scale.index(note.pitch)
+                note.pitch = scale[orig_sd + adjusted_interval]
 
     def displace_passage(self, displacement, start_time=None, end_time=None):
         if displacement == 0:
             return
-        notes_to_move = []
-        for note_object in self:
-            if start_time and start_time > note_object.attack_time:
-                continue
-            if end_time and note_object.attack_time >= end_time:
-                continue
-            notes_to_move.append(note_object)
 
-        for note_object in notes_to_move:
-            self.remove_note_object(note_object)
-            note_object.attack_time = note_object.attack_time + displacement
-            if note_object.attack_time >= 0:
-                self.add_note_object(note_object, update_sort=False)
+        if start_time is None:
+            start_time = 0
 
-        self.update_sort()
-        self.sort_up_to_date += 1
+        if -displacement > start_time:
+            self.remove_passage(start_time, -displacement)
+            start_time = -displacement
+        if end_time is not None and start_time >= end_time:
+            return
+
+        passage = self.remove_passage(start_time, end_time)
+        for note in passage:
+            note.attack_time += displacement
+            self.add_note(note)
+
+    def fill_with_rests(self, until):
+        prev_release = 0
+        rests = []
+        for attack_time, notes in self._data.items():
+            if prev_release >= until:
+                break
+            if attack_time > prev_release:
+                rests.append((prev_release, attack_time - prev_release))
+            for note in notes:
+                if attack_time + note.dur > prev_release:
+                    prev_release = attack_time + note.dur
+
+        if until > prev_release:
+            rests.append((prev_release, until - prev_release))
+
+        for onset, dur in rests:
+            self.add_rest(onset, dur)
+
+    def copy(self):
+
+        return copy.deepcopy(self)
 
 
 class VoiceList(collections.UserList):
@@ -613,10 +606,7 @@ class VoiceList(collections.UserList):
 
     def __getitem__(self, key):
         if 0 <= key < self.num_new_voices:
-            # try:
             return self.data[key]
-            # except IndexError:
-            #     breakpoint()
         if (
             self.num_new_voices
             < key

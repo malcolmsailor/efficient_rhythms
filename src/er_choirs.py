@@ -1,6 +1,5 @@
 """Choir functions for efficient_rhythms2.py"""
 
-import copy
 import itertools
 import random
 import warnings
@@ -172,9 +171,9 @@ def assign_choirs(er, super_pattern):
                     and prev_choir is not None
                     and prev_choir != choir
                 ):
-                    new_note = copy.copy(note)
+                    new_note = note.copy()
                     new_note.choir = prev_choir
-                    voice.add_note_object(new_note)
+                    voice.add_note(new_note)
 
         return
 

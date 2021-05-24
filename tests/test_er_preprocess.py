@@ -33,8 +33,8 @@ def test_process_pattern_voice_leading_order():
                 pattern_len = pattern_lens[voice_i]
                 modulo = max(pattern_lens) if truncate else pattern_len
                 start_time = item.start_time
-                while item.prev_item is not None:
-                    item = item.prev_item
+                while item._prev is not None:
+                    item = item._prev
                     assert item.voice_i == voice_i, "item.voice_i != voice_i"
                     try:
                         try:
@@ -83,7 +83,9 @@ def test_read_in_settings():
 
 def test_pitch_constants():
     result = er_preprocess.read_in_settings(
-        [os.path.join(SCRIPT_DIR, "test_settings/test_er_constants1.py"),],
+        [
+            os.path.join(SCRIPT_DIR, "test_settings/test_er_constants1.py"),
+        ],
         dict,
     )
     try:
@@ -131,7 +133,11 @@ def test_replace_pitch_constants():
                 er_constants.MINOR_64 * er_constants.A,
             ],
         ),
-        ("unison_weighted_as", "GENERIC_UNISON", er_constants.GENERIC_UNISON,),
+        (
+            "unison_weighted_as",
+            "GENERIC_UNISON",
+            er_constants.GENERIC_UNISON,
+        ),
         (
             "max_interval_for_non_chord_tones",
             "-OCTAVE",

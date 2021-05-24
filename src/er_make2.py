@@ -49,12 +49,12 @@ def get_foot_to_force(er, voice_i, harmony_i):
 
 
 def get_repeated_pitch(poss_note, min_attack_time=0):
-    prev_pitch = poss_note.voice.get_prev_pitch(
-        poss_note.attack_time, min_attack_time=min_attack_time
-    )
-    if prev_pitch < 0:
+    # prev_pitch = poss_note.voice.get_prev_pitch(
+    #     poss_note.attack_time, min_attack_time=min_attack_time
+    # )
+    if poss_note.attack_time < min_attack_time or poss_note.prev_pitch < 0:
         return None
-    return prev_pitch
+    return poss_note.prev_pitch
 
 
 # LONGTERM consolidate this and previous function!
@@ -68,7 +68,7 @@ def get_repeated_pitch2(voice, attack_time, min_attack_time=0):
 
 
 def check_harmonic_intervals(
-    er, super_pattern, pitch, attack_time, dur, voice_i, other_voices="all"
+    er, super_pattern, pitch, attack_time, dur, voice_i, other_voices=None
 ):
     # LONGTERM poss_note
 
@@ -82,7 +82,10 @@ def check_harmonic_intervals(
     forbidden_interval_modulo = er.get(voice_i, "forbidden_interval_modulo")
 
     if (
-        forbidden_interval_modulo != [0,]
+        forbidden_interval_modulo
+        != [
+            0,
+        ]
         and er_misc_funcs.check_modulo(attack_time, forbidden_interval_modulo)
         != 0
     ):
@@ -114,8 +117,7 @@ def check_if_chord_tone(er, super_pattern, attack_time, pitch):
 
 
 def check_consonance(er, super_pattern, pitch, attack_time, dur, voice_i):
-    """Checks whether the given pitch fulfills the consonance parameters.
-    """
+    """Checks whether the given pitch fulfills the consonance parameters."""
     # LONGTERM use possible note class (but first update voice-leading functions.)
 
     if er.consonance_treatment == "none":
@@ -125,7 +127,10 @@ def check_consonance(er, super_pattern, pitch, attack_time, dur, voice_i):
         voice_i, "consonance_modulo", "min_dur_for_cons_treatment"
     )
     if (
-        consonance_modulo != [0,]
+        consonance_modulo
+        != [
+            0,
+        ]
         and er_misc_funcs.check_modulo(attack_time, consonance_modulo) != 0
     ):
         # MAYBE comma here, to allow for very close attacks?
@@ -234,9 +239,7 @@ def check_melodic_intervals(
         return None
 
     if isinstance(new_p, int):
-        new_p = [
-            new_p,
-        ]
+        new_p = [new_p]
 
     if max_interval == 0 and min_interval == 0:
         return new_p

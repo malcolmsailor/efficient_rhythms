@@ -319,8 +319,7 @@ class Speller:
         return self.spelled_list(item, pitches=pitches)
 
     def _shell_pitch(self, pc_string, pitch_num):
-        """Appends an octave number to a pitch-class (e.g., "C#" becomes "C#3")
-        """
+        """Appends an octave number to a pitch-class (e.g., "C#" becomes "C#3")"""
         octave = pitch_num // self._tet - 1
         return pc_string + str(octave)
 
@@ -370,7 +369,7 @@ class Speller:
             pitches = self._pitches
 
         if not isinstance(item, (int, np.integer)):
-            if item is not None or self._rests:
+            if item is not None or not self._rests:
                 raise TypeError(
                     "Speller.spelled_list() can only take iterables of "
                     "integers, or None for rests"

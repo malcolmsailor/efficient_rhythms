@@ -5,10 +5,10 @@ import src.er_classes as er_classes
 
 def apply_voice_leading(
     er,
-    super_pattern,
+    score,
     prev_note,
     first_note,
-    new_attack_time,
+    new_onset,
     new_dur,
     voice_i,
     new_harmony_i,
@@ -25,7 +25,7 @@ def apply_voice_leading(
         foot = er_make2.get_foot_to_force(er, voice_i, new_harmony_i)
         if foot is not None:
             new_pitch = foot
-            new_note = er_classes.Note(new_pitch, new_attack_time, new_dur)
+            new_note = er_classes.Note(new_pitch, new_onset, new_dur)
             return new_note
         return None
 
@@ -43,12 +43,12 @@ def apply_voice_leading(
             return new_note, None
 
     if er.force_repeated_notes:
-        repeated_pitch = er_make2.get_repeated_pitch2(
-            new_notes, new_attack_time
-        )
+        # TODO consolidate get_repeated_pitch2 with get_repeated_pitch
+        # or at least rename it?
+        repeated_pitch = er_make2.get_repeated_pitch2(new_notes, new_onset)
         if repeated_pitch is not None:
             new_pitch = repeated_pitch
-            new_note = er_classes.Note(new_pitch, new_attack_time, new_dur)
+            new_note = er_classes.Note(new_pitch, new_onset, new_dur)
             return new_note, None
 
     if (
@@ -57,13 +57,13 @@ def apply_voice_leading(
         and voice_i == 0
     ):
         pattern_len = er.pattern_len[voice_i]
-        if new_attack_time % pattern_len in er.bass_foot_times:
+        if new_onset % pattern_len in er.bass_foot_times:
             new_note = _try_to_force_foot()
             if new_note:
                 return new_note, None
 
     other_voices = er_misc_funcs.get_prev_voice_indices(
-        super_pattern, new_attack_time, new_dur
+        score, new_onset, new_dur
     )
 
     prev_pitch = prev_note.pitch
@@ -78,20 +78,20 @@ def apply_voice_leading(
             voice_lead_error.out_of_range()
             return _fail()
 
-    # LONGTERM should be able to move up more/less than an octave
+    # TODO warn if hard_bounds less than an octave
     hard_bounds = er.get(voice_i, "hard_bounds")
-    if new_pitch < hard_bounds[0]:
+    while new_pitch < hard_bounds[0]:
         new_pitch += er.tet
-    elif new_pitch > hard_bounds[1]:
+    while new_pitch > hard_bounds[1]:
         new_pitch -= er.tet
 
     if er.parallel_voice_leading:
-        new_note = er_classes.Note(new_pitch, new_attack_time, new_dur)
+        new_note = er_classes.Note(new_pitch, new_onset, new_dur)
         return new_note, (prev_pitch_index, voice_leading_interval)
 
     if er.vl_maintain_prohibit_parallels:
         if not er_make2.check_parallel_intervals(
-            er, super_pattern, new_pitch, prev_pitch, new_attack_time, voice_i
+            er, score, new_pitch, prev_pitch, new_onset, voice_i
         ):
             voice_lead_error.parallel_intervals()
             return _fail()
@@ -99,9 +99,9 @@ def apply_voice_leading(
     if er.vl_maintain_forbidden_intervals:
         if not er_make2.check_harmonic_intervals(
             er,
-            super_pattern,
+            score,
             new_pitch,
-            new_attack_time,
+            new_onset,
             new_dur,
             voice_i,
             other_voices=other_voices,
@@ -111,14 +111,12 @@ def apply_voice_leading(
     if er.vl_maintain_consonance:
         if er.get(
             voice_i, "chord_tones_no_diss_treatment"
-        ) and er_make2.check_if_chord_tone(
-            er, super_pattern, new_attack_time, new_pitch
-        ):
+        ) and er_make2.check_if_chord_tone(er, score, new_onset, new_pitch):
             pass
         elif new_dur < er.get(voice_i, "min_dur_for_cons_treatment"):
             pass
         elif not er_make2.check_consonance(
-            er, super_pattern, new_pitch, new_attack_time, new_dur, voice_i
+            er, score, new_pitch, new_onset, new_dur, voice_i
         ):
             voice_lead_error.check_consonance()
             return _fail()
@@ -128,25 +126,25 @@ def apply_voice_leading(
         and new_harmony_i != prev_harmony_i
     ):
         try:
-            last_attack = max(new_notes.data)
-            last_pitch = new_notes[last_attack][0].pitch
-        except ValueError:
-            last_attack = max(super_pattern.voices[voice_i].data)
-            last_pitch = super_pattern.voices[voice_i][last_attack][0].pitch
+            last_onset, last_notes = new_notes.last_attack_and_notes
+        except IndexError:
+            # raised when new_notes is empty
+            last_onset, last_notes = score.voices[voice_i].last_attack_and_notes
+        last_pitch = last_notes[-1].pitch
 
         chord_tone = er_make2.check_if_chord_tone(
-            er, super_pattern, last_attack, last_pitch
+            er, score, last_onset, last_pitch
         )
 
         max_interval, min_interval = er_make2.get_limiting_intervals(
             er, voice_i, chord_tone
         )
-
         if not er_make2.check_melodic_intervals(
             er, new_pitch, last_pitch, max_interval, min_interval, new_harmony_i
         ):
             voice_lead_error.limit_intervals()
+
             return _fail()
 
-    new_note = er_classes.Note(new_pitch, new_attack_time, new_dur)
+    new_note = er_classes.Note(new_pitch, new_onset, new_dur)
     return new_note, (prev_pitch_index, voice_leading_interval)

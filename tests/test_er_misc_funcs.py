@@ -502,6 +502,26 @@ def test_binary_search_not_found(tup):
         assert list_[force_upper_i] == nearest
 
 
+def test_get_lowest_of_each_pc_in_set():
+    try:
+        pitch_set = {23, 35, 47, 26, 14, 50}
+        lowests = er_misc_funcs.get_lowest_of_each_pc_in_set(pitch_set, tet=12)
+        assert lowests[11] == 23
+        assert lowests[35 % 12] == 23
+        assert lowests[2] == 14
+        pitch_set = [i for i in range(8)]
+        lowests = er_misc_funcs.get_lowest_of_each_pc_in_set(pitch_set, tet=5)
+        assert lowests[1] == 1
+        assert lowests[7 % 5] == 2
+    except:  # pylint: disable=bare-except
+
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        traceback.print_exception(
+            exc_type, exc_value, exc_traceback, file=sys.stdout
+        )
+        breakpoint()
+
+
 if __name__ == "__main__":
     test_check_modulo()
     test_check_interval_class()
@@ -510,3 +530,4 @@ if __name__ == "__main__":
     test_chord_in_list()
     test_binary_search()  # pylint: disable=no-value-for-parameter
     test_binary_search_not_found()  # pylint: disable=no-value-for-parameter
+    test_get_lowest_of_each_pc_in_set()

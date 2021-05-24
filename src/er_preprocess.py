@@ -240,8 +240,7 @@ def replace_pitch_constants(er):
 
 
 def preprocess_temper_pitch_materials(er):
-    """Tempers pitch materials as necessary.
-    """
+    """Tempers pitch materials as necessary."""
 
     for pitch_material_name in PITCH_MATERIAL_LISTS:
         pitch_material = getattr(er, pitch_material_name)
@@ -319,7 +318,11 @@ def ensure_lists_or_tuples(er):
             except TypeError:
                 # MAYBE make this function recursive, although I doubt
                 #   I'l need deeper lists
-                return [[in_iter,]]
+                return [
+                    [
+                        in_iter,
+                    ]
+                ]
 
     to_list = [
         "harmony_len",
@@ -367,7 +370,12 @@ def ensure_lists_or_tuples(er):
 
 
 def guess_time_sig(er):
-    temp_time_signature = max(er.pattern_len + [sum(er.harmony_len),])
+    temp_time_signature = max(
+        er.pattern_len
+        + [
+            sum(er.harmony_len),
+        ]
+    )
     i = 0
     numer = temp_time_signature
     while numer % 1 != 0:
@@ -735,8 +743,7 @@ def rhythm_preprocessing(er):
 
 
 def process_pattern_voice_leading_order(er):
-    """Adds er.pattern_voice_leading_order to ERSettings object.
-    """
+    """Adds er.pattern_voice_leading_order to ERSettings object."""
 
     # QUESTION put parallel voices immediately after their leader in voice
     #       order? or put them after all other voices? or setting to control
@@ -774,7 +781,10 @@ def process_pattern_voice_leading_order(er):
                 ]
             er.pattern_voice_leading_order.append(
                 er_voice_leadings.VoiceLeadingOrderItem(
-                    voice_i, start_time, end_time, prev_item=prev_item,
+                    voice_i,
+                    start_time,
+                    end_time,
+                    prev=prev_item,
                 )
             )
             start_time = end_time
@@ -835,11 +845,71 @@ def read_in_settings(settings_input, settings_class):
     return settings_class(**merged_dict)
 
 
+class SettingsProcesser(er_settings.ERSettings):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._chord_pcs = {}
+        self._nonchord_pcs = {}
+        self._chord_indices = {}
+        self._nonchord_indices = {}
+
+    def nonchord_pcs_at_harmony_i(self, i):
+        if i not in self._nonchord_pcs:
+            self._get_chord_and_nonchord_pcs(i)
+        return self._nonchord_pcs[i]
+
+    def chord_pcs_at_harmony_i(self, i):
+        if i not in self._chord_pcs:
+            self._get_chord_and_nonchord_pcs(i)
+        return self._chord_pcs[i]
+
+    def _get_chord_and_nonchord_pcs(self, i):
+        chord_pcs = []
+        non_chord_pcs = []
+        pc_scale, pc_chord = self.get(i, "pc_scales", "pc_chords")
+        for pc in pc_scale:
+            if pc in pc_chord:
+                chord_pcs.append(pc)
+            else:
+                non_chord_pcs.append(pc)
+        self._chord_pcs[i] = tuple(chord_pcs)
+        self._nonchord_pcs[i] = tuple(non_chord_pcs)
+
+    def nonchord_indices_at_harmony_i(self, i):
+        if i not in self._nonchord_indices:
+            self._get_chord_and_nonchord_indices(i)
+        return self._nonchord_indices[i]
+
+    def chord_indices_at_harmony_i(self, i):
+        if i not in self._chord_indices:
+            self._get_chord_and_nonchord_indices(i)
+        return self._chord_indices[i]
+
+    def _get_chord_and_nonchord_indices(self, i):
+        # TODO should we combine this and _get_chord_and_nonchord_pcs? How
+        # likely are the functions to be called/not-called at the same time?
+        chord_indices = {}
+        chord_i = 0
+        nonchord_indices = {}
+        nonchord_i = 0
+        pc_scale, pc_chord = self.get(i, "pc_scales", "pc_chords")
+        for j, pc in enumerate(pc_scale):
+            if pc in pc_chord:
+                chord_indices[chord_i] = j
+                chord_i += 1
+            else:
+                nonchord_indices[nonchord_i] = j
+                nonchord_i += 1
+        self._chord_indices[i] = chord_indices
+        self._nonchord_indices[i] = nonchord_indices
+
+
 def preprocess_settings(
     user_settings, script_dir=SCRIPT_DIR, random_settings=False, seed=None
 ):
 
-    er = read_in_settings(user_settings, er_settings.ERSettings)
+    # er = read_in_settings(user_settings, er_settings.ERSettings)
+    er = read_in_settings(user_settings, SettingsProcesser)
     if seed is not None:
         er.seed = seed
     er.seed = er_misc_funcs.set_seed(er.seed)
@@ -1049,7 +1119,9 @@ def preprocess_settings(
         # else:
         er.super_pattern_len = er_misc_funcs.lcm(
             ([max(er.pattern_len)] if er.truncate_patterns else er.pattern_len)
-            + [er.length_of_all_harmonies,],
+            + [
+                er.length_of_all_harmonies,
+            ],
             max_n=max_super_pattern_len,
         )
     except er_misc_funcs.LCMError as exc:

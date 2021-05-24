@@ -1,32 +1,116 @@
 import copy
 
+import sortedcontainers
+
 import src.er_classes as er_classes
 import src.er_spelling as er_spelling
 
 
 class HarmonyTimes:
-    def __init__(self, start, end):
+    def __init__(self, start, end, i):
         self.start_time = start
         self.end_time = end
+        self.i = i
 
     def __repr__(self):
         return (
             f"{self.__class__.__name__}(start_time={self.start_time}, "
-            f"end_time={self.end_time})"
+            f"end_time={self.end_time}, i={self.i})"
         )
 
 
 class Score:
     """Contains the notes, as well as many methods for working with them.
 
-    Arguments:
+    Keyword arguments:
+        num_voices
+        test
         harmony_len: Used to construct attribute "harmony_times_dict"
-            and associated methods. If passed, pass "total_len" as well.
+            and associated methods (unless harmony_times_dict is also passed,
+            in which case this argument has no effect). If passed, pass
+            "total_len" as well.
+        harmony_times_dict: can be passed in directly when copying an
+            existing Score object. Otherwise use harmony_len.
         total_len: Total length of the music that will be stored. Only used
             in calculation of "harmony_times_dict", so you can add notes
             beyond this time without consequence.
 
+    Attributes:
+        harmony_times
+        all_voice_idxs
+        total_dur
+        first_attack_and_notes
+
+    Methods:
+        head
+
+        add_voice
+        remove_empty_voices
+        add_note
+        add_other_message
+        add_meta_message
+        attack
+        fill_with_rests
+        displace_passage
+        remove_passage
+        repeat_passage
+        transpose
+        get_passage
+        get_harmony_times
+        get_harmony_i
+        get_harmony_times_from_attack
+        get_sounding_voices
+        get_sounding_pitches
+        get_simultaneously_attacked_pitches
+        get_all_pitches_attacked_during_duration
+        get_all_pitches_sounding_during_duration
+        get_prev_n_pitches
+        get_prev_pitch
+        get_last_n_pitches
+
+
     """
+
+    def __init__(
+        self,
+        num_voices=0,
+        tet=12,
+        harmony_len=None,
+        harmony_times_dict=None,
+        total_len=None,
+        ranges=(None,),
+        time_sig=None,
+        existing_score=None,
+    ):
+
+        if harmony_times_dict:
+            self.harmony_times_dict = harmony_times_dict
+        elif harmony_len:
+            self._build_harmony_times_dict(harmony_len, total_len=total_len)
+        else:
+            self.harmony_times_dict = None
+        self.tet = tet
+        try:
+            self.speller = er_spelling.Speller(tet, pitches=True)
+        except ValueError:
+            self.speller = lambda x: x
+        self.existing_voices = []
+        if existing_score:
+            for voice in existing_score.voices:
+                self.existing_voices.append(voice)
+            self.voices = er_classes.VoiceList(
+                existing_voices=self.existing_voices
+            )
+        else:
+            self.voices = er_classes.VoiceList()  # num_new_voices=num_voices)
+        self.meta_messages = []
+        self.n_since_chord_tone_list = []
+        self.num_voices = 0
+        self.time_sig = time_sig
+        self.attacks_adjusted_by = 0
+
+        for i in range(num_voices):
+            self.add_voice(voice_range=ranges[i % len(ranges)])
 
     def __str__(self, head=-1):
         strings = []
@@ -45,7 +129,7 @@ class Score:
                             break
                         n += 1
                     strings.append(
-                        "Attack:{:>10.3}  Pitch:{:>6}  Duration:{:>10.3}"
+                        "Attack:{:>10.5}  Pitch:{:>6}  Duration:{:>10.5}"
                         "".format(
                             float(note.attack_time),
                             self.speller(note.pitch),
@@ -58,44 +142,35 @@ class Score:
     def head(self, head=15):
         return self.__str__(head=head)
 
+    # LONGTERM implement "score note iterator?"
     def __iter__(self):
-        # This iterates over new *and* existing voices... is there any
-        # use case for doing just one over the other?
-        attack_times = []
-        for voice_i in self.all_voice_is:
-            attack_times += self.voices[voice_i].data.keys()
-        attack_times = sorted(list(set(attack_times)))
-        for attack_time in attack_times:
-            out = []
-            for voice_i in self.all_voice_is:
-                try:
-                    out += self.voices[voice_i].data[attack_time]
-                except KeyError:
-                    pass
-            yield out
+        # TODO use this more
+        for voice_i in self.all_voice_idxs:
+            yield self.voices[voice_i]
 
-    def get_total_len(self):
+    @property
+    def total_dur(self):
         """Returns the length of the super pattern from 0 to the final note
         release.
         """
-        total_len = 0
-        for voice in self.voices:
+        releases = []
+        for voice in self:
             try:
-                max_attack = max(voice.data)
-            except ValueError:
-                # if a voice is empty, max will return a ValueError
-                continue
-            max_dur = max([note.dur for note in voice[max_attack]])
-            final_release = max_attack + max_dur
-            if final_release > total_len:
-                total_len = final_release
-
-        return total_len
+                releases.append(voice.last_release_and_notes[0])
+            except IndexError:
+                pass
+        if not releases:
+            return 0
+        return max(releases)
 
     def add_voice(self, voice=None, voice_i=None, voice_range=None):
         """Adds a voice."""
         if voice:
             self.voices.append(voice)
+            # this allows the new voice to have a value for voice_i that
+            # doesn't conform to its index position in self.voices. What is
+            # the use of that? Shouldn't we automatically assign the appropriate
+            # index?
             if voice_i is not None:
                 self.voices[-1].voice_i = voice_i
         else:
@@ -109,37 +184,33 @@ class Score:
         self.num_voices += 1
         return self.voices[self.num_voices - 1]
 
-    def remove_empty_voices(self):
+    def remove_empty_voices(self, update_indices=False):
         """Removes any voices that contain no notes."""
 
         non_empty_voices = list(range(self.num_voices))
         for voice_i, voice in enumerate(self.voices):
-            if not voice:
+            if voice.is_empty():
                 non_empty_voices.remove(voice_i)
 
         new_voices = er_classes.VoiceList()
-        for non_empty_voice_i in non_empty_voices:
+        for new_voice_i, non_empty_voice_i in enumerate(non_empty_voices):
+            if update_indices:
+                self.voices[non_empty_voice_i] = new_voice_i
             new_voices.append(self.voices[non_empty_voice_i])
         self.voices = new_voices
 
     def add_note(
         self,
         voice_i,
-        pitch,
-        attack_time,
-        dur,
+        note_obj_or_pitch,
+        attack_time=None,
+        dur=None,
         velocity=er_classes.DEFAULT_VELOCITY,
         choir=er_classes.DEFAULT_CHOIR,
     ):
         """Adds a note to the specified voice."""
         self.voices[voice_i].add_note(
-            pitch, attack_time, dur, velocity=velocity, choir=choir
-        )
-
-    def add_note_object(self, voice_i, note_object, update_sort=True):
-        """Adds a note object to the specified voice."""
-        self.voices[voice_i].add_note_object(
-            note_object, update_sort=update_sort
+            note_obj_or_pitch, attack_time, dur, velocity=velocity, choir=choir
         )
 
     def add_other_message(self, voice_i, message):
@@ -162,9 +233,7 @@ class Score:
     def attack(self, attack_time, voice_i):
         """Check if an attack occurs in the given voice
         at the specified time."""
-        if attack_time in self.voices[voice_i]:
-            return True
-        return False
+        return attack_time in self.voices[voice_i]
 
     def fill_with_rests(self, end_time):
         """Fills all silences with "rests" (Note classes with pitch,
@@ -175,25 +244,8 @@ class Score:
 
         For now this is only used for writing kern files.
         """
-        for voice_i, voice in enumerate(self.voices):
-            temp_voice = er_classes.Voice(
-                voice_i=voice.voice_i, tet=voice.tet, voice_range=voice.range
-            )
-            prev_release = 0
-            for note in voice:
-                attack_time = note.attack_time
-                if attack_time > prev_release:
-                    rest_attack = prev_release
-                    rest_dur = attack_time - prev_release
-                    temp_voice.add_rest(rest_attack, rest_dur)
-                prev_release = attack_time + note.dur
-                temp_voice.add_note_object(note)
-            if prev_release < end_time:
-                rest_attack = prev_release
-                rest_dur = end_time - prev_release
-                temp_voice.add_rest(rest_attack, rest_dur)
-
-            self.voices[voice_i] = temp_voice
+        for voice in self:
+            voice.fill_with_rests(end_time)
 
     def displace_passage(
         self,
@@ -216,12 +268,12 @@ class Score:
         # LONGTERM add parameter to overwrite existing music when displacing
         if displacement == 0:
             return
-        if apply_to_existing_voices:
-            voices = self.voices + self.existing_voices
-        else:
-            voices = self.voices
-        for voice in voices:
+
+        for voice in self.voices:
             voice.displace_passage(displacement, start_time, end_time)
+        if apply_to_existing_voices:
+            for voice in self.existing_voices:
+                voice.displace_passage(displacement, start_time, end_time)
 
         for msg in self.meta_messages:
             # LONGTERM don't move tempo changes past beginning of passage
@@ -232,29 +284,15 @@ class Score:
             msg.time = max(msg.time + displacement, 0)
 
     def remove_passage(
-        self, start_time, end_time=0, apply_to_existing_voices=False
+        self, start_time=None, end_time=None, apply_to_existing_voices=False
     ):
-        """Removes from the specified start time until the specified end time.
-
-        If end time is 0, then removes until the end of the Score.
-        """
+        """Removes from the specified start time until the specified end time."""
         # LONGTERM what to do about overlapping durations?
-
+        for voice in self.voices:
+            voice.remove_passage(start_time=start_time, end_time=end_time)
         if apply_to_existing_voices:
-            voice_lists = (self.voices, self.existing_voices)
-        else:
-            voice_lists = (self.voices,)
-        for voice_list in voice_lists:
-            for voice in voice_list:
-                to_remove = []
-                for attack in voice.data:
-                    if attack < start_time:
-                        continue
-                    if end_time != 0 and attack >= end_time:
-                        continue
-                    to_remove.append(attack)
-                for attack in to_remove:
-                    del voice.data[attack]
+            for voice in self.existing_voices:
+                voice.remove_passage(start_time=start_time, end_time=end_time)
 
     def repeat_passage(
         self,
@@ -264,24 +302,48 @@ class Score:
         apply_to_existing_voices=False,
     ):
         """Repeats a passage."""
-        if apply_to_existing_voices:
-            voices = self.voices + self.existing_voices
-        else:
-            voices = self.voices
-        for voice in voices:
+        for voice in self.voices:
             voice.repeat_passage(
                 original_start_time, original_end_time, repeat_start_time
             )
+        if apply_to_existing_voices:
+            for voice in self.existing_voices:
+                voice.repeat_passage(
+                    original_start_time, original_end_time, repeat_start_time
+                )
         # LONGTERM handle meta messages?
 
     def transpose(
-        self, interval, start_time, end_time, apply_to_existing_voices=False
+        self,
+        interval,
+        er=None,  # triggers generic transposition if passed
+        max_interval=None,  # ignored unless generic transposition
+        finetune=0,
+        start_time=None,
+        end_time=None,
+        apply_to_existing_voices=False,
     ):
         for voice in self.voices:
-            voice.transpose(interval, start_time, end_time)
+            voice.transpose(
+                interval,
+                er=er,
+                score=self if er is not None else None,
+                max_interval=max_interval,
+                finetune=finetune,
+                start_time=start_time,
+                end_time=end_time,
+            )
         if apply_to_existing_voices:
             for voice in self.existing_voices:
-                voice.transpose(interval, start_time, end_time)
+                voice.transpose(
+                    interval,
+                    er=er,
+                    score=self if er is not None else None,
+                    max_interval=max_interval,
+                    finetune=finetune,
+                    start_time=start_time,
+                    end_time=end_time,
+                )
 
     def get_passage(self, passage_start_time, passage_end_time, make_copy=True):
         """Returns all voices of a given passage as a Score object.
@@ -295,10 +357,12 @@ class Score:
                 False, returns the original notes (so they can be altered in
                 place).
         """
-        passage = Score(
-            tet=self.tet, harmony_times_dict=self.harmony_times_dict
-        )
-        for voice in self.voices:
+        try:
+            harmony_times_dict = self.harmony_times_dict.copy()
+        except AttributeError:
+            harmony_times_dict = None
+        passage = Score(tet=self.tet, harmony_times_dict=harmony_times_dict)
+        for voice in self:
             new_voice = voice.get_passage(
                 passage_start_time, passage_end_time, make_copy=make_copy
             )
@@ -338,26 +402,21 @@ class Score:
         return passage
 
     def get_harmony_times(self, harmony_i):
-        return self.harmony_times_dict[harmony_i]
+        return self._harmony_idx_to_time[harmony_i]
+
+    def get_harmony_times_from_attack(self, attack_time):
+        # TODO replace get_harmony_times with this method?
+        return self._harmony_idx_to_time[self.get_harmony_i(attack_time)]
 
     @property
     def harmony_times(self):
-        return self._harmony_times
+        return list(self._harmony_idx_to_time.values())
 
     def get_harmony_i(self, attack_time):
         """If passed an attack time beyond the end of the harmonies, will
         return the last harmony.
         """
-        for harmony_i in self.harmony_times_dict:
-            try:
-                if (
-                    self.harmony_times_dict[harmony_i + 1].start_time
-                    > attack_time
-                ):
-                    return harmony_i
-            except KeyError:
-                return harmony_i
-        return harmony_i
+        return self._harmony_time_to_idx.bisect_right(attack_time) - 1
 
     def get_sounding_voices(
         self, attack_time, dur=0, min_attack_time=0, min_dur=0
@@ -365,11 +424,13 @@ class Score:
         """Get voices sounding at attack_time (if dur==0) or between
         attack_time and attack_time + dur.
         """
+        # TODO refactor this and similar functions to take an end_time argument
+        # instead of dur?
         out = []
-        for voice_i in self.all_voice_is:
+        for voice_i in self.all_voice_idxs:
             if self.voices[voice_i].get_sounding_pitches(
                 attack_time,
-                dur=dur,
+                end_time=attack_time + dur,
                 min_attack_time=min_attack_time,
                 min_dur=min_dur,
             ):
@@ -377,31 +438,25 @@ class Score:
         return out
 
     def get_sounding_pitches(
-        self, attack_time, dur=0, voices="all", min_attack_time=0, min_dur=0
+        self,
+        attack_time,
+        end_time=None,
+        voices=None,
+        min_attack_time=0,
+        min_dur=0,
     ):
 
         sounding_pitches = set()
 
-        if voices == "all":
-            voices = self.all_voice_is
+        if voices is None:
+            voices = self.all_voice_idxs
 
         for voice_i in voices:
             voice = self.voices[voice_i]
             sounding_pitches.update(
                 voice.get_sounding_pitches(
                     attack_time,
-                    dur=dur,
-                    min_attack_time=min_attack_time,
-                    min_dur=min_dur,
-                )
-            )
-
-        for existing_voice in self.existing_voices:
-            # Existing voices are always retrieved.
-            sounding_pitches.update(
-                existing_voice.get_sounding_pitches(
-                    attack_time,
-                    dur=dur,
+                    end_time=end_time,
                     min_attack_time=min_attack_time,
                     min_dur=min_dur,
                 )
@@ -410,7 +465,7 @@ class Score:
         return list(sorted(sounding_pitches))
 
     def get_simultaneously_attacked_pitches(
-        self, attack_time, voices="all", min_dur=0
+        self, attack_time, voices=None, min_dur=0
     ):
         return self.get_sounding_pitches(
             attack_time,
@@ -420,17 +475,23 @@ class Score:
         )
 
     def get_all_pitches_attacked_during_duration(
-        self, attack_time, dur, voices="all"
+        self, attack_time, dur, voices=None
     ):
         return self.get_sounding_pitches(
-            attack_time, dur=dur, voices=voices, min_attack_time=attack_time
+            attack_time,
+            end_time=attack_time + dur,
+            voices=voices,
+            min_attack_time=attack_time,
         )
 
     def get_all_pitches_sounding_during_duration(
-        self, attack_time, dur, voices="all", min_dur=0
+        self, attack_time, dur, voices=None, min_dur=0
     ):
         return self.get_sounding_pitches(
-            attack_time, dur=dur, voices=voices, min_dur=min_dur
+            attack_time,
+            end_time=attack_time + dur,
+            voices=voices,
+            min_dur=min_dur,
         )
 
     def get_prev_n_pitches(
@@ -474,69 +535,43 @@ class Score:
                 "Must pass total_len with harmony_len when creating "
                 "Score object."
             )
-
-        self.harmony_times_dict = {}
-        harmony_times_list = []
-        harmony_i = 0
-        start_time = 0
-        end_time = 0
-        while True:
+        self._harmony_idx_to_time = {}
+        self._harmony_time_to_idx = sortedcontainers.SortedDict()
+        harmony_i = start_time = end_time = 0
+        while end_time < total_len:
             end_time += harmony_len[harmony_i % len(harmony_len)]
-            self.harmony_times_dict[harmony_i] = HarmonyTimes(
-                start_time, end_time
-            )
-            harmony_times_list.append((start_time, end_time))
-            # self.harmony_times_dict[harmony_i] = (start_time, end_time)
+            harmony_times = HarmonyTimes(start_time, end_time, harmony_i)
+            self._harmony_idx_to_time[harmony_i] = harmony_times
+            self._harmony_time_to_idx[start_time] = harmony_times
             start_time = end_time
             harmony_i += 1
-            if end_time > total_len:
-                break
-        self._harmony_times = tuple(harmony_times_list)
+        # We want the final harmony_time to extend to the end of the score,
+        # even if there are stray notes overlapping where the last harmony
+        # "should" have ended. So we set it to None.
+        harmony_times.end_time = None
 
     @property
-    def all_voice_is(self):
+    def all_voice_idxs(self):
         return list(range(self.voices.num_new_voices)) + [
             i + self.voices.num_new_voices + 1
             for i in range(self.voices.num_existing_voices)
         ]
 
-    def __init__(
-        self,
-        num_voices=0,
-        tet=12,
-        harmony_len=None,
-        harmony_times_dict=None,
-        total_len=None,
-        ranges=(None,),
-        time_sig=None,
-        existing_score=None,
-    ):
+    @property
+    def first_attack_and_notes(self):
+        first_attack = self.total_dur
+        first_notes = None
+        for voice in self:
+            (
+                first_attack_in_voice,
+                first_note_in_voice,
+            ) = voice.first_attack_and_notes
+            if first_attack_in_voice < first_attack:
+                first_attack, first_notes = (
+                    first_attack_in_voice,
+                    first_note_in_voice,
+                )
+        return first_attack, first_notes
 
-        if harmony_times_dict:
-            self.harmony_times_dict = harmony_times_dict
-        elif harmony_len:
-            self._build_harmony_times_dict(harmony_len, total_len=total_len)
-        else:
-            self.harmony_times_dict = None
-        self.tet = tet
-        try:
-            self.speller = er_spelling.Speller(tet, pitches=True)
-        except ValueError:
-            self.speller = lambda x: x
-        self.existing_voices = []
-        if existing_score:
-            for voice in existing_score.voices:
-                self.existing_voices.append(voice)
-            self.voices = er_classes.VoiceList(
-                existing_voices=self.existing_voices
-            )
-        else:
-            self.voices = er_classes.VoiceList()  # num_new_voices=num_voices)
-        self.meta_messages = []
-        self.n_since_chord_tone_list = []
-        self.num_voices = 0
-        self.time_sig = time_sig
-        self.attacks_adjusted_by = 0
-
-        for i in range(num_voices):
-            self.add_voice(voice_range=ranges[i % len(ranges)])
+    def copy(self):
+        return copy.deepcopy(self)

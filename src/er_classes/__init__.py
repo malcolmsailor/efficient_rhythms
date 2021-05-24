@@ -5,10 +5,12 @@ from .note import (
 )
 
 from .voice import (
+    DumbSortedList,
     Voice,
     VoiceList,
 )
 
 from .score import (
+    HarmonyTimes,
     Score,
 )

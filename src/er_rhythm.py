@@ -48,6 +48,7 @@ class RhythmicDict(collections.UserDict):
 
 
 class Rhythm(RhythmicDict):
+    # TODO refactor this using some sort of sorted container
     # LONGTERM provide "re-generate" method, rather than
     #   re-initializing an entire new rhythm at each failure in er_make.py
     @functools.cached_property
@@ -73,6 +74,7 @@ class Rhythm(RhythmicDict):
     def __init__(self, er, voice_i):
         super().__init__()
         self.voice_i = voice_i
+        # TODO "rhythm_dur" rather than "rhythm_len"
         (
             self.num_notes,
             self.rhythm_len,
@@ -136,9 +138,77 @@ class Rhythm(RhythmicDict):
 
     @functools.cached_property
     def loop_num_notes(self):
+        # TODO rename this property?
+        # it is the number of notes in the rhythm up to the end of the truncate
         return (
             self.truncate_len // self.pattern_len * self.total_num_notes
             + self.truncated_pattern_num_notes
+        )
+
+    def get_i_at_or_after(self, time):
+        # TODO use sortedcontainers
+        if self.truncate_len:
+            truncated, untruncated = divmod(time, self.truncate_len)
+            truncated_num_notes = int(truncated) * self.loop_num_notes
+        else:
+            truncated_num_notes, untruncated = 0, time
+        reps, remainder = divmod(untruncated, self.total_rhythm_len)
+        for remainder_i, attack_time in enumerate(self.attack_times):
+            if attack_time >= remainder:
+                break
+        if remainder > attack_time:
+            remainder_i += 1
+        return (
+            truncated_num_notes + int(reps) * self.total_num_notes + remainder_i
+        )
+
+    def get_i_before(self, time):
+        if self.truncate_len:
+            truncated, untruncated = divmod(time, self.truncate_len)
+            truncated_num_notes = int(truncated) * self.loop_num_notes
+        else:
+            truncated_num_notes, untruncated = 0, time
+        reps, remainder = divmod(untruncated, self.total_rhythm_len)
+        for remainder_i, attack_time in enumerate(self.attack_times):
+            if attack_time >= remainder:
+                remainder_i -= 1
+                break
+        return (
+            truncated_num_notes + int(reps) * self.total_num_notes + remainder_i
+        )
+
+    def get_i_at_or_before(self, time):
+        """Returns -1 if time is before first note in rhythm."""
+        if self.truncate_len:
+            truncated, untruncated = divmod(time, self.truncate_len)
+            truncated_num_notes = int(truncated) * self.loop_num_notes
+        else:
+            truncated_num_notes, untruncated = 0, time
+        reps, remainder = divmod(untruncated, self.total_rhythm_len)
+        # 0 1 2 3
+        #    ^
+        for remainder_i, attack_time in enumerate(self.attack_times):
+            if attack_time > remainder:
+                remainder_i -= 1
+                break
+        return (
+            truncated_num_notes + int(reps) * self.total_num_notes + remainder_i
+        )
+
+    def get_i_after(self, time):
+        if self.truncate_len:
+            truncated, untruncated = divmod(time, self.truncate_len)
+            truncated_num_notes = int(truncated) * self.loop_num_notes
+        else:
+            truncated_num_notes, untruncated = 0, time
+        reps, remainder = divmod(untruncated, self.total_rhythm_len)
+        for remainder_i, attack_time in enumerate(self.attack_times):
+            if attack_time > remainder:
+                break
+        if remainder >= attack_time:
+            remainder_i += 1
+        return (
+            truncated_num_notes + int(reps) * self.total_num_notes + remainder_i
         )
 
     def get_attack_time_and_dur(self, rhythm_i):
@@ -825,8 +895,7 @@ def _add_comma(er, voice_i, attacks):
 
 
 def _fit_rhythm_to_pattern(er, voice_i, attacks):
-    """If the rhythm is shorter than the pattern, extend it as necessary.
-    """
+    """If the rhythm is shorter than the pattern, extend it as necessary."""
 
     if not attacks:
         return
@@ -898,7 +967,12 @@ def generate_rhythm1(er, voice_i, prev_rhythms=()):
         leader_i = er.rhythmic_quasi_unison_followers[voice_i]
         leader_rhythm = prev_rhythms[leader_i % len(prev_rhythms)]
         available = _get_available_for_quasi_unison(
-            er, voice_i, [prev_rhythms[leader_i],], attack_positions
+            er,
+            voice_i,
+            [
+                prev_rhythms[leader_i],
+            ],
+            attack_positions,
         )
 
         if (
@@ -918,7 +992,10 @@ def generate_rhythm1(er, voice_i, prev_rhythms=()):
         )
 
         leader_durs_at_attacks = _fill_quasi_unison_durs(
-            er, voice_i, attacks, prev_rhythms[leader_i],
+            er,
+            voice_i,
+            attacks,
+            prev_rhythms[leader_i],
         )
 
         _fill_attack_durs(
@@ -1017,8 +1094,9 @@ def update_pattern_voice_leading_order(er, rhythms):
             totals[vl_item.voice_i] += er.num_notes_by_pattern[vl_item.voice_i]
         # end_rhythm_i is the first note *after* the rhythm ends
         end_rhythm_i = totals[vl_item.voice_i]
-        vl_item.start_rhythm_i = start_rhythm_i
-        vl_item.end_rhythm_i = end_rhythm_i
+        vl_item.start_i = start_rhythm_i
+        vl_item.end_i = end_rhythm_i
+        vl_item.len = end_rhythm_i - start_rhythm_i
 
 
 class Grid(ContinuousRhythmicObject):
@@ -1165,8 +1243,7 @@ class Grid(ContinuousRhythmicObject):
 
 
 def rhythms_handler(er):
-    """According to the parameters in er, return rhythms.
-    """
+    """According to the parameters in er, return rhythms."""
 
     if er.rhythms_specified_in_midi:
         rhythms = er_midi.get_rhythms_from_midi(er)

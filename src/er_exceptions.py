@@ -183,14 +183,17 @@ class VoiceLeadingError(ErMakeException):
         self._parallel_intervals += 1
         self._total_parallel_intervals += 1
 
-    def __init__(self, er):
+    def __init__(self, er=None):
         super().__init__()
         self.total_failures = 0
         self.harmony_counter = collections.Counter()
         self._init_total_counts()
         self.reset_inner_counts()
-        self.num_attempts = er.voice_leading_attempts
-        self.printer = er.build_status_printer
+        # This class should always be created with er non-None. But this
+        # check allows the instances to be copied for debugging purposes.
+        if er is not None:
+            self.num_attempts = er.voice_leading_attempts
+            self.printer = er.build_status_printer
 
     def reset_inner_counts(self):
         self._out_of_range = 0
