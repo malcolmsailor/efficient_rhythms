@@ -365,9 +365,8 @@ Less often used general settings are under
     
     *Default*: `True`
 
-  - <span id="humanize_attack">**`humanize_attack`**</span>: float.
-    Randomly varies attack times within +- this amount, in quarter
-    notes.
+  - <span id="humanize_onset">**`humanize_onset`**</span>: float.
+    Randomly varies onset times within +- this amount, in quarter notes.
     
     *Default*: `0.0`
 
@@ -428,7 +427,7 @@ Less often used general settings are under
     number between 0 and 1. If
     <a href="#logic_type_pitch_bend">`logic_type_pitch_bend`</a> is
     True, then this parameter defines how long between the release of
-    the last note on a channel and the attack of the next note on that
+    the last note on a channel and the onset of the next note on that
     same channel the associated pitch-bend message should be written.
     The value should probably be more than half to avoid an audible bend
     during the release of the previous pitch.
@@ -740,18 +739,18 @@ irrespective of
   - <span id="force_chord_tone">**`force_chord_tone`**</span>: string.
     Possible values:
     
-      - `"global_first_beat"`: forces chord tone on attacks on the
-        global first beat (i.e., the first beat of the entire piece).
-        Note, however, that this does not ensure that there will be an
-        attack on the global first beat, and this parameter has no
-        effect on notes that sound *after* the first beat. (Compare
+      - `"global_first_beat"`: forces chord tone on onsets on the global
+        first beat (i.e., the first beat of the entire piece). Note,
+        however, that this does not ensure that there will be an onset
+        on the global first beat, and this parameter has no effect on
+        notes that sound *after* the first beat. (Compare
         “global\_first\_note”.)
       - `"global_first_note"`: forces chord tones on the first note to
         sound in each voice.
-      - `"first_beat"`: forces chord tones on attacks on the first beat
+      - `"first_beat"`: forces chord tones on onsets on the first beat
         of each harmony of the initial pattern. Note, however, that this
-        does not ensure that there will be an attack on the first beat
-        of each harmony, and this parameter has no effect on notes that
+        does not ensure that there will be an onset on the first beat of
+        each harmony, and this parameter has no effect on notes that
         sound *after* the first beat of each harmony. (Compare
         “first\_note”.)
       - `"first_note"`: forces chord tones on the first note of each
@@ -760,9 +759,9 @@ irrespective of
     
     *Default*: `"none"`
 
-  - <span id="chord_tones_sync_attack_in_all_voices">**`chord_tones_sync_attack_in_all_voices`**</span>:
+  - <span id="chord_tones_sync_onset_in_all_voices">**`chord_tones_sync_onset_in_all_voices`**</span>:
     bool. If True, then chord-tone selection will be synchronized
-    between all simultaneously attacked voices.
+    between all simultaneously onset voices.
     
     *Default*: `False`
 
@@ -929,7 +928,7 @@ irrespective of
     constrained to move in (generic) parallel motion. The parallel
     motion is only enforced within harmonies; across the boundaries
     between harmonies, voices may move freely. When this parameter is
-    True between voices that do not have the same attacks, it works as
+    True between voices that do not have the same onsets, it works as
     follows: it takes the *last* melodic interval in the leader voice,
     and adds the same melodic interval in the follower voice.
     
@@ -959,13 +958,13 @@ irrespective of
     string. Controls among which notes consonance is evaluated. Possible
     values:
     
-      - `"all_attacks"`: each pitch is evaluated for consonance with all
-        other simulatenously attacked pitches.
+      - `"all_onsets"`: each pitch is evaluated for consonance with all
+        other simulatenously onset pitches.
       - `"all_durs"`: each pitch is evaluated for consonance with all
         other pitches sounding during its duration.
       - `"none"`: no consonance treatment.
     
-    *Default*: `"all_attacks"`
+    *Default*: `"all_onsets"`
 
   - <span id="consonance_type">**`consonance_type`**</span>: string.
     Controls how notes are evaluated for consonance/dissonance. Possible
@@ -984,13 +983,13 @@ irrespective of
     sequence](#note-on-per-voice-sequences-and-other-looping-sequences)
     of sequences of numbers.
     
-    If a number, only attack times that are 0 modulo this number will
+    If a number, only onset times that are 0 modulo this number will
     have consonance settings applied. For example, if `consonance_modulo
     == 1`, then every quarter-note beat will have consonance settings
     applied, but pitches *between* these beats will not.
     
     If a sequence of numbers, the sequence of numbers defines a loop of
-    attack times at which consonance settings will be applied. The
+    onset times at which consonance settings will be applied. The
     largest number in the sequence defines the loop length. For example,
     if `consonance_modulo == [1, 1.5, 2]`, then consonance settings will
     be applied at beats 0, 1, 1.5, 2, 3, 3.5, 4, 5, etc.
@@ -1029,7 +1028,7 @@ irrespective of
 
   - <span id="forbidden_interval_modulo">**`forbidden_interval_modulo`**</span>:
     number, or a sequence of number, or a sequence of sequence of
-    numbers. Optionally defines attack times at which
+    numbers. Optionally defines onset times at which
     <a href="#forbidden_interval_classes">`forbidden_interval_classes`</a>
     will be enforced. Works similarly to and is specified in the same
     manner as <a href="#consonance_modulo">`consonance_modulo`</a>.
@@ -1155,27 +1154,26 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
     
     *Default*: `False`
 
-  - <span id="attack_density">**`attack_density`**</span>: a float from
+  - <span id="onset_density">**`onset_density`**</span>: a float from
     0.0 to 1.0, or an int, or a [per-voice
     sequence](#note-on-per-voice-sequences-and-other-looping-sequences)
     of floats and/or ints.
     
-    Floats represent a proportion of the available attacks to be filled.
-    E.g., if `attack_density == 0.5` and there are 4 possible attack
-    times, there will be 2 attacks. (Possible attack times are
-    determined by
-    <a href="#attack_subdivision">`attack_subdivision`</a>,
+    Floats represent a proportion of the available onsets to be filled.
+    E.g., if `onset_density == 0.5` and there are 4 possible onset
+    times, there will be 2 onsets. (Possible onset times are determined
+    by <a href="#onset_subdivision">`onset_subdivision`</a>,
     <a href="#sub_subdivisions">`sub_subdivisions`</a>, and `comma`
     below).
     
-    Integers represent a literal number of attacks. E.g., if
-    `attack_density == 3`, there will be 3 attacks.
+    Integers represent a literal number of onsets. E.g., if
+    `onset_density == 3`, there will be 3 onsets.
     
     Any negative values will be replaced by a random float between 0.0
     and 1.0.
     
-    Note that there will always be at least one attack in each rhythm,
-    regardless of how low <a href="#attack_density">`attack_density`</a>
+    Note that there will always be at least one onset in each rhythm,
+    regardless of how low <a href="#onset_density">`onset_density`</a>
     is set.
     
     *Default*: `0.5`
@@ -1190,19 +1188,19 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
     
     *Default*: `1.0`
 
-  - <span id="attack_subdivision">**`attack_subdivision`**</span>: a
+  - <span id="onset_subdivision">**`onset_subdivision`**</span>: a
     number, or a [per-voice
     sequence](#note-on-per-voice-sequences-and-other-looping-sequences)
-    of numbers. Indicates the basic “grid” on which attacks can take
-    place, measured in quarter notes. For example, if
-    `attack_subdivision == 1/4`, then attacks can occur on every
-    sixteenth note subdivision. (But see also `sub_subdivision` below.)
-    If `cont_rhythms == "all"` or `cont_rhythms == "grid"`, then this
-    parameter no longer indicates the grid on which attacks can take
-    place, but it is still used to calculate how many attack positions
-    there should be. Thus, in the case of continuous rhythms, this
-    parameter can be thought of as indicating the average grid duration,
-    rather than the exact grid duration.
+    of numbers. Indicates the basic “grid” on which onsets can take
+    place, measured in quarter notes. For example, if `onset_subdivision
+    == 1/4`, then onsets can occur on every sixteenth note subdivision.
+    (But see also `sub_subdivision` below.) If `cont_rhythms == "all"`
+    or `cont_rhythms == "grid"`, then this parameter no longer indicates
+    the grid on which onsets can take place, but it is still used to
+    calculate how many onset positions there should be. Thus, in the
+    case of continuous rhythms, this parameter can be thought of as
+    indicating the average grid duration, rather than the exact grid
+    duration.
     
     *Default*: `Fraction(1, 4)`
 
@@ -1210,11 +1208,11 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
     sequence of ints, or a [per-voice
     sequence](#note-on-per-voice-sequences-and-other-looping-sequences)
     of sequences of ints. Further subdivides
-    <a href="#attack_subdivision">`attack_subdivision`</a>, into parts
+    <a href="#onset_subdivision">`onset_subdivision`</a>, into parts
     defined by the ratio of the integers in the sequence. This can be
     used to apply “swing” or any other irregular subdivision you like.
     For instance, if passed a value of `(3, 4, 2)`, each unit of length
-    <a href="#attack_subdivision">`attack_subdivision`</a> will be
+    <a href="#onset_subdivision">`onset_subdivision`</a> will be
     subdivided into a portion of 3/9, a portion of 4/9, and a portion of
     2/9. If a sequence of sequences, each sub-sequence applies to an
     individual voice, interpreted in the looping per-voice manner
@@ -1227,8 +1225,8 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
     sequence](#note-on-per-voice-sequences-and-other-looping-sequences)
     of numbers. Indicates the “grid” on which note durations are
     extended (and thus on which releases take place), which will be
-    measured from the note attack. Values of 0 will be assigned the
-    corresponding value of attack\_subdivision. Note that, regardless of
+    measured from the note onset. Values of 0 will be assigned the
+    corresponding value of onset\_subdivision. Note that, regardless of
     this value, all notes will be given a duration of at least
     <a href="#min_dur">`min_dur`</a>, so it is possible that the total
     duration will exceed the value implied by
@@ -1240,48 +1238,47 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
     sequence](#note-on-per-voice-sequences-and-other-looping-sequences)
     of numbers. Indicates the minimum duration of a note. Values \<= 0
     will be assigned the corresponding value of
-    <a href="#attack_subdivision">`attack_subdivision`</a>.
+    <a href="#onset_subdivision">`onset_subdivision`</a>.
     
     *Default*: `0`
 
-  - <span id="obligatory_attacks">**`obligatory_attacks`**</span>: a
+  - <span id="obligatory_onsets">**`obligatory_onsets`**</span>: a
     sequence of numbers, or a [per-voice
     sequence](#note-on-per-voice-sequences-and-other-looping-sequences)
-    of sequences of numbers. Numbers specify obligatory attack times to
+    of sequences of numbers. Numbers specify obligatory onset times to
     include in the rhythm. Zero-indexed, so beat “1” (in musical terms)
     is `0`. Thus a value of `[0, 2, 3]`, with an
-    <a href="#obligatory_attacks">`obligatory_attacks`</a> value of `4`
-    would enforce attacks on beats 0, 2, and 3, repeating every 4 beats;
-    in musical terms, we could think of this as attacks on the first,
+    <a href="#obligatory_onsets">`obligatory_onsets`</a> value of `4`
+    would enforce onsets on beats 0, 2, and 3, repeating every 4 beats;
+    in musical terms, we could think of this as onsets on the first,
     third, and fourth beats of every measure of 4/4.
     
-    If <a href="#obligatory_attacks">`obligatory_attacks`</a> specifies
-    more attacks than would be implied by
-    <a href="#attack_density">`attack_density`</a>,
-    <a href="#obligatory_attacks">`obligatory_attacks`</a> takes
+    If <a href="#obligatory_onsets">`obligatory_onsets`</a> specifies
+    more onsets than would be implied by
+    <a href="#onset_density">`onset_density`</a>,
+    <a href="#obligatory_onsets">`obligatory_onsets`</a> takes
     precedence.
     
     *Default*: `()`
 
-  - <span id="obligatory_attacks_modulo">**`obligatory_attacks_modulo`**</span>:
+  - <span id="obligatory_onsets_modulo">**`obligatory_onsets_modulo`**</span>:
     a number, or a sequence of numbers. Specifies which times (if any)
     should be understood as equivalent to the values in
-    <a href="#obligatory_attacks">`obligatory_attacks`</a>. Thus, if
-    <a href="#obligatory_attacks">`obligatory_attacks`</a> is `(0,)`,
-    and
-    <a href="#obligatory_attacks_modulo">`obligatory_attacks_modulo`</a>
+    <a href="#obligatory_onsets">`obligatory_onsets`</a>. Thus, if
+    <a href="#obligatory_onsets">`obligatory_onsets`</a> is `(0,)`, and
+    <a href="#obligatory_onsets_modulo">`obligatory_onsets_modulo`</a>
     is passed a value of `2`, then times of 2, 4, 6, … will be
     equivalent to 0. Has no effect if
-    <a href="#obligatory_attacks">`obligatory_attacks`</a> is empty.
+    <a href="#obligatory_onsets">`obligatory_onsets`</a> is empty.
     
     *Default*: `4`
 
   - <span id="comma_position">**`comma_position`**</span>: string, int,
     or sequence of strings and/or ints. If the
     <a href="#rhythm_len">`rhythm_len`</a> is not divisible by
-    <a href="#attack_subdivision">`attack_subdivision`</a> (e.g.,
-    `rhythm_len == 3` and `attack_subdivision == 2/3`), then there will
-    be a “comma” left over that the attacks do not fill. This setting
+    <a href="#onset_subdivision">`onset_subdivision`</a> (e.g.,
+    `rhythm_len == 3` and `onset_subdivision == 2/3`), then there will
+    be a “comma” left over that the onsets do not fill. This setting
     controls the placement of any such comma. Possible values: - “end”:
     comma is placed at the end of the rhythm. - “anywhere”: the comma is
     placed randomly anywhere before, after, or during the rhythm. -
@@ -1300,7 +1297,7 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
 
   - <span id="rhythmic_unison">**`rhythmic_unison`**</span>: bool, or a
     sequence of tuples of ints. Controls whether to apply “rhythmic
-    unison” (i.e., simultaneous attacks and releases) to some or all
+    unison” (i.e., simultaneous onsets and releases) to some or all
     voices.
     
     If True, all voices are in rhythmic unison. In this case, the rhythm
@@ -1326,14 +1323,14 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
     sometimes necessary to provide “dummy” rhythmic parameters. If, for
     instance, the <a href="#rhythmic_unison">`rhythmic_unison`</a>
     tuples are `[(0, 1), (2, 3)]` and a parameter such as
-    <a href="#attack_density">`attack_density`</a> is `[0.5, 0.3]`, the
-    second value of <a href="#attack_density">`attack_density`</a> will
+    <a href="#onset_density">`onset_density`</a> is `[0.5, 0.3]`, the
+    second value of <a href="#onset_density">`onset_density`</a> will
     never be used, because the first voices of the
     <a href="#rhythmic_unison">`rhythmic_unison`</a> tuples are 0 and 2
     (and 2, modulo the length of
-    <a href="#attack_density">`attack_density`</a>, is 0). In this
+    <a href="#onset_density">`onset_density`</a>, is 0). In this
     situation it is necessary to insert a dummy value into
-    <a href="#attack_density">`attack_density`</a> (e.g., \[0.5, 0.0,
+    <a href="#onset_density">`onset_density`</a> (e.g., \[0.5, 0.0,
     0.3\]) in order to apply the parameter 0.3 to the second
     <a href="#rhythmic_unison">`rhythmic_unison`</a> tuple.
     
@@ -1346,19 +1343,19 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
     <a href="#rhythmic_unison">`rhythmic_unison`</a> causes voices to
     have precisely the same rhythms, this parameter works differently.
     It does not override the rhythmic settings (such as
-    <a href="#attack_density">`attack_density`</a>) that apply to each
-    voice, but it constrains the attacks of “follower” voices to occur
-    at the same time as the attacks of “leader” voices, as far as is
+    <a href="#onset_density">`onset_density`</a>) that apply to each
+    voice, but it constrains the onsets of “follower” voices to occur at
+    the same time as the onsets of “leader” voices, as far as is
     possible. If the follower has a greater
-    <a href="#attack_density">`attack_density`</a> than the leader, then
-    the follower will have attacks simultaneous with all those of the
-    leader, as well as extra attacks to satisfy its
-    <a href="#attack_density">`attack_density`</a> value. If the
-    follower has a lesser <a href="#attack_density">`attack_density`</a>
-    than the leader, then all of the followers attacks will occur
-    simultaneous with attacks in the leader, but it will have fewer
-    attacks than the leader. The effect on other rhythmic parameters
-    like <a href="#dur_density">`dur_density`</a> is similar. See also
+    <a href="#onset_density">`onset_density`</a> than the leader, then
+    the follower will have onsets simultaneous with all those of the
+    leader, as well as extra onsets to satisfy its
+    <a href="#onset_density">`onset_density`</a> value. If the follower
+    has a lesser <a href="#onset_density">`onset_density`</a> than the
+    leader, then all of the followers onsets will occur simultaneous
+    with onsets in the leader, but it will have fewer onsets than the
+    leader. The effect on other rhythmic parameters like
+    <a href="#dur_density">`dur_density`</a> is similar. See also
     <a href="#rhythmic_quasi_unison_constrain">`rhythmic_quasi_unison_constrain`</a>
     below.
     
@@ -1371,12 +1368,12 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
     <a href="#rhythmic_quasi_unison">`rhythmic_quasi_unison`</a> is
     True, then
     
-      - if the follower voice has a smaller attack density than the
+      - if the follower voice has a smaller onset density than the
         leader, it will be constrained not to contain any durations that
         lie outside the durations of the leader.
     
-      - if the follower has a greater attack density than the leader, it
-        will be constrained to have all its attacks occur during the
+      - if the follower has a greater onset density than the leader, it
+        will be constrained to have all its onsets occur during the
         durations of the leader, if possible.
     
     *Default*: `False`
@@ -1385,7 +1382,7 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
     tuples of ints. This parameter is specified in the same way as
     <a href="#rhythmic_unison">`rhythmic_unison`</a> above. Its effect
     is to lead combinations of voices to be “hocketed” —i.e., for, when
-    possible, the attacks of one voice to be placed during the pauses of
+    possible, the onsets of one voice to be placed during the pauses of
     another, and vice versa.
     
     Tuples of the form (0, 1, 2) will cause voice 1 to be constructed in
@@ -1413,8 +1410,7 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
       - `"none"`: continuous rhythms are not used.
       - `"all"`: all voices have unique continuous rhythm.
       - `"grid"`: all voices share a continuous-rhythm “grid”, so that
-        their rhythmic attacks ( and releases?) will be on a common
-        grid.
+        their rhythmic onsets ( and releases?) will be on a common grid.
     
     If <a href="#cont_rhythms">`cont_rhythms`</a> is not `None`, then
     <a href="#rhythm_len">`rhythm_len`</a> must equal

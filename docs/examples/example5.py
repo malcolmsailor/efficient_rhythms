@@ -7,7 +7,7 @@
     "pattern_len": [1.5, 4],
     "truncate_patterns": True,
     "harmony_len": 4,
-    "attack_density": 0.7,
+    "onset_density": 0.7,
     "consonance_treatment": "none",
     "voice_lead_chord_tones": False,
     "hocketing": True,

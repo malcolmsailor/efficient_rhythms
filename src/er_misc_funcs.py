@@ -802,35 +802,35 @@ def get_prev_voice_indices(score, start_time, dur):
     return score.get_sounding_voices(start_time, dur)
 
 
-# def get_prev_voice_indices(er, voice_i, during_pattern_voice_leading=None):
+# def get_prev_voice_indices(er, voice_i, during_pattern_vl=None):
 #     """Returns the indices of the voices that have already been constructed,
 #     as well as for previously existing voices.
 #
-#     If during_pattern_voice_leading, pass attack_time.
+#     If during_pattern_vl, pass onset.
 #     """
 #
 #     # QUESTION This seems to omit the case where a voice later in the voice
-#     #   order was attacked earlier but has a dur that overlaps with the current
-#     #   attack time... is that ok?
-#     if during_pattern_voice_leading is None:
+#     #   order was onset earlier but has a dur that overlaps with the current
+#     #   onset time... is that ok?
+#     if during_pattern_vl is None:
 #         return (
 #             er.voice_order[: er.voice_order.index(voice_i)]
 #             + er.existing_voices_indices
 #         )
 #
 #     # Get all voices that have already been written whose end times
-#     # are later than the attack time.
+#     # are later than the onset time.
 #
-#     attack_time = during_pattern_voice_leading
+#     onset = during_pattern_vl
 #
 #     voice_lens = {voice_i: 0 for voice_i in er.voice_order}
 #
 #     active_voice_i = end_time = -1
 #
 #     order_i = 0
-#     while active_voice_i != voice_i or end_time < attack_time:
+#     while active_voice_i != voice_i or end_time < onset:
 #         try:
-#             vl_item = er.pattern_voice_leading_order[order_i]
+#             vl_item = er.pattern_vl_order[order_i]
 #             end_time = vl_item.end_time
 #             active_voice_i = vl_item.voice_i
 #         except IndexError:
@@ -841,7 +841,7 @@ def get_prev_voice_indices(score, start_time, dur):
 #     prev_voice_indices = []
 #
 #     for other_voice_i, end_time in voice_lens.items():
-#         if other_voice_i != voice_i and end_time > attack_time:
+#         if other_voice_i != voice_i and end_time > onset:
 #             prev_voice_indices.append(other_voice_i)
 #
 #     return prev_voice_indices + er.existing_voices_indices

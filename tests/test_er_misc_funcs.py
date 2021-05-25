@@ -49,7 +49,7 @@ def test_get_prev_voice_indices():
     settingsdict = {"num_voices": 2, "tet": 12}
     er = er_preprocess.preprocess_settings(settingsdict)
 
-    # voice, pitch, attack, dur, evaluates_to
+    # voice, pitch, onset, dur, evaluates_to
     notes1 = [
         (0, 60, 1.5, 0.5, []),
         (1, 64, 1.75, 0.25, [0]),

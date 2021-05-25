@@ -172,7 +172,7 @@ def efficient_voice_leading(
 class VoiceLeader:
     """A class for getting voice-leadings between two harmonies.
 
-    Each time the get_next_voice_leading() method is called, returns
+    Each time the instance is called (i.e., with __call__), returns
     the next most efficient voice-leading. If there are no more
     possible voice-leadings, returns a NoMoreVoiceLeadingsError.
 
@@ -398,10 +398,13 @@ class VoiceLeader:
                     nonchord_vl_i += 1
             self.intervals.append(zipped_voice_leading)
 
-    def exclude_voice_leading_motion(self, interval_i, interval):
-        self.excluded_vl_motions[interval_i].append(interval)
-
-    def get_next_voice_leading(self):
+    def __call__(self, exclude_vl_tup=None):
+        if exclude_vl_tup is not None:
+            # exclude_vl_tup[0] is interval_i
+            # exclude_vl_tup[1] is interval
+            self.excluded_vl_motions[exclude_vl_tup[0]].append(
+                exclude_vl_tup[1]
+            )
         self.voice_leading_i += 1
         while True:
             break_out = True

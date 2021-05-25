@@ -32,6 +32,7 @@ dependencies:
   - numpy
   - pygame
   - python-rtmidi
+  - sortedcontainers
 
 These can be installed by running `pip3 install -r requirements.txt` in
 the script directory.
@@ -161,9 +162,9 @@ We can also have different values of
 so, the script has to work quite a bit harder to find a solution. To
 help it do so, I made its task a little easier by changing
 \[`consonance_treatment`\](docs/settings.md\#consonance\_treatment) from
-`"all_attacks"` to `"none"`. Thus whereas in the previous examples, the
-simultaneously attacked notes all formed intervals like 3rds and fifths,
-in <a href="#example5">`docs/examples/example5.py`</a>, there are also
+`"all_onsets"` to `"none"`. Thus whereas in the previous examples, the
+simultaneously onset notes all formed intervals like 3rds and fifths, in
+<a href="#example5">`docs/examples/example5.py`</a>, there are also
 dissonances like 7ths and 9ths.
 
 <span id="example5">**Example:**
@@ -480,26 +481,26 @@ did [above](#how-it-works), there are many other ways of controlling the
 rhythms that are produced.\[5\]
 
 To begin with, we have
-\[`attack_subdivision`\](docs/settings.md\#attack\_subdivision) and
-\[`attack_density`\](docs/settings.md\#attack\_density):
+\[`onset_subdivision`\](docs/settings.md\#onset\_subdivision) and
+\[`onset_density`\](docs/settings.md\#onset\_density):
 
-  - \[`attack_subdivision`\](docs/settings.md\#attack\_subdivision)
-    indicates the basic “grid” on which note attacks can take place,
+  - \[`onset_subdivision`\](docs/settings.md\#onset\_subdivision)
+    indicates the basic “grid” on which note onsets can take place,
     measured in quarter notes.
-  - \[`attack_density`\](docs/settings.md\#attack\_density) indicates
-    the proportion of grid points that should have an attack.
+  - \[`onset_density`\](docs/settings.md\#onset\_density) indicates the
+    proportion of grid points that should have an onset.
 
 So for example, in
 <a href="#rhythm_example1">`docs/examples/rhythm_example1.py`</a>,
-`"attack_subdivision" = 1/4` indicates a sixteenth-note grid, and
-`"attack_density" = 1.0` indicates that every point in the grid should
-have an attack, creating a *moto perpetuo* texture. (For
-clarity/brevity, this example has only one voice.)
+`"onset_subdivision" = 1/4` indicates a sixteenth-note grid, and
+`"onset_density" = 1.0` indicates that every point in the grid should
+have an onset, creating a *moto perpetuo* texture. (For clarity/brevity,
+this example has only one voice.)
 
     {
     "num_voices": 1,
-    "attack_density": 0.5,
-    "attack_subdivision": 1/4,
+    "onset_density": 0.5,
+    "onset_subdivision": 1/4,
     }
 
 <span id="rhythm_example1">**Example:**
@@ -510,15 +511,15 @@ roll\](docs/resources/pngs/rhythm\_example1\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/rhythm\_example1.m4a)
 
-If we reduce \[`attack_density`\](docs/settings.md\#attack\_density), as
+If we reduce \[`onset_density`\](docs/settings.md\#onset\_density), as
 in <a href="#rhythm_example2">`docs/examples/rhythm_example2.py`</a>,
-the proportion of the sixteenth-grid that is filled with attacks will be
+the proportion of the sixteenth-grid that is filled with onsets will be
 correspondingly reduced.
 
     {
         "num_voices": 1,
-        "attack_density": 0.5,
-        "attack_subdivision": 1 / 4,
+        "onset_density": 0.5,
+        "onset_subdivision": 1 / 4,
     }
 
 <span id="rhythm_example2">**Example:**
@@ -532,9 +533,9 @@ audio\](docs/resources/m4as/rhythm\_example2.m4a)
 Another important rhythmic parameter is
 \[`dur_density`\](docs/settings.md\#dur\_density). It specifies the
 proportion of time that should be filled by note durations, irrespective
-of how many attacks there are. So far we have left
+of how many onsets there are. So far we have left
 \[`dur_density`\](docs/settings.md\#dur\_density) at the default value
-of `1.0`, which means that all notes last until the next attack in that
+of `1.0`, which means that all notes last until the next onset in that
 voice. (In musical terms, all notes are *legato*.) If we decrease it to
 0.75, as in
 <a href="#rhythm_example3">`docs/examples/rhythm_example3.py`</a>, some
@@ -543,9 +544,9 @@ rhythm is filled by sounding notes.
 
     {
         "num_voices": 1,
-        "attack_density": 0.5,
+        "onset_density": 0.5,
         "dur_density": 0.75,
-        "attack_subdivision": 1 / 4,
+        "onset_subdivision": 1 / 4,
     }}
 
 <span id="rhythm_example3">**Example:**
@@ -564,10 +565,10 @@ minimum duration of each pitch as well.
 
     {
         "num_voices": 1,
-        "attack_density": 0.5,
+        "onset_density": 0.5,
         "dur_density": 0.25,
         "min_dur": 1/8,
-        "attack_subdivision": 1 / 4,
+        "onset_subdivision": 1 / 4,
     }
 
 <span id="rhythm_example4">**Example:**
@@ -578,17 +579,17 @@ roll\](docs/resources/pngs/rhythm\_example4\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/rhythm\_example4.m4a)
 
-We can change `"attack_subdivision"` as well. For example, to have a
-grid of eighth-note triplets, we would set `"attack_subdivision" = 1/3`.
-And since computers have no problem with precise, strange rhythms, we
-could also set it to unusual values like `5/13` or `math.pi / 12`.\[6\]
+We can change `"onset_subdivision"` as well. For example, to have a grid
+of eighth-note triplets, we would set `"onset_subdivision" = 1/3`. And
+since computers have no problem with precise, strange rhythms, we could
+also set it to unusual values like `5/13` or `math.pi / 12`.\[6\]
 
     {
         "num_voices": 1,
-        "attack_density": 0.75,
+        "onset_density": 0.75,
         "dur_density": 0.25,
         "min_dur": 1/8,
-        "attack_subdivision": 3/ 13,
+        "onset_subdivision": 3/ 13,
     }
 
 <span id="rhythm_example5">**Example:**
@@ -599,7 +600,7 @@ audio\](docs/resources/m4as/rhythm\_example5.m4a)
 
 All of the settings we have been looking at so far are “per-voice”,
 meaning that they can be set to a different value in each voice. If we
-set \[`attack_subdivision`\](docs/settings.md\#attack\_subdivision) to a
+set \[`onset_subdivision`\](docs/settings.md\#onset\_subdivision) to a
 different unusual value in each voice, we get a particularly chaotic
 effect. (I find that the chaos can be reined in a bit by setting
 \[`rhythm_len`\](docs/settings.md\#rhythm\_len) to a short value,
@@ -608,10 +609,10 @@ creating a brief rhythmic loop.)
     {
         "rhythm_len": 1,
         "num_voices": 3,
-        "attack_density": [0.25, 0.5, 0.75],
+        "onset_density": [0.25, 0.5, 0.75],
         "dur_density": [0.25, 0.5, 0.25],
         "min_dur": [0.25, 0.25, 1/8],
-        "attack_subdivision": [3/ 13, 5/12, 6/11],
+        "onset_subdivision": [3/ 13, 5/12, 6/11],
     }
 
 <span id="rhythm_example6">**Example:**
@@ -622,17 +623,17 @@ audio\](docs/resources/m4as/rhythm\_example6.m4a)
 
 There are also a few settings that govern the relation between different
 voices. If \[`hocketing`\](docs/settings.md\#hocketing) is `True`, then,
-to the extent possible, the attacks of each voice will occur when there
-is no attack in any other voice. (In textures with many voices, it is
+to the extent possible, the onsets of each voice will occur when there
+is no onset in any other voice. (In textures with many voices, it is
 also possible to assign specific pairs of voices to hocket with one
 another.)
 
     {
         "num_voices": 2,
-        "attack_density": 0.4,
+        "onset_density": 0.4,
         "dur_density": 0.4,
         "min_dur": 0.25,
-        "attack_subdivision": 0.25,
+        "onset_subdivision": 0.25,
         "hocketing": True,
     }
 
@@ -654,10 +655,10 @@ for more details.)
     {
         "num_voices": 3,
         "rhythmic_unison": True,
-        "attack_density": .7,
+        "onset_density": .7,
         "dur_density": 0.6,
         "min_dur": 0.25,
-        "attack_subdivision": 1/4,
+        "onset_subdivision": 1/4,
     }
 
 <span id="rhythm_example8">**Example:**
@@ -670,32 +671,32 @@ audio\](docs/resources/m4as/rhythm\_example8.m4a)
 
 When \[`rhythmic_unison`\](docs/settings.md\#rhythmic\_unison) is
 applied, rhythmic settings like
-\[`attack_density`\](docs/settings.md\#attack\_density) only have any
+\[`onset_density`\](docs/settings.md\#onset\_density) only have any
 effect in the “leader” voice, whose rhythm is simply copied into the
 other voices. If we wanted to specify a different
-\[`attack_density`\](docs/settings.md\#attack\_density) in a “follower”
+\[`onset_density`\](docs/settings.md\#onset\_density) in a “follower”
 voice, it would be ignored. This situation would call for the related
 setting
 \[`rhythmic_quasi_unison`\](docs/settings.md\#rhythmic\_quasi\_unison).
 When
 \[`rhythmic_quasi_unison`\](docs/settings.md\#rhythmic\_quasi\_unison)
 applies, then, instead of copying the “leader” rhythm into the
-“follower” voices, the attacks of the “follower” voices are
+“follower” voices, the onsets of the “follower” voices are
 constrained so far as possible to coincide with those of the “leader.”
 In <a href="#rhythm_example9">`docs/examples/rhythm_example9.py`</a>,
 the leader is the bass voice (midi guitar). The middle voice (midi
 piano) has a *lower*
-\[`attack_density`\](docs/settings.md\#attack\_density), and the top
-voice (midi electric piano) has a *higher*
-\[`attack_density`\](docs/settings.md\#attack\_density).
+\[`onset_density`\](docs/settings.md\#onset\_density), and the top voice
+(midi electric piano) has a *higher*
+\[`onset_density`\](docs/settings.md\#onset\_density).
 
     {
         "num_voices": 3,
         "rhythmic_quasi_unison": True,
-        "attack_density": [0.5, 0.4, 0.6],
+        "onset_density": [0.5, 0.4, 0.6],
         "dur_density": [0.5, 0.4, 0.6],
         "min_dur": 0.25,
-        "attack_subdivision": 1 / 4,
+        "onset_subdivision": 1 / 4,
     }
 
 <span id="rhythm_example9">**Example:**
@@ -707,33 +708,32 @@ style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/rhythm\_example9.m4a)
 
 We can obtain more explicit control of the rhythms through the
-\[`obligatory_attacks`\](docs/settings.md\#obligatory\_attacks) setting,
+\[`obligatory_onsets`\](docs/settings.md\#obligatory\_onsets) setting,
 which specifies a sequence of times at which the rhythms will be
 “obliged” to have a note onset. It’s also necessary to specify
-\[`obligatory_attacks_modulo`\](docs/settings.md\#obligatory\_attacks\_modulo)
-in order to specify when these attacks should repeat (e.g., every two
+\[`obligatory_onsets_modulo`\](docs/settings.md\#obligatory\_onsets\_modulo)
+in order to specify when these onsets should repeat (e.g., every two
 beats).
 
 For example, in
 <a href="#rhythm_example10">`docs/examples/rhythm_example10.py`</a>,
-I’ve set
-\[`obligatory_attacks`\](docs/settings.md\#obligatory\_attacks) to
-`[0, 0.75, 1.5]` and
-\[`obligatory_attacks_modulo`\](docs/settings.md\#obligatory\_attacks\_modulo)
+I’ve set \[`obligatory_onsets`\](docs/settings.md\#obligatory\_onsets)
+to `[0, 0.75, 1.5]` and
+\[`obligatory_onsets_modulo`\](docs/settings.md\#obligatory\_onsets\_modulo)
 to `2` in order to specify a *tresillo* 3–3–2 rhythm. Since the value of
-\[`attack_density`\](docs/settings.md\#attack\_density) implies more
-than three attacks every two beats, additional attacks are added to the
+\[`onset_density`\](docs/settings.md\#onset\_density) implies more than
+three onsets every two beats, additional onsets are added to the
 underlying scaffold supplied by the values in
-\[`obligatory_attacks`\](docs/settings.md\#obligatory\_attacks).
+\[`obligatory_onsets`\](docs/settings.md\#obligatory\_onsets).
 
     {
         "num_voices": 3,
-        "obligatory_attacks": [0, 0.75, 1.5],
-        "obligatory_attacks_modulo": 2,
-        "attack_density": 0.5,
+        "obligatory_onsets": [0, 0.75, 1.5],
+        "obligatory_onsets_modulo": 2,
+        "onset_density": 0.5,
         "dur_density": 0.5,
         "min_dur": 0.25,
-        "attack_subdivision": 0.25,
+        "onset_subdivision": 0.25,
     }
 
 <span id="rhythm_example10">**Example:**
@@ -744,22 +744,21 @@ roll\](docs/resources/pngs/rhythm\_example10\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/rhythm\_example10.m4a)
 
-It is possible to specify an irregular grid upon which note attacks will
+It is possible to specify an irregular grid upon which note onsets will
 take place using
 \[`sub_subdivisions`\](docs/settings.md\#sub\_subdivisions). This
 setting takes a sequence of integers and subdivides the grid specified
-by \[`attack_subdivision`\](docs/settings.md\#attack\_subdivision) into
+by \[`onset_subdivision`\](docs/settings.md\#onset\_subdivision) into
 parts defined by the ratio of these integers. For example, in
 <a href="#rhythm_example11">`docs/examples/rhythm_example11.py`</a>
 below, \[`sub_subdivisions`\](docs/settings.md\#sub\_subdivisions) is
 `[4,3]`, which creates an uneven “swing” feel where every first note is
 4/3rds as long as every second note.\[^To keep the number of total
-attacks consistent, you’ll probably want to increase
-\[`attack_subdivision`\](docs/settings.md\#attack\_subdivision) by
-taking the value you otherwise would have chosen and multiplying it by
-the length of
-\[`sub_subdivisions`\](docs/settings.md\#sub\_subdivisions).\] You’ll
-notice that
+onsets consistent, you’ll probably want to increase
+\[`onset_subdivision`\](docs/settings.md\#onset\_subdivision) by taking
+the value you otherwise would have chosen and multiplying it by the
+length of \[`sub_subdivisions`\](docs/settings.md\#sub\_subdivisions).\]
+You’ll notice that
 <a href="#rhythm_example11">`docs/examples/rhythm_example11.py`</a> is
 precisely the same as
 <a href="#rhythm_example1">`docs/examples/rhythm_example1.py`</a>,
@@ -767,8 +766,8 @@ except for the uneven rhythms.
 
     {
         "num_voices": 1,
-        "attack_density": 1.0,
-        "attack_subdivision": 0.5,
+        "onset_density": 1.0,
+        "onset_subdivision": 0.5,
         "sub_subdivisions": [4, 3],
     }
 
@@ -786,11 +785,11 @@ do in
 
     {
         "num_voices": 3,
-        "attack_density": 0.4,
-        "attack_subdivision": 2,
+        "onset_density": 0.4,
+        "onset_subdivision": 2,
         "sub_subdivisions": [12, 13, 11, 15, 17, 10],
-        "obligatory_attacks": 0,
-        "obligatory_attacks_modulo": 2,
+        "obligatory_onsets": 0,
+        "obligatory_onsets_modulo": 2,
         "hocketing": True,
     }
 

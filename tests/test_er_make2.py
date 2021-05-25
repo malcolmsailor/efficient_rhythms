@@ -15,11 +15,13 @@ def test_check_harmonic_intervals():
     settingsdict = {
         "num_voices": 2,
         "tet": 12,
-        "forbidden_interval_classes": [0,],
+        "forbidden_interval_classes": [
+            0,
+        ],
     }
     er = er_preprocess.preprocess_settings(settingsdict)
 
-    # voice, pitch, attack, dur, evaluates_to
+    # voice, pitch, onset, dur, evaluates_to
     notes1 = [
         (0, 60, 1.5, 0.5, True),
         (1, 64, 1.75, 0.25, True),
@@ -53,7 +55,9 @@ def test_check_harmonic_intervals():
     settingsdict = {
         "num_voices": 3,
         "tet": 12,
-        "forbidden_intervals": [0,],
+        "forbidden_intervals": [
+            0,
+        ],
         "forbidden_interval_classes": [],
     }
     er = er_preprocess.preprocess_settings(settingsdict)
@@ -94,7 +98,7 @@ def test_check_melodic_intervals():
             "num_reps_super_pattern": 2,
             "overlap": False,
             "consonance_treatment": "none",
-            "obligatory_attacks_modulo": [2],
+            "obligatory_onsets_modulo": [2],
             "forbidden_interval_classes": [],
             "num_voices": 1,
             "max_interval": max_interval,

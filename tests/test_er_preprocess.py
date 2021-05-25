@@ -15,7 +15,7 @@ import src.er_settings as er_settings  # pylint: disable=wrong-import-position
 SCRIPT_DIR = os.path.dirname((os.path.realpath(__file__)))
 
 
-def test_process_pattern_voice_leading_order():
+def test_process_pattern_vl_order():
     # LONGTERM is there a way to redirect stdout and stderr while running
     #   the tests?
     pattern_lens_list = [(2.5, 3, 3.5, 4), (2, 3, 5)]
@@ -28,7 +28,7 @@ def test_process_pattern_voice_leading_order():
                 "truncate_patterns": truncate,
             }
             er = er_preprocess.preprocess_settings(settingsdict)
-            for item in er.pattern_voice_leading_order:
+            for item in er.pattern_vl_order:
                 voice_i = item.voice_i
                 pattern_len = pattern_lens[voice_i]
                 modulo = max(pattern_lens) if truncate else pattern_len
@@ -190,7 +190,7 @@ def test_replace_pitch_constants():
 
 
 if __name__ == "__main__":
-    test_process_pattern_voice_leading_order()
+    test_process_pattern_vl_order()
     test_read_in_settings()
     test_pitch_constants()
     test_replace_pitch_constants()

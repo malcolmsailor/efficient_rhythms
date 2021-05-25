@@ -84,11 +84,11 @@ def notify_user_of_unusual_settings(er):
             "particularly if there are many short notes."
         )
     if (
-        er.chord_tones_sync_attack_in_all_voices
+        er.chord_tones_sync_onset_in_all_voices
         and er.scale_chord_tone_prob_by_dur
     ):
         print(
-            "Notice: 'chord_tones_sync_attack_in_all_voices' and "
+            "Notice: 'chord_tones_sync_onset_in_all_voices' and "
             "'scale_chord_tone_prob_by_dur' are both true. Long notes in some "
             "voices may be non chord tones."
         )
@@ -289,11 +289,11 @@ def rhythmic_values_to_fractions(er):
         "rhythm_len",
         "harmony_len",
         "transpose_len",
-        "attack_subdivision",
+        "onset_subdivision",
         "sub_subdivisions",
         "dur_subdivision",
-        "obligatory_attacks",
-        "obligatory_attacks_modulo",
+        "obligatory_onsets",
+        "obligatory_onsets_modulo",
         "length_choir_segments",
         "length_choir_loop",
         "chord_tone_before_rests",
@@ -359,7 +359,7 @@ def ensure_lists_or_tuples(er):
         "hard_bounds",
         "scales",
         "chords",
-        "obligatory_attacks",
+        "obligatory_onsets",
         "sub_subdivisions",
         "consonance_modulo",
         "forbidden_interval_modulo",
@@ -599,13 +599,13 @@ def fill_rhythm_lists_by_voice(er):
     er.rhythm_lists_by_voice = [
         er.pattern_len,
         er.rhythm_len,
-        er.attack_density,
+        er.onset_density,
         er.dur_density,
-        er.attack_subdivision,
+        er.onset_subdivision,
         er.dur_subdivision,
         er.min_dur,
-        er.obligatory_attacks,
-        er.obligatory_attacks_modulo,
+        er.obligatory_onsets,
+        er.obligatory_onsets_modulo,
         er.comma_position,
     ]
 
@@ -664,19 +664,19 @@ def rhythm_preprocessing(er):
             er.num_notes[voice_i] = er.num_notes[leader_i]
             return
         rhythm_len = er.rhythm_len[voice_i]
-        density = er.attack_density[voice_i]
-        attack_div = er.attack_subdivision[voice_i]
+        density = er.onset_density[voice_i]
+        onset_div = er.onset_subdivision[voice_i]
 
         len_sub_subdiv = (
             len(er.sub_subdiv_props[voice_i])
             if er.cont_rhythms == "none"
             else 1
         )
-        num_div = int(rhythm_len / attack_div * len_sub_subdiv)
+        num_div = int(rhythm_len / onset_div * len_sub_subdiv)
         if isinstance(density, int):
             if density > num_div:
                 print(
-                    f"Notice: voice {voice_i} attack density of {density} "
+                    f"Notice: voice {voice_i} onset density of {density} "
                     f"is greater than {num_div}, the number of divisions.  "
                     f"Reducing to {num_div}."
                 )
@@ -685,7 +685,7 @@ def rhythm_preprocessing(er):
             # if isinstance(density, float):
             num_notes = min(round(density * num_div), num_div)
         er.num_notes[voice_i] = max(
-            num_notes, 1, len(er.obligatory_attacks[voice_i])
+            num_notes, 1, len(er.obligatory_onsets[voice_i])
         )
 
     if er.rhythms_specified_in_midi:
@@ -742,14 +742,14 @@ def rhythm_preprocessing(er):
         _num_notes(voice_i)
 
 
-def process_pattern_voice_leading_order(er):
-    """Adds er.pattern_voice_leading_order to ERSettings object."""
+def process_pattern_vl_order(er):
+    """Adds er.pattern_vl_order to ERSettings object."""
 
     # QUESTION put parallel voices immediately after their leader in voice
     #       order? or put them after all other voices? or setting to control
     #       this?
 
-    er.pattern_voice_leading_order = []
+    er.pattern_vl_order = []
 
     if er.truncate_patterns:
         truncate_len = max(er.pattern_len)
@@ -776,10 +776,8 @@ def process_pattern_voice_leading_order(er):
                     prev_pattern_i = pattern_i - 1
                 else:
                     prev_pattern_i = pattern_i - n_since_prev_pattern
-                prev_item = er.pattern_voice_leading_order[
-                    prev_pattern_i + voice_offset
-                ]
-            er.pattern_voice_leading_order.append(
+                prev_item = er.pattern_vl_order[prev_pattern_i + voice_offset]
+            er.pattern_vl_order.append(
                 er_voice_leadings.VoiceLeadingOrderItem(
                     voice_i,
                     start_time,
@@ -791,8 +789,8 @@ def process_pattern_voice_leading_order(er):
             pattern_i += 1
         voice_offset += pattern_i
 
-    er.pattern_voice_leading_order.sort(key=lambda x: x.end_time, reverse=True)
-    er.pattern_voice_leading_order.sort(key=lambda x: x.start_time)
+    er.pattern_vl_order.sort(key=lambda x: x.end_time, reverse=True)
+    er.pattern_vl_order.sort(key=lambda x: x.start_time)
 
 
 def num_cont_vars(er):
@@ -1166,14 +1164,11 @@ def preprocess_settings(
     def _prepare_sub_subdivisions(er):
         er.sub_subdiv_props = []
         for voice_i in range(er.num_voices):
-            subs, attack_div = er.get(
-                voice_i, "sub_subdivisions", "attack_subdivision"
+            subs, onset_div = er.get(
+                voice_i, "sub_subdivisions", "onset_subdivision"
             )
             er.sub_subdiv_props.append(
-                [
-                    fractions.Fraction(sub, sum(subs)) * attack_div
-                    for sub in subs
-                ]
+                [fractions.Fraction(sub, sum(subs)) * onset_div for sub in subs]
             )
 
     def _min_dur_process(er):
@@ -1181,30 +1176,30 @@ def preprocess_settings(
             for min_dur_i, min_dur in enumerate(er.min_dur):
                 if min_dur <= 0:
                     er.min_dur[min_dur_i] = er.get(
-                        min_dur_i, "attack_subdivision"
+                        min_dur_i, "onset_subdivision"
                     )
                 # QUESTION what is this? Is it for continuous rhythms?
                 # if isinstance(min_dur, int):
                 # er.min_dur[min_dur_i] = er.tempo[0] / 60 * (0.001 * min_dur)
         elif er.min_dur <= 0:
-            er.min_dur = er.get(0, "attack_subdivision")
+            er.min_dur = er.get(0, "onset_subdivision")
             # QUESTION what is this? Is it for continuous rhythms?
             # er.min_dur = er.tempo[0] / 60 * (0.001 * er.min_dur)
         er.min_dur = er_misc_funcs.convert_to_fractions(er.min_dur)
 
-    er.attack_density = _process_rhythm_list(
-        er.attack_density, replace_negative_with_random=True
+    er.onset_density = _process_rhythm_list(
+        er.onset_density, replace_negative_with_random=True
     )
     er.dur_density = _process_rhythm_list(
         er.dur_density, replace_negative_with_random=True
     )
-    er.attack_subdivision = _process_rhythm_list(er.attack_subdivision)
+    er.onset_subdivision = _process_rhythm_list(er.onset_subdivision)
     _prepare_sub_subdivisions(er)
     er.dur_subdivision = _process_rhythm_list(er.dur_subdivision)
     _min_dur_process(er)
     er.min_dur = _process_rhythm_list(er.min_dur)
-    er.obligatory_attacks_modulo = _process_rhythm_list(
-        er.obligatory_attacks_modulo
+    er.obligatory_onsets_modulo = _process_rhythm_list(
+        er.obligatory_onsets_modulo
     )
     if not er.comma_position:
         er.comma_position = "end"
@@ -1213,31 +1208,31 @@ def preprocess_settings(
         er.chord_tone_before_rests
     )
 
-    for sub_list_i, sub_list in enumerate(er.obligatory_attacks):
+    for sub_list_i, sub_list in enumerate(er.obligatory_onsets):
         beats = sub_list.copy()
         for beat in beats:
             for i in range(
                 1,
                 math.ceil(
                     er.get(sub_list_i, "pattern_len")
-                    / er.get(sub_list_i, "obligatory_attacks_modulo")
+                    / er.get(sub_list_i, "obligatory_onsets_modulo")
                 ),
             ):
                 sub_list.append(
-                    beat + i * er.get(sub_list_i, "obligatory_attacks_modulo")
+                    beat + i * er.get(sub_list_i, "obligatory_onsets_modulo")
                 )
 
-    er.attack_subdivision_gcd = er_misc_funcs.gcd_from_list(
-        er.attack_subdivision,
+    er.onset_subdivision_gcd = er_misc_funcs.gcd_from_list(
+        er.onset_subdivision,
         er.sub_subdiv_props,  # pylint: disable=no-member
         er.pattern_len,
         er.harmony_len,
         er.rhythm_len,
-        er.obligatory_attacks,
-        er.obligatory_attacks_modulo,
+        er.obligatory_onsets,
+        er.obligatory_onsets_modulo,
     )
     er.dur_gcd = er_misc_funcs.gcd_from_list(
-        er.attack_subdivision_gcd, er.dur_subdivision, er.min_dur
+        er.onset_subdivision_gcd, er.dur_subdivision, er.min_dur
     )
 
     # Continuous rhythm settings
@@ -1302,7 +1297,7 @@ def preprocess_settings(
 
     rhythm_preprocessing(er)
 
-    process_pattern_voice_leading_order(er)
+    process_pattern_vl_order(er)
 
     notify_user_of_unusual_settings(er)
 
@@ -1323,7 +1318,7 @@ def preprocess_settings(
     return er
 
 
-# Constants for accessing er.pattern_voice_leading_order
+# Constants for accessing er.pattern_vl_order
 
 VOICE_I = 0
 PATTERN_START = 1

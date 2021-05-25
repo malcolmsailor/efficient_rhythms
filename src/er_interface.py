@@ -118,7 +118,10 @@ class BuildStatusPrinter:
         return "\n".join(
             [
                 er_misc_funcs.make_header(
-                    subhead, fill_char="-", bold=False, indent=4,
+                    subhead,
+                    fill_char="-",
+                    bold=False,
+                    indent=4,
                 ),
                 er_misc_funcs.make_table(
                     [
@@ -222,7 +225,7 @@ def parse_cmd_line_args():
     # )
     # parser.add_argument(
     #     "-d",
-    #     help="Maximum denominator for attack/durations for midi file specified "
+    #     help="Maximum denominator for onset/durations for midi file specified "
     #     "with -f",
     #     default=0,
     #     type=int,
@@ -929,8 +932,7 @@ def verovio_interface(super_pattern, midi_path, verovio_arguments):
 
 
 def update_midi_type(er):
-    """For writing voices and/or choirs to separate tracks.
-    """
+    """For writing voices and/or choirs to separate tracks."""
 
     def _update_midi_type_prompt():
         prompt_strs = [er_misc_funcs.make_header("Midi settings")]
@@ -999,7 +1001,10 @@ def failure_message(exc, random_failures=None):
                 er_misc_funcs.make_header("UNABLE TO BUILD PATTERN"),
                 exc.__str__(),
                 "",
-                er_misc_funcs.add_line_breaks(msg, indent_type="none",),
+                er_misc_funcs.add_line_breaks(
+                    msg,
+                    indent_type="none",
+                ),
             ]
         )
     )
@@ -1009,8 +1014,7 @@ def failure_message(exc, random_failures=None):
 def input_loop(
     er, super_pattern, midi_player, verovio_arguments=None, debug=False
 ):
-    """Run the user input loop for efficient_rhythms.py
-    """
+    """Run the user input loop for efficient_rhythms.py"""
 
     def get_input_prompt():
         return "".join(

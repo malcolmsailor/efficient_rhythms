@@ -41,7 +41,7 @@ def check_rhythms(er):
     # the kern function only works if all rhythms have denominator that is a
     # power of 2, so we want to check that first
     # As a heuristic, we just check if the rhythms are divisible by 128.
-    # LONGTERM check other rhythmic features besides attack_subdivision,
+    # LONGTERM check other rhythmic features besides onset_subdivision,
     #   sub_subdivisions?
     if any([len(x) > 1 for x in er.sub_subdivisions]):
         print(
@@ -49,7 +49,7 @@ def check_rhythms(er):
             "values of er.sub_subdivisions"
         )
         return False
-    if all([n % (1 / 128) == 0 for n in er.attack_subdivision]):
+    if all([n % (1 / 128) == 0 for n in er.onset_subdivision]):
         return True
     print("Can't export notation because not all rhythms are divisible by 128")
     return False
@@ -218,7 +218,7 @@ def get_kern(super_pattern):
 
     voice_ps = [[] for voice_i in range(num_voices)]
     ties = [{} for voice_i in range(num_voices)]
-    attacks = []
+    onsets = []
 
     numer, denom = super_pattern.time_sig
     time_sig_dur = numer * 4 / denom
@@ -239,33 +239,33 @@ def get_kern(super_pattern):
             )
             for note, spelling in zip(voice, spelled):
                 note.spelling = spelling
-                attack = note.attack_time
-                attacks.append(attack)
+                onset = note.onset
+                onsets.append(onset)
 
-                # add supplementary attacks for tied notes where necessary
+                # add supplementary onsets for tied notes where necessary
                 durs = dur_to_kern(
                     note.dur,
-                    offset=attack,
+                    offset=onset,
                     unbreakable_value=unbreakable_value,
                     time_sig_dur=time_sig_dur,
                 )
                 if len(durs) > 1:
-                    ties[voice_i][attack] = (durs[0][1], note.spelling, "start")
+                    ties[voice_i][onset] = (durs[0][1], note.spelling, "start")
                     for i in range(1, len(durs)):
-                        supplementary_attack = sum(
+                        supplementary_onset = sum(
                             [
-                                attack,
+                                onset,
                             ]
                             + [durs[j][0] for j in range(i)]
                         )
-                        attacks.append(supplementary_attack)
-                        ties[voice_i][supplementary_attack] = (
+                        onsets.append(supplementary_onset)
+                        ties[voice_i][supplementary_onset] = (
                             durs[i][1],
                             note.spelling,
                             "end" if i == len(durs) - 1 else "middle",
                         )
 
-    attacks = sorted(list(set(attacks)))
+    onsets = sorted(list(set(onsets)))
 
     # outkern = open(kern_file, "w", encoding="utf8")
     outkern = []
@@ -300,25 +300,25 @@ def get_kern(super_pattern):
 
     measure_counter = 0
 
-    for attack in attacks:
-        if attack % time_sig_dur == 0:
+    for onset in onsets:
+        if onset % time_sig_dur == 0:
             # write bar line
             measure_counter += 1
             for voice in range(num_voices):
                 outkern.append("=" + str(measure_counter))
                 outkern.append(_kern_white_space(voice))
         for voice in range(num_voices):
-            if attack in ties[voice]:
-                kern_dur, kern_letter, tie_status = ties[voice][attack]
+            if onset in ties[voice]:
+                kern_dur, kern_letter, tie_status = ties[voice][onset]
                 if tie_status == "end":
                     outkern.append(kern_dur + kern_letter + "]")
                 elif tie_status == "start":
                     outkern.append("[" + kern_dur + kern_letter)
                 else:
                     outkern.append(kern_dur + kern_letter)
-            elif attack in super_pattern.voices[voice]:
-                note = super_pattern.voices[voice][attack][0]
-                if len(super_pattern.voices[voice][attack]) > 1:
+            elif onset in super_pattern.voices[voice]:
+                note = super_pattern.voices[voice][onset][0]
+                if len(super_pattern.voices[voice][onset]) > 1:
                     raise NotImplementedError(
                         "No support for writing polyphonic voices to kern yet"
                     )

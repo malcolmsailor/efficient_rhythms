@@ -39,7 +39,7 @@ class Score:
         harmony_times
         all_voice_idxs
         total_dur
-        first_attack_and_notes
+        first_onset_and_notes
 
     Methods:
         head
@@ -49,7 +49,7 @@ class Score:
         add_note
         add_other_message
         add_meta_message
-        attack
+        onset
         fill_with_rests
         displace_passage
         remove_passage
@@ -58,12 +58,12 @@ class Score:
         get_passage
         get_harmony_times
         get_harmony_i
-        get_harmony_times_from_attack
+        get_harmony_times_from_onset
         get_sounding_voices
         get_sounding_pitches
-        get_simultaneously_attacked_pitches
-        get_all_pitches_attacked_during_duration
-        get_all_pitches_sounding_during_duration
+        get_simultaneously_onset_ps
+        get_all_ps_onset_in_dur
+        get_all_ps_sounding_in_dur
         get_prev_n_pitches
         get_prev_pitch
         get_last_n_pitches
@@ -107,7 +107,7 @@ class Score:
         self.n_since_chord_tone_list = []
         self.num_voices = 0
         self.time_sig = time_sig
-        self.attacks_adjusted_by = 0
+        self.onsets_adjusted_by = 0
 
         for i in range(num_voices):
             self.add_voice(voice_range=ranges[i % len(ranges)])
@@ -131,7 +131,7 @@ class Score:
                     strings.append(
                         "Attack:{:>10.5}  Pitch:{:>6}  Duration:{:>10.5}"
                         "".format(
-                            float(note.attack_time),
+                            float(note.onset),
                             self.speller(note.pitch),
                             float(note.dur),
                         )
@@ -203,14 +203,14 @@ class Score:
         self,
         voice_i,
         note_obj_or_pitch,
-        attack_time=None,
+        onset=None,
         dur=None,
         velocity=er_classes.DEFAULT_VELOCITY,
         choir=er_classes.DEFAULT_CHOIR,
     ):
         """Adds a note to the specified voice."""
         self.voices[voice_i].add_note(
-            note_obj_or_pitch, attack_time, dur, velocity=velocity, choir=choir
+            note_obj_or_pitch, onset, dur, velocity=velocity, choir=choir
         )
 
     def add_other_message(self, voice_i, message):
@@ -230,10 +230,10 @@ class Score:
             pass
         self.meta_messages.append(message)
 
-    def attack(self, attack_time, voice_i):
-        """Check if an attack occurs in the given voice
+    def onset(self, onset, voice_i):
+        """Check if an onset occurs in the given voice
         at the specified time."""
-        return attack_time in self.voices[voice_i]
+        return onset in self.voices[voice_i]
 
     def fill_with_rests(self, end_time):
         """Fills all silences with "rests" (Note classes with pitch,
@@ -256,9 +256,9 @@ class Score:
     ):
         """Moves a passage forward or backward in time.
 
-        Any notes whose attack times are moved before 0 will be deleted.
+        Any notes whose onset times are moved before 0 will be deleted.
 
-        Any meta messages whose attack times that would be displaced below
+        Any meta messages whose onset times that would be displaced below
         time 0 are placed at time 0.
 
         If start_time is not specified, passage moved starts from beginning
@@ -348,8 +348,8 @@ class Score:
     def get_passage(self, passage_start_time, passage_end_time, make_copy=True):
         """Returns all voices of a given passage as a Score object.
 
-        Passage includes notes attacked during the given time interval,
-        but not notes sounding but attacked earlier. Passage is inclusive
+        Passage includes notes with onsets during the given time interval,
+        but not notes sounding but with earlier onsets. Passage is inclusive
         of passage_start_time and exclusive of passage_end_time.
 
         Keyword args:
@@ -404,34 +404,32 @@ class Score:
     def get_harmony_times(self, harmony_i):
         return self._harmony_idx_to_time[harmony_i]
 
-    def get_harmony_times_from_attack(self, attack_time):
+    def get_harmony_times_from_onset(self, onset):
         # TODO replace get_harmony_times with this method?
-        return self._harmony_idx_to_time[self.get_harmony_i(attack_time)]
+        return self._harmony_idx_to_time[self.get_harmony_i(onset)]
 
     @property
     def harmony_times(self):
         return list(self._harmony_idx_to_time.values())
 
-    def get_harmony_i(self, attack_time):
-        """If passed an attack time beyond the end of the harmonies, will
+    def get_harmony_i(self, onset):
+        """If passed an onset time beyond the end of the harmonies, will
         return the last harmony.
         """
-        return self._harmony_time_to_idx.bisect_right(attack_time) - 1
+        return self._harmony_time_to_idx.bisect_right(onset) - 1
 
-    def get_sounding_voices(
-        self, attack_time, dur=0, min_attack_time=0, min_dur=0
-    ):
-        """Get voices sounding at attack_time (if dur==0) or between
-        attack_time and attack_time + dur.
+    def get_sounding_voices(self, onset, dur=0, min_onset=0, min_dur=0):
+        """Get voices sounding at onset (if dur==0) or between
+        onset and onset + dur.
         """
         # TODO refactor this and similar functions to take an end_time argument
         # instead of dur?
         out = []
         for voice_i in self.all_voice_idxs:
             if self.voices[voice_i].get_sounding_pitches(
-                attack_time,
-                end_time=attack_time + dur,
-                min_attack_time=min_attack_time,
+                onset,
+                end_time=onset + dur,
+                min_onset=min_onset,
                 min_dur=min_dur,
             ):
                 out.append(voice_i)
@@ -439,13 +437,12 @@ class Score:
 
     def get_sounding_pitches(
         self,
-        attack_time,
+        onset,
         end_time=None,
         voices=None,
-        min_attack_time=0,
+        min_onset=0,
         min_dur=0,
     ):
-
         sounding_pitches = set()
 
         if voices is None:
@@ -455,73 +452,66 @@ class Score:
             voice = self.voices[voice_i]
             sounding_pitches.update(
                 voice.get_sounding_pitches(
-                    attack_time,
+                    onset,
                     end_time=end_time,
-                    min_attack_time=min_attack_time,
+                    min_onset=min_onset,
                     min_dur=min_dur,
                 )
             )
 
         return list(sorted(sounding_pitches))
 
-    def get_simultaneously_attacked_pitches(
-        self, attack_time, voices=None, min_dur=0
-    ):
+    def get_simultaneously_onset_ps(self, onset, voices=None, min_dur=0):
         return self.get_sounding_pitches(
-            attack_time,
+            onset,
             voices=voices,
-            min_attack_time=attack_time,
+            min_onset=onset,
             min_dur=min_dur,
         )
 
-    def get_all_pitches_attacked_during_duration(
-        self, attack_time, dur, voices=None
-    ):
+    def get_all_ps_onset_in_dur(self, onset, dur, voices=None):
         return self.get_sounding_pitches(
-            attack_time,
-            end_time=attack_time + dur,
+            onset,
+            end_time=onset + dur,
             voices=voices,
-            min_attack_time=attack_time,
+            min_onset=onset,
         )
 
-    def get_all_pitches_sounding_during_duration(
-        self, attack_time, dur, voices=None, min_dur=0
-    ):
+    def get_all_ps_sounding_in_dur(self, onset, dur, voices=None, min_dur=0):
+
         return self.get_sounding_pitches(
-            attack_time,
-            end_time=attack_time + dur,
+            onset,
+            end_time=onset + dur,
             voices=voices,
             min_dur=min_dur,
         )
 
     def get_prev_n_pitches(
-        self, n, time, voice_i, min_attack_time=0, stop_at_rest=False
+        self, n, time, voice_i, min_onset=0, stop_at_rest=False
     ):
-        """Returns previous n pitches (attacked before time).
+        """Returns previous n pitches (with onset before time).
 
-        If pitches are attacked earlier than min_attack_time, -1 will be
+        If pitches are onset earlier than min_onset, -1 will be
         returned instead.
         """
         return self.voices[voice_i].get_prev_n_pitches(
-            n, time, min_attack_time=min_attack_time, stop_at_rest=stop_at_rest
+            n, time, min_onset=min_onset, stop_at_rest=stop_at_rest
         )
 
-    def get_prev_pitch(
-        self, time, voice_i, min_attack_time=0, stop_at_rest=False
-    ):
+    def get_prev_pitch(self, time, voice_i, min_onset=0, stop_at_rest=False):
         """Returns previous pitch from voice."""
         return self.voices[voice_i].get_prev_n_pitches(
-            1, time, min_attack_time=min_attack_time, stop_at_rest=stop_at_rest
+            1, time, min_onset=min_onset, stop_at_rest=stop_at_rest
         )[0]
 
     def get_last_n_pitches(
-        self, n, time, voice_i, min_attack_time=0, stop_at_rest=False
+        self, n, time, voice_i, min_onset=0, stop_at_rest=False
     ):
-        """Returns last n pitches (including pitch attacked at time)."""
+        """Returns last n pitches (including pitch with onset at time)."""
         return self.voices[voice_i].get_prev_n_pitches(
             n,
             time,
-            min_attack_time=min_attack_time,
+            min_onset=min_onset,
             stop_at_rest=stop_at_rest,
             include_start_time=True,
         )
@@ -558,20 +548,20 @@ class Score:
         ]
 
     @property
-    def first_attack_and_notes(self):
-        first_attack = self.total_dur
+    def first_onset_and_notes(self):
+        first_onset = self.total_dur
         first_notes = None
         for voice in self:
             (
-                first_attack_in_voice,
+                first_onset_in_voice,
                 first_note_in_voice,
-            ) = voice.first_attack_and_notes
-            if first_attack_in_voice < first_attack:
-                first_attack, first_notes = (
-                    first_attack_in_voice,
+            ) = voice.first_onset_and_notes
+            if first_onset_in_voice < first_onset:
+                first_onset, first_notes = (
+                    first_onset_in_voice,
                     first_note_in_voice,
                 )
-        return first_attack, first_notes
+        return first_onset, first_notes
 
     def copy(self):
         return copy.deepcopy(self)

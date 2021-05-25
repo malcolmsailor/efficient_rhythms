@@ -133,7 +133,7 @@ def test_voice():
             note_objs[3],
         ], "prev != [None, note_objs[2], note_objs[3]]"
         prev = voice.get_prev_n_notes(
-            3, 1.5, include_start_time=True, min_attack_time=1
+            3, 1.5, include_start_time=True, min_onset=1
         )
         assert prev == [
             None,
@@ -151,7 +151,7 @@ def test_voice():
         s = voice.get_sounding_pitches(0, end_time=2, min_dur=0.5)
         assert s == [60, 62, 63], "s != [60, 62, 63]"
         s = voice.get_sounding_pitches(
-            0.3, end_time=2.3, min_attack_time=0.2, min_dur=0.5
+            0.3, end_time=2.3, min_onset=0.2, min_dur=0.5
         )
         assert s == [62, 63], "s != [62, 63]"
         p = voice.get_passage(1, 2)
@@ -183,8 +183,8 @@ def test_voice():
         p2 = voice.get_passage(3.0, 4.5)
         for n1, n2 in zip(p1, p2):
             assert n1.partial_equality(
-                n2, attack_time=False
-            ), "n1.partial_equality(n2, attack_time=False)"
+                n2, onset=False
+            ), "n1.partial_equality(n2, onset=False)"
         assert len(voice[4.0]) == 2, "len(voice[4.0]) != 2"
         voice.displace_passage(-1, 2.0)
         assert len(voice[3.0]) == 2, "len(voice[3.0]) != 2"
@@ -192,8 +192,8 @@ def test_voice():
         p2 = voice.get_passage(2.0, 10.0)
         for n1, n2 in zip(p1, p2):
             assert n1.partial_equality(
-                n2, attack_time=False
-            ), "n1.partial_equality(n2, attack_time=False)"
+                n2, onset=False
+            ), "n1.partial_equality(n2, onset=False)"
         voice.displace_passage(-0.5)
         for note in voice:
             assert note is note_objs[1], "note is not note_objs[1]"

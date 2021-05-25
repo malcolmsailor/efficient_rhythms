@@ -105,27 +105,27 @@ class BoolRandomizer(BaseRandomizer):
 
 class Randomizer(BoolRandomizer):
     """
-        conditions: a sequence of tuples of form (lhs, op, rhs, action_indices),
-            where
-                - lhs is an attribute of the ERSettings object
-                - rhs is an attribute of the ERSettings or a literal value
-                    (although note that if rhs is a string, it can't have the
-                    name of an attribute of ERSettings or it will evaluate
-                    to that attribute)
-                - op is the name of a comparison operator (e.g., "__eq__")
-                - action_indices: a tuple of indices into the sequence passed as the
-                    `actions` argument. The reason for passing indices rather
-                    than the actions directly is so that multiple conditions
-                    can trigger the same actions, without the actions
-                    being taken multiple times (which, e.g., would lead to
-                    an error if an attribute is deleted twice).
-        actions: a sequence of tuples of form (obj_name, action_name,
-            action_args), where
-                - obj_name is an attribute of the Randomizer
-                - action_name is either the name of a method of lhs (e.g.,
-                    "__delitem__"), or "setattr" (in which case
-                    setattr(self, obj_name, action_args) is called)
-                - action_args is the argument to action_name
+    conditions: a sequence of tuples of form (lhs, op, rhs, action_indices),
+        where
+            - lhs is an attribute of the ERSettings object
+            - rhs is an attribute of the ERSettings or a literal value
+                (although note that if rhs is a string, it can't have the
+                name of an attribute of ERSettings or it will evaluate
+                to that attribute)
+            - op is the name of a comparison operator (e.g., "__eq__")
+            - action_indices: a tuple of indices into the sequence passed as the
+                `actions` argument. The reason for passing indices rather
+                than the actions directly is so that multiple conditions
+                can trigger the same actions, without the actions
+                being taken multiple times (which, e.g., would lead to
+                an error if an attribute is deleted twice).
+    actions: a sequence of tuples of form (obj_name, action_name,
+        action_args), where
+            - obj_name is an attribute of the Randomizer
+            - action_name is either the name of a method of lhs (e.g.,
+                "__delitem__"), or "setattr" (in which case
+                setattr(self, obj_name, action_args) is called)
+            - action_args is the argument to action_name
     """
 
     def __init__(
@@ -221,7 +221,9 @@ class ERRandomize:
         self.truncate_patterns = BoolRandomizer(0.7)
         self.voice_order_str = StrRandomizer({"reverse": 0.25, "usual": 0.75})
         self.interval_cycle = RandomSelecter(
-            list(range(er.tet)), multiple_values=0.5, max_multiple_values=8,
+            list(range(er.tet)),
+            multiple_values=0.5,
+            max_multiple_values=8,
         )
         self.chords = RandomSelecter(
             [
@@ -251,7 +253,7 @@ class ERRandomize:
                 "none": 0.2,
             }
         )
-        self.chord_tones_sync_attack_in_all_voices = BoolRandomizer(0.2)
+        self.chord_tones_sync_onset_in_all_voices = BoolRandomizer(0.2)
         self.force_foot_in_bass = StrRandomizer(
             {
                 "global_first_beat": 0.2,
@@ -265,13 +267,27 @@ class ERRandomize:
         self.force_repeated_notes = BoolRandomizer(0.1)
         self.force_parallel_motion = BoolRandomizer(0.2)
         self.consonance_treatment = StrRandomizer(
-            {"all_attacks": 0.5, "all_durs": 0.25, "none": 0.25}
+            {"all_onsets": 0.5, "all_durs": 0.25, "none": 0.25}
         )
         self.cont_rhythms = StrRandomizer(
-            {"none": 0.6, "all": 0.2, "grid": 0.2,},
+            {
+                "none": 0.6,
+                "all": 0.2,
+                "grid": 0.2,
+            },
             conditions=(
-                ("pattern_len", "__ne__", "rhythm_len", (0, 1),),
-                ("pattern_len", "__ne__", 1, (0, 1),),
+                (
+                    "pattern_len",
+                    "__ne__",
+                    "rhythm_len",
+                    (0, 1),
+                ),
+                (
+                    "pattern_len",
+                    "__ne__",
+                    1,
+                    (0, 1),
+                ),
             ),
             actions=(
                 ("mapping", "__delitem__", "all"),
@@ -287,13 +303,13 @@ class ERRandomize:
         self.rhythmic_unison = BoolRandomizer(0.3)
         self.rhythmic_quasi_unison = BoolRandomizer(0.3)
         self.hocketing = BoolRandomizer(0.4)
-        self.attack_density = Randomizer(
+        self.onset_density = Randomizer(
             0.05, 1, step=0.05, multiple_values=1, spread=(0, 1)
         )
         self.dur_density = Randomizer(
             0.05, 1, step=0.05, multiple_values=0.7, spread=(0, 1)
         )
-        self.attack_subdivision = RandomSelecter(
+        self.onset_subdivision = RandomSelecter(
             [
                 Fraction(1, 1),
                 Fraction(1, 2),
@@ -306,7 +322,12 @@ class ERRandomize:
         )
         self.randomly_distribute_between_choirs = BoolRandomizer(0.7)
         self.length_choir_segments = Randomizer(
-            -0.5, 2, step=0.25, illegal_values=[0,]
+            -0.5,
+            2,
+            step=0.25,
+            illegal_values=[
+                0,
+            ],
         )
         self.tempo = Randomizer(96, 160)
 

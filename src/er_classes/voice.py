@@ -13,9 +13,9 @@ import src.er_spelling as er_spelling
 class DumbSortedList(list):
     """A list that stays sorted.
 
-    The purpose of this class is to store notes that share a given attack
+    The purpose of this class is to store notes that share a given onset
     time. I expect that most often there will only be a single note at each
-    attack time, and rarely more than 2. For this reason, any extra overhead
+    onset time, and rarely more than 2. For this reason, any extra overhead
     from using a binary tree or the like seems not worth it. For any usage
     where these assumptions don't hold, consider replacing with
     sortedcontainers.SortedList
@@ -69,12 +69,12 @@ class Voice:
 
     Can be iterated over (e.g., for note in voice [where "voice" is a
     Voice object]) and reversed (e.g., reversed(voice)). This will
-    give the note objects sorted by attack time and secondarily by
+    give the note objects sorted by onset time and secondarily by
     durations.
 
     Attributes:
     # TODO update this list
-        data: a dictionary. Keys are attack_times (fractions), values are
+        data: a dictionary. Keys are onsets (fractions), values are
             lists of Note objects, sorted by duration.
         other_messages: a list in which other midi messages are stored
             when constructing the voice from a midi file.
@@ -90,12 +90,12 @@ class Voice:
         add_note
         move_note
         remove_note
-        remove_attack
+        remove_onset
         add_rest
         add_other_message
         append
         get_sounding_pitches
-        get_all_pitches_attacked_during_duration
+        get_all_ps_onset_in_dur
         get_prev_n_pitches
         get_prev_pitch
         get_last_n_pitches
@@ -130,13 +130,13 @@ class Voice:
         self.range = voice_range
 
     def __iter__(self):
-        for attack_time in self._data:
-            for note in self._data[attack_time]:
+        for onset in self._data:
+            for note in self._data[onset]:
                 yield note
 
     def __reversed__(self):
-        for attack_time in reversed(self._data):
-            for note in reversed(self._data[attack_time]):
+        for onset in reversed(self._data):
+            for note in reversed(self._data[onset]):
                 yield note
 
     def __str__(self):
@@ -146,7 +146,7 @@ class Voice:
             strings.append(
                 "Attack:{:>10.3}  Pitch:{:>6}  Duration:{:>10.3}"
                 "".format(
-                    float(note.attack_time),
+                    float(note.onset),
                     self.speller(note.pitch),
                     float(note.dur),
                 )
@@ -160,24 +160,24 @@ class Voice:
     def __getitem__(self, *args, **kwargs):
         return self._data.__getitem__(*args, **kwargs)
 
-    def __delitem__(self, attack_time):
-        self.remove_attack(attack_time)
+    def __delitem__(self, onset):
+        self.remove_onset(onset)
 
     def is_empty(self):  # TODO convert to property, document
         return len(self._data) == 0
 
     def is_polyphonic(self):
-        for attack_time in self._data:
-            if len(self._data[attack_time]) > 1:
+        for onset in self._data:
+            if len(self._data[onset]) > 1:
                 return True
         return False
 
     @property
-    def first_attack_and_notes(self):
+    def first_onset_and_notes(self):
         return self._data.peekitem(0)
 
     @property
-    def last_attack_and_notes(self):
+    def last_onset_and_notes(self):
         """Raises an IndexError if the voice is empty."""
         return self._data.peekitem()
 
@@ -191,7 +191,7 @@ class Voice:
     def add_note(
         self,
         note_obj_or_pitch,
-        attack_time=None,
+        onset=None,
         dur=None,
         velocity=er_classes.DEFAULT_VELOCITY,
         choir=er_classes.DEFAULT_CHOIR,
@@ -200,58 +200,56 @@ class Voice:
             note_obj = note_obj_or_pitch
             note_obj.voice = self.voice_i
         else:
-            # is it worth asserting that attack_time and dur are not None here?
+            # is it worth asserting that onset and dur are not None here?
             note_obj = er_classes.Note(
                 note_obj_or_pitch,
-                attack_time,
+                onset,
                 dur,
                 velocity=velocity,
                 choir=choir,
                 voice=self.voice_i,
             )
-        if note_obj.attack_time not in self._data:
-            self._data[note_obj.attack_time] = DumbSortedList([note_obj])
+        if note_obj.onset not in self._data:
+            self._data[note_obj.onset] = DumbSortedList([note_obj])
         else:
-            self._data[note_obj.attack_time].add(note_obj)
-        if (
-            release := note_obj.attack_time + note_obj.dur
-        ) not in self._releases:
+            self._data[note_obj.onset].add(note_obj)
+        if (release := note_obj.onset + note_obj.dur) not in self._releases:
             self._releases[release] = DumbSortedList([note_obj])
         else:
             self._releases[release].add(note_obj)
 
-    def move_note(self, note_object, new_attack_time):
-        """Moves a note object to a new attack time."""
+    def move_note(self, note_object, new_onset):
+        """Moves a note object to a new onset time."""
         self.remove_note(note_object)
-        note_object.attack_time = new_attack_time
+        note_object.onset = new_onset
         self.add_note(note_object)
 
     def remove_note(self, note_obj):
         """Removes given note object from self."""
-        notes = self._data[note_obj.attack_time]
+        notes = self._data[note_obj.onset]
         notes.remove(note_obj)  # what kind of exception does this raise?
         if not notes:
-            del self._data[note_obj.attack_time]
-        release = note_obj.attack_time + note_obj.dur
+            del self._data[note_obj.onset]
+        release = note_obj.onset + note_obj.dur
         notes = self._releases[release]
         notes.remove(note_obj)
         if not notes:
             del self._releases[release]
 
-    def remove_attack(self, attack_time):
-        """Unconditionally removes and returns all notes at `attack_time`.
+    def remove_onset(self, onset):
+        """Unconditionally removes and returns all notes at `onset`.
 
-        `del voice[attack_time] calls this function`
+        `del voice[onset] calls this function`
         """
-        # because self.remove_note alters self._data[attack_time], we need
+        # because self.remove_note alters self._data[onset], we need
         # to save a list of the notes to iterate
-        notes = list(self._data[attack_time])
+        notes = list(self._data[onset])
         for note in notes:
             self.remove_note(note)
         return notes
 
-    def add_rest(self, attack_time, dur):
-        self.add_note(None, attack_time, dur)
+    def add_rest(self, onset, dur):
+        self.add_note(None, onset, dur)
 
     def add_other_message(self, message):
         self.other_messages.append(message)
@@ -265,38 +263,38 @@ class Voice:
         for note in other_voice_or_sequence:
             if make_copy:
                 note = note.copy()
-            note.attack_time += offset
+            note.onset += offset
             self.add_note(note)
 
     def get_sounding_pitches(
         self,
-        attack_time,
+        onset,
         end_time=None,
-        min_attack_time=0,
+        min_onset=0,
         min_dur=0,
         sort_out=True,
     ):
         sounding_pitches = set()
-        # end_time = attack_time + dur
+        # end_time = onset + dur
         if end_time is None:
-            end_time = attack_time
-        # # Unfortunately, we seem to need to iterate over all attacks that occur
+            end_time = onset
+        # # Unfortunately, we seem to need to iterate over all onsets that occur
         # # before
         # # the end of the interval (starting from 0), because there is no
         # constraint on how long
         # # a note can be. So even if we are now at time 10000, there is no
         # # guarantee that a note was not struck at time 0 with length 10001.
-        # # This inefficiency can be reduced somewhat by use of min_attack_time.
+        # # This inefficiency can be reduced somewhat by use of min_onset.
         # # If this proves to be a bottleneck there is probably a more clever
         # # way of performing the search that would be worth looking into.
 
         ## TODO Maybe this can be refactored using _releases?
-        attacks_during_interval = self._data.irange(
-            min_attack_time, end_time, inclusive=(True, attack_time == end_time)
+        onsets_during_interval = self._data.irange(
+            min_onset, end_time, inclusive=(True, onset == end_time)
         )
-        for attack in attacks_during_interval:
-            for note in self._data[attack]:
-                if note.attack_time + note.dur <= attack_time:
+        for prev_onset in onsets_during_interval:
+            for note in self._data[prev_onset]:
+                if note.onset + note.dur <= onset:
                     continue
                 if note.dur >= min_dur:
                     sounding_pitches.add(note.pitch)
@@ -304,27 +302,27 @@ class Voice:
             return list(sorted(sounding_pitches))
         return list(sounding_pitches)
 
-    # def get_all_pitches_attacked_during_duration(self, attack_time, dur):
+    # def get_all_ps_onset_in_dur(self, onset, dur):
     #     return self.get_sounding_pitches(
-    #         attack_time, dur=dur, min_attack_time=attack_time
+    #         onset, dur=dur, min_onset=onset
     #     )
 
-    def get_all_pitches_attacked_during_duration(self, attack_time, end_time):
+    def get_all_ps_onset_in_dur(self, onset, end_time):
         return self.get_sounding_pitches(
-            attack_time, end_time=end_time, min_attack_time=attack_time
+            onset, end_time=end_time, min_onset=onset
         )
 
     def get_prev_n_pitches(
         self,
         n,
         time,
-        min_attack_time=0,
+        min_onset=0,
         stop_at_rest=False,
         include_start_time=False,
     ):
-        """Returns previous n pitches (attacked before time).
+        """Returns previous n pitches (onset before time).
 
-        If pitches are attacked earlier than min_attack_time, -1 will be
+        If pitches are onset earlier than min_onset, -1 will be
         returned instead. Or, if stop_at_rest is True, then instead of any
         pitches earlier than the first rest, -1 will be returned in place.
         """
@@ -333,26 +331,24 @@ class Voice:
             for note in self.get_prev_n_notes(
                 n,
                 time,
-                min_attack_time=min_attack_time,
+                min_onset=min_onset,
                 stop_at_rest=stop_at_rest,
                 include_start_time=include_start_time,
             )
         ]
 
-    def get_prev_pitch(self, time, min_attack_time=0, stop_at_rest=False):
+    def get_prev_pitch(self, time, min_onset=0, stop_at_rest=False):
         """Returns previous pitch from voice."""
         return self.get_prev_n_pitches(
-            1, time, min_attack_time=min_attack_time, stop_at_rest=stop_at_rest
+            1, time, min_onset=min_onset, stop_at_rest=stop_at_rest
         )[0]
 
-    def get_last_n_pitches(
-        self, n, time, min_attack_time=0, stop_at_rest=False
-    ):
-        """Returns last n pitches (including pitch attacked at time)."""
+    def get_last_n_pitches(self, n, time, min_onset=0, stop_at_rest=False):
+        """Returns last n pitches (including pitch onset at time)."""
         return self.get_prev_n_pitches(
             n,
             time,
-            min_attack_time=min_attack_time,
+            min_onset=min_onset,
             stop_at_rest=stop_at_rest,
             include_start_time=True,
         )
@@ -384,7 +380,7 @@ class Voice:
         self,
         n,
         time,
-        min_attack_time=0,
+        min_onset=0,
         stop_at_rest=False,
         include_start_time=False,
     ):
@@ -398,25 +394,22 @@ class Voice:
             start_i = self.get_i_before(time)
 
         out_notes = []
-        last_attack_time = time
+        last_onset = time
         i_iter = iter(range(start_i, -1, -1))
         try:
             while n > 0:
                 i = next(i_iter)
-                attack_time, notes = self._data.peekitem(i)
-                if attack_time < min_attack_time:
+                onset, notes = self._data.peekitem(i)
+                if onset < min_onset:
                     break
                 for note in reversed(notes):
-                    if (
-                        stop_at_rest
-                        and note.attack_time + note.dur < last_attack_time
-                    ):
+                    if stop_at_rest and note.onset + note.dur < last_onset:
                         raise BreakWhile
                     out_notes.append(note)
                     n -= 1
                     if n == 0:
                         break
-                    last_attack_time = attack_time
+                    last_onset = onset
         except (StopIteration, BreakWhile):
             pass
 
@@ -426,18 +419,18 @@ class Voice:
         out_notes.reverse()
         return out_notes
 
-    def get_prev_note(self, time, min_attack_time=0, stop_at_rest=False):
+    def get_prev_note(self, time, min_onset=0, stop_at_rest=False):
         """Returns previous Note from voice."""
         return self.get_prev_n_notes(
-            1, time, min_attack_time=min_attack_time, stop_at_rest=stop_at_rest
+            1, time, min_onset=min_onset, stop_at_rest=stop_at_rest
         )[0]
 
-    def get_last_n_notes(self, n, time, min_attack_time=0, stop_at_rest=False):
-        """Returns last n pitches (including pitch attacked at time)."""
+    def get_last_n_notes(self, n, time, min_onset=0, stop_at_rest=False):
+        """Returns last n pitches (including pitch onset at time)."""
         return self.get_prev_n_notes(
             n,
             time,
-            min_attack_time=min_attack_time,
+            min_onset=min_onset,
             stop_at_rest=stop_at_rest,
             include_start_time=True,
         )
@@ -446,8 +439,8 @@ class Voice:
 
         """Returns a single voice of a given passage.
 
-        Passage includes notes attacked during the given time interval,
-        but not notes sounding but attacked earlier. Passage is inclusive
+        Passage includes notes onset during the given time interval,
+        but not notes sounding but onset earlier. Passage is inclusive
         of start_time and exclusive of end_time.
 
         Doesn't change the "voice" attributes of the notes.
@@ -459,13 +452,12 @@ class Voice:
         """
 
         new_voice = Voice(tet=self.tet, voice_range=self.range)
-        attacks = self._data.irange(
+        onsets = self._data.irange(
             start_time, end_time, inclusive=(True, False)
         )
-        for attack in attacks:
-            new_voice._data[attack] = [  # pylint: disable=protected-access
-                note.copy() if make_copy else note
-                for note in self._data[attack]
+        for onset in onsets:
+            new_voice._data[onset] = [  # pylint: disable=protected-access
+                note.copy() if make_copy else note for note in self._data[onset]
             ]
         return new_voice
 
@@ -476,26 +468,26 @@ class Voice:
         new_voice = Voice(tet=self.tet, voice_range=self.range)
         # We must cast the return value to a tuple because otherwise, it is
         # lazily evaluated and this causes problems because we are changing
-        # the underlying data as we iterate through attacks
-        attacks = tuple(
+        # the underlying data as we iterate through onsets
+        onsets = tuple(
             self._data.irange(start_time, end_time, inclusive=(True, False))
         )
-        for attack in attacks:
-            new_voice._data[attack] = self.remove_attack(attack)
+        for onset in onsets:
+            new_voice._data[onset] = self.remove_onset(onset)
         return new_voice
 
     def repeat_passage(
         self, original_start_time, original_end_time, repeat_start_time
     ):
         """Repeats a voice."""
-        original_attacks = self._data.irange(
+        original_onsets = self._data.irange(
             original_start_time, original_end_time, inclusive=(True, False)
         )
-        for attack in original_attacks:
-            for note in self._data[attack]:
+        for onset in original_onsets:
+            for note in self._data[onset]:
                 repeat_note = note.copy()
-                repeat_note.attack_time = (
-                    repeat_start_time + attack - original_start_time
+                repeat_note.onset = (
+                    repeat_start_time + onset - original_start_time
                 )
                 self.add_note(repeat_note)
 
@@ -510,12 +502,12 @@ class Voice:
         end_time=None,
     ):
         """Transposes a passage."""
-        attacks = self._data.irange(
+        onsets = self._data.irange(
             start_time, end_time, inclusive=(True, False)
         )
         if er is None:  # specific transpose
-            for attack in attacks:
-                for note in self._data[attack]:
+            for onset in onsets:
+                for note in self._data[onset]:
                     note.pitch += interval
                     note.finetune += finetune
             return
@@ -539,10 +531,10 @@ class Voice:
                 adjusted_interval += len(er.get(harmony_i, "pc_scales"))
 
         _update_harmony_times()
-        for attack in attacks:
-            if attack >= harmony_times.end_time:
+        for onset in onsets:
+            if onset >= harmony_times.end_time:
                 _update_harmony_times()
-            for note in self._data[attack]:
+            for note in self._data[onset]:
                 orig_sd = scale.index(note.pitch)
                 note.pitch = scale[orig_sd + adjusted_interval]
 
@@ -561,20 +553,20 @@ class Voice:
 
         passage = self.remove_passage(start_time, end_time)
         for note in passage:
-            note.attack_time += displacement
+            note.onset += displacement
             self.add_note(note)
 
     def fill_with_rests(self, until):
         prev_release = 0
         rests = []
-        for attack_time, notes in self._data.items():
+        for onset, notes in self._data.items():
             if prev_release >= until:
                 break
-            if attack_time > prev_release:
-                rests.append((prev_release, attack_time - prev_release))
+            if onset > prev_release:
+                rests.append((prev_release, onset - prev_release))
             for note in notes:
-                if attack_time + note.dur > prev_release:
-                    prev_release = attack_time + note.dur
+                if onset + note.dur > prev_release:
+                    prev_release = onset + note.dur
 
         if until > prev_release:
             rests.append((prev_release, until - prev_release))

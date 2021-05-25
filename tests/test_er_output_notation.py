@@ -26,8 +26,8 @@ def test_get_kern():
         total_len=6,
     )
     for voice_i, voice in enumerate(notes):
-        for pitch, attack, dur in voice:
-            score.add_note(voice_i, pitch, attack, dur)
+        for pitch, onset, dur in voice:
+            score.add_note(voice_i, pitch, onset, dur)
     kern = er_output_notation.get_kern(score)
     _, temp_path = tempfile.mkstemp()
     # If the input is incorrect, verovio should fail

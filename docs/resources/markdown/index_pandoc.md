@@ -96,7 +96,7 @@ Up to now, we've always specified the same settings in both voices. But we need 
 
 EXAMPLE:example4
 
-We can also have different values of `pattern_len` in each voice, as in REF:example5. However, if we do so, the script has to work quite a bit harder to find a solution. To help it do so, I made its task a little easier by changing  `consonance_treatment` from `"all_attacks"` to `"none"`. Thus whereas in the previous examples, the simultaneously attacked notes all formed intervals like 3rds and fifths, in REF:example5, there are also dissonances like 7ths and 9ths.
+We can also have different values of `pattern_len` in each voice, as in REF:example5. However, if we do so, the script has to work quite a bit harder to find a solution. To help it do so, I made its task a little easier by changing  `consonance_treatment` from `"all_onsets"` to `"none"`. Thus whereas in the previous examples, the simultaneously onset notes all formed intervals like 3rds and fifths, in REF:example5, there are also dissonances like 7ths and 9ths.
 
 
 EXAMPLE:example5
@@ -244,42 +244,42 @@ Besides setting `rhythm_len` as we did [above](#how-it-works), there are many ot
 [^rhythm_example_settings]: The settings files that generated the examples in this section all begin with `rhythm_example` and are found in the `docs/examples` folder. `docs/examples/rhythm_example_base.py` is shared among each example. So you can build the first example with the command `python3 efficient_rhythms.py --settings docs/examples/rhythm_example_base.py docs/examples/rhythm_example1.py`.
 
 
-To begin with, we have `attack_subdivision` and `attack_density`:
+To begin with, we have `onset_subdivision` and `onset_density`:
 
-- `attack_subdivision` indicates the basic "grid" on which note attacks can take place, measured in quarter notes.
-- `attack_density` indicates the proportion of grid points that should have an attack.
+- `onset_subdivision` indicates the basic "grid" on which note onsets can take place, measured in quarter notes.
+- `onset_density` indicates the proportion of grid points that should have an onset.
 
-So for example, in REF:rhythm_example1, `"attack_subdivision" = 1/4` indicates a sixteenth-note grid, and `"attack_density" = 1.0` indicates that every point in the grid should have an attack, creating a *moto perpetuo* texture. (For clarity/brevity, this example has only one voice.)
+So for example, in REF:rhythm_example1, `"onset_subdivision" = 1/4` indicates a sixteenth-note grid, and `"onset_density" = 1.0` indicates that every point in the grid should have an onset, creating a *moto perpetuo* texture. (For clarity/brevity, this example has only one voice.)
 
 ```
 {
 "num_voices": 1,
-"attack_density": 0.5,
-"attack_subdivision": 1/4,
+"onset_density": 0.5,
+"onset_subdivision": 1/4,
 }
 ```
 
 EXAMPLE:rhythm_example1
 
-If we reduce `attack_density`, as in REF:rhythm_example2, the proportion of the sixteenth-grid that is filled with attacks will be correspondingly reduced.
+If we reduce `onset_density`, as in REF:rhythm_example2, the proportion of the sixteenth-grid that is filled with onsets will be correspondingly reduced.
 
 ```
 {
     "num_voices": 1,
-    "attack_density": 0.5,
-    "attack_subdivision": 1 / 4,
+    "onset_density": 0.5,
+    "onset_subdivision": 1 / 4,
 }
 ```
 
 EXAMPLE:rhythm_example2
 
-Another important rhythmic parameter is `dur_density`. It specifies the proportion of time that should be filled by note durations, irrespective of how many attacks there are. So far we have left `dur_density` at the default value of `1.0`, which means that all notes last until the next attack in that voice. (In musical terms, all notes are *legato*.) If we decrease it to 0.75, as in REF:rhythm_example3, some of the notes will become shorter, so that 75% of the total time of the rhythm is filled by sounding notes.
+Another important rhythmic parameter is `dur_density`. It specifies the proportion of time that should be filled by note durations, irrespective of how many onsets there are. So far we have left `dur_density` at the default value of `1.0`, which means that all notes last until the next onset in that voice. (In musical terms, all notes are *legato*.) If we decrease it to 0.75, as in REF:rhythm_example3, some of the notes will become shorter, so that 75% of the total time of the rhythm is filled by sounding notes.
 ```
 {
     "num_voices": 1,
-    "attack_density": 0.5,
+    "onset_density": 0.5,
     "dur_density": 0.75,
-    "attack_subdivision": 1 / 4,
+    "onset_subdivision": 1 / 4,
 }}
 ```
 
@@ -289,53 +289,53 @@ To obtain a *staccato* effect, we can make `dur_density` still shorter, but to o
 ```
 {
     "num_voices": 1,
-    "attack_density": 0.5,
+    "onset_density": 0.5,
     "dur_density": 0.25,
     "min_dur": 1/8,
-    "attack_subdivision": 1 / 4,
+    "onset_subdivision": 1 / 4,
 }
 ```
 
 EXAMPLE:rhythm_example4
 
-We can change `"attack_subdivision"` as well. For example, to have a grid of eighth-note triplets, we would set `"attack_subdivision" = 1/3`. And since computers have no problem with precise, strange rhythms, we could also set it to unusual values like `5/13` or `math.pi / 12`.[^Notation]
+We can change `"onset_subdivision"` as well. For example, to have a grid of eighth-note triplets, we would set `"onset_subdivision" = 1/3`. And since computers have no problem with precise, strange rhythms, we could also set it to unusual values like `5/13` or `math.pi / 12`.[^Notation]
 
 [^Notation]: However, we'll have to give up on representing these in conventional music notation. In fact, for the time being only duple note-values (i.e., eighth-notes, quarter-notes, and the like) can be exported to notation.
 
 ```
 {
     "num_voices": 1,
-    "attack_density": 0.75,
+    "onset_density": 0.75,
     "dur_density": 0.25,
     "min_dur": 1/8,
-    "attack_subdivision": 3/ 13,
+    "onset_subdivision": 3/ 13,
 }
 ```
 
 EXAMPLE:rhythm_example5
 
-All of the settings we have been looking at so far are "per-voice", meaning that they can be set to a different value in each voice. If we set `attack_subdivision` to a different unusual value in each voice, we get a particularly chaotic effect. (I find that the chaos can be reined in a bit by setting `rhythm_len` to a short value, creating a brief rhythmic loop.)
+All of the settings we have been looking at so far are "per-voice", meaning that they can be set to a different value in each voice. If we set `onset_subdivision` to a different unusual value in each voice, we get a particularly chaotic effect. (I find that the chaos can be reined in a bit by setting `rhythm_len` to a short value, creating a brief rhythmic loop.)
 ```
 {
     "rhythm_len": 1,
     "num_voices": 3,
-    "attack_density": [0.25, 0.5, 0.75],
+    "onset_density": [0.25, 0.5, 0.75],
     "dur_density": [0.25, 0.5, 0.25],
     "min_dur": [0.25, 0.25, 1/8],
-    "attack_subdivision": [3/ 13, 5/12, 6/11],
+    "onset_subdivision": [3/ 13, 5/12, 6/11],
 }
 ```
 
 EXAMPLE:rhythm_example6
 
-There are also a few settings that govern the relation between different voices. If `hocketing` is `True`, then, to the extent possible, the attacks of each voice will occur when there is no attack in any other voice. (In textures with many voices, it is also possible to assign specific pairs of voices to hocket with one another.)
+There are also a few settings that govern the relation between different voices. If `hocketing` is `True`, then, to the extent possible, the onsets of each voice will occur when there is no onset in any other voice. (In textures with many voices, it is also possible to assign specific pairs of voices to hocket with one another.)
 ```
 {
     "num_voices": 2,
-    "attack_density": 0.4,
+    "onset_density": 0.4,
     "dur_density": 0.4,
     "min_dur": 0.25,
-    "attack_subdivision": 0.25,
+    "onset_subdivision": 0.25,
     "hocketing": True,
 }
 ```
@@ -347,55 +347,55 @@ Another setting that governs the rhythmic relation between voices is `rhythmic_u
 {
     "num_voices": 3,
     "rhythmic_unison": True,
-    "attack_density": .7,
+    "onset_density": .7,
     "dur_density": 0.6,
     "min_dur": 0.25,
-    "attack_subdivision": 1/4,
+    "onset_subdivision": 1/4,
 }
 ```
 
 EXAMPLE:rhythm_example8
 
-When `rhythmic_unison` is applied, rhythmic settings like `attack_density` only have any effect in the "leader" voice, whose rhythm is simply copied into the other voices. If we wanted to specify a different `attack_density` in a "follower" voice, it would be ignored. This situation would call for the related setting `rhythmic_quasi_unison`. When `rhythmic_quasi_unison` applies, then, instead of copying the "leader" rhythm into the "follower" voices, the attacks of the "follower" voices are constrained so far as possible to coincide with those of the "leader." In REF:rhythm_example9, the leader is the bass voice (midi guitar). The middle voice (midi piano) has a *lower* `attack_density`, and the top voice (midi electric piano) has a *higher* `attack_density`.
+When `rhythmic_unison` is applied, rhythmic settings like `onset_density` only have any effect in the "leader" voice, whose rhythm is simply copied into the other voices. If we wanted to specify a different `onset_density` in a "follower" voice, it would be ignored. This situation would call for the related setting `rhythmic_quasi_unison`. When `rhythmic_quasi_unison` applies, then, instead of copying the "leader" rhythm into the "follower" voices, the onsets of the "follower" voices are constrained so far as possible to coincide with those of the "leader." In REF:rhythm_example9, the leader is the bass voice (midi guitar). The middle voice (midi piano) has a *lower* `onset_density`, and the top voice (midi electric piano) has a *higher* `onset_density`.
 
 ```
 {
     "num_voices": 3,
     "rhythmic_quasi_unison": True,
-    "attack_density": [0.5, 0.4, 0.6],
+    "onset_density": [0.5, 0.4, 0.6],
     "dur_density": [0.5, 0.4, 0.6],
     "min_dur": 0.25,
-    "attack_subdivision": 1 / 4,
+    "onset_subdivision": 1 / 4,
 }
 ```
 
 EXAMPLE:rhythm_example9
 
-We can obtain more explicit control of the rhythms through the `obligatory_attacks` setting, which specifies a sequence of times at which the rhythms will be "obliged" to have a note onset. It's also necessary to specify `obligatory_attacks_modulo` in order to specify when these attacks should repeat (e.g., every two beats).
+We can obtain more explicit control of the rhythms through the `obligatory_onsets` setting, which specifies a sequence of times at which the rhythms will be "obliged" to have a note onset. It's also necessary to specify `obligatory_onsets_modulo` in order to specify when these onsets should repeat (e.g., every two beats).
 
-For example, in REF:rhythm_example10, I've set `obligatory_attacks` to `[0, 0.75, 1.5]` and `obligatory_attacks_modulo` to `2` in order to specify a *tresillo* 3--3--2 rhythm. Since the value of `attack_density` implies more than three attacks every two beats, additional attacks are added to the underlying scaffold supplied by the values in `obligatory_attacks`.
+For example, in REF:rhythm_example10, I've set `obligatory_onsets` to `[0, 0.75, 1.5]` and `obligatory_onsets_modulo` to `2` in order to specify a *tresillo* 3--3--2 rhythm. Since the value of `onset_density` implies more than three onsets every two beats, additional onsets are added to the underlying scaffold supplied by the values in `obligatory_onsets`.
 
 ```
 {
     "num_voices": 3,
-    "obligatory_attacks": [0, 0.75, 1.5],
-    "obligatory_attacks_modulo": 2,
-    "attack_density": 0.5,
+    "obligatory_onsets": [0, 0.75, 1.5],
+    "obligatory_onsets_modulo": 2,
+    "onset_density": 0.5,
     "dur_density": 0.5,
     "min_dur": 0.25,
-    "attack_subdivision": 0.25,
+    "onset_subdivision": 0.25,
 }
 ```
 
 EXAMPLE:rhythm_example10
 
-It is possible to specify an irregular grid upon which note attacks will take place using `sub_subdivisions`. This setting takes a sequence of integers and subdivides the grid specified by `attack_subdivision` into parts defined by the ratio of these integers. For example, in REF:rhythm_example11 below, `sub_subdivisions` is `[4,3]`, which creates an uneven "swing" feel where every first note is 4/3rds as long as every second note.[^To keep the number of total attacks consistent, you'll probably want to increase `attack_subdivision` by taking the value you otherwise would have chosen and multiplying it by the length of `sub_subdivisions`.] You'll notice that REF:rhythm_example11 is precisely the same as REF:rhythm_example1, except for the uneven rhythms.
+It is possible to specify an irregular grid upon which note onsets will take place using `sub_subdivisions`. This setting takes a sequence of integers and subdivides the grid specified by `onset_subdivision` into parts defined by the ratio of these integers. For example, in REF:rhythm_example11 below, `sub_subdivisions` is `[4,3]`, which creates an uneven "swing" feel where every first note is 4/3rds as long as every second note.[^To keep the number of total onsets consistent, you'll probably want to increase `onset_subdivision` by taking the value you otherwise would have chosen and multiplying it by the length of `sub_subdivisions`.] You'll notice that REF:rhythm_example11 is precisely the same as REF:rhythm_example1, except for the uneven rhythms.
 
 ```
 {
     "num_voices": 1,
-    "attack_density": 1.0,
-    "attack_subdivision": 0.5,
+    "onset_density": 1.0,
+    "onset_subdivision": 0.5,
     "sub_subdivisions": [4, 3],
 }
 ```
@@ -406,11 +406,11 @@ I think, however, that it is more interesting to experiment with values of `sub_
 ```
 {
     "num_voices": 3,
-    "attack_density": 0.4,
-    "attack_subdivision": 2,
+    "onset_density": 0.4,
+    "onset_subdivision": 2,
     "sub_subdivisions": [12, 13, 11, 15, 17, 10],
-    "obligatory_attacks": 0,
-    "obligatory_attacks_modulo": 2,
+    "obligatory_onsets": 0,
+    "obligatory_onsets_modulo": 2,
     "hocketing": True,
 }
 ```
@@ -456,7 +456,7 @@ preserve_foot_in_bass
 chord_tone_and_foot_disable
 chord_tone_selection
 force_chord_tone
-chord_tones_sync_attack_in_all_voices
+chord_tones_sync_onset_in_all_voices
 force_foot_in_bass
 prefer_small_melodic_intervals
 force_repeated_notes
@@ -467,9 +467,9 @@ vary_rhythm_consistently
 rhythmic_unison
 rhythmic_quasi_unison
 hocketing
-attack_density
+onset_density
 dur_density
-attack_subdivision
+onset_subdivision
 randomly_distribute_between_choirs
 length_choir_segments
 tempo
@@ -501,7 +501,7 @@ choirs_separate_tracks
 choirs_separate_channels
 write_program_changes
 humanize
-humanize_attack
+humanize_onset
 humanize_dur
 humanize_velocity
 humanize_tuning
@@ -556,8 +556,8 @@ rhythms_in_midi_reverse_voices
 sub_subdivisions
 dur_subdivision
 min_dur
-obligatory_attacks
-obligatory_attacks_modulo
+obligatory_onsets
+obligatory_onsets_modulo
 comma_position
 overlap
 choirs

@@ -12,7 +12,7 @@
     "force_foot_in_bass": "first_beat",
     "extend_bass_range_for_foots": 7,
     "voice_lead_chord_tones": True,
-    "attack_density": 0.7,
+    "onset_density": 0.7,
     "dur_density": 0.7,
     "unison_weighted_as": "SECOND",
     "randomly_distribute_between_choirs": True,

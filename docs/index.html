@@ -55,6 +55,7 @@
 <li>numpy</li>
 <li>pygame</li>
 <li>python-rtmidi</li>
+<li>sortedcontainers</li>
 </ul>
 <p>These can be installed by running <code>pip3 install -r requirements.txt</code> in the script directory.</p>
 <p>As far as installing the script itself goes, you can just clone the Github repository.</p>
@@ -92,7 +93,7 @@ pip3 install img2pdf</code></pre>
 <p><span id="example3"><strong>Example:</strong> <code>docs/examples/example3.py</code></span><br><img src="resources/svgs/example3.svg" class="notation" alt=" notation" /> <img src="resources/pngs/example3_00001.png" class="piano_roll" style="max-height: 300px" alt=" piano roll" /> <audio src="resources/m4as/example3.m4a" controls=""><a href="resources/m4as/example3.m4a"> audio</a></audio></p>
 <p>Up to now, we’ve always specified the same settings in both voices. But we need not do so! In <a href="#example4"><code>docs/examples/example4.py</code></a>, the bottom voice again has <code>rhythm_len = 1.5</code>, but the top voice now has <code>rhythm_len = 2</code>.</p>
 <p><span id="example4"><strong>Example:</strong> <code>docs/examples/example4.py</code></span><br><img src="resources/svgs/example4.svg" class="notation" alt=" notation" /> <img src="resources/pngs/example4_00001.png" class="piano_roll" style="max-height: 300px" alt=" piano roll" /> <audio src="resources/m4as/example4.m4a" controls=""><a href="resources/m4as/example4.m4a"> audio</a></audio></p>
-<p>We can also have different values of <a href="settings.html#pattern_len"><code>pattern_len</code></a> in each voice, as in <a href="#example5"><code>docs/examples/example5.py</code></a>. However, if we do so, the script has to work quite a bit harder to find a solution. To help it do so, I made its task a little easier by changing <a href="settings.html#consonance_treatment"><code>consonance_treatment</code></a> from <code>"all_attacks"</code> to <code>"none"</code>. Thus whereas in the previous examples, the simultaneously attacked notes all formed intervals like 3rds and fifths, in <a href="#example5"><code>docs/examples/example5.py</code></a>, there are also dissonances like 7ths and 9ths.</p>
+<p>We can also have different values of <a href="settings.html#pattern_len"><code>pattern_len</code></a> in each voice, as in <a href="#example5"><code>docs/examples/example5.py</code></a>. However, if we do so, the script has to work quite a bit harder to find a solution. To help it do so, I made its task a little easier by changing <a href="settings.html#consonance_treatment"><code>consonance_treatment</code></a> from <code>"all_onsets"</code> to <code>"none"</code>. Thus whereas in the previous examples, the simultaneously onset notes all formed intervals like 3rds and fifths, in <a href="#example5"><code>docs/examples/example5.py</code></a>, there are also dissonances like 7ths and 9ths.</p>
 <p><span id="example5"><strong>Example:</strong> <code>docs/examples/example5.py</code></span><br><img src="resources/svgs/example5.svg" class="notation" alt=" notation" /> <img src="resources/pngs/example5_00001.png" class="piano_roll" style="max-height: 300px" alt=" piano roll" /> <audio src="resources/m4as/example5.m4a" controls=""><a href="resources/m4as/example5.m4a"> audio</a></audio></p>
 <p>Up until now, whenever one pattern or rhythm didn’t line up with the other, we have truncated the shorter one, so that subsequent repetitions began together in both voices. But the script doesn’t require this. In <a href="#example6"><code>docs/examples/example6.py</code></a>, I have changed <a href="settings.html#truncate_patterns"><code>truncate_patterns</code></a> to <code>False</code>. Now the 1.5-beat pattern in the lower part isn’t truncated after 4 beats. Instead, it is displaced relative to both the 4-beat pattern in the upper part, as well as the 4-beat harmony changes. (The two patterns finally come into sync after 12 beats, the least-common-multiple of 1.5 and 4.)</p>
 <p><span id="example6"><strong>Example:</strong> <code>docs/examples/example6.py</code></span><br><img src="resources/svgs/example6.svg" class="notation" alt=" notation" /> <img src="resources/pngs/example6_00001.png" class="piano_roll" style="max-height: 300px" alt=" piano roll" /> <audio src="resources/m4as/example6.m4a" controls=""><a href="resources/m4as/example6.m4a"> audio</a></audio></p>
@@ -182,68 +183,68 @@ pip3 install img2pdf</code></pre>
 <p><span id="harmony_example9"><strong>Example:</strong> <code>docs/examples/harmony_example9.py</code></span><br><img src="resources/svgs/harmony_example9.svg" class="notation" alt=" notation" /> <img src="resources/pngs/harmony_example9_00001.png" class="piano_roll" style="max-height: 300px" alt=" piano roll" /> <audio src="resources/m4as/harmony_example9.m4a" controls=""><a href="resources/m4as/harmony_example9.m4a"> audio</a></audio></p>
 <h3 id="specifying-rhythms">Specifying rhythms</h3>
 <p>Besides setting <a href="settings.html#rhythm_len"><code>rhythm_len</code></a> as we did <a href="#how-it-works">above</a>, there are many other ways of controlling the rhythms that are produced.<a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a></p>
-<p>To begin with, we have <a href="settings.html#attack_subdivision"><code>attack_subdivision</code></a> and <a href="settings.html#attack_density"><code>attack_density</code></a>:</p>
+<p>To begin with, we have <a href="settings.html#onset_subdivision"><code>onset_subdivision</code></a> and <a href="settings.html#onset_density"><code>onset_density</code></a>:</p>
 <ul>
-<li><a href="settings.html#attack_subdivision"><code>attack_subdivision</code></a> indicates the basic “grid” on which note attacks can take place, measured in quarter notes.</li>
-<li><a href="settings.html#attack_density"><code>attack_density</code></a> indicates the proportion of grid points that should have an attack.</li>
+<li><a href="settings.html#onset_subdivision"><code>onset_subdivision</code></a> indicates the basic “grid” on which note onsets can take place, measured in quarter notes.</li>
+<li><a href="settings.html#onset_density"><code>onset_density</code></a> indicates the proportion of grid points that should have an onset.</li>
 </ul>
-<p>So for example, in <a href="#rhythm_example1"><code>docs/examples/rhythm_example1.py</code></a>, <code>"attack_subdivision" = 1/4</code> indicates a sixteenth-note grid, and <code>"attack_density" = 1.0</code> indicates that every point in the grid should have an attack, creating a <em>moto perpetuo</em> texture. (For clarity/brevity, this example has only one voice.)</p>
+<p>So for example, in <a href="#rhythm_example1"><code>docs/examples/rhythm_example1.py</code></a>, <code>"onset_subdivision" = 1/4</code> indicates a sixteenth-note grid, and <code>"onset_density" = 1.0</code> indicates that every point in the grid should have an onset, creating a <em>moto perpetuo</em> texture. (For clarity/brevity, this example has only one voice.)</p>
 <pre><code>{
 &quot;num_voices&quot;: 1,
-&quot;attack_density&quot;: 0.5,
-&quot;attack_subdivision&quot;: 1/4,
+&quot;onset_density&quot;: 0.5,
+&quot;onset_subdivision&quot;: 1/4,
 }</code></pre>
 <p><span id="rhythm_example1"><strong>Example:</strong> <code>docs/examples/rhythm_example1.py</code></span><br><img src="resources/svgs/rhythm_example1.svg" class="notation" alt=" notation" /> <img src="resources/pngs/rhythm_example1_00001.png" class="piano_roll" style="max-height: 300px" alt=" piano roll" /> <audio src="resources/m4as/rhythm_example1.m4a" controls=""><a href="resources/m4as/rhythm_example1.m4a"> audio</a></audio></p>
-<p>If we reduce <a href="settings.html#attack_density"><code>attack_density</code></a>, as in <a href="#rhythm_example2"><code>docs/examples/rhythm_example2.py</code></a>, the proportion of the sixteenth-grid that is filled with attacks will be correspondingly reduced.</p>
+<p>If we reduce <a href="settings.html#onset_density"><code>onset_density</code></a>, as in <a href="#rhythm_example2"><code>docs/examples/rhythm_example2.py</code></a>, the proportion of the sixteenth-grid that is filled with onsets will be correspondingly reduced.</p>
 <pre><code>{
     &quot;num_voices&quot;: 1,
-    &quot;attack_density&quot;: 0.5,
-    &quot;attack_subdivision&quot;: 1 / 4,
+    &quot;onset_density&quot;: 0.5,
+    &quot;onset_subdivision&quot;: 1 / 4,
 }</code></pre>
 <p><span id="rhythm_example2"><strong>Example:</strong> <code>docs/examples/rhythm_example2.py</code></span><br><img src="resources/svgs/rhythm_example2.svg" class="notation" alt=" notation" /> <img src="resources/pngs/rhythm_example2_00001.png" class="piano_roll" style="max-height: 300px" alt=" piano roll" /> <audio src="resources/m4as/rhythm_example2.m4a" controls=""><a href="resources/m4as/rhythm_example2.m4a"> audio</a></audio></p>
-<p>Another important rhythmic parameter is <a href="settings.html#dur_density"><code>dur_density</code></a>. It specifies the proportion of time that should be filled by note durations, irrespective of how many attacks there are. So far we have left <a href="settings.html#dur_density"><code>dur_density</code></a> at the default value of <code>1.0</code>, which means that all notes last until the next attack in that voice. (In musical terms, all notes are <em>legato</em>.) If we decrease it to 0.75, as in <a href="#rhythm_example3"><code>docs/examples/rhythm_example3.py</code></a>, some of the notes will become shorter, so that 75% of the total time of the rhythm is filled by sounding notes.</p>
+<p>Another important rhythmic parameter is <a href="settings.html#dur_density"><code>dur_density</code></a>. It specifies the proportion of time that should be filled by note durations, irrespective of how many onsets there are. So far we have left <a href="settings.html#dur_density"><code>dur_density</code></a> at the default value of <code>1.0</code>, which means that all notes last until the next onset in that voice. (In musical terms, all notes are <em>legato</em>.) If we decrease it to 0.75, as in <a href="#rhythm_example3"><code>docs/examples/rhythm_example3.py</code></a>, some of the notes will become shorter, so that 75% of the total time of the rhythm is filled by sounding notes.</p>
 <pre><code>{
     &quot;num_voices&quot;: 1,
-    &quot;attack_density&quot;: 0.5,
+    &quot;onset_density&quot;: 0.5,
     &quot;dur_density&quot;: 0.75,
-    &quot;attack_subdivision&quot;: 1 / 4,
+    &quot;onset_subdivision&quot;: 1 / 4,
 }}</code></pre>
 <p><span id="rhythm_example3"><strong>Example:</strong> <code>docs/examples/rhythm_example3.py</code></span><br><img src="resources/svgs/rhythm_example3.svg" class="notation" alt=" notation" /> <img src="resources/pngs/rhythm_example3_00001.png" class="piano_roll" style="max-height: 300px" alt=" piano roll" /> <audio src="resources/m4as/rhythm_example3.m4a" controls=""><a href="resources/m4as/rhythm_example3.m4a"> audio</a></audio></p>
 <p>To obtain a <em>staccato</em> effect, we can make <a href="settings.html#dur_density"><code>dur_density</code></a> still shorter, but to obtain <em>really</em> short notes, we may have to adjust <a href="settings.html#min_dur"><code>min_dur</code></a> as well, which sets the minimum duration of each pitch as well.</p>
 <pre><code>{
     &quot;num_voices&quot;: 1,
-    &quot;attack_density&quot;: 0.5,
+    &quot;onset_density&quot;: 0.5,
     &quot;dur_density&quot;: 0.25,
     &quot;min_dur&quot;: 1/8,
-    &quot;attack_subdivision&quot;: 1 / 4,
+    &quot;onset_subdivision&quot;: 1 / 4,
 }</code></pre>
 <p><span id="rhythm_example4"><strong>Example:</strong> <code>docs/examples/rhythm_example4.py</code></span><br><img src="resources/svgs/rhythm_example4.svg" class="notation" alt=" notation" /> <img src="resources/pngs/rhythm_example4_00001.png" class="piano_roll" style="max-height: 300px" alt=" piano roll" /> <audio src="resources/m4as/rhythm_example4.m4a" controls=""><a href="resources/m4as/rhythm_example4.m4a"> audio</a></audio></p>
-<p>We can change <code>"attack_subdivision"</code> as well. For example, to have a grid of eighth-note triplets, we would set <code>"attack_subdivision" = 1/3</code>. And since computers have no problem with precise, strange rhythms, we could also set it to unusual values like <code>5/13</code> or <code>math.pi / 12</code>.<a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a></p>
+<p>We can change <code>"onset_subdivision"</code> as well. For example, to have a grid of eighth-note triplets, we would set <code>"onset_subdivision" = 1/3</code>. And since computers have no problem with precise, strange rhythms, we could also set it to unusual values like <code>5/13</code> or <code>math.pi / 12</code>.<a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a></p>
 <pre><code>{
     &quot;num_voices&quot;: 1,
-    &quot;attack_density&quot;: 0.75,
+    &quot;onset_density&quot;: 0.75,
     &quot;dur_density&quot;: 0.25,
     &quot;min_dur&quot;: 1/8,
-    &quot;attack_subdivision&quot;: 3/ 13,
+    &quot;onset_subdivision&quot;: 3/ 13,
 }</code></pre>
 <p><span id="rhythm_example5"><strong>Example:</strong> <code>docs/examples/rhythm_example5.py</code></span><br><img src="resources/pngs/rhythm_example5_00001.png" class="piano_roll" style="max-height: 300px" alt=" piano roll" /> <audio src="resources/m4as/rhythm_example5.m4a" controls=""><a href="resources/m4as/rhythm_example5.m4a"> audio</a></audio></p>
-<p>All of the settings we have been looking at so far are “per-voice”, meaning that they can be set to a different value in each voice. If we set <a href="settings.html#attack_subdivision"><code>attack_subdivision</code></a> to a different unusual value in each voice, we get a particularly chaotic effect. (I find that the chaos can be reined in a bit by setting <a href="settings.html#rhythm_len"><code>rhythm_len</code></a> to a short value, creating a brief rhythmic loop.)</p>
+<p>All of the settings we have been looking at so far are “per-voice”, meaning that they can be set to a different value in each voice. If we set <a href="settings.html#onset_subdivision"><code>onset_subdivision</code></a> to a different unusual value in each voice, we get a particularly chaotic effect. (I find that the chaos can be reined in a bit by setting <a href="settings.html#rhythm_len"><code>rhythm_len</code></a> to a short value, creating a brief rhythmic loop.)</p>
 <pre><code>{
     &quot;rhythm_len&quot;: 1,
     &quot;num_voices&quot;: 3,
-    &quot;attack_density&quot;: [0.25, 0.5, 0.75],
+    &quot;onset_density&quot;: [0.25, 0.5, 0.75],
     &quot;dur_density&quot;: [0.25, 0.5, 0.25],
     &quot;min_dur&quot;: [0.25, 0.25, 1/8],
-    &quot;attack_subdivision&quot;: [3/ 13, 5/12, 6/11],
+    &quot;onset_subdivision&quot;: [3/ 13, 5/12, 6/11],
 }</code></pre>
 <p><span id="rhythm_example6"><strong>Example:</strong> <code>docs/examples/rhythm_example6.py</code></span><br><img src="resources/pngs/rhythm_example6_00001.png" class="piano_roll" style="max-height: 300px" alt=" piano roll" /> <audio src="resources/m4as/rhythm_example6.m4a" controls=""><a href="resources/m4as/rhythm_example6.m4a"> audio</a></audio></p>
-<p>There are also a few settings that govern the relation between different voices. If <a href="settings.html#hocketing"><code>hocketing</code></a> is <code>True</code>, then, to the extent possible, the attacks of each voice will occur when there is no attack in any other voice. (In textures with many voices, it is also possible to assign specific pairs of voices to hocket with one another.)</p>
+<p>There are also a few settings that govern the relation between different voices. If <a href="settings.html#hocketing"><code>hocketing</code></a> is <code>True</code>, then, to the extent possible, the onsets of each voice will occur when there is no onset in any other voice. (In textures with many voices, it is also possible to assign specific pairs of voices to hocket with one another.)</p>
 <pre><code>{
     &quot;num_voices&quot;: 2,
-    &quot;attack_density&quot;: 0.4,
+    &quot;onset_density&quot;: 0.4,
     &quot;dur_density&quot;: 0.4,
     &quot;min_dur&quot;: 0.25,
-    &quot;attack_subdivision&quot;: 0.25,
+    &quot;onset_subdivision&quot;: 0.25,
     &quot;hocketing&quot;: True,
 }</code></pre>
 <p><span id="rhythm_example7"><strong>Example:</strong> <code>docs/examples/rhythm_example7.py</code></span><br><img src="resources/svgs/rhythm_example7.svg" class="notation" alt=" notation" /> <img src="resources/pngs/rhythm_example7_00001.png" class="piano_roll" style="max-height: 300px" alt=" piano roll" /> <audio src="resources/m4as/rhythm_example7.m4a" controls=""><a href="resources/m4as/rhythm_example7.m4a"> audio</a></audio></p>
@@ -251,50 +252,50 @@ pip3 install img2pdf</code></pre>
 <pre><code>{
     &quot;num_voices&quot;: 3,
     &quot;rhythmic_unison&quot;: True,
-    &quot;attack_density&quot;: .7,
+    &quot;onset_density&quot;: .7,
     &quot;dur_density&quot;: 0.6,
     &quot;min_dur&quot;: 0.25,
-    &quot;attack_subdivision&quot;: 1/4,
+    &quot;onset_subdivision&quot;: 1/4,
 }</code></pre>
 <p><span id="rhythm_example8"><strong>Example:</strong> <code>docs/examples/rhythm_example8.py</code></span><br><img src="resources/svgs/rhythm_example8.svg" class="notation" alt=" notation" /> <img src="resources/pngs/rhythm_example8_00001.png" class="piano_roll" style="max-height: 300px" alt=" piano roll" /> <audio src="resources/m4as/rhythm_example8.m4a" controls=""><a href="resources/m4as/rhythm_example8.m4a"> audio</a></audio></p>
-<p>When <a href="settings.html#rhythmic_unison"><code>rhythmic_unison</code></a> is applied, rhythmic settings like <a href="settings.html#attack_density"><code>attack_density</code></a> only have any effect in the “leader” voice, whose rhythm is simply copied into the other voices. If we wanted to specify a different <a href="settings.html#attack_density"><code>attack_density</code></a> in a “follower” voice, it would be ignored. This situation would call for the related setting <a href="settings.html#rhythmic_quasi_unison"><code>rhythmic_quasi_unison</code></a>. When <a href="settings.html#rhythmic_quasi_unison"><code>rhythmic_quasi_unison</code></a> applies, then, instead of copying the “leader” rhythm into the “follower” voices, the attacks of the “follower” voices are constrained so far as possible to coincide with those of the “leader.” In <a href="#rhythm_example9"><code>docs/examples/rhythm_example9.py</code></a>, the leader is the bass voice (midi guitar). The middle voice (midi piano) has a <em>lower</em> <a href="settings.html#attack_density"><code>attack_density</code></a>, and the top voice (midi electric piano) has a <em>higher</em> <a href="settings.html#attack_density"><code>attack_density</code></a>.</p>
+<p>When <a href="settings.html#rhythmic_unison"><code>rhythmic_unison</code></a> is applied, rhythmic settings like <a href="settings.html#onset_density"><code>onset_density</code></a> only have any effect in the “leader” voice, whose rhythm is simply copied into the other voices. If we wanted to specify a different <a href="settings.html#onset_density"><code>onset_density</code></a> in a “follower” voice, it would be ignored. This situation would call for the related setting <a href="settings.html#rhythmic_quasi_unison"><code>rhythmic_quasi_unison</code></a>. When <a href="settings.html#rhythmic_quasi_unison"><code>rhythmic_quasi_unison</code></a> applies, then, instead of copying the “leader” rhythm into the “follower” voices, the onsets of the “follower” voices are constrained so far as possible to coincide with those of the “leader.” In <a href="#rhythm_example9"><code>docs/examples/rhythm_example9.py</code></a>, the leader is the bass voice (midi guitar). The middle voice (midi piano) has a <em>lower</em> <a href="settings.html#onset_density"><code>onset_density</code></a>, and the top voice (midi electric piano) has a <em>higher</em> <a href="settings.html#onset_density"><code>onset_density</code></a>.</p>
 <pre><code>{
     &quot;num_voices&quot;: 3,
     &quot;rhythmic_quasi_unison&quot;: True,
-    &quot;attack_density&quot;: [0.5, 0.4, 0.6],
+    &quot;onset_density&quot;: [0.5, 0.4, 0.6],
     &quot;dur_density&quot;: [0.5, 0.4, 0.6],
     &quot;min_dur&quot;: 0.25,
-    &quot;attack_subdivision&quot;: 1 / 4,
+    &quot;onset_subdivision&quot;: 1 / 4,
 }</code></pre>
 <p><span id="rhythm_example9"><strong>Example:</strong> <code>docs/examples/rhythm_example9.py</code></span><br><img src="resources/svgs/rhythm_example9.svg" class="notation" alt=" notation" /> <img src="resources/pngs/rhythm_example9_00001.png" class="piano_roll" style="max-height: 300px" alt=" piano roll" /> <audio src="resources/m4as/rhythm_example9.m4a" controls=""><a href="resources/m4as/rhythm_example9.m4a"> audio</a></audio></p>
-<p>We can obtain more explicit control of the rhythms through the <a href="settings.html#obligatory_attacks"><code>obligatory_attacks</code></a> setting, which specifies a sequence of times at which the rhythms will be “obliged” to have a note onset. It’s also necessary to specify <a href="settings.html#obligatory_attacks_modulo"><code>obligatory_attacks_modulo</code></a> in order to specify when these attacks should repeat (e.g., every two beats).</p>
-<p>For example, in <a href="#rhythm_example10"><code>docs/examples/rhythm_example10.py</code></a>, I’ve set <a href="settings.html#obligatory_attacks"><code>obligatory_attacks</code></a> to <code>[0, 0.75, 1.5]</code> and <a href="settings.html#obligatory_attacks_modulo"><code>obligatory_attacks_modulo</code></a> to <code>2</code> in order to specify a <em>tresillo</em> 3–3–2 rhythm. Since the value of <a href="settings.html#attack_density"><code>attack_density</code></a> implies more than three attacks every two beats, additional attacks are added to the underlying scaffold supplied by the values in <a href="settings.html#obligatory_attacks"><code>obligatory_attacks</code></a>.</p>
+<p>We can obtain more explicit control of the rhythms through the <a href="settings.html#obligatory_onsets"><code>obligatory_onsets</code></a> setting, which specifies a sequence of times at which the rhythms will be “obliged” to have a note onset. It’s also necessary to specify <a href="settings.html#obligatory_onsets_modulo"><code>obligatory_onsets_modulo</code></a> in order to specify when these onsets should repeat (e.g., every two beats).</p>
+<p>For example, in <a href="#rhythm_example10"><code>docs/examples/rhythm_example10.py</code></a>, I’ve set <a href="settings.html#obligatory_onsets"><code>obligatory_onsets</code></a> to <code>[0, 0.75, 1.5]</code> and <a href="settings.html#obligatory_onsets_modulo"><code>obligatory_onsets_modulo</code></a> to <code>2</code> in order to specify a <em>tresillo</em> 3–3–2 rhythm. Since the value of <a href="settings.html#onset_density"><code>onset_density</code></a> implies more than three onsets every two beats, additional onsets are added to the underlying scaffold supplied by the values in <a href="settings.html#obligatory_onsets"><code>obligatory_onsets</code></a>.</p>
 <pre><code>{
     &quot;num_voices&quot;: 3,
-    &quot;obligatory_attacks&quot;: [0, 0.75, 1.5],
-    &quot;obligatory_attacks_modulo&quot;: 2,
-    &quot;attack_density&quot;: 0.5,
+    &quot;obligatory_onsets&quot;: [0, 0.75, 1.5],
+    &quot;obligatory_onsets_modulo&quot;: 2,
+    &quot;onset_density&quot;: 0.5,
     &quot;dur_density&quot;: 0.5,
     &quot;min_dur&quot;: 0.25,
-    &quot;attack_subdivision&quot;: 0.25,
+    &quot;onset_subdivision&quot;: 0.25,
 }</code></pre>
 <p><span id="rhythm_example10"><strong>Example:</strong> <code>docs/examples/rhythm_example10.py</code></span><br><img src="resources/svgs/rhythm_example10.svg" class="notation" alt=" notation" /> <img src="resources/pngs/rhythm_example10_00001.png" class="piano_roll" style="max-height: 300px" alt=" piano roll" /> <audio src="resources/m4as/rhythm_example10.m4a" controls=""><a href="resources/m4as/rhythm_example10.m4a"> audio</a></audio></p>
-<p>It is possible to specify an irregular grid upon which note attacks will take place using <a href="settings.html#sub_subdivisions"><code>sub_subdivisions</code></a>. This setting takes a sequence of integers and subdivides the grid specified by <a href="settings.html#attack_subdivision"><code>attack_subdivision</code></a> into parts defined by the ratio of these integers. For example, in <a href="#rhythm_example11"><code>docs/examples/rhythm_example11.py</code></a> below, <a href="settings.html#sub_subdivisions"><code>sub_subdivisions</code></a> is <code>[4,3]</code>, which creates an uneven “swing” feel where every first note is 4/3rds as long as every second note.[^To keep the number of total attacks consistent, you’ll probably want to increase <a href="settings.html#attack_subdivision"><code>attack_subdivision</code></a> by taking the value you otherwise would have chosen and multiplying it by the length of <a href="settings.html#sub_subdivisions"><code>sub_subdivisions</code></a>.] You’ll notice that <a href="#rhythm_example11"><code>docs/examples/rhythm_example11.py</code></a> is precisely the same as <a href="#rhythm_example1"><code>docs/examples/rhythm_example1.py</code></a>, except for the uneven rhythms.</p>
+<p>It is possible to specify an irregular grid upon which note onsets will take place using <a href="settings.html#sub_subdivisions"><code>sub_subdivisions</code></a>. This setting takes a sequence of integers and subdivides the grid specified by <a href="settings.html#onset_subdivision"><code>onset_subdivision</code></a> into parts defined by the ratio of these integers. For example, in <a href="#rhythm_example11"><code>docs/examples/rhythm_example11.py</code></a> below, <a href="settings.html#sub_subdivisions"><code>sub_subdivisions</code></a> is <code>[4,3]</code>, which creates an uneven “swing” feel where every first note is 4/3rds as long as every second note.[^To keep the number of total onsets consistent, you’ll probably want to increase <a href="settings.html#onset_subdivision"><code>onset_subdivision</code></a> by taking the value you otherwise would have chosen and multiplying it by the length of <a href="settings.html#sub_subdivisions"><code>sub_subdivisions</code></a>.] You’ll notice that <a href="#rhythm_example11"><code>docs/examples/rhythm_example11.py</code></a> is precisely the same as <a href="#rhythm_example1"><code>docs/examples/rhythm_example1.py</code></a>, except for the uneven rhythms.</p>
 <pre><code>{
     &quot;num_voices&quot;: 1,
-    &quot;attack_density&quot;: 1.0,
-    &quot;attack_subdivision&quot;: 0.5,
+    &quot;onset_density&quot;: 1.0,
+    &quot;onset_subdivision&quot;: 0.5,
     &quot;sub_subdivisions&quot;: [4, 3],
 }</code></pre>
 <p><span id="rhythm_example11"><strong>Example:</strong> <code>docs/examples/rhythm_example11.py</code></span><br><img src="resources/pngs/rhythm_example11_00001.png" class="piano_roll" style="max-height: 300px" alt=" piano roll" /> <audio src="resources/m4as/rhythm_example11.m4a" controls=""><a href="resources/m4as/rhythm_example11.m4a"> audio</a></audio></p>
 <p>I think, however, that it is more interesting to experiment with values of <a href="settings.html#sub_subdivisions"><code>sub_subdivisions</code></a> that are further from what a human would be likely to produce, as I have tried to do in <a href="#rhythm_example12"><code>docs/examples/rhythm_example12.py</code></a>.</p>
 <pre><code>{
     &quot;num_voices&quot;: 3,
-    &quot;attack_density&quot;: 0.4,
-    &quot;attack_subdivision&quot;: 2,
+    &quot;onset_density&quot;: 0.4,
+    &quot;onset_subdivision&quot;: 2,
     &quot;sub_subdivisions&quot;: [12, 13, 11, 15, 17, 10],
-    &quot;obligatory_attacks&quot;: 0,
-    &quot;obligatory_attacks_modulo&quot;: 2,
+    &quot;obligatory_onsets&quot;: 0,
+    &quot;obligatory_onsets_modulo&quot;: 2,
     &quot;hocketing&quot;: True,
 }</code></pre>
 <p><span id="rhythm_example12"><strong>Example:</strong> <code>docs/examples/rhythm_example12.py</code></span><br><img src="resources/pngs/rhythm_example12_00001.png" class="piano_roll" style="max-height: 300px" alt=" piano roll" /> <audio src="resources/m4as/rhythm_example12.m4a" controls=""><a href="resources/m4as/rhythm_example12.m4a"> audio</a></audio></p>

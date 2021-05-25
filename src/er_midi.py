@@ -59,20 +59,18 @@ def get_rhythms_from_midi(er):
         rhythm_len = er.get(voice_i, "rhythm_len")
         voice = score.voices[voice_i % len(score.voices)]
         for note in voice:
-            attack_time = note.attack_time
-            if attack_time > rhythm_len:
+            onset = note.onset
+            if onset > rhythm_len:
                 break
-            rhythm[attack_time] = note.dur
-        max_attack = max(rhythm)
-        min_attack = min(rhythm)
+            rhythm[onset] = note.dur
+        max_onset = max(rhythm)
+        min_onset = min(rhythm)
         if er.overlap:
-            overlap = min_attack - (
-                max_attack + rhythm[max_attack] - rhythm_len
-            )
+            overlap = min_onset - (max_onset + rhythm[max_onset] - rhythm_len)
         else:
-            overlap = max_attack + rhythm[max_attack] - rhythm_len
+            overlap = max_onset + rhythm[max_onset] - rhythm_len
         if overlap > 0:
-            rhythm[max_attack] -= overlap
+            rhythm[max_onset] -= overlap
         rhythms.append(rhythm)
 
     return rhythms
@@ -104,9 +102,9 @@ def get_scales_and_chords_from_midi(midif, tet=12, time_sig=4):
         if pcset_type == "chords":
             lowest_pitch = tet * 100
         for note in score.voices[i]:
-            attack = note.attack_time
+            onset = note.onset
             pitch = note.pitch
-            if round(attack / time_sig) > len(pcsets) - 1:
+            if round(onset / time_sig) > len(pcsets) - 1:
                 pcsets.append([])
                 if pcset_type == "chords":
                     foots.append(lowest_pitch % tet)
@@ -258,9 +256,7 @@ def humanize(er, note=None, tuning=None):
 
     if note is not None:
         new_note = note.copy()
-        new_note.attack_time = max(
-            0, note.attack_time - 1 + _get_value(er.humanize_attack)
-        )
+        new_note.onset = max(0, note.onset - 1 + _get_value(er.humanize_onset))
         new_note.dur = note.dur - 1 + _get_value(er.humanize_dur)
         new_note.velocity = round(
             note.velocity * _get_value(er.humanize_velocity)
@@ -325,14 +321,14 @@ def add_er_voice(er, voice_i, voice, mf, force_choir=None):
             ]
             er.pitch_bend_time_dict[track_i][
                 note_count % er.num_channels_pitch_bend_loop
-            ] = note.attack_time
+            ] = note.onset
             if prev_time_on_channel == 0:
                 pitch_bend_time = 0
             else:
                 pitch_bend_time = (
                     prev_time_on_channel
                     + er.pitch_bend_time_prop
-                    * (note.attack_time - prev_time_on_channel)
+                    * (note.onset - prev_time_on_channel)
                 )
             add_note_and_pitch_bend(
                 mf.tracks[track_i],
@@ -561,7 +557,7 @@ def add_note(mido_track, note, pitch=None, channel=None):
             channel=channel,
             note=pitch,
             velocity=note.velocity,
-            time=note.attack_time,
+            time=note.onset,
         )
     )
     mido_track.append(
@@ -570,7 +566,7 @@ def add_note(mido_track, note, pitch=None, channel=None):
             channel=channel,
             note=pitch,
             velocity=note.velocity,
-            time=note.attack_time + note.dur,
+            time=note.onset + note.dur,
         )
     )
 
@@ -616,14 +612,14 @@ def add_track(track_i, track, midi_settings, mf):
             ]
             midi_settings.pitch_bend_time_dict[track_i][
                 note_count % midi_settings.num_channels_pitch_bend_loop
-            ] = note.attack_time
+            ] = note.onset
             if prev_time_on_channel == 0:
                 pitch_bend_time = 0
             else:
                 pitch_bend_time = (
                     prev_time_on_channel
                     + midi_settings.pitch_bend_time_prop
-                    * (note.attack_time - prev_time_on_channel)
+                    * (note.onset - prev_time_on_channel)
                 )
             add_note_and_pitch_bend(
                 track,
@@ -695,10 +691,10 @@ def _note_off_handler(
 
     note_on_msg, pitch = note_on_dict[track_i][channel][midinum]
     velocity = note_on_msg.velocity
-    tick_attack = note_on_msg.time
+    tick_onset = note_on_msg.time
 
-    tick_dur = tick_release - tick_attack
-    attack = fractions.Fraction(tick_attack, ticks_per_beat).limit_denominator(
+    tick_dur = tick_release - tick_onset
+    onset = fractions.Fraction(tick_onset, ticks_per_beat).limit_denominator(
         max_denominator=max_denominator
     )
     dur = fractions.Fraction(tick_dur, ticks_per_beat).limit_denominator(
@@ -706,7 +702,7 @@ def _note_off_handler(
     )
 
     note_object = er_classes.note.Note(
-        pitch, attack, dur, velocity=velocity, choir=channel
+        pitch, onset, dur, velocity=velocity, choir=channel
     )
 
     return note_object
@@ -873,22 +869,22 @@ def read_midi_to_internal_data(
     if first_note_at_0 is False:
         return internal_data
 
-    # first_attack = internal_data.total_dur
+    # first_onset = internal_data.total_dur
     # for voice in internal_data.voices:
-    #     first_attack_in_voice = min(voice.data.keys())
-    #     if first_attack_in_voice < first_attack:
-    #         first_attack = first_attack_in_voice
-    first_attack, _ = internal_data.first_attack_and_notes
+    #     first_onset_in_voice = min(voice.data.keys())
+    #     if first_onset_in_voice < first_onset:
+    #         first_onset = first_onset_in_voice
+    first_onset, _ = internal_data.first_onset_and_notes
 
-    # If the first attack is smaller than min_attack_to_adjust, don't
+    # If the first onset is smaller than min_onset_to_adjust, don't
     # displace the score.
-    min_attack_to_adjust = 4
-    if first_note_at_0 is None and first_attack < min_attack_to_adjust:
+    min_onset_to_adjust = 4
+    if first_note_at_0 is None and first_onset < min_onset_to_adjust:
         return internal_data
 
-    if first_attack > 0:
-        internal_data.attacks_adjusted_by = -first_attack
-        internal_data.displace_passage(-first_attack)
+    if first_onset > 0:
+        internal_data.onsets_adjusted_by = -first_onset
+        internal_data.displace_passage(-first_onset)
 
     return internal_data
 

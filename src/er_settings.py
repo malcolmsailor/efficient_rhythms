@@ -314,7 +314,7 @@ class ERSettings:
         humanize: bool. Whether to apply "humanization" to various parameters
             according to the various "humanize" settings below.
             Default: True
-        humanize_attack: float. Randomly varies attack times within +- this
+        humanize_onset: float. Randomly varies onset times within +- this
             amount, in quarter notes.
             Default: 0.0
         humanize_dur: float.  Randomly varies duration times within +- this
@@ -355,7 +355,7 @@ class ERSettings:
             Default: 9
         pitch_bend_time_prop: number between 0 and 1. If `logic_type_pitch_bend`
             is True, then this parameter defines how long between the release
-            of the last note on a channel and the attack of the next note
+            of the last note on a channel and the onset of the next note
             on that same channel the associated pitch-bend message should
             be written. The value should probably be more than half to avoid
             an audible bend during the release of the previous pitch.
@@ -567,17 +567,17 @@ class ERSettings:
             treatment.)
             Default: False
         force_chord_tone: string. Possible values:
-                "global_first_beat": forces chord tone on attacks on the global
+                "global_first_beat": forces chord tone on onsets on the global
                     first beat (i.e., the first beat of the entire piece). Note,
                     however, that this does not ensure that there will be an
-                    attack on the global first beat, and this parameter has no
+                    onset on the global first beat, and this parameter has no
                     effect on notes that sound *after* the first beat. (Compare
                     "global_first_note".)
                 "global_first_note": forces chord tones on the first note to
                     sound in each voice.
-                "first_beat": forces chord tones on attacks on the first beat
+                "first_beat": forces chord tones on onsets on the first beat
                     of each harmony of the initial pattern. Note, however, that
-                    this does not ensure that there will be an attack on the
+                    this does not ensure that there will be an onset on the
                     first beat of each harmony, and this parameter has no effect
                     on notes that sound *after* the first beat of each harmony.
                     (Compare "first_note".)
@@ -585,8 +585,8 @@ class ERSettings:
                     harmony in each voice.
                 "none": does not force any chord tones.
             Default: "none"
-        chord_tones_sync_attack_in_all_voices: bool. If True, then chord-tone
-            selection will be synchronized between all simultaneously attacked
+        chord_tones_sync_onset_in_all_voices: bool. If True, then chord-tone
+            selection will be synchronized between all simultaneously onset
             voices.
             Default: False
         force_foot_in_bass: string. Possible values are listed below; they work
@@ -702,7 +702,7 @@ class ERSettings:
             motion. The parallel motion is only enforced within harmonies;
             across the boundaries between harmonies, voices may move freely.
             When this parameter is True between voices that do not have the same
-            attacks, it works as follows: it takes the *last* melodic interval
+            onsets, it works as follows: it takes the *last* melodic interval
             in the leader voice, and adds the same melodic interval in the
             follower voice.
 
@@ -729,12 +729,12 @@ class ERSettings:
 
         consonance_treatment: string. Controls among which notes consonance
             is evaluated. Possible values:
-                "all_attacks": each pitch is evaluated for consonance with all
-                    other simulatenously attacked pitches.
+                "all_onsets": each pitch is evaluated for consonance with all
+                    other simulatenously onset pitches.
                 "all_durs": each pitch is evaluated for consonance with
                     all other pitches sounding during its duration.
                 "none": no consonance treatment.
-            Default: "all_attacks"
+            Default: "all_onsets"
         consonance_type: string. Controls how notes are evaluated for
             consonance/dissonance. Possible values:
                 "pairwise": all pairs of sounding voices are checked against
@@ -746,14 +746,14 @@ class ERSettings:
         consonance_modulo: number, or a sequence of numbers, or a
             per-voice sequence of sequences of numbers.
 
-            If a number, only attack times that are 0 modulo this number will
+            If a number, only onset times that are 0 modulo this number will
             have consonance settings applied. For example, if
             `consonance_modulo == 1`, then every quarter-note beat will have
             consonance settings applied, but pitches *between* these beats
             will not.
 
             If a sequence of numbers, the sequence of numbers defines a loop
-            of attack times at which consonance settings will be applied. The
+            of onset times at which consonance settings will be applied. The
             largest number in the sequence defines the loop length.
             For example, if `consonance_modulo == [1, 1.5, 2]`, then consonance
             settings will be applied at beats 0, 1, 1.5, 2, 3, 3.5, 4, 5, etc.
@@ -779,7 +779,7 @@ class ERSettings:
             note above on specifying pitches and intervals.)
             Default: ()
         forbidden_interval_modulo: number, or a sequence of number, or a
-            sequence of sequence of numbers. Optionally defines attack times
+            sequence of sequence of numbers. Optionally defines onset times
             at which `forbidden_interval_classes` will be enforced. Works
             similarly to and is specified in the same manner as
             `consonance_modulo`.
@@ -877,47 +877,47 @@ class ERSettings:
             the input file was made with this latter score-order convention, set
             this boolean to true.
             Default: False
-        attack_density: a float from 0.0 to 1.0, or an int, or a per-voice
+        onset_density: a float from 0.0 to 1.0, or an int, or a per-voice
             sequence of floats and/or ints.
 
-            Floats represent a proportion of the available attacks to be
-            filled. E.g., if `attack_density == 0.5` and there are 4 possible
-            attack times, there will be 2 attacks. (Possible attack times are
-            determined by `attack_subdivision`, `sub_subdivisions`, and
+            Floats represent a proportion of the available onsets to be
+            filled. E.g., if `onset_density == 0.5` and there are 4 possible
+            onset times, there will be 2 onsets. (Possible onset times are
+            determined by `onset_subdivision`, `sub_subdivisions`, and
             `comma` below).
 
-            Integers represent a literal number of attacks. E.g., if
-            `attack_density == 3`, there will be 3 attacks.
+            Integers represent a literal number of onsets. E.g., if
+            `onset_density == 3`, there will be 3 onsets.
 
             Any negative values will be replaced by a random float between
             0.0 and 1.0.
 
-            Note that there will always be at least one attack in each rhythm,
-            regardless of how low `attack_density` is set.
+            Note that there will always be at least one onset in each rhythm,
+            regardless of how low `onset_density` is set.
             Default: 0.5
         dur_density: a float from 0.0 to 1.0, or a per-voice sequence of floats.
             Indicates a proportion of the duration of `rhythm_len` that should
             be filled. Any negative values will be replaced by a random float
             between 0.0 and 1.0.
             Default: 1.0
-        attack_subdivision: a number, or a per-voice sequence of numbers.
-            Indicates the basic "grid" on which attacks can take place, measured
-            in quarter notes. For example, if `attack_subdivision == 1/4`, then
-            attacks can occur on every sixteenth note subdivision. (But see also
+        onset_subdivision: a number, or a per-voice sequence of numbers.
+            Indicates the basic "grid" on which onsets can take place, measured
+            in quarter notes. For example, if `onset_subdivision == 1/4`, then
+            onsets can occur on every sixteenth note subdivision. (But see also
             `sub_subdivision` below.) If `cont_rhythms == "all"` or
             `cont_rhythms == "grid"`, then this parameter no longer indicates
-            the grid on which attacks can take place, but it is still used to
-            calculate how many attack positions there should be. Thus, in the
+            the grid on which onsets can take place, but it is still used to
+            calculate how many onset positions there should be. Thus, in the
             case of continuous rhythms, this parameter can be thought of as
             indicating the average grid duration, rather than the exact grid
             duration.
             Default: Fraction(1, 4)
         sub_subdivisions: a sequence of ints, or a per-voice sequence of
-            sequences of ints.  Further subdivides `attack_subdivision`, into
+            sequences of ints.  Further subdivides `onset_subdivision`, into
             parts defined by the ratio of the integers in the sequence. This can
             be used to apply "swing" or any other irregular subdivision you
             like. For instance, if passed a value of `(3, 4, 2)`, each unit of
-            length `attack_subdivision` will be subdivided into a portion of
+            length `onset_subdivision` will be subdivided into a portion of
             3/9, a portion of 4/9, and a portion of 2/9. If a sequence of
             sequences, each sub-sequence applies to an individual voice,
             interpreted in the looping per-voice manner described above.
@@ -926,40 +926,40 @@ class ERSettings:
         dur_subdivision: a number, or a per-voice sequence of numbers.
             Indicates the "grid" on which note durations are extended (and thus
             on which releases take place), which will be measured from the
-            note attack. Values of 0 will be assigned the corresponding value of
-            attack_subdivision. Note that, regardless of this value, all notes
+            note onset. Values of 0 will be assigned the corresponding value of
+            onset_subdivision. Note that, regardless of this value, all notes
             will be given a duration of at least `min_dur`, so it is possible
             that the total duration will exceed the value implied by
             `dur_subdivision` somewhat.
             Default: 0
         min_dur: a number, or a per-voice sequence of numbers. Indicates the
             minimum duration of a note. Values <= 0 will be assigned the
-            corresponding value of `attack_subdivision`.
+            corresponding value of `onset_subdivision`.
             Default: 0
-        obligatory_attacks: a sequence of numbers, or a per-voice sequence of
+        obligatory_onsets: a sequence of numbers, or a per-voice sequence of
             sequences of numbers. Numbers specify obligatory
-            attack times to include in the rhythm. Zero-indexed, so beat "1"
+            onset times to include in the rhythm. Zero-indexed, so beat "1"
             (in musical terms) is `0`. Thus a value of `[0, 2, 3]`, with
-            an `obligatory_attacks` value of `4` would enforce attacks on beats
+            an `obligatory_onsets` value of `4` would enforce onsets on beats
             0, 2, and 3, repeating every 4 beats; in musical terms, we could
-            think of this as attacks on the first, third, and fourth beats of
+            think of this as onsets on the first, third, and fourth beats of
             every measure of 4/4.
 
-            If `obligatory_attacks` specifies more attacks than would be
-            implied by `attack_density`, `obligatory_attacks` takes precedence.
+            If `obligatory_onsets` specifies more onsets than would be
+            implied by `onset_density`, `obligatory_onsets` takes precedence.
 
             Default: ()
-        obligatory_attacks_modulo: a number, or a sequence of numbers.
+        obligatory_onsets_modulo: a number, or a sequence of numbers.
             Specifies which times (if any) should be understood as equivalent
-            to the values in `obligatory_attacks`. Thus, if `obligatory_attacks`
-            is `(0,)`, and `obligatory_attacks_modulo` is passed a value of
+            to the values in `obligatory_onsets`. Thus, if `obligatory_onsets`
+            is `(0,)`, and `obligatory_onsets_modulo` is passed a value of
             `2`, then times of 2, 4, 6, ... will be equivalent to 0. Has no
-            effect if `obligatory_attacks` is empty.
+            effect if `obligatory_onsets` is empty.
             Default: 4
         comma_position: string, int, or sequence of strings and/or ints.  If
-            the `rhythm_len` is not divisible by `attack_subdivision`
-            (e.g., `rhythm_len == 3` and `attack_subdivision == 2/3`), then
-            there will be a "comma" left over that the attacks do not fill. This
+            the `rhythm_len` is not divisible by `onset_subdivision`
+            (e.g., `rhythm_len == 3` and `onset_subdivision == 2/3`), then
+            there will be a "comma" left over that the onsets do not fill. This
             setting controls the placement of any such comma. Possible values:
               - "end": comma is placed at the end of the rhythm.
               - "anywhere": the comma is placed randomly anywhere before,
@@ -975,7 +975,7 @@ class ERSettings:
             `False`, pattern overlaps are avoided.
             Default: True
         rhythmic_unison: bool, or a sequence of tuples of ints. Controls
-            whether to apply "rhythmic unison" (i.e., simultaneous attacks
+            whether to apply "rhythmic unison" (i.e., simultaneous onsets
             and releases) to some or all voices.
 
             If True, all voices are in rhythmic unison. In this case, the
@@ -1001,11 +1001,11 @@ class ERSettings:
             Note that, when using tuples of rhythmic unison voices, it is
             sometimes necessary to provide "dummy" rhythmic parameters. If, for
             instance, the `rhythmic_unison` tuples are `[(0, 1), (2, 3)]` and a
-            parameter such as `attack_density` is `[0.5, 0.3]`, the second value
-            of `attack_density` will never be used, because the first voices of
+            parameter such as `onset_density` is `[0.5, 0.3]`, the second value
+            of `onset_density` will never be used, because the first voices of
             the `rhythmic_unison` tuples are 0 and 2 (and 2, modulo the length
-            of `attack_density`, is 0). In this situation it is necessary to
-            insert a dummy value into `attack_density` (e.g., [0.5, 0.0, 0.3])
+            of `onset_density`, is 0). In this situation it is necessary to
+            insert a dummy value into `onset_density` (e.g., [0.5, 0.0, 0.3])
             in order to apply the parameter 0.3 to the second `rhythmic_unison`
             tuple.
             Default: False
@@ -1013,33 +1013,33 @@ class ERSettings:
             parameter is specified in the same way as `rhythmic_unison` above.
             However, whereas `rhythmic_unison` causes voices to have precisely
             the same rhythms, this parameter works differently. It does not
-            override the rhythmic settings (such as `attack_density`) that apply
-            to each voice, but it constrains the attacks of "follower" voices to
-            occur at the same time as the attacks of "leader" voices, as far as
-            is possible. If the follower has a greater `attack_density` than the
-            leader, then the follower will have attacks simultaneous with all
-            those of the leader, as well as extra attacks to satisfy its
-            `attack_density` value. If the follower has a lesser
-            `attack_density` than the leader, then all of the followers attacks
-            will occur simultaneous with attacks in the leader, but it will have
-            fewer attacks than the leader. The effect on other rhythmic
+            override the rhythmic settings (such as `onset_density`) that apply
+            to each voice, but it constrains the onsets of "follower" voices to
+            occur at the same time as the onsets of "leader" voices, as far as
+            is possible. If the follower has a greater `onset_density` than the
+            leader, then the follower will have onsets simultaneous with all
+            those of the leader, as well as extra onsets to satisfy its
+            `onset_density` value. If the follower has a lesser
+            `onset_density` than the leader, then all of the followers onsets
+            will occur simultaneous with onsets in the leader, but it will have
+            fewer onsets than the leader. The effect on other rhythmic
             parameters like `dur_density` is similar.  See also
             `rhythmic_quasi_unison_constrain` below.
             Default: False
         rhythmic_quasi_unison_constrain: boolean. If `rhythmic_quasi_unison`
             is False, has no effect. If True, and `rhythmic_quasi_unison` is
             True, then
-                - if the follower voice has a smaller attack density than the
+                - if the follower voice has a smaller onset density than the
                 leader, it will be constrained not to contain any durations
                 that lie outside the durations of the leader.
-                - if the follower has a greater attack density than the leader,
-                it will be constrained to have all its attacks occur during the
+                - if the follower has a greater onset density than the leader,
+                it will be constrained to have all its onsets occur during the
                 durations of the leader, if possible.
             Default: False
         hocketing: bool, or a sequence of tuples of ints.  This parameter is
             specified in the same way as `rhythmic_unison` above.  Its effect is
             to lead combinations of voices to be "hocketed" ---i.e., for, when
-            possible, the attacks of one voice to be placed during the pauses of
+            possible, the onsets of one voice to be placed during the pauses of
             another, and vice versa.
 
             Tuples of the form (0, 1, 2) will cause voice 1 to be constructed
@@ -1064,7 +1064,7 @@ class ERSettings:
                 "none": continuous rhythms are not used.
                 "all": all voices have unique continuous rhythm.
                 "grid": all voices share a continuous-rhythm "grid", so that
-                    their rhythmic attacks (  and releases?) will be
+                    their rhythmic onsets (  and releases?) will be
                     on a common grid.
 
             If `cont_rhythms` is not `None`, then `rhythm_len` must equal
@@ -1396,7 +1396,12 @@ class ERSettings:
         typing.Tuple[
             typing.Union[str, numbers.Number], typing.Union[str, numbers.Number]
         ]
-    ] = (("OCTAVE0 * A", "OCTAVE8 * C",),)
+    ] = (
+        (
+            "OCTAVE0 * A",
+            "OCTAVE8 * C",
+        ),
+    )
     # MAYBE add other possible voice orders, e.g., (melody, bass, inner voices)
     voice_order_str: str = "usual"
     allow_voice_crossings: typing.Union[bool, typing.Sequence[bool]] = True
@@ -1425,7 +1430,7 @@ class ERSettings:
     choirs_separate_channels: bool = True
     write_program_changes: bool = True
     humanize: bool = True
-    humanize_attack: float = 0.0
+    humanize_onset: float = 0.0
     humanize_dur: float = 0.0
     humanize_velocity: float = 0.1
     humanize_tuning: float = 0.0
@@ -1490,7 +1495,7 @@ class ERSettings:
         bool, typing.Sequence[bool]
     ] = False
     force_chord_tone: str = "none"
-    chord_tones_sync_attack_in_all_voices: bool = False
+    chord_tones_sync_onset_in_all_voices: bool = False
     force_foot_in_bass: str = "none"
 
     ###################################################################
@@ -1539,7 +1544,7 @@ class ERSettings:
     # Consonance and dissonance settings
 
     consonance_type: str = "pairwise"
-    consonance_treatment: str = "all_attacks"
+    consonance_treatment: str = "all_onsets"
     # MAYBE all modulos have boolean to be truncated by initial_pattern_len?
     consonance_modulo: typing.Union[
         numbers.Number,
@@ -1580,22 +1585,23 @@ class ERSettings:
     hocketing: typing.Union[bool, typing.Sequence[typing.Sequence[int]]] = False
     rhythmic_quasi_unison_constrain: bool = False
     cont_rhythms: str = "none"
-    # LONGTERM add obligatory_attacks to grid
+    # LONGTERM add obligatory_onsets to grid
     num_cont_rhythm_vars: typing.Union[int, typing.Sequence[int]] = 1
     vary_rhythm_consistently: bool = True
     cont_var_increment: numbers.Number = 0.1
     super_pattern_reps_cont_var: bool = True
     rhythms_specified_in_midi: str = ""
     rhythms_in_midi_reverse_voices: bool = False
-    attack_density: typing.Union[
+    onset_density: typing.Union[
         typing.Union[float, int], typing.Sequence[typing.Union[float, int]]
     ] = 0.5
     dur_density: typing.Union[float, typing.Sequence[float]] = 1.0
-    attack_subdivision: typing.Union[
+    onset_subdivision: typing.Union[
         numbers.Number, typing.Sequence[numbers.Number]
     ] = Fraction(1, 4)
     sub_subdivisions: typing.Union[
-        int, typing.Sequence[typing.Union[int, typing.Sequence[int]]],
+        int,
+        typing.Sequence[typing.Union[int, typing.Sequence[int]]],
     ] = 1
     dur_subdivision: typing.Union[
         numbers.Number, typing.Sequence[numbers.Number]
@@ -1603,11 +1609,11 @@ class ERSettings:
     # MAYBE raise error if min_dur is empty,
     #    or other settings that cannot be empty are empty?
     min_dur: typing.Union[numbers.Number, typing.Sequence[numbers.Number]] = 0
-    obligatory_attacks: typing.Union[
+    obligatory_onsets: typing.Union[
         typing.Sequence[numbers.Number],
         typing.Sequence[typing.Sequence[numbers.Number]],
     ] = ()
-    obligatory_attacks_modulo: typing.Union[
+    obligatory_onsets_modulo: typing.Union[
         numbers.Number, typing.Sequence[numbers.Number]
     ] = 4
     comma_position: typing.Union[

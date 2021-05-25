@@ -10,7 +10,7 @@ import src.er_classes as er_classes  # pylint: disable=wrong-import-position
 
 
 def test_comparisons():
-    # pitch, finetune, attack, dur, velocity
+    # pitch, finetune, onset, dur, velocity
     note_attrs = (
         (60, 0, 10.0, 2.0, 64),
         # greater than
@@ -29,10 +29,8 @@ def test_comparisons():
         (60, 0, 10.0, 2.0, 60),
     )
     notes = tuple(
-        er_classes.Note(
-            pitch, attack_time, dur, velocity=velocity, finetune=finetune
-        )
-        for (pitch, finetune, attack_time, dur, velocity) in note_attrs
+        er_classes.Note(pitch, onset, dur, velocity=velocity, finetune=finetune)
+        for (pitch, finetune, onset, dur, velocity) in note_attrs
     )
     main_note = notes[0]
     greater = notes[1:7]

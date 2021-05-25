@@ -30,7 +30,7 @@ def test_too_many_alternations():
 
     settingsdict = {"num_voices": 1, "max_alternations": 3}
     er = er_preprocess.preprocess_settings(settingsdict)
-    # pitch, attack, dur, evaluates_to
+    # pitch, onset, dur, evaluates_to
 
     try:
         notes = [60, 62, 60, 62, 60]
@@ -55,9 +55,9 @@ def test_too_many_alternations():
 
 
 class BasicPossibleNote(er_make.PossibleNote):
-    def __init__(self, score, attack_time, dur, voice_i):
+    def __init__(self, score, onset, dur, voice_i):
         self.score = score
-        self.attack_time = attack_time
+        self.onset = onset
         self.dur = dur
         self.voice_i = voice_i
 

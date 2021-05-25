@@ -11,11 +11,11 @@ class Note:
 
     For sorting, notes can be compared with the standard comparison operators
     like <, >=, etc. They are compared on the following attributes, in this
-    order: attack_time, dur, pitch, finetune, velocity
+    order: onset, dur, pitch, finetune, velocity
 
     Attributes:
         pitch: an integer.
-        attack_time: a fraction.
+        onset: a fraction.
         dur: a fraction.
         velocity: an integer 0-127.
         choir: an integer.
@@ -28,7 +28,7 @@ class Note:
     def __init__(
         self,
         pitch,
-        attack_time,
+        onset,
         dur,
         velocity=DEFAULT_VELOCITY,
         choir=DEFAULT_CHOIR,
@@ -36,7 +36,7 @@ class Note:
         finetune=0,
     ):
         self.pitch = pitch
-        self.attack_time = attack_time
+        self.onset = onset
         self.dur = dur
         self.velocity = velocity
         self.choir = choir
@@ -45,12 +45,12 @@ class Note:
         self._spelling = None
 
     def __repr__(self):
-        # not sure what my motivation for printing attack and dur as floats was
+        # not sure what my motivation for printing onset and dur as floats was
         out = (
-            "<Note pitch={} attack={:f} dur={:f} vel={} choir={} "
+            "<Note pitch={} onset={:f} dur={:f} vel={} choir={} "
             "voice={}>\n".format(
                 self.pitch,
-                float(self.attack_time),
+                float(self.onset),
                 float(self.dur),
                 self.velocity,
                 self.choir,
@@ -79,7 +79,7 @@ class Note:
         if not isinstance(other, Note):
             raise ValueError
 
-        for attr in ("attack_time", "dur", "pitch", "finetune", "velocity"):
+        for attr in ("onset", "dur", "pitch", "finetune", "velocity"):
             result = _compare_attr(attr)
             if result is not None:
                 return result
@@ -113,7 +113,7 @@ class Note:
         self,
         other,
         pitch=True,
-        attack_time=True,
+        onset=True,
         dur=True,
         velocity=True,
         choir=True,
@@ -122,7 +122,7 @@ class Note:
     ):
         if pitch and not self.pitch == other.pitch:
             return False
-        if attack_time and not self.attack_time == other.attack_time:
+        if onset and not self.onset == other.onset:
             return False
         if dur and not self.dur == other.dur:
             return False

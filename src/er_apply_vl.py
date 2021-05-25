@@ -126,10 +126,10 @@ def apply_voice_leading(
         and new_harmony_i != prev_harmony_i
     ):
         try:
-            last_onset, last_notes = new_notes.last_attack_and_notes
+            last_onset, last_notes = new_notes.last_onset_and_notes
         except IndexError:
             # raised when new_notes is empty
-            last_onset, last_notes = score.voices[voice_i].last_attack_and_notes
+            last_onset, last_notes = score.voices[voice_i].last_onset_and_notes
         last_pitch = last_notes[-1].pitch
 
         chord_tone = er_make2.check_if_chord_tone(

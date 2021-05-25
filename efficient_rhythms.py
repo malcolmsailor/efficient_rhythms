@@ -56,7 +56,7 @@ def main():
         )
         midi_settings.num_tracks_from(super_pattern)
         midi_settings.original_path = midi_in
-        if super_pattern.attacks_adjusted_by != 0:
+        if super_pattern.onsets_adjusted_by != 0:
             er_midi.write_midi(super_pattern, midi_settings)
         er_interface.input_loop(
             midi_settings,

@@ -24,15 +24,15 @@ class PossibleNoteError(Exception):
 class PossibleNote:
     """A class for storing the properties of a possible note."""
 
-    def __init__(self, er, super_pattern, attack_i):
-        self.attack_i = attack_i
+    def __init__(self, er, super_pattern, onset_i):
+        self.onset_i = onset_i
         try:
-            self.voice_i, self.attack_time = er.initial_pattern_order[attack_i]
+            self.voice_i, self.onset = er.initial_pattern_order[onset_i]
         except IndexError:
             raise PossibleNoteError()  # pylint: disable=raise-missing-from
         self.voice = super_pattern.voices[self.voice_i]
-        self.dur = er.rhythms[self.voice_i][self.attack_time]
-        self.harmony_i = super_pattern.get_harmony_i(self.attack_time)
+        self.dur = er.rhythms[self.voice_i][self.onset]
+        self.harmony_i = super_pattern.get_harmony_i(self.onset)
         self.score = super_pattern
 
     @functools.cached_property
@@ -42,7 +42,7 @@ class PossibleNote:
         Returns -1 at start of score.
         """
         # TODO update code to use this more.
-        return self.score.get_prev_pitch(self.attack_time, self.voice_i)
+        return self.score.get_prev_pitch(self.onset, self.voice_i)
 
     @functools.cached_property
     def prev_note(self):
@@ -51,13 +51,13 @@ class PossibleNote:
         Returns None at start of score.
         """
         # TODO update code to use this more.
-        return self.score.voices[self.voice_i].get_prev_note(self.attack_time)
+        return self.score.voices[self.voice_i].get_prev_note(self.onset)
 
     @functools.cached_property
     def other_voice_indices(self):
         # TODO update code to use this more.
         return er_misc_funcs.get_prev_voice_indices(
-            self.score, self.attack_time, self.dur
+            self.score, self.onset, self.dur
         )
 
 
@@ -66,16 +66,14 @@ def get_repeated_pitch(super_pattern, poss_note):
     harmony_start_time = super_pattern.get_harmony_times(
         poss_note.harmony_i
     ).start_time
-    return er_make2.get_repeated_pitch(
-        poss_note, min_attack_time=harmony_start_time
-    )
+    return er_make2.get_repeated_pitch(poss_note, min_onset=harmony_start_time)
 
 
 def get_looped_pitch(er, poss_note):
 
     loop_len = er.get(poss_note.voice_i, "pitch_loop")
     prev_n_pitches = poss_note.voice.get_prev_n_pitches(
-        loop_len, poss_note.attack_time
+        loop_len, poss_note.onset
     )
     pitch_to_loop = prev_n_pitches[0]
 
@@ -131,7 +129,7 @@ def get_forced_parallel_motion(er, super_pattern, poss_note):
     leader = super_pattern.voices[leader_i]
     follower = super_pattern.voices[poss_note.voice_i]
 
-    if poss_note.attack_time not in leader:
+    if poss_note.onset not in leader:
         return None
 
     harmony_start_time = super_pattern.get_harmony_times(
@@ -142,14 +140,14 @@ def get_forced_parallel_motion(er, super_pattern, poss_note):
 
         leader_prev_pitch, leader_pitch = leader.get_last_n_pitches(
             2,
-            poss_note.attack_time,
-            min_attack_time=harmony_start_time,
+            poss_note.onset,
+            min_onset=harmony_start_time,
             stop_at_rest=True,
         )
 
         follower_prev_pitch = follower.get_prev_pitch(
-            poss_note.attack_time,
-            min_attack_time=harmony_start_time,
+            poss_note.onset,
+            min_onset=harmony_start_time,
             stop_at_rest=True,
         )
 
@@ -190,31 +188,31 @@ def get_forced_parallel_motion(er, super_pattern, poss_note):
 
 
 def check_other_voices_for_chord_tones(
-    er, super_pattern, attack_time, prev_voices, harmony_i
+    er, super_pattern, onset, prev_voices, harmony_i
 ):
 
     # This function assumes that the other voices are monophonic.
 
     for prev_voice_i in prev_voices:
         prev_voice = super_pattern.voices[prev_voice_i]
-        if attack_time not in prev_voice:
+        if onset not in prev_voice:
             continue
-        prev_note = prev_voice[attack_time][0]
+        prev_note = prev_voice[onset][0]
         pc = prev_note.pitch % er.tet
         if pc in er.get(harmony_i, "pc_chords"):
             return True
     return False
 
 
-def get_n_since_chord_tone(er, super_pattern, attack_time, voice_i):
+def get_n_since_chord_tone(er, super_pattern, onset, voice_i):
     voice = super_pattern.voices[voice_i]
     n = 0
     for note in reversed(voice):
-        time = note.attack_time
-        if time >= attack_time:
+        time = note.onset
+        if time >= onset:
             continue
         if er_make2.check_if_chord_tone(
-            er, super_pattern, note.attack_time, note.pitch
+            er, super_pattern, note.onset, note.pitch
         ):
             return n
         n += 1
@@ -256,11 +254,11 @@ def choose_whether_chord_tone(er, super_pattern, poss_note):
     force_chord_tone = er.get(poss_note.voice_i, "force_chord_tone")
 
     if force_chord_tone != "none":
-        if poss_note.attack_time == 0:
+        if poss_note.onset == 0:
             return True
         if force_chord_tone == "global_first_note":
             # prev_pitch = super_pattern.get_prev_pitch(
-            #     poss_note.attack_time, poss_note.voice_i
+            #     poss_note.onset, poss_note.voice_i
             # )
             if poss_note.prev_pitch <= 0:
                 return True
@@ -270,20 +268,20 @@ def choose_whether_chord_tone(er, super_pattern, poss_note):
             ).start_time
             if (
                 force_chord_tone == "first_beat"
-                and poss_note.attack_time == harmony_start_time
+                and poss_note.onset == harmony_start_time
             ):
                 return True
             if force_chord_tone == "first_note":
                 prev_note = poss_note.prev_note
                 if (
                     prev_note.pitch <= 0
-                    and prev_note.attack_time >= harmony_start_time
+                    and prev_note.onset >= harmony_start_time
                 ):
                     return True
                 # prev_pitch = super_pattern.get_prev_pitch(
-                #     poss_note.attack_time,
+                #     poss_note.onset,
                 #     poss_note.voice_i,
-                #     min_attack_time=harmony_start_time,
+                #     min_onset=harmony_start_time,
                 # )
                 # if prev_pitch <= 0:
                 #     return True
@@ -296,26 +294,25 @@ def choose_whether_chord_tone(er, super_pattern, poss_note):
     rest_dur = er.get(poss_note.voice_i, "chord_tone_before_rests")
 
     if rest_dur:
-        mod_attack = (
-            poss_note.attack_time
-            % er.rhythms[poss_note.voice_i].total_rhythm_len
+        mod_onset = (
+            poss_note.onset % er.rhythms[poss_note.voice_i].total_rhythm_len
         )
         if er_rhythm.rest_before_next_note(
-            er.rhythms[poss_note.voice_i], mod_attack, rest_dur
+            er.rhythms[poss_note.voice_i], mod_onset, rest_dur
         ):
             return True
 
-    if er.chord_tones_sync_attack_in_all_voices:
+    if er.chord_tones_sync_onset_in_all_voices:
         prev_voices = er_misc_funcs.get_prev_voice_indices(
             super_pattern,
-            poss_note.attack_time,
+            poss_note.onset,
             poss_note.dur,
         )
         if prev_voices:
             if check_other_voices_for_chord_tones(
                 er,
                 super_pattern,
-                poss_note.attack_time,
+                poss_note.onset,
                 prev_voices,
                 poss_note.harmony_i,
             ):
@@ -331,7 +328,7 @@ def choose_whether_chord_tone(er, super_pattern, poss_note):
             return False
 
     n_since_chord_tone = get_n_since_chord_tone(
-        er, super_pattern, poss_note.attack_time, poss_note.voice_i
+        er, super_pattern, poss_note.onset, poss_note.voice_i
     )
 
     # LONGTERM chord tone probability influenced by metric position
@@ -342,33 +339,31 @@ def choose_whether_chord_tone(er, super_pattern, poss_note):
     return False
 
 
-# def check_for_voice_crossings(super_pattern, pitch, attack_time, dur, voice_i):
+# def check_for_voice_crossings(super_pattern, pitch, onset, dur, voice_i):
 #     voices_above = [i for i in range(super_pattern.num_voices) if i > voice_i]
-#     pitches_above = super_pattern.get_all_pitches_sounding_during_duration(
-#         attack_time, dur, voices=voices_above)
+#     pitches_above = super_pattern.get_all_ps_sounding_in_dur(
+#         onset, dur, voices=voices_above)
 #     if pitch > min(pitches_above):
 #         return True
 #
 #     voices_below = [i for i in range(super_pattern.num_voices) if i < voice_i]
-#     pitches_below = super_pattern.get_all_pitches_sounding_during_duration(
-#         attack_time, dur, voices=voices_below)
+#     pitches_below = super_pattern.get_all_ps_sounding_in_dur(
+#         onset, dur, voices=voices_below)
 #     if pitch < max(pitches_below):
 #         return True
 #
 #     return False
 
 
-def get_pitches_to_check_for_crossings(
-    super_pattern, attack_time, dur, voice_i
-):
+def get_pitches_to_check_for_crossings(super_pattern, onset, dur, voice_i):
     # MAYBE make work with existing voices?
     voices_above = [i for i in range(super_pattern.num_voices) if i > voice_i]
-    pitches_above = super_pattern.get_all_pitches_sounding_during_duration(
-        attack_time, dur, voices=voices_above
+    pitches_above = super_pattern.get_all_ps_sounding_in_dur(
+        onset, dur, voices=voices_above
     )
     voices_below = [i for i in range(super_pattern.num_voices) if i < voice_i]
-    pitches_below = super_pattern.get_all_pitches_sounding_during_duration(
-        attack_time, dur, voices=voices_below
+    pitches_below = super_pattern.get_all_ps_sounding_in_dur(
+        onset, dur, voices=voices_below
     )
     return max(pitches_below), min(pitches_above)
 
@@ -417,7 +412,7 @@ def get_boundary_pitches(er, super_pattern, poss_note):
             lowest_pitch_above,
         ) = get_pitches_to_check_for_crossings(
             super_pattern,
-            poss_note.attack_time,
+            poss_note.onset,
             poss_note.dur,
             poss_note.voice_i,
         )
@@ -444,14 +439,14 @@ def get_available_pitches(er, score, available_pcs, poss_note):
                 er,
                 score,
                 available_pitch,
-                poss_note.attack_time,
+                poss_note.onset,
                 poss_note.dur,
                 poss_note.voice_i,
             ):
                 if er.get(
                     poss_note.voice_i, "chord_tones_no_diss_treatment"
                 ) and er_make2.check_if_chord_tone(
-                    er, score, poss_note.attack_time, available_pitch
+                    er, score, poss_note.onset, available_pitch
                 ):
                     sub_out.append(available_pitch)
                 elif poss_note.dur < er.get(
@@ -463,7 +458,7 @@ def get_available_pitches(er, score, available_pcs, poss_note):
                         er,
                         score,
                         available_pitch,
-                        poss_note.attack_time,
+                        poss_note.onset,
                         poss_note.dur,
                         poss_note.voice_i,
                     )
@@ -482,7 +477,7 @@ def within_limit_intervals(er, super_pattern, available_pitches, poss_note):
         return available_pitches
 
     chord_tone = er_make2.check_if_chord_tone(
-        er, super_pattern, prev_note.attack_time, prev_note.pitch
+        er, super_pattern, prev_note.onset, prev_note.pitch
     )
 
     max_interval, min_interval = er_make2.get_limiting_intervals(
@@ -507,10 +502,10 @@ def remove_parallels(er, super_pattern, available_pitches, poss_note):
     forbidden_parallels = er.prohibit_parallels
 
     for other_voice_i in poss_note.other_voice_indices:
-        if not super_pattern.attack(poss_note.attack_time, other_voice_i):
+        if not super_pattern.onset(poss_note.onset, other_voice_i):
             continue
         other_prev_pitch, other_pitch = super_pattern.get_last_n_pitches(
-            2, poss_note.attack_time, other_voice_i
+            2, poss_note.onset, other_voice_i
         )
         if -1 in (other_prev_pitch, other_pitch):
             continue
@@ -590,10 +585,10 @@ def apply_melodic_control(er, available_pitches, poss_note):
     return pitch
 
 
-def too_many_alternations(er, super_pattern, pitch, attack_time, voice_i):
+def too_many_alternations(er, super_pattern, pitch, onset, voice_i):
     max_alternations = er.get(voice_i, "max_alternations")
     prev_n_pitches = super_pattern.get_prev_n_pitches(
-        max_alternations * 2 - 1, attack_time, voice_i
+        max_alternations * 2 - 1, onset, voice_i
     )
     if pitch == prev_n_pitches[-1]:
         # we don't want to filter out repeated pitches with this function
@@ -606,11 +601,9 @@ def too_many_alternations(er, super_pattern, pitch, attack_time, voice_i):
     return True
 
 
-def too_many_repeated_notes(er, super_pattern, pitch, attack_time, voice_i):
+def too_many_repeated_notes(er, super_pattern, pitch, onset, voice_i):
     num_notes = er.max_repeated_notes + 1
-    prev_n_pitches = super_pattern.get_prev_n_pitches(
-        num_notes, attack_time, voice_i
-    )
+    prev_n_pitches = super_pattern.get_prev_n_pitches(num_notes, onset, voice_i)
     last_n_pitches = prev_n_pitches + [
         pitch,
     ]
@@ -630,18 +623,18 @@ def choose_pitch(
         pitch = random.choice(available_pitches)
 
     if er.get(poss_note.voice_i, "max_alternations") and too_many_alternations(
-        er, super_pattern, pitch, poss_note.attack_time, poss_note.voice_i
+        er, super_pattern, pitch, poss_note.onset, poss_note.voice_i
     ):
         return pitch, "too_many_alternations"
     if er.max_repeated_notes >= 0 and too_many_repeated_notes(
-        er, super_pattern, pitch, poss_note.attack_time, poss_note.voice_i
+        er, super_pattern, pitch, poss_note.onset, poss_note.voice_i
     ):
         return pitch, "too_many_repeated_notes"
     if isinstance(er.get(poss_note.voice_i, "pitch_loop_complete"), bool):
         last_n_pitches = super_pattern.voices[
             poss_note.voice_i
         ].get_prev_n_pitches(
-            er.get(poss_note.voice_i, "pitch_loop") - 1, poss_note.attack_time
+            er.get(poss_note.voice_i, "pitch_loop") - 1, poss_note.onset
         ) + [
             pitch,
         ]
@@ -686,14 +679,10 @@ def check_whether_to_force_foot(er, super_pattern, poss_note):
     # MAYBE move this function to a more opportune location
     if er.force_foot_in_bass == "none":
         return False
-    if (
-        poss_note.attack_time == 0
-        and er.force_foot_in_bass == "global_first_beat"
-    ):
+    if poss_note.onset == 0 and er.force_foot_in_bass == "global_first_beat":
         return True
-    if (
-        er.force_foot_in_bass == "global_first_note"
-        and poss_note.attack_time == min(er.rhythms[BASS])
+    if er.force_foot_in_bass == "global_first_note" and poss_note.onset == min(
+        er.rhythms[BASS]
     ):
         return True
     if er.force_foot_in_bass in ("first_note", "first_beat"):
@@ -701,11 +690,11 @@ def check_whether_to_force_foot(er, super_pattern, poss_note):
             poss_note.harmony_i
         ).start_time
         if (
-            poss_note.attack_time == harmony_start_time
+            poss_note.onset == harmony_start_time
             and er.force_foot_in_bass == "first_beat"
         ):
             return True
-        if poss_note.attack_time == min(
+        if poss_note.onset == min(
             [time for time in er.rhythms[BASS] if time >= harmony_start_time]
         ):
             return True
@@ -713,13 +702,13 @@ def check_whether_to_force_foot(er, super_pattern, poss_note):
 
 
 def attempt_initial_pattern(
-    er, super_pattern, available_pitch_error, attack_i=0
+    er, super_pattern, available_pitch_error, onset_i=0
 ):
 
     er.build_status_printer.spin()
 
     try:
-        poss_note = PossibleNote(er, super_pattern, attack_i)
+        poss_note = PossibleNote(er, super_pattern, onset_i)
     except PossibleNoteError:
         return True
 
@@ -733,16 +722,16 @@ def attempt_initial_pattern(
         if looped_pitch:
             if hard_pitch_loop:
                 poss_note.voice.add_note(
-                    looped_pitch, poss_note.attack_time, poss_note.dur
+                    looped_pitch, poss_note.onset, poss_note.dur
                 )
                 if attempt_initial_pattern(
                     er,
                     super_pattern,
                     available_pitch_error,
-                    attack_i=attack_i + 1,
+                    onset_i=onset_i + 1,
                 ):
                     return True
-                del poss_note.voice[poss_note.attack_time]
+                del poss_note.voice[poss_note.onset]
                 return False
             choose_first = looped_pitch
 
@@ -756,26 +745,26 @@ def attempt_initial_pattern(
         )
         if forced_foot:
             poss_note.voice.add_note(
-                forced_foot, poss_note.attack_time, poss_note.dur
+                forced_foot, poss_note.onset, poss_note.dur
             )
             if attempt_initial_pattern(
-                er, super_pattern, available_pitch_error, attack_i=attack_i + 1
+                er, super_pattern, available_pitch_error, onset_i=onset_i + 1
             ):
                 return True
-            del poss_note.voice[poss_note.attack_time]
+            del poss_note.voice[poss_note.onset]
             return False
 
     if er.force_repeated_notes:
         repeated_pitch = get_repeated_pitch(super_pattern, poss_note)
         if repeated_pitch:
             poss_note.voice.add_note(
-                repeated_pitch, poss_note.attack_time, poss_note.dur
+                repeated_pitch, poss_note.onset, poss_note.dur
             )
             if attempt_initial_pattern(
-                er, super_pattern, available_pitch_error, attack_i=attack_i + 1
+                er, super_pattern, available_pitch_error, onset_i=onset_i + 1
             ):
                 return True
-            del poss_note.voice[poss_note.attack_time]
+            del poss_note.voice[poss_note.onset]
             return False
 
     if poss_note.voice_i in er.parallel_motion_followers:
@@ -785,13 +774,13 @@ def attempt_initial_pattern(
         )
         if parallel_pitch:
             poss_note.voice.add_note(
-                parallel_pitch, poss_note.attack_time, poss_note.dur
+                parallel_pitch, poss_note.onset, poss_note.dur
             )
             if attempt_initial_pattern(
-                er, super_pattern, available_pitch_error, attack_i=attack_i + 1
+                er, super_pattern, available_pitch_error, onset_i=onset_i + 1
             ):
                 return True
-            del poss_note.voice[poss_note.attack_time]
+            del poss_note.voice[poss_note.onset]
             return False
 
     available_pcs = _get_available_pcs(
@@ -848,15 +837,13 @@ def attempt_initial_pattern(
                     unable_error.pitch_loop_just_one_pitch
                 )
                 break
-            poss_note.voice.add_note(
-                pitch, poss_note.attack_time, poss_note.dur
-            )
+            poss_note.voice.add_note(pitch, poss_note.onset, poss_note.dur)
             if attempt_initial_pattern(
-                er, super_pattern, available_pitch_error, attack_i=attack_i + 1
+                er, super_pattern, available_pitch_error, onset_i=onset_i + 1
             ):
                 return True
             sub_available_pitches.remove(pitch)
-            del poss_note.voice[poss_note.attack_time]
+            del poss_note.voice[poss_note.onset]
 
     return False
 
@@ -866,15 +853,13 @@ def _get_bass_foot_times(er, super_pattern):
     er.bass_foot_times = []
     harmony_times = er_classes.HarmonyTimes(0, 0, BASS)
     for note in bass:
-        attack_time = note.attack_time
-        if attack_time >= harmony_times.end_time:
-            harmony_i = super_pattern.get_harmony_i(attack_time)
+        onset = note.onset
+        if onset >= harmony_times.end_time:
+            harmony_i = super_pattern.get_harmony_i(onset)
             harmony_times = super_pattern.get_harmony_times(harmony_i)
             # harmony_dur = harmony_times.end_time - harmony_times.start_time
-            all_pitches_in_harmony = (
-                bass.get_all_pitches_attacked_during_duration(
-                    harmony_times.start_time, end_time=harmony_times.end_time
-                )
+            all_pitches_in_harmony = bass.get_all_ps_onset_in_dur(
+                harmony_times.start_time, end_time=harmony_times.end_time
             )
             foot_pc = er.get(harmony_i, "pc_chords")[FOOT]
             lowest_of_each_pc = er_misc_funcs.get_lowest_of_each_pc_in_set(
@@ -885,16 +870,16 @@ def _get_bass_foot_times(er, super_pattern):
             continue
 
         if er.preserve_foot_in_bass == "all":
-            er.bass_foot_times.append(attack_time)
+            er.bass_foot_times.append(onset)
             continue
 
         if lowest_of_each_pc[note.pitch % er.tet] == note.pitch:
-            er.bass_foot_times.append(attack_time)
+            er.bass_foot_times.append(onset)
 
         # if er_misc_funcs.lowest_occurrence_of_pc_in_set(
         #     note.pitch, all_pitches_in_harmony, tet=er.tet
         # ):
-        #     er.bass_foot_times.append(attack_time)
+        #     er.bass_foot_times.append(onset)
 
 
 def make_initial_pattern(er, available_pitch_error):
@@ -907,7 +892,7 @@ def make_initial_pattern(er, available_pitch_error):
             er.build_status_printer.increment_ip_attempt()
             available_pitch_error.status()
             er.rhythms = er_rhythm.rhythms_handler(er)
-            er.initial_pattern_order = er_rhythm.get_attack_order(er)
+            er.initial_pattern_order = er_rhythm.get_onset_order(er)
             super_pattern = er_classes.Score(
                 num_voices=er.num_voices,
                 tet=er.tet,
@@ -960,15 +945,13 @@ def transpose_foots(er, super_pattern):
         if new_pitch < lowest_pitch:
             continue
 
-        if note.attack_time >= harmony_times.end_time:
-            harmony_i = super_pattern.get_harmony_i(note.attack_time)
+        if note.onset >= harmony_times.end_time:
+            harmony_i = super_pattern.get_harmony_i(note.onset)
             harmony_times = super_pattern.get_harmony_times(harmony_i)
             # harmony_dur = harmony_times.end_time - harmony_times.start_time
-            all_pitches_in_harmony = (
-                bass.get_all_pitches_attacked_during_duration(
-                    harmony_times.start_time,
-                    end_time=harmony_times.end_time,
-                )
+            all_pitches_in_harmony = bass.get_all_ps_onset_in_dur(
+                harmony_times.start_time,
+                end_time=harmony_times.end_time,
             )
 
             foot_pc = er.get(harmony_i, "pc_chords")[FOOT]
@@ -997,20 +980,14 @@ def voice_lead_pattern(er, super_pattern, voice_lead_error):
     voice_lead_error.reset_inner_counts()
 
     if er_vl_strict_and_flex.voice_lead_pattern_strictly(
-        er,
-        super_pattern,
-        voice_lead_error,
-        pattern_voice_leading_i=er.num_voices,
+        er, super_pattern, voice_lead_error, pattern_vl_i=er.num_voices
     ):
         return True
 
     if (
         er.allow_flexible_voice_leading
         and er_vl_strict_and_flex.voice_lead_pattern_flexibly(
-            er,
-            super_pattern,
-            voice_lead_error,
-            pattern_voice_leading_i=er.num_voices,
+            er, super_pattern, voice_lead_error, pattern_vl_i=er.num_voices
         )
     ):
         return True
@@ -1086,22 +1063,22 @@ def repeat_super_pattern(er, super_pattern, apply_to_existing_voices=False):
         new_voice = er_classes.Voice()
         for repetition in range(1, er.num_reps_super_pattern):
             repetition_start_time = repetition * er.super_pattern_len
-            last_attack_time = -1
-            note_attack_i = -1
+            last_onset = -1
+            note_onset_i = -1
 
             for note in voice:
-                if note.attack_time > last_attack_time:
-                    note_attack_i += 1
-                    last_attack_time = note.attack_time
-                new_note_attack_i = (
-                    repetition * num_notes_in_super_pattern + note_attack_i
+                if note.onset > last_onset:
+                    note_onset_i += 1
+                    last_onset = note.onset
+                new_note_onset_i = (
+                    repetition * num_notes_in_super_pattern + note_onset_i
                 )
                 new_note = note.copy()
-                new_note.attack_time, new_note.dur = rhythm_list[
-                    new_note_attack_i % len(rhythm_list)
+                new_note.onset, new_note.dur = rhythm_list[
+                    new_note_onset_i % len(rhythm_list)
                 ]
-                new_note.attack_time += (
-                    new_note_attack_i
+                new_note.onset += (
+                    new_note_onset_i
                     // len(rhythm_list)
                     * rhythm.total_rhythm_len
                 )

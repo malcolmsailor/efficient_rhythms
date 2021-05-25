@@ -5,6 +5,6 @@
     "pattern_len": 4,
     "rhythm_len": 1.5,
     "harmony_len": 4,
-    "attack_density": [0.7, 0.85],
-    "consonance_treatment": "all_attacks",
+    "onset_density": [0.7, 0.85],
+    "consonance_treatment": "all_onsets",
 }

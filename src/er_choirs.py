@@ -155,8 +155,8 @@ def assign_choirs(er, super_pattern):
             prev_choir = None
             choir_assignments = er.choir_order[voice_i]
             for note in voice:
-                attack_time = note.attack_time
-                choir_i = attack_time // er.length_choir_segments
+                onset = note.onset
+                choir_i = onset // er.length_choir_segments
                 if er.choir_segments_dovetail:
                     try:
                         prev_choir = choir

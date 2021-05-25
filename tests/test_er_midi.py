@@ -13,7 +13,8 @@ import src.er_preprocess as er_preprocess  # pylint: disable=wrong-import-positi
 
 
 def assay_write_track_names(
-    er, super_pattern,
+    er,
+    super_pattern,
 ):
     # This test seems to be incomplete!
     mf = er_midi.init_midi(er, super_pattern)
@@ -35,7 +36,7 @@ def test_er_midi():
         "seed": 1,
         "pattern_len": 1,
         "num_harmonies": 1,
-        "attack_density": 1 / 4,
+        "onset_density": 1 / 4,
         "length_choir_segments": 1 / 4,
         "randomly_distribute_between_choirs": True,
     }
