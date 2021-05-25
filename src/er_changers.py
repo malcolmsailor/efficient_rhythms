@@ -1,13 +1,12 @@
 import collections
-import copy
 import fractions
 import itertools
 import math
 import random
 
+import src.er_classes as er_classes
 import src.er_misc_funcs as er_misc_funcs
 import src.er_prob_funcs as er_prob_funcs
-import src.er_notes as er_notes
 
 # QUESTION why does program change sometimes not apply to first note when
 #           changing midi files imported from logic?
@@ -24,7 +23,7 @@ import src.er_notes as er_notes
 
 # CHANGER_TODO change "filter" to "transformer" for transformers?
 EXEMPTIONS_DESC = """'Exemptions' specify notes that the filter will never be
-applied to. Exemptions can either be 'metric', meaning that notes attacked on
+applied to. Exemptions can either be 'metric', meaning that notes onset on
 certain beats are exempt, or 'counting', meaning that notes are counted, and
 every 'nth' note is exempt.
 """
@@ -33,9 +32,7 @@ first beat is 0). See also 'Exempt beats modulo' and 'Exempt comma'."""
 
 
 def _get_prob_funcs():
-    """Gets the possible probability functions from er_prob_funcs.py.
-
-    """
+    """Gets the possible probability functions from er_prob_funcs.py."""
     out = []
     for var in vars(er_prob_funcs):
         if var == "NullProbFunc":
@@ -80,10 +77,10 @@ class Changer(er_prob_funcs.AttributeAdder):
             changer_counter[self.pretty_name] += 1
             self.pretty_name += " " + str(changer_counter[self.pretty_name])
         self.condition = condition
-        self.total_len = float(score.get_total_len())
+        self.total_len = float(score.total_dur)
         super().__init__()
-        self.all_voice_is = score.all_voice_is
-        self.num_voices = len(self.all_voice_is)
+        self.all_voice_idxs = score.all_voice_idxs
+        self.num_voices = len(self.all_voice_idxs)
         self.tet = score.tet
         prob_funcs = vars(er_prob_funcs)
         self.require_score = False
@@ -183,11 +180,14 @@ class Changer(er_prob_funcs.AttributeAdder):
             exemptions = list(
                 itertools.accumulate(self.exempt_n)  # pylint: disable=no-member
             )
-            self.mod_n = exemptions[  # pylint: disable=attribute-defined-outside-init
+            self.mod_n = exemptions[
                 -1
-            ]
-            self.exemptions_n = (  # pylint: disable=attribute-defined-outside-init
-                [0,] + exemptions[:-1]
+            ]  # pylint: disable=attribute-defined-outside-init
+            self.exemptions_n = (
+                [  # pylint: disable=attribute-defined-outside-init
+                    0,
+                ]
+                + exemptions[:-1]
             )
         else:
             self.mod_n = None  # pylint: disable=attribute-defined-outside-init
@@ -198,39 +198,38 @@ class Changer(er_prob_funcs.AttributeAdder):
             except IndexError:
                 skip_marked_by_validation = True
             if not skip_marked_by_validation:
-                if not isinstance(score, er_notes.Score):
+                if not isinstance(score, er_classes.Score):
                     raise NotImplementedError()
                 no_marked_transformations = True
-                for note in score:
-                    try:
-                        if self.marked_by in note.transformations_:
-                            no_marked_transformations = False
-                            break
-                    except AttributeError:
-                        continue
+                # TODO it seems this is expecting single notes but iterating
+                #   over the score will return a list of notes?
+                # TODO iterate over voices separately
+                for voice in score:
+                    for note in voice:
+                        try:
+                            if self.marked_by in note.transformations_:
+                                no_marked_transformations = False
+                                break
+                        except AttributeError:
+                            continue
                 if no_marked_transformations:
                     raise ChangeFuncError(
                         f"No notes transformed by {self.marked_by}"  # pylint: disable=no-member
                     )
 
-    def beat_exempt(self, attack_time):
-        mod_attack_time = (
-            attack_time % self.exempt_modulo  # pylint: disable=no-member
-        )
+    def beat_exempt(self, onset):
+        mod_onset = onset % self.exempt_modulo  # pylint: disable=no-member
         exempt_i = er_misc_funcs.binary_search(
             self.exempt,  # pylint: disable=no-member
-            mod_attack_time,
+            mod_onset,
             not_found="nearest",
         )
         mod_diff = min(
-            abs(
-                self.exempt[exempt_i]  # pylint: disable=no-member
-                - mod_attack_time
-            ),
+            abs(self.exempt[exempt_i] - mod_onset),  # pylint: disable=no-member
             abs(
                 self.exempt[exempt_i]  # pylint: disable=no-member
                 + self.exempt_modulo  # pylint: disable=no-member
-                - mod_attack_time
+                - mod_onset
             ),
         )
         if mod_diff < self.exempt_comma:  # pylint: disable=no-member
@@ -257,7 +256,7 @@ class Changer(er_prob_funcs.AttributeAdder):
             and self.exempt[0] is not None  # pylint: disable=no-member
         )
         for interface_voice_i in self.voices:  # pylint: disable=no-member
-            voice_i = self.all_voice_is[interface_voice_i]
+            voice_i = self.all_voice_idxs[interface_voice_i]
             try:
                 voice = score.voices[voice_i]
             except IndexError:
@@ -271,15 +270,15 @@ class Changer(er_prob_funcs.AttributeAdder):
                 )
 
             for note_object_i, note_object in enumerate(voice):
-                attack_time = note_object.attack_time
-                if attack_time < start_time:
+                onset = note_object.onset
+                if onset < start_time:
                     continue
                 if exemptions:
-                    if self.mod_n is None and self.beat_exempt(attack_time):
+                    if self.mod_n is None and self.beat_exempt(onset):
                         continue
                     if self.mod_n and self.n_exempt(note_object_i):
                         continue
-                if attack_time >= end_time:
+                if onset >= end_time:
                     break
                 if not self.condition(note_object):
                     continue
@@ -292,9 +291,11 @@ class Changer(er_prob_funcs.AttributeAdder):
                 except AttributeError:
                     continue
 
-                filter_time = attack_time - start_time
-                func_result = self.prob_func.calculate(  # pylint: disable=no-member
-                    filter_time, random.random(), voice_i
+                filter_time = onset - start_time
+                func_result = (
+                    self.prob_func.calculate(  # pylint: disable=no-member
+                        filter_time, random.random(), voice_i
+                    )
                 )
                 if func_result:
                     notes_to_change.append(note_object)
@@ -319,25 +320,26 @@ class Changer(er_prob_funcs.AttributeAdder):
             self.prob_func.length = (  # pylint: disable=no-member
                 end_time - start_time
             )
+        # TODO replace or implement score iteration
         for notes in score:
-            attack_time = notes[0].attack_time
-            if attack_time < start_time:
+            onset = notes[0].onset
+            if onset < start_time:
                 continue
-            if exemptions and self.beat_exempt(attack_time):
+            if exemptions and self.beat_exempt(onset):
                 continue
-            if attack_time >= end_time:
+            if onset >= end_time:
                 break
             notes_to_process = [
                 note
                 for note in notes
                 if self.condition(note)
-                and not note.attack_time
+                and not note.onset
                 % self.exempt_modulo  # pylint: disable=no-member
                 in self.exempt  # pylint: disable=no-member
             ]
             if not notes_to_process:
                 continue
-            filter_time = attack_time - start_time
+            filter_time = onset - start_time
             func_result = self.prob_func.calculate(  # pylint: disable=no-member
                 filter_time, random.random(), 0
             )
@@ -481,8 +483,10 @@ class Mediator(er_prob_funcs.AttributeAdder):
         if self.func_str == "thru":  # pylint: disable=no-member
             return True
         try:
-            self.mediating_func = getattr(  # pylint: disable=attribute-defined-outside-init
-                er_prob_funcs, self.func_str  # pylint: disable=no-member
+            self.mediating_func = (
+                getattr(  # pylint: disable=attribute-defined-outside-init
+                    er_prob_funcs, self.func_str  # pylint: disable=no-member
+                )
             )
             # vars(er_prob_funcs)[
             #     self.func_str
@@ -491,7 +495,7 @@ class Mediator(er_prob_funcs.AttributeAdder):
         except KeyError:
             return False
 
-    def mediate(self, voice_i, unmediated_val, original_val, attack_time):
+    def mediate(self, voice_i, unmediated_val, original_val, onset):
         if self.func_str == "thru":  # pylint: disable=no-member
             return unmediated_val
 
@@ -503,11 +507,11 @@ class Mediator(er_prob_funcs.AttributeAdder):
             )
             period = end_time - start_time
             offset = 0
-            if start_time > attack_time or end_time <= attack_time:
+            if start_time > onset or end_time <= onset:
                 return unmediated_val
 
         adjust = self.mediating_func(
-            attack_time + offset,
+            onset + offset,
             0,
             1,
             period,
@@ -569,7 +573,7 @@ class Filter(Changer):
             unique=True,
             display_if={"adjust_dur": "Subtract_duration"},
         )
-        self.dur_adjust_durs = self.dur_adjust_attack_times = None
+        self.dur_adjust_durs = self.dur_adjust_onsets = None
 
     def _process_all_voices(self, notes_by_voices):
         if (
@@ -577,31 +581,31 @@ class Filter(Changer):
             or self.by_voice  # pylint: disable=no-member
         ):
             return
-        self.dur_adjust_attack_times = []
+        self.dur_adjust_onsets = []
         self.dur_adjust_durs = []
         dur_adjust_dict = {}
         for notes in notes_by_voices.values():
             for note in notes:
-                if note.attack_time in dur_adjust_dict:
-                    dur_adjust_dict[note.attack_time] = min(
-                        note.dur, dur_adjust_dict[note.attack_time]
+                if note.onset in dur_adjust_dict:
+                    dur_adjust_dict[note.onset] = min(
+                        note.dur, dur_adjust_dict[note.onset]
                     )
                 else:
-                    dur_adjust_dict[note.attack_time] = note.dur
+                    dur_adjust_dict[note.onset] = note.dur
 
         dur_adjustment = 0
-        last_mod_attack_time = 0
-        for attack_time in sorted(dur_adjust_dict.keys()):
+        last_mod_onset = 0
+        for onset in sorted(dur_adjust_dict.keys()):
             if self.subtract_dur_modulo:  # pylint: disable=no-member
-                mod_attack_time = (
-                    attack_time
+                mod_onset = (
+                    onset
                     % self.subtract_dur_modulo  # pylint: disable=no-member
                 )
-                if mod_attack_time < last_mod_attack_time:
-                    dur_adjustment = -mod_attack_time
-                last_mod_attack_time = mod_attack_time
-            dur_adjustment -= dur_adjust_dict[attack_time]
-            self.dur_adjust_attack_times.append(attack_time)
+                if mod_onset < last_mod_onset:
+                    dur_adjustment = -mod_onset
+                last_mod_onset = mod_onset
+            dur_adjustment -= dur_adjust_dict[onset]
+            self.dur_adjust_onsets.append(onset)
             self.dur_adjust_durs.append(dur_adjustment)
 
     def change_func(self, voice, notes_to_change):
@@ -619,7 +623,7 @@ class Filter(Changer):
                 )
             )
 
-        voice.filtered_notes = er_notes.Voice(
+        voice.filtered_notes = er_classes.Voice(
             voice_i=voice.voice_i, tet=voice.tet, voice_range=voice.range
         )
 
@@ -628,60 +632,53 @@ class Filter(Changer):
             and self.by_voice  # pylint: disable=no-member
         ):
             dur_adjustment = 0
-            self.dur_adjust_attack_times = []
+            self.dur_adjust_onsets = []
             self.dur_adjust_durs = []
-            last_mod_attack_time = 0
+            last_mod_onset = 0
         for note in notes_to_change:
             if (
                 self.adjust_dur  # pylint: disable=no-member
                 == "Extend_previous_notes"
             ):
-                prev_note = voice.get_prev_note(note.attack_time)
+                prev_note = voice.get_prev_note(note.onset)
                 if prev_note and (
-                    note.attack_time - prev_note.attack_time - prev_note.dur
+                    note.onset - prev_note.onset - prev_note.dur
                     < self.adjust_dur_comma  # pylint: disable=no-member
                 ):
-                    prev_note.dur = (
-                        note.attack_time + note.dur - prev_note.attack_time
-                    )
+                    prev_note.dur = note.onset + note.dur - prev_note.onset
             if (
                 self.adjust_dur  # pylint: disable=no-member
                 == "Subtract_duration"
                 and self.by_voice  # pylint: disable=no-member
             ):
                 if self.subtract_dur_modulo:  # pylint: disable=no-member
-                    mod_attack_time = (
-                        note.attack_time
+                    mod_onset = (
+                        note.onset
                         % self.subtract_dur_modulo  # pylint: disable=no-member
                     )
-                    if mod_attack_time < last_mod_attack_time:
-                        dur_adjustment = -mod_attack_time
-                    last_mod_attack_time = mod_attack_time
+                    if mod_onset < last_mod_onset:
+                        dur_adjustment = -mod_onset
+                    last_mod_onset = mod_onset
                 dur_adjustment -= note.dur
-                self.dur_adjust_attack_times.append(note.attack_time)
+                self.dur_adjust_onsets.append(note.onset)
                 self.dur_adjust_durs.append(dur_adjustment)
-            voice.filtered_notes.add_note_object(
-                copy.copy(note), update_sort=False
-            )
-            voice.remove_note_object(note)
-        voice.filtered_notes.update_sort()
+            voice.filtered_notes.add_note(note.copy())
+            voice.remove_note(note)
+        # voice.filtered_notes.update_sort()
         if self.adjust_dur == "Subtract_duration":  # pylint: disable=no-member
             i = -1
             notes_to_move = []
             dur_adjustment = 0
             for note in voice:
                 try:
-                    while (
-                        note.attack_time >= self.dur_adjust_attack_times[i + 1]
-                    ):
+                    while note.onset >= self.dur_adjust_onsets[i + 1]:
                         i += 1
                         dur_adjustment = self.dur_adjust_durs[i]
                 except IndexError:
                     pass
-                notes_to_move.append((note, note.attack_time + dur_adjustment))
-            for note, new_attack_time in notes_to_move:
-                voice.move_note(note, new_attack_time, update_sort=False)
-            voice.update_sort()
+                notes_to_move.append((note, note.onset + dur_adjustment))
+            for note, new_onset in notes_to_move:
+                voice.move_note(note, new_onset)
 
 
 class RangeFilter(Filter):
@@ -742,7 +739,7 @@ class OscillatingRangeFilter(Filter):
         )
         l_bound = round(
             er_prob_funcs.linear_osc(
-                note_object.attack_time
+                note_object.onset
                 + self.osc_offset,  # pylint: disable=no-member
                 self.bottom_range[0],  # pylint: disable=no-member
                 self.bottom_range[0]  # pylint: disable=no-member
@@ -1106,7 +1103,7 @@ class VelocityTransformer(TransformBase, Mediator):
                 )
                 mediated_vel = round(
                     self.mediate(
-                        voice_i, unmediated_vel, note.velocity, note.attack_time
+                        voice_i, unmediated_vel, note.velocity, note.onset
                     )
                 )
                 note.velocity = random.randrange(
@@ -1121,7 +1118,7 @@ class VelocityTransformer(TransformBase, Mediator):
                 unmediated_vel = round(max(0, min(127, fix_to)))
                 mediated_vel = round(
                     self.mediate(
-                        voice_i, unmediated_vel, note.velocity, note.attack_time
+                        voice_i, unmediated_vel, note.velocity, note.onset
                     )
                 )
                 try:
@@ -1194,9 +1191,7 @@ class ChangeDurationsTransformer(TransformBase, Mediator):
             except NameError:
                 unmediated_dur = note.dur + fix_amount
             note.dur = fractions.Fraction(
-                self.mediate(
-                    voice_i, unmediated_dur, note.dur, note.attack_time
-                )
+                self.mediate(voice_i, unmediated_dur, note.dur, note.onset)
             ).limit_denominator(2048)
             if (
                 note.dur < min_dur
@@ -1220,7 +1215,7 @@ class ChangeDurationsTransformer(TransformBase, Mediator):
             return
 
         for note in notes_to_remove:
-            voice.remove_note_object(note)
+            voice.remove_note(note)
 
 
 class RandomOctaveTransformer(TransformBase):
@@ -1374,21 +1369,19 @@ class TransposeTransformer(TransformBase):
         transpose, preserve = self.get(voice_i, "transpose", "preserve")
         for note in notes_to_change:
             if preserve:
-                note_copy = copy.copy(note)
+                note_copy = note.copy()
                 note_copy.pitch += transpose
-                voice.add_note_object(note_copy, update_sort=False)
+                voice.add_note(note_copy)
                 self.mark_note(note_copy)
                 self.mark_note(note)
             else:
                 note.pitch += transpose
                 self.mark_note(note)
-        if preserve:
-            voice.update_sort()
 
     def get_seg_i(self, voice_i, note):
         seg_dur, seg_card = self.get(voice_i, "seg_dur", "seg_card")
         if seg_dur:
-            seg_i = int(note.attack_time // seg_dur)
+            seg_i = int(note.onset // seg_dur)
         else:
             seg_i = self._count_dict[voice_i] // seg_card
             self._count_dict[voice_i] += 1
@@ -1412,16 +1405,14 @@ class TransposeTransformer(TransformBase):
                         cum_trans += voice.tet
             # note.pitch += cum_trans
             if preserve:
-                note_copy = copy.copy(note)
+                note_copy = note.copy()
                 note_copy.pitch += cum_trans
-                voice.add_note_object(note_copy, update_sort=False)
+                voice.add_note(note_copy)
                 self.mark_note(note_copy)
                 self.mark_note(note)
             else:
                 note.pitch += cum_trans
                 self.mark_note(note)
-        if preserve:
-            voice.update_sort()
 
     def build_rand_trans(self):
         self.rand_trans = []  # pylint: disable=attribute-defined-outside-init
@@ -1468,17 +1459,15 @@ class TransposeTransformer(TransformBase):
             seg_i = self.get_seg_i(voice_i, note)
             transpose = rand_trans[seg_i % len(rand_trans)]
             if preserve:
-                note_copy = copy.copy(note)
+                note_copy = note.copy()
                 note_copy.pitch += transpose
-                voice.add_note_object(note_copy, update_sort=False)
+                voice.add_note(note_copy)
                 self.mark_note(note_copy)
                 # QUESTION should the original note be marked in this case?
                 self.mark_note(note)
             else:
                 note.pitch += transpose
                 self.mark_note(note)
-        if preserve:
-            voice.update_sort()
 
     def change_func(self, voice, notes_to_change):
         if self.trans_type == "Standard":  # pylint: disable=no-member
@@ -1739,13 +1728,12 @@ class ShepherdTransformer(TransformBase):
                     # LONGTERM
                     pass
                 else:
-                    new_note = copy.copy(note)
+                    new_note = note.copy()
                     new_note.velocity = new_vel
                     new_note.pitch = pitch
-                    voice.add_note_object(new_note, update_sort=False)
+                    voice.add_note(new_note)
                 # ...
                 pitch += self.tet
-        voice.update_sort()
 
 
 class TrackExchangerTransformer(TransformBase):
@@ -1797,11 +1785,10 @@ class TrackExchangerTransformer(TransformBase):
             score.add_voice()
 
         for note in notes_to_change:
-            score.voices[dest_voice_i].add_note_object(note, update_sort=False)
-            score.voices[voice_i].remove_note_object(note)
+            score.voices[dest_voice_i].add_note(note)
+            score.voices[voice_i].remove_note(note)
             self.mark_note(note)
-        score.voices[dest_voice_i].update_sort()
-        # score.voices[voice_i].update_sort()
+        # score.voices[dest_voice_i].update_sort()
 
 
 class InvertTransformer(TransformBase):
@@ -1853,7 +1840,7 @@ class InvertTransformer(TransformBase):
                 )
             )
             for note in notes_to_remove:
-                voice.remove_note_object(note)
+                voice.remove_note(note)
 
 
 class TrackRandomizerTransformer(TransformBase):
@@ -1901,12 +1888,12 @@ class TrackRandomizerTransformer(TransformBase):
             dest_voice_i = random.choice(
                 self.dest_voices  # pylint: disable=no-member
             )
-            score.voices[dest_voice_i].add_note_object(note, update_sort=False)
-            score.voices[voice_i].remove_note_object(note)
+            score.voices[dest_voice_i].add_note(note)
+            score.voices[voice_i].remove_note(note)
             self.mark_note(note)
 
-        for dest_voice_i in self.dest_voices:  # pylint: disable=no-member
-            score.voices[dest_voice_i].update_sort()
+        # for dest_voice_i in self.dest_voices:  # pylint: disable=no-member
+        #     score.voices[dest_voice_i].update_sort()
         # score.voices[voice_i].update_sort()
 
 
@@ -1986,22 +1973,22 @@ class SubdivideTransformer(TransformBase):
         voice_i = voice.voice_i
         subdivision = self.get(voice_i, "subdivision")
         for note in notes_to_change:
-            time = note.attack_time
+            time = note.onset
             end = time + note.dur
             to_add = min((subdivision, note.dur))
             note.dur = to_add
             time += to_add
             while time < end:
-                new_note = copy.copy(note)
-                new_note.attack_time = time
+                new_note = note.copy()
+                new_note.onset = time
                 to_add = min((subdivision, end - time))
                 if to_add == 0:
                     break
                 new_note.dur = to_add
-                voice.add_note_object(new_note, update_sort=False)
+                voice.add_note(new_note)
                 time += to_add
             self.mark_note(note)
-        voice.update_sort()
+        # voice.update_sort()
 
 
 class LoopTransformer(TransformBase):
@@ -2036,12 +2023,12 @@ class LoopTransformer(TransformBase):
     def change_func(self, voice, notes_to_change):
         voice_i = voice.voice_i
         loop_len = self.get(voice_i, "loop_len")
-        # What to do if the attack % loop_len does not
+        # What to do if the onset % loop_len does not
         # occur in the initial loop?
         # And what about note attributes other than pitch?
         # (duration, choir, ...)
         for note in notes_to_change:
-            time = note.attack_time
+            time = note.onset
             ref_time = time % loop_len
             # For now, I just take the first note, arbitrarily,
             # at the earlier time

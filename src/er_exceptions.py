@@ -35,60 +35,79 @@ class AvailablePitchMaterialsError(ErMakeException):
 
     def __init__(self, er):
         super().__init__()
+        self._init_total_counts()
+        self.reset_inner_counts()
+
+        self.forbidden_parallels_str = (
+            f"prohibit_parallels: {er.prohibit_parallels}"
+        )
+        self._max_count = er.max_available_pitch_materials_deadends
+        self.num_attempts = er.initial_pattern_attempts
+        self.printer = er.build_status_printer
+
+    def reset_inner_counts(self):
         self._no_available_pcs = 0
         self._no_available_pitches = 0
-
         self._exceeding_max_interval = 0
-        # max_interval_type = "generic" if er.max_interval > 0 else "specific"
-        # self.max_interval_str = (
-        #     f"Max {max_interval_type} interval = {er.max_interval}")
-
         self._forbidden_parallels = 0
-        self.forbidden_parallels_str = (
-            f"Forbidden parallels: {er.prohibit_parallels}"
-        )
-
         self._unable_to_choose_pitch = 0
         self._excess_alternations = 0
         self._excess_repeated_notes = 0
         self._pitch_loop_just_one_pitch = 0
-        self._total_count = 0
-        self._max_count = er.max_available_pitch_materials_deadends
-        self.num_attempts = er.initial_pattern_attempts
+        self._all_count = 0
+
+    def _init_total_counts(self):
+        self._total_no_available_pcs = 0
+        self._total_no_available_pitches = 0
+        self._total_exceeding_max_interval = 0
+        self._total_forbidden_parallels = 0
+        self._total_unable_to_choose_pitch = 0
+        self._total_excess_alternations = 0
+        self._total_excess_repeated_notes = 0
+        self._total_pitch_loop_just_one_pitch = 0
 
     def _update_count(self):
-        self._total_count += 1
-        if self._total_count >= self._max_count:
+        self._all_count += 1
+        self.status()
+        if self._all_count >= self._max_count:
             raise self
 
     def no_available_pcs(self):
         self._no_available_pcs += 1
+        self._total_no_available_pcs += 1
         self._update_count()
 
     def no_available_pitches(self):
         self._no_available_pitches += 1
+        self._total_no_available_pitches += 1
         self._update_count()
 
     def exceeding_max_interval(self):
         self._exceeding_max_interval += 1
+        self._total_exceeding_max_interval += 1
         self._update_count()
 
     def forbidden_parallels(self):
         self._forbidden_parallels += 1
+        self._total_forbidden_parallels += 1
         self._update_count()
 
     def unable_to_choose_pitch(self):
         self._unable_to_choose_pitch += 1
+        self._total_unable_to_choose_pitch += 1
         self._update_count()
 
     def excess_alternations(self, count=1):
         self._excess_alternations += count
+        self._total_excess_alternations += count
 
     def excess_repeated_notes(self, count=1):
         self._excess_repeated_notes += count
+        self._total_excess_repeated_notes += count
 
     def pitch_loop_just_one_pitch(self, count=1):
         self._pitch_loop_just_one_pitch += count
+        self._total_pitch_loop_just_one_pitch += count
 
     def __str__(self):
 
@@ -107,81 +126,103 @@ class AvailablePitchMaterialsError(ErMakeException):
             "        Pitch loop just one pitch:     {:3}\n"
             "".format(
                 self.num_attempts,
-                self._no_available_pcs,
-                self._no_available_pitches,
-                self._exceeding_max_interval,
+                self._total_no_available_pcs,
+                self._total_no_available_pitches,
+                self._total_exceeding_max_interval,
                 # self.max_interval_str,
-                self._forbidden_parallels,
+                self._total_forbidden_parallels,
                 self.forbidden_parallels_str,
-                self._unable_to_choose_pitch,
-                self._excess_alternations,
-                self._excess_repeated_notes,
-                self._pitch_loop_just_one_pitch,
+                self._total_unable_to_choose_pitch,
+                self._total_excess_alternations,
+                self._total_excess_repeated_notes,
+                self._total_pitch_loop_just_one_pitch,
             )
         )
 
-    def status(self):
-        out = (
-            "No PCs:{:<3} No Ps:{:<3} Max int:{:<3} = ints:{:<3} Alts:{:<3} "
-            "Reps:{:<3} Loop:{:<3}"
-            "".format(
-                self._no_available_pcs,
-                self._no_available_pitches,
-                self._exceeding_max_interval,
-                self._forbidden_parallels,
-                self._excess_alternations,
-                self._excess_repeated_notes,
+    @property
+    def counts(self):
+        return (
+            (self._no_available_pcs, self._total_no_available_pcs),
+            (self._no_available_pitches, self._total_no_available_pitches),
+            (self._exceeding_max_interval, self._total_exceeding_max_interval),
+            (self._forbidden_parallels, self._total_forbidden_parallels),
+            (self._excess_alternations, self._total_excess_alternations),
+            (self._excess_repeated_notes, self._total_excess_repeated_notes),
+            (
                 self._pitch_loop_just_one_pitch,
-            )
+                self._total_pitch_loop_just_one_pitch,
+            ),
         )
-        return out
+
+    def status(self):
+        self.printer.initial_pattern_status(*self.counts)
 
 
 class NoMoreVoiceLeadingsError(ErMakeException):
     """Raised if cannot find voice-leading of necessary displacement."""
 
 
-class VoiceLeadFailureCounter:
-    def __init__(self):
-        self.out_of_range = 0
-        self.check_intervals = 0
-        self.check_consonance = 0
-        self.limit_intervals = 0
-        self.parallel_intervals = 0
-
-    def __str__(self):
-        out = (
-            "Out of range:{:<4} Harm. ints:{:<4} "
-            "Not consonant:{:<4} Mel. ints:{:<4} Par. ints:{:<4}"
-            "".format(
-                self.out_of_range,
-                self.check_intervals,
-                self.check_consonance,
-                self.limit_intervals,
-                self.parallel_intervals,
-            )
-        )
-        return out
-
-
 class VoiceLeadingError(ErMakeException):
-    def __init__(self, er):
+    def out_of_range(self):
+        self._out_of_range += 1
+        self._total_out_of_range += 1
+
+    def check_intervals(self):
+        self._check_intervals += 1
+        self._total_check_intervals += 1
+
+    def check_consonance(self):
+        self._check_consonance += 1
+        self._total_check_consonance += 1
+
+    def limit_intervals(self):
+        self._limit_intervals += 1
+        self._total_limit_intervals += 1
+
+    def parallel_intervals(self):
+        self._parallel_intervals += 1
+        self._total_parallel_intervals += 1
+
+    def __init__(self, er=None):
         super().__init__()
         self.total_failures = 0
         self.harmony_counter = collections.Counter()
-        self.temp_failure_counter = VoiceLeadFailureCounter()
-        self.total_failure_counter = VoiceLeadFailureCounter()
-        self.num_attempts = er.voice_leading_attempts
+        self._init_total_counts()
+        self.reset_inner_counts()
+        # This class should always be created with er non-None. But this
+        # check allows the instances to be copied for debugging purposes.
+        if er is not None:
+            self.num_attempts = er.voice_leading_attempts
+            self.printer = er.build_status_printer
 
-    def reset_temp_counter(self):
-        total_vars = vars(self.total_failure_counter)
-        temp_vars = vars(self.temp_failure_counter)
-        for var in total_vars:
-            total_vars[var] += temp_vars[var]
-        self.temp_failure_counter = VoiceLeadFailureCounter()
+    def reset_inner_counts(self):
+        self._out_of_range = 0
+        self._check_consonance = 0
+        self._check_intervals = 0
+        self._limit_intervals = 0
+        self._parallel_intervals = 0
+
+    def _init_total_counts(self):
+        self._total_out_of_range = 0
+        self._total_check_consonance = 0
+        self._total_check_intervals = 0
+        self._total_limit_intervals = 0
+        self._total_parallel_intervals = 0
+
+    @property
+    def counts(self):
+        return (
+            (self._out_of_range, self._total_out_of_range),
+            (self._check_intervals, self._total_check_intervals),
+            (self._check_consonance, self._total_check_consonance),
+            (self._limit_intervals, self._total_limit_intervals),
+            (self._parallel_intervals, self._total_parallel_intervals),
+        )
+
+    def status(self):
+        self.printer.voice_leading_status(*self.counts)
 
     def __str__(self):
-        self.reset_temp_counter()
         counter_strs = []
         within = False
         max_count = 0
@@ -226,7 +267,5 @@ class VoiceLeadingError(ErMakeException):
         return (
             f"\nUnable to voice-lead {self.num_attempts} attempts at "
             "initial pattern.\n"
-            f"Total voice-leading failures: {self.total_failures}\n"
-            f"{str(self.total_failure_counter)}\n"
             f"{counter_str}"
         )

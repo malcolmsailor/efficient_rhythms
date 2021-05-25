@@ -10,7 +10,8 @@ import subprocess
 import typing
 
 import numpy as np
-import termcolor
+
+import src.er_shell_constants as er_shell_constants
 
 MAX_DENOMINATOR = 8192
 
@@ -34,6 +35,7 @@ def silently_run_process(commands, stdin=None):
         stderr=subprocess.STDOUT,
         check=False,
     )
+    # LONGTERM replace my besoke ProcError with the standard library exception
     if proc.returncode != 0:
         raise ProcError(
             f"{commands[0]} returned error code {proc.returncode}\n"
@@ -43,9 +45,9 @@ def silently_run_process(commands, stdin=None):
 
 
 def check_modulo(n, mod):
-    """ arguments:
-            mod: an int, or a list. If an int just returns n % mod.
-                If a list, needs to be in 'cumulative' format.
+    """arguments:
+    mod: an int, or a list. If an int just returns n % mod.
+        If a list, needs to be in 'cumulative' format.
     """
     try:
         return n % mod
@@ -182,12 +184,13 @@ def add_line_breaks(
 def make_table(
     rows,
     header=None,
-    row_width=7,
-    fit_in_window=True,
+    col_width=7,
+    fit_in_window=False,
     divider="|",
     align_char="^",
     row_spacing=0,
     borders=True,
+    full_borders=True,
 ):
     """Returns a formatted table from a list of lists.
 
@@ -198,11 +201,13 @@ def make_table(
 
     Keyword args:
         header: an optional row of column names.
-        row_width: integer. Default 7.
-        fit_in_window: boolean. If True, then row_width will be adjusted
+        col_width: integer. Default 7.
+        fit_in_window: boolean. If True, then col_width will be adjusted
             downward if necessary to fit all columns in one terminal line
             (although it's still possible that not all rows will fit on one
             line).
+            # The behavior enabled by this flag is a bit of a mess since it
+            # causes rows to be misaligned.
         divider: character or string to use as a column divider. (Will be
             padded with a space on either side.) Default "|".
         align_char: character to pass to format specification for cells.
@@ -211,6 +216,8 @@ def make_table(
             row.
         borders: bool. Whether to print lines above and below the table.
             Default True
+        full_borders: bool. Whether borders should extend to full width of
+            terminal window, or to size of table. Default True
 
     Returns:
         string.
@@ -223,19 +230,19 @@ def make_table(
         def _format_(cell):
             if isinstance(cell, (str, int, np.integer)):
                 # NOTE Doesn't format very large ints appropriately
-                return f"{cell:{align_char}{row_width}}"
+                return f"{cell:{align_char}{col_width}}"
             if isinstance(cell, fractions.Fraction):
                 try:
-                    return f"{cell:{align_char}.{row_width - 1}g}"
+                    return f"{cell:{align_char}.{col_width - 1}g}"
                 except TypeError:
                     out = f"{cell}"
-                    return _format(out) if len(out) < row_width else out
+                    return _format(out) if len(out) < col_width else out
             if isinstance(cell, float):
                 # NOTE Doesn't format very large floats appropriately
-                return f"{cell:{align_char}.{row_width - 1}g}"
+                return f"{cell:{align_char}.{col_width - 1}g}"
             raise ValueError("unsupported type")
 
-        return f"{_format_(cell):{align_char}{row_width}}"
+        return f"{_format_(cell):{align_char}{col_width}}"
 
     divider = divider.join([" "] * 2)
     try:
@@ -243,20 +250,23 @@ def make_table(
     except OSError:
         term_size = 80
     if fit_in_window:
-        if (len(rows[0]) + 1) * (row_width + len(divider)) - len(
+        # Formerly, I was adding 1 to len(rows[0]) --- I have no idea why!
+        if (len(rows[0])) * (col_width + len(divider)) - len(
             divider
         ) > term_size:
-            row_width = (term_size + len(divider)) // (len(rows[0]) + 1) - len(
+            col_width = (term_size + len(divider)) // (len(rows[0]) + 1) - len(
                 divider
             )
     formatted_rows = [[_format(cell) for cell in row] for row in rows]
     row_strings = [divider.join(row) for row in formatted_rows]
     if row_spacing > 0:
-        blank_row_string = divider.join([" " * row_width for _ in rows[0]])
+        blank_row_string = divider.join([" " * col_width for _ in rows[0]])
         for i in range(len(row_strings)):
             for _ in range(row_spacing):
                 row_strings.insert((1 + row_spacing) * i, blank_row_string)
-    line_width = min(term_size, len(row_strings[0]))
+    line_width = (
+        min(term_size, len(row_strings[0])) if not full_borders else term_size
+    )
     line = "-" * line_width
     if header is not None:
         header_string = divider.join([_format(cell) for cell in header])
@@ -269,7 +279,13 @@ def make_table(
 
 
 def make_header(
-    text, fill_char="#", space_char=" ", line_width=None, align="left", indent=2
+    text,
+    fill_char="#",
+    space_char=" ",
+    line_width=None,
+    align="left",
+    indent=2,
+    bold=True,
 ):
     """Puts a string into a format suitable for a header on the prompt.
 
@@ -284,6 +300,7 @@ def make_header(
         align: either "left", "center", or "right".
         indent: if align is either "left" or "right", number of fill characters
             to indent by. Default 2.
+        bold: Default True
 
     Returns:
         Formatted string.
@@ -337,8 +354,11 @@ def make_header(
         )
     else:
         raise ValueError("Alignment type not recognized")
-    # LONGTERM remove termcolor
-    return termcolor.colored(out, attrs=["bold"])
+    if bold:
+        return (
+            er_shell_constants.BOLD_TEXT + out + er_shell_constants.RESET_TEXT
+        )
+    return out
 
 
 def no_empty_lists(item):
@@ -498,7 +518,12 @@ def fraction_gcd(frac1, frac2, min_n=2 ** (-15)):
 
     result = fractions.Fraction(
         math.gcd(frac1.numerator, frac2.numerator),
-        lcm([frac1.denominator, frac2.denominator,]),
+        lcm(
+            [
+                frac1.denominator,
+                frac2.denominator,
+            ]
+        ),
     )
 
     if result < min_n:
@@ -777,35 +802,35 @@ def get_prev_voice_indices(score, start_time, dur):
     return score.get_sounding_voices(start_time, dur)
 
 
-# def get_prev_voice_indices(er, voice_i, during_pattern_voice_leading=None):
+# def get_prev_voice_indices(er, voice_i, during_pattern_vl=None):
 #     """Returns the indices of the voices that have already been constructed,
 #     as well as for previously existing voices.
 #
-#     If during_pattern_voice_leading, pass attack_time.
+#     If during_pattern_vl, pass onset.
 #     """
 #
 #     # QUESTION This seems to omit the case where a voice later in the voice
-#     #   order was attacked earlier but has a dur that overlaps with the current
-#     #   attack time... is that ok?
-#     if during_pattern_voice_leading is None:
+#     #   order was onset earlier but has a dur that overlaps with the current
+#     #   onset time... is that ok?
+#     if during_pattern_vl is None:
 #         return (
 #             er.voice_order[: er.voice_order.index(voice_i)]
 #             + er.existing_voices_indices
 #         )
 #
 #     # Get all voices that have already been written whose end times
-#     # are later than the attack time.
+#     # are later than the onset time.
 #
-#     attack_time = during_pattern_voice_leading
+#     onset = during_pattern_vl
 #
 #     voice_lens = {voice_i: 0 for voice_i in er.voice_order}
 #
 #     active_voice_i = end_time = -1
 #
 #     order_i = 0
-#     while active_voice_i != voice_i or end_time < attack_time:
+#     while active_voice_i != voice_i or end_time < onset:
 #         try:
-#             vl_item = er.pattern_voice_leading_order[order_i]
+#             vl_item = er.pattern_vl_order[order_i]
 #             end_time = vl_item.end_time
 #             active_voice_i = vl_item.voice_i
 #         except IndexError:
@@ -816,7 +841,7 @@ def get_prev_voice_indices(score, start_time, dur):
 #     prev_voice_indices = []
 #
 #     for other_voice_i, end_time in voice_lens.items():
-#         if other_voice_i != voice_i and end_time > attack_time:
+#         if other_voice_i != voice_i and end_time > onset:
 #             prev_voice_indices.append(other_voice_i)
 #
 #     return prev_voice_indices + er.existing_voices_indices
@@ -883,7 +908,8 @@ def get_scale_index(scale, pitch, up_or_down=0, return_adjustment_sign=False):
 
 def get_generic_interval(er, harmony_i, pitch, prev_pitch):
     scale = er.get(harmony_i, "scales")
-    prev_scale_index = get_scale_index(scale, prev_pitch)
+    # TODO consider restoring random behavior of get_scale_index
+    prev_scale_index = get_scale_index(scale, prev_pitch, up_or_down=1)
     scale_index = scale.index(pitch)
 
     return scale_index - prev_scale_index
@@ -891,14 +917,14 @@ def get_generic_interval(er, harmony_i, pitch, prev_pitch):
 
 def apply_generic_interval(er, harmony_i, generic_interval, prev_pitch):
     scale = er.get(harmony_i, "scales")
-    prev_scale_index = get_scale_index(scale, prev_pitch)
+    # TODO consider restoring random behavior of get_scale_index
+    prev_scale_index = get_scale_index(scale, prev_pitch, up_or_down=-1)
     new_pitch = scale[prev_scale_index + generic_interval]
     return new_pitch
 
 
 def same_set_class(pcset1, pcset2, tet=12):
-    """Doesn't check for inversional equivalence.
-    """
+    """Doesn't check for inversional equivalence."""
     pcset1_min = min(pcset1)
     pcset1 = {pc - pcset1_min for pc in pcset1}
     for adjust_pc in pcset2:
@@ -1010,6 +1036,22 @@ def pitches_consonant(
     return True
 
 
+def get_lowest_of_each_pc_in_set(pitch_set, tet=12):
+    """Returns a dictionary of form {pc: lowest instance of pc in pitch set}"""
+    out = {}
+    if len(pitch_set) > tet:
+        for pc in range(tet):
+            pitches = [p for p in pitch_set if p % tet == pc]
+            if pitches:
+                out[pc] = min(pitches)
+    else:
+        for pitch in pitch_set:
+            out[pitch % tet] = min(
+                p for p in pitch_set if p % tet == pitch % tet
+            )
+    return out
+
+
 def lowest_occurrence_of_pc_in_set(pitch, pitch_set, tet=12):
     """Check if a pitch is the lowest occurence of its pitch-class
     in given pitch-set.
@@ -1027,8 +1069,7 @@ def lowest_occurrence_of_pc_in_set(pitch, pitch_set, tet=12):
 
 
 def _get_consec_intervals(chord, tet, octave_equi):
-    """Used by chord_in_list()
-    """
+    """Used by chord_in_list()"""
     out = []
     if octave_equi in ("all", "bass"):
         chord = [(pitch - chord[0]) % tet for pitch in chord]
@@ -1056,9 +1097,13 @@ def chord_in_list(
     the octave equivalence and doubling settings).
 
     The first pc in all the chords in `list_of_chords` should be 0.
-    # TODO What if chords in `list_of_chords` contain doublings?
-    # TODO enforce this elsewhere?
-    # TODO can we count on passed chord being sorted? What about list of chords?
+
+    Arguments:
+        chord: a sequence of ints representing pitch-classes or pitches.
+        list_of_chords: a sequence of sequences of ints representing
+            pitch-classes. The first pitch-class of each chord should be 0,
+            and all ints should be < tet (i.e., they should be pitch-*classes*,
+            rather than pitches).
 
     Keyword arguments:
         tet: int.
@@ -1069,12 +1114,9 @@ def chord_in_list(
                 except that bass note must be preserved (the bass note being
                 assumed to be the first listed pitch/pitch-class of the
                 chords in the list)
-            "order": octave equivalence is allowed but pitch-classes must be
-                in the order listed. (This is order from lowest to highest,
-                not by voice. So if the alto is lower than the tenor, the
-                alto's pitch-class comes first.)
-                # TODO How do we even know what the order by voice is here?
-                # TODO how are pitch-class doublings treated here?
+            "order": octave equivalence is allowed but the pitches in
+                `chord`, when sorted from lowest to highest, must be in the
+                order pitch classes are given in `list_of_chords`.
             "none": no octave equivalence, in the sense that (C3, E4, G4) is
                 not considered the same as (C4, E4, G4) because of the tenth/
                 third. Nevertheless, transpositional equivalence still applies,
@@ -1085,8 +1127,8 @@ def chord_in_list(
             "complete": doublings only permitted after the chord is complete.
             "none": no doublings permitted.
 
-    Examples:
-        Suppose `list_of_chords` is [[0, 4, 7]]. # TODO
+    For many examples of input and expected output, see
+    `tests/test_er_misc_funcs.py`
     """
     chord = sorted(chord)
     for pitch in chord:
@@ -1148,8 +1190,7 @@ def chord_in_list(
 
 
 def remove_interval_class(interval_class, given_pitch, other_pitches, tet=12):
-    """Returns pitches that don't form given interval class from given pitch.
-    """
+    """Returns pitches that don't form given interval class from given pitch."""
     out = []
     for other_pitch in other_pitches:
         if (given_pitch - other_pitch) % tet != interval_class % tet and (
@@ -1203,63 +1244,11 @@ def check_interval_class(interval_class, given_pitch, other_pitches, tet=12):
     return False
 
 
-def generic_transpose(
-    er,
-    score,
-    interval,
-    max_interval,
-    start_time,
-    end_time,
-    apply_to_existing_voices=False,
-):
-    """Transposes a passage diatonically.
-    """
-    # (specific) "transpose" is a method of the Score class. Perhaps
-    #   this should be as well but because it requires the ERSettings
-    #   object as well I've made it an independent function...
-    def _update_harmony(time):
-        harmony_i = score.get_harmony_i(time)
-        harmony_end_time = score.get_harmony_times(harmony_i)[1]
-        scale = er.get(harmony_i, "scales")
-        adjusted_interval = interval
-        while adjusted_interval > max_interval:
-            adjusted_interval -= len(er.get(harmony_i, "pc_scales"))
-        while adjusted_interval < min_interval:
-            adjusted_interval += len(er.get(harmony_i, "pc_scales"))
-        return harmony_i, harmony_end_time, scale, adjusted_interval
-
-    def _apply_generic_transpose(voice):
-        (
-            # I don't know why pylint thinks harmony_i is unused
-            harmony_i,  # pylint: disable=unused-variable
-            harmony_end_time,
-            scale,
-            adjusted_interval,
-        ) = _update_harmony(start_time)
-        for note in voice:
-            if note.attack_time < start_time:
-                continue
-            if note.attack_time >= harmony_end_time:
-                (
-                    harmony_i,
-                    harmony_end_time,
-                    scale,
-                    adjusted_interval,
-                ) = _update_harmony(note.attack_time)
-            orig_sd = scale.index(note.pitch)
-            new_pitch = scale[orig_sd + adjusted_interval]
-            note.pitch = new_pitch
-            if note.attack_time > end_time:
-                break
-
-    min_interval = -max_interval
-
-    for voice in score.voices:
-        _apply_generic_transpose(voice)
-
-    if apply_to_existing_voices:
-        for voice in score.existing_voices:
-            _apply_generic_transpose(voice)
+def check_interval(interval, given_pitch, other_pitches):
+    for other_pitch in other_pitches:
+        if abs(given_pitch - other_pitch) == interval:
+            return True
+    return False
 
 
 def nested_method(method):
@@ -1284,8 +1273,7 @@ def nested_method(method):
 
 
 def tuplify(item, max_float_p=None):
-    """Prints out all iterables like tuples.
-    """
+    """Prints out all iterables like tuples."""
     if isinstance(item, (typing.Sequence, np.ndarray)) and not isinstance(
         item, str
     ):

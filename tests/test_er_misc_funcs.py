@@ -3,7 +3,6 @@ import os
 import sys
 import traceback
 
-# TODO is there a way to add these to requirements only for testing?
 import hypothesis
 import hypothesis.strategies as st
 
@@ -12,7 +11,7 @@ sys.path.insert(
 )
 
 import src.er_misc_funcs as er_misc_funcs  # pylint: disable=wrong-import-position
-import src.er_notes as er_notes  # pylint: disable=wrong-import-position
+import src.er_classes as er_classes  # pylint: disable=wrong-import-position
 import src.er_preprocess as er_preprocess  # pylint: disable=wrong-import-position
 
 
@@ -50,7 +49,7 @@ def test_get_prev_voice_indices():
     settingsdict = {"num_voices": 2, "tet": 12}
     er = er_preprocess.preprocess_settings(settingsdict)
 
-    # voice, pitch, attack, dur, evaluates_to
+    # voice, pitch, onset, dur, evaluates_to
     notes1 = [
         (0, 60, 1.5, 0.5, []),
         (1, 64, 1.75, 0.25, [0]),
@@ -64,7 +63,7 @@ def test_get_prev_voice_indices():
         (0, 64, 2, 0.25, [1]),
     ]
     for notes in (notes1, notes2):
-        score = er_notes.Score(num_voices=er.num_voices, tet=er.tet)
+        score = er_classes.Score(num_voices=er.num_voices, tet=er.tet)
         for (v, p, a, d, l) in notes:  # pylint: disable=invalid-name
             try:
                 assert (
@@ -124,7 +123,8 @@ def test_chord_in_list():
         [63, 72, 79],
         [64, 73, 81],
         [65, 73, 82],
-        # doublings (not all combinations should pass with doublings == "complete")
+        # doublings (not all combinations should pass with doublings
+        # == "complete")
         [60, 64, 67, 72],
         [61, 64, 68, 76],
         [62, 65, 70, 82],
@@ -194,13 +194,19 @@ def test_chord_in_list():
     for doubling, no_doubling in zip(doublings, no_doublings):
         try:
             assert not er_misc_funcs.chord_in_list(
-                doubling, chords, octave_equi="all", permit_doublings="none",
+                doubling,
+                chords,
+                octave_equi="all",
+                permit_doublings="none",
             ), (
                 "not er_misc_funcs.chord_in_list(doubling, chords, "
                 "octave_equi='all', permit_doublings='none')"
             )
             assert er_misc_funcs.chord_in_list(
-                no_doubling, chords, octave_equi="all", permit_doublings="none",
+                no_doubling,
+                chords,
+                octave_equi="all",
+                permit_doublings="none",
             ), (
                 "er_misc_funcs.chord_in_list(no_doubling, chords, "
                 "octave_equi='all', permit_doublings='none')"
@@ -214,69 +220,69 @@ def test_chord_in_list():
     #########################
     # octave_equi = "bass", #
     #########################
-    # chords = [[0, 4, 7, 10]]
-    # in_list = [
-    #     # close positions
-    #     [60, 64, 67, 70],
-    #     [61, 65, 68, 71],
-    #     # open positions
-    #     [60, 67, 70, 76],
-    #     [60, 64, 70, 79],
-    #     [49, 65, 68, 71],
-    #     [61, 65, 68, 83],
-    #     # doublings (not all combinations should pass with doublings == "complete")
-    #     [60, 64, 67, 70, 72],
-    #     [60, 64, 67, 70, 76],
-    #     [61, 65, 68, 71, 80],
-    #     [61, 65, 68, 71, 83],
-    # ]
-    # for item_i, item in enumerate(in_list):
-    #     for r in range(2, 4):
-    #         for combination in itertools.combinations(item, r):
-    #             try:
-    #                 if combination[0] == item[0]:
-    #                     try:
-    #                         assert er_misc_funcs.chord_in_list(
-    #                             combination,
-    #                             chords,
-    #                             octave_equi="bass",
-    #                             permit_doublings="complete",
-    #                         ), (
-    #                             "er_misc_funcs.chord_in_list(combination, "
-    #                             "chords, octave_equi='bass', "
-    #                             "permit_doublings='complete')"
-    #                         )
-    #                     except AssertionError:
-    #                         # should only fail with doublings after index 5
-    #                         assert item_i >= 6, "item_i < 6"
-    #                         assert er_misc_funcs.chord_in_list(
-    #                             combination,
-    #                             chords,
-    #                             octave_equi="bass",
-    #                             permit_doublings="all",
-    #                         ), (
-    #                             "er_misc_funcs.chord_in_list(combination, "
-    #                             "chords, octave_equi='bass', "
-    #                             "permit_doublings='all')"
-    #                         )
-    #                 else:
-    #                     assert not er_misc_funcs.chord_in_list(
-    #                         combination,
-    #                         chords,
-    #                         octave_equi="bass",
-    #                         permit_doublings="complete",
-    #                     ), (
-    #                         "not er_misc_funcs.chord_in_list(combination, "
-    #                         "chords, octave_equi='bass', "
-    #                         "permit_doublings='complete')"
-    #                     )
-    #
-    #             except:  # pylint: disable=bare-except
-    #                 exc_type, exc_value, exc_traceback = sys.exc_info()
-    #                 traceback.print_exception(
-    #                     exc_type, exc_value, exc_traceback, file=sys.stdout
-    #                 )
-    #                 breakpoint()
+    chords = [[0, 4, 7, 10]]
+    in_list = [
+        # close positions
+        [60, 64, 67, 70],
+        [61, 65, 68, 71],
+        # open positions
+        [60, 67, 70, 76],
+        [60, 64, 70, 79],
+        [49, 65, 68, 71],
+        [61, 65, 68, 83],
+        # doublings (not all combinations should pass with doublings == "complete")
+        [60, 64, 67, 70, 72],
+        [60, 64, 67, 70, 76],
+        [61, 65, 68, 71, 80],
+        [61, 65, 68, 71, 83],
+    ]
+    for item_i, item in enumerate(in_list):
+        for r in range(2, 4):
+            for combination in itertools.combinations(item, r):
+                try:
+                    if combination[0] == item[0]:
+                        try:
+                            assert er_misc_funcs.chord_in_list(
+                                combination,
+                                chords,
+                                octave_equi="bass",
+                                permit_doublings="complete",
+                            ), (
+                                "er_misc_funcs.chord_in_list(combination, "
+                                "chords, octave_equi='bass', "
+                                "permit_doublings='complete')"
+                            )
+                        except AssertionError:
+                            # should only fail with doublings after index 5
+                            assert item_i >= 6, "item_i < 6"
+                            assert er_misc_funcs.chord_in_list(
+                                combination,
+                                chords,
+                                octave_equi="bass",
+                                permit_doublings="all",
+                            ), (
+                                "er_misc_funcs.chord_in_list(combination, "
+                                "chords, octave_equi='bass', "
+                                "permit_doublings='all')"
+                            )
+                    else:
+                        assert not er_misc_funcs.chord_in_list(
+                            combination,
+                            chords,
+                            octave_equi="bass",
+                            permit_doublings="complete",
+                        ), (
+                            "not er_misc_funcs.chord_in_list(combination, "
+                            "chords, octave_equi='bass', "
+                            "permit_doublings='complete')"
+                        )
+
+                except:  # pylint: disable=bare-except
+                    exc_type, exc_value, exc_traceback = sys.exc_info()
+                    traceback.print_exception(
+                        exc_type, exc_value, exc_traceback, file=sys.stdout
+                    )
+                    breakpoint()
 
     #########################
     # octave_equi = "order" #
@@ -377,10 +383,30 @@ def test_chord_in_list():
     ]
     # test_chord, all_val, comp_val, none_val
     tests = [
-        ([48, 60, 64, 67, 70], True, False, False,),
-        ([60, 64, 67, 70, 82], True, True, False,),
-        ([60, 64, 67, 70, 72], False, False, False,),
-        ([48, 60, 64, 76, 88], True, False, False,),
+        (
+            [48, 60, 64, 67, 70],
+            True,
+            False,
+            False,
+        ),
+        (
+            [60, 64, 67, 70, 82],
+            True,
+            True,
+            False,
+        ),
+        (
+            [60, 64, 67, 70, 72],
+            False,
+            False,
+            False,
+        ),
+        (
+            [48, 60, 64, 76, 88],
+            True,
+            False,
+            False,
+        ),
         ([48, 52, 55], True, True, True),
         ([48, 64, 79, 94], True, True, True),
     ]
@@ -393,7 +419,12 @@ def test_chord_in_list():
     # test_chord, all_val, comp_val, none_val
     tests = [
         ([48, 48, 52, 55, 58], True, False, False),
-        ([48, 60, 64, 67, 70], False, False, False,),
+        (
+            [48, 60, 64, 67, 70],
+            False,
+            False,
+            False,
+        ),
         ([48, 52, 55, 58, 58, 58], True, True, False),
         ([60, 64, 67, 70], True, True, True),
         ([60, 64, 64, 67, 67], True, False, False),
@@ -424,7 +455,9 @@ def list_and_item(draw):
     return list_, item
 
 
-@hypothesis.given(list_and_item(),)  # pylint: disable=no-value-for-parameter
+@hypothesis.given(
+    list_and_item(),  # pylint: disable=no-value-for-parameter
+)
 def test_binary_search(tup):
     list_, item = tup
     assert item == list_[er_misc_funcs.binary_search(list_, item)]
@@ -469,6 +502,26 @@ def test_binary_search_not_found(tup):
         assert list_[force_upper_i] == nearest
 
 
+def test_get_lowest_of_each_pc_in_set():
+    try:
+        pitch_set = {23, 35, 47, 26, 14, 50}
+        lowests = er_misc_funcs.get_lowest_of_each_pc_in_set(pitch_set, tet=12)
+        assert lowests[11] == 23
+        assert lowests[35 % 12] == 23
+        assert lowests[2] == 14
+        pitch_set = [i for i in range(8)]
+        lowests = er_misc_funcs.get_lowest_of_each_pc_in_set(pitch_set, tet=5)
+        assert lowests[1] == 1
+        assert lowests[7 % 5] == 2
+    except:  # pylint: disable=bare-except
+
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        traceback.print_exception(
+            exc_type, exc_value, exc_traceback, file=sys.stdout
+        )
+        breakpoint()
+
+
 if __name__ == "__main__":
     test_check_modulo()
     test_check_interval_class()
@@ -477,3 +530,4 @@ if __name__ == "__main__":
     test_chord_in_list()
     test_binary_search()  # pylint: disable=no-value-for-parameter
     test_binary_search_not_found()  # pylint: disable=no-value-for-parameter
+    test_get_lowest_of_each_pc_in_set()

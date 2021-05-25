@@ -1,6 +1,5 @@
 """Choir functions for efficient_rhythms2.py"""
 
-import copy
 import itertools
 import random
 import warnings
@@ -39,6 +38,12 @@ class Choir:
     def temper_split_points(self, tet, integers_in_12_tet):
         er_tuning.temper_pitch_materials_in_place(
             self.split_points, tet, integers_in_12_tet
+        )
+
+    def __repr__(self):
+        return (
+            f"{self.__class__.__name__}(sub_choirs={self.sub_choirs}, "
+            f"split_points={self.split_points})"
         )
 
 
@@ -150,8 +155,8 @@ def assign_choirs(er, super_pattern):
             prev_choir = None
             choir_assignments = er.choir_order[voice_i]
             for note in voice:
-                attack_time = note.attack_time
-                choir_i = attack_time // er.length_choir_segments
+                onset = note.onset
+                choir_i = onset // er.length_choir_segments
                 if er.choir_segments_dovetail:
                     try:
                         prev_choir = choir
@@ -166,9 +171,9 @@ def assign_choirs(er, super_pattern):
                     and prev_choir is not None
                     and prev_choir != choir
                 ):
-                    new_note = copy.copy(note)
+                    new_note = note.copy()
                     new_note.choir = prev_choir
-                    voice.add_note_object(new_note)
+                    voice.add_note(new_note)
 
         return
 

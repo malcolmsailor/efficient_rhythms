@@ -19,16 +19,18 @@ import src.er_preprocess as er_preprocess
 # MAYBE wait a moment when sending midi messages, see if this solves
 #   issue of first messages sometimes not sounding?
 
-# TODO fix printing of scores to include note octave
-
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 MAX_RANDOM_TRIES = 10
 
 
 def main():
 
+    er_interface.print_hello()
     args = er_interface.parse_cmd_line_args()
-
+    if not args.no_interface:
+        midi_player = er_playback.init_and_return_midi_player(
+            shell=args.midi_port
+        )
     midi_in = args.input_midi
     if midi_in:
         if args.output_notation:
@@ -54,10 +56,7 @@ def main():
         )
         midi_settings.num_tracks_from(super_pattern)
         midi_settings.original_path = midi_in
-        midi_player = er_playback.init_and_return_midi_player(
-            shell=args.midi_port
-        )
-        if super_pattern.attacks_adjusted_by != 0:
+        if super_pattern.onsets_adjusted_by != 0:
             er_midi.write_midi(super_pattern, midi_settings)
         er_interface.input_loop(
             midi_settings,
@@ -69,6 +68,7 @@ def main():
 
     else:
         seed = None
+
         # LONGTERM move this loop to er_make.py or something
         for try_i in itertools.count():
             er = er_preprocess.preprocess_settings(
@@ -102,24 +102,22 @@ def main():
         if args.no_interface:
             print(f"Output written to {er.output_path}")
             if args.output_notation:
-                try:
-                    result = er_output_notation.run_verovio(
-                        super_pattern,
-                        er.output_path,
-                        args.verovio_arguments,
-                        "." + args.output_notation,
-                    )
-                except er_misc_funcs.ProcError as exc:
-                    if not args.debug:
-                        er_output_notation.clean_up_temporary_notation_files()
-                    print(exc)
-                    sys.exit(1)
-                if not result:
-                    sys.exit(1)
+                if er_output_notation.check_rhythms(er):
+                    try:
+                        result = er_output_notation.run_verovio(
+                            super_pattern,
+                            er.output_path,
+                            args.verovio_arguments,
+                            "." + args.output_notation,
+                        )
+                    except er_misc_funcs.ProcError as exc:
+                        if not args.debug:
+                            er_output_notation.clean_up_temporary_notation_files()
+                        print(exc)
+                        sys.exit(1)
+                    if not result:
+                        sys.exit(1)
             return
-        midi_player = er_playback.init_and_return_midi_player(
-            shell=args.midi_port
-        )
         er_interface.input_loop(
             er,
             super_pattern,

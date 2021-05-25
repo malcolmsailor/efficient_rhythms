@@ -1,0 +1,17 @@
+{
+    "choirs": ("GUITAR", "PIANO", "ELECTRIC_PIANO"),
+    "seed": 0,
+    "pattern_len": 4,
+    "num_harmonies": 3,
+    "harmony_len": [4, 2, 2],
+    "num_reps_super_pattern": 4,
+    "foot_pcs": [6,],
+    "interval_cycle": [4,],
+    "voice_ranges": "AUTHENTIC_OCTAVES * D * OCTAVE3",
+    "scales": ["PENTATONIC_SCALE",],
+    "force_foot_in_bass": "global_first_note",
+    "max_repeated_notes": 0,
+    "forbidden_intervals": (0,),
+    "output_path": "EFFRHY/docs/examples/midi/",
+    "overwrite": True,
+}

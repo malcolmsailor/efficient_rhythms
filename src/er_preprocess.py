@@ -5,7 +5,6 @@ use.
 import collections
 import fractions
 import math
-import numbers
 import os
 import random
 import typing
@@ -15,6 +14,7 @@ import numpy as np
 
 import src.er_choirs as er_choirs
 import src.er_constants as er_constants
+import src.er_interface as er_interface
 import src.er_midi as er_midi
 import src.er_misc_funcs as er_misc_funcs
 import src.er_randomize as er_randomize
@@ -33,15 +33,17 @@ PITCH_MATERIAL_LISTS = (
     "hard_bounds",
     "consonances",
     "consonant_chords",
+    "forbidden_intervals",
     "forbidden_interval_classes",
     "prohibit_parallels",
     "transpose_intervals",
+    "max_interval",
+    "max_interval_for_non_chord_tones",
+    "min_interval",
+    "min_interval_for_non_chord_tones",
 )
 
-PITCH_MATERIALS = (
-    # TODO finish populating this list?
-    "unison_weighted_as",
-)
+PITCH_MATERIALS = ("unison_weighted_as",)
 
 
 # INTERNET_TODO either replace `warnings` module with simple print statements
@@ -82,11 +84,11 @@ def notify_user_of_unusual_settings(er):
             "particularly if there are many short notes."
         )
     if (
-        er.chord_tones_sync_attack_in_all_voices
+        er.chord_tones_sync_onset_in_all_voices
         and er.scale_chord_tone_prob_by_dur
     ):
         print(
-            "Notice: 'chord_tones_sync_attack_in_all_voices' and "
+            "Notice: 'chord_tones_sync_onset_in_all_voices' and "
             "'scale_chord_tone_prob_by_dur' are both true. Long notes in some "
             "voices may be non chord tones."
         )
@@ -189,6 +191,19 @@ def notify_user_of_unusual_settings(er):
         )
 
 
+def check_min_dur(er):
+    for voice_i, rhythm_len in enumerate(er.rhythm_len):
+        if rhythm_len < er.min_dur[voice_i] * er.num_notes[voice_i]:
+            new_min_dur = er_misc_funcs.convert_to_fractions(
+                rhythm_len / er.num_notes[voice_i]
+            )
+            print(
+                f"Notice: min_dur too long in voice {voice_i} rhythm; "
+                f"reducing from {er.min_dur[voice_i]} to {new_min_dur}."
+            )
+            er.min_dur[voice_i] = new_min_dur
+
+
 def prepare_warnings(er):
     """Certain warnings should only occur once, even though the situation
     that provokes them may occur many times. This function initializes
@@ -199,59 +214,17 @@ def prepare_warnings(er):
     }
 
 
-PITCH_CONSTANT_OP_MAP = {
-    "*": ("__mul__", "__rmul__"),
-    "+": ("__add__", "__radd__"),
-    "-": ("__sub__", "__rsub__"),
-    "/": ("__truediv__", "__rtruediv__"),  # TODO test
-}
-
-
 def replace_pitch_constants(er):
-    class PitchConstantError(Exception):
-        pass
-
     def _process_str(pitch_str):
         pitch_str = pitch_str.replace("#", "_SHARP")
-        bits = pitch_str.split()
-        val = 1
-        next_op, rnext_op = "__mul__", "__rmul__"
-        for bit in bits:
-            if next_op is None:
-                try:
-                    next_op, rnext_op = PITCH_CONSTANT_OP_MAP[bit]
-                except KeyError:
-                    raise PitchConstantError(  # pylint: disable=raise-missing-from
-                        f"{bit} is not an implemented operation on pitch "
-                        "constants. Implemented pitch constant operations are "
-                        f"{tuple(PITCH_CONSTANT_OP_MAP.keys())}."
-                        # TODO see documentation for more help
-                    )
-            else:
-                try:
-                    constant = getattr(er_constants, bit)
-                except AttributeError:
-                    raise PitchConstantError(  # pylint: disable=raise-missing-from
-                        f"{bit} is not an implemented pitch constant."
-                    )
-                    # TODO see documentation for more help
-                next_val = getattr(val, next_op)(constant)
-                if next_val is NotImplemented:
-                    val = getattr(constant, rnext_op)(val)
-                else:
-                    val = next_val
-                next_op = None
-        if next_op is not None:
-            raise PitchConstantError(
-                f"Trailing operation in pitch constant {pitch_str}"
-            )
-        return val
+        return eval(pitch_str, vars(er_constants))
 
     def _replace(pitch_material, i):
         if isinstance(pitch_material[i], str):
             pitch_material[i] = _process_str(pitch_material[i])
         elif isinstance(pitch_material[i], typing.Sequence):
             for j in range(len(pitch_material[i])):
+                pitch_material[i] = list(pitch_material[i])
                 _replace(pitch_material[i], j)
 
     for pitch_material_name in PITCH_MATERIAL_LISTS + PITCH_MATERIALS:
@@ -260,7 +233,6 @@ def replace_pitch_constants(er):
             if isinstance(pitch_material, str):
                 pitch_material = _process_str(pitch_material)
             elif isinstance(pitch_material, typing.Sequence):
-                # LONGTERM handle list conversion elsewhere?
                 pitch_material = list(pitch_material)
                 for i in range(len(pitch_material)):
                     _replace(pitch_material, i)
@@ -268,8 +240,7 @@ def replace_pitch_constants(er):
 
 
 def preprocess_temper_pitch_materials(er):
-    """Tempers pitch materials as necessary.
-    """
+    """Tempers pitch materials as necessary."""
 
     for pitch_material_name in PITCH_MATERIAL_LISTS:
         pitch_material = getattr(er, pitch_material_name)
@@ -318,11 +289,11 @@ def rhythmic_values_to_fractions(er):
         "rhythm_len",
         "harmony_len",
         "transpose_len",
-        "attack_subdivision",
+        "onset_subdivision",
         "sub_subdivisions",
         "dur_subdivision",
-        "obligatory_attacks",
-        "obligatory_attacks_modulo",
+        "obligatory_onsets",
+        "obligatory_onsets_modulo",
         "length_choir_segments",
         "length_choir_loop",
         "chord_tone_before_rests",
@@ -347,7 +318,11 @@ def ensure_lists_or_tuples(er):
             except TypeError:
                 # MAYBE make this function recursive, although I doubt
                 #   I'l need deeper lists
-                return [[in_iter,]]
+                return [
+                    [
+                        in_iter,
+                    ]
+                ]
 
     to_list = [
         "harmony_len",
@@ -384,7 +359,7 @@ def ensure_lists_or_tuples(er):
         "hard_bounds",
         "scales",
         "chords",
-        "obligatory_attacks",
+        "obligatory_onsets",
         "sub_subdivisions",
         "consonance_modulo",
         "forbidden_interval_modulo",
@@ -395,7 +370,12 @@ def ensure_lists_or_tuples(er):
 
 
 def guess_time_sig(er):
-    temp_time_signature = max(er.pattern_len + [sum(er.harmony_len),])
+    temp_time_signature = max(
+        er.pattern_len
+        + [
+            sum(er.harmony_len),
+        ]
+    )
     i = 0
     numer = temp_time_signature
     while numer % 1 != 0:
@@ -465,11 +445,15 @@ def process_np_arrays(er):
 
 def process_choir_settings(er):
     """Prepares the choir settings."""
+    # LONGTERM check if midi programs are defined in midi player? (To avoid
+    #   tracks that mysteriously don't play back.)
     if not er.choirs:
         raise SettingsError("'choirs' cannot be empty")
     if not er.randomly_distribute_between_choirs:
         if not er.choir_assignments:
-            er.choir_assignments = [0 for _ in range(er.num_voices)]
+            er.choir_assignments = [
+                i % len(er.choirs) for i in range(er.num_voices)
+            ]
         if max(er.choir_assignments) > len(er.choirs) - 1:
             raise SettingsError(
                 "'choir_assignments' assigns a voice to choir "
@@ -507,22 +491,59 @@ def process_choir_settings(er):
                 warn_if_loop_too_short=warn_if_loop_too_short,
             )
 
+    def _get_choir(choir):
+        if isinstance(choir, int):
+            return choir
+        try:
+            return getattr(er_constants, choir)
+        except AttributeError:
+            raise ValueError(  # pylint: disable=raise-missing-from
+                f"{choir} is not an implemented choir constant. See "
+                "docs/er_constants.html for a list of available constants."
+            )
+
     er.choir_programs = []
     for choir_i in range(er.num_choirs):
+        # Why are both choir_programs and choirs necessary?
         choir = er.choirs[choir_i]
-        if isinstance(choir, numbers.Number):
-            er.choir_programs.append(choir)
+        if isinstance(choir, (int, str)):
+            er.choir_programs.append(_get_choir(choir))
         else:
-            sub_choirs, split_points = choir
-            if not isinstance(split_points, typing.Sequence):
-                split_points = [
-                    split_points,
-                ]
-            er.choirs[choir_i] = er_choirs.Choir(sub_choirs, split_points)
-            er.choirs[choir_i].temper_split_points(
-                er.tet, er.integers_in_12_tet
+            raise NotImplementedError(
+                "'choirs' must be integers or strings defined in "
+                "er_constants.py"
             )
-            er.choir_programs += sub_choirs
+            # # LONGTERM implement choir split points
+            # #   it seems I never actually completed implementing this
+            ############
+            # # here is the old docstring from er_settings which provides a spec:
+            # choirs: a sequence of ints or tuples.
+            #
+            #     Integers specify the program numbers of GM midi instruments.
+            #     Constants defining these can be found in `er_constants.py`.
+            #
+            #     Tuples can be used to combine multiple instruments (e.g., violins
+            #     and cellos) into a single "choir". They should consist of two items:
+            #         - a sequence of GM midi instruments, listed from low to high
+            #         - an integer or sequence of integers, specifying a split point
+            #         or split points, that is, the pitches at which the instruments
+            #         should be switched between.
+            #     Default: (er_constants.MARIMBA, er_constants.VIBRAPHONE,
+            #     er_constants.ELECTRIC_PIANO, er_constants.GUITAR,)
+            ############
+            # sub_choirs, split_points = choir
+            # if not isinstance(split_points, typing.Sequence):
+            #     split_points = [
+            #         split_points,
+            #     ]
+            # sub_choir_progs = [
+            #     _get_choir(sub_choir) for sub_choir in sub_choirs
+            # ]
+            # er.choirs[choir_i] = er_choirs.Choir(sub_choir_progs, split_points,)
+            # er.choirs[choir_i].temper_split_points(
+            #     er.tet, er.integers_in_12_tet
+            # )
+            # er.choir_programs += sub_choir_progs
 
     er.num_choir_programs = len(er.choir_programs)
 
@@ -578,13 +599,13 @@ def fill_rhythm_lists_by_voice(er):
     er.rhythm_lists_by_voice = [
         er.pattern_len,
         er.rhythm_len,
-        er.attack_density,
+        er.onset_density,
         er.dur_density,
-        er.attack_subdivision,
+        er.onset_subdivision,
         er.dur_subdivision,
         er.min_dur,
-        er.obligatory_attacks,
-        er.obligatory_attacks_modulo,
+        er.obligatory_onsets,
+        er.obligatory_onsets_modulo,
         er.comma_position,
     ]
 
@@ -637,23 +658,25 @@ def rhythm_preprocessing(er):
         return out_dict
 
     def _num_notes(voice_i):
+
         if voice_i in er.rhythmic_unison_followers:
             leader_i = er.rhythmic_unison_followers[voice_i]
             er.num_notes[voice_i] = er.num_notes[leader_i]
             return
         rhythm_len = er.rhythm_len[voice_i]
-        density = er.attack_density[voice_i]
-        attack_div = er.attack_subdivision[voice_i]
+        density = er.onset_density[voice_i]
+        onset_div = er.onset_subdivision[voice_i]
+
         len_sub_subdiv = (
             len(er.sub_subdiv_props[voice_i])
             if er.cont_rhythms == "none"
             else 1
         )
-        num_div = int(rhythm_len / attack_div * len_sub_subdiv)
+        num_div = int(rhythm_len / onset_div * len_sub_subdiv)
         if isinstance(density, int):
             if density > num_div:
                 print(
-                    f"Notice: voice {voice_i} attack density of {density} "
+                    f"Notice: voice {voice_i} onset density of {density} "
                     f"is greater than {num_div}, the number of divisions.  "
                     f"Reducing to {num_div}."
                 )
@@ -661,7 +684,9 @@ def rhythm_preprocessing(er):
         else:
             # if isinstance(density, float):
             num_notes = min(round(density * num_div), num_div)
-        er.num_notes[voice_i] = max(num_notes, 1)
+        er.num_notes[voice_i] = max(
+            num_notes, 1, len(er.obligatory_onsets[voice_i])
+        )
 
     if er.rhythms_specified_in_midi:
         return
@@ -717,15 +742,14 @@ def rhythm_preprocessing(er):
         _num_notes(voice_i)
 
 
-def process_pattern_voice_leading_order(er):
-    """Adds er.pattern_voice_leading_order to ERSettings object.
-    """
+def process_pattern_vl_order(er):
+    """Adds er.pattern_vl_order to ERSettings object."""
 
     # QUESTION put parallel voices immediately after their leader in voice
     #       order? or put them after all other voices? or setting to control
     #       this?
 
-    er.pattern_voice_leading_order = []
+    er.pattern_vl_order = []
 
     if er.truncate_patterns:
         truncate_len = max(er.pattern_len)
@@ -752,20 +776,21 @@ def process_pattern_voice_leading_order(er):
                     prev_pattern_i = pattern_i - 1
                 else:
                     prev_pattern_i = pattern_i - n_since_prev_pattern
-                prev_item = er.pattern_voice_leading_order[
-                    prev_pattern_i + voice_offset
-                ]
-            er.pattern_voice_leading_order.append(
+                prev_item = er.pattern_vl_order[prev_pattern_i + voice_offset]
+            er.pattern_vl_order.append(
                 er_voice_leadings.VoiceLeadingOrderItem(
-                    voice_i, start_time, end_time, prev_item=prev_item,
+                    voice_i,
+                    start_time,
+                    end_time,
+                    prev=prev_item,
                 )
             )
             start_time = end_time
             pattern_i += 1
         voice_offset += pattern_i
 
-    er.pattern_voice_leading_order.sort(key=lambda x: x.end_time, reverse=True)
-    er.pattern_voice_leading_order.sort(key=lambda x: x.start_time)
+    er.pattern_vl_order.sort(key=lambda x: x.end_time, reverse=True)
+    er.pattern_vl_order.sort(key=lambda x: x.start_time)
 
 
 def num_cont_vars(er):
@@ -793,16 +818,6 @@ def cum_mod_lists(er):
             ]
 
 
-# def read_in_settings(user_settings, settings_class):
-#     if user_settings is None:
-#         user_settings = {}
-#     elif isinstance(user_settings, str):
-#         print(f"Reading settings from {user_settings}")
-#         with open(user_settings, "r", encoding="utf-8") as inf:
-#             user_settings = eval(inf.read())
-#     return settings_class(**user_settings)
-
-
 def read_in_settings(settings_input, settings_class):
     def _merge(dict1, dict2):
         for key, val in dict2.items():
@@ -811,8 +826,9 @@ def read_in_settings(settings_input, settings_class):
                 and key in dict1
                 and isinstance(dict1[key], dict)
             ):
-                dict2[key] = _merge(dict1[key], val)
-        return dict1 | dict2
+                _merge(dict1[key], val)
+                dict2[key] = dict1[key]
+        dict1.update(dict2)
 
     if settings_input is None:
         settings_input = {}
@@ -822,16 +838,76 @@ def read_in_settings(settings_input, settings_class):
     for user_settings_path in settings_input:
         print(f"Reading settings from {user_settings_path}")
         with open(user_settings_path, "r", encoding="utf-8") as inf:
-            user_settings = eval(inf.read())
-        merged_dict = _merge(merged_dict, user_settings)
+            user_settings = eval(inf.read(), vars(er_constants))
+        _merge(merged_dict, user_settings)
     return settings_class(**merged_dict)
+
+
+class SettingsProcesser(er_settings.ERSettings):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._chord_pcs = {}
+        self._nonchord_pcs = {}
+        self._chord_indices = {}
+        self._nonchord_indices = {}
+
+    def nonchord_pcs_at_harmony_i(self, i):
+        if i not in self._nonchord_pcs:
+            self._get_chord_and_nonchord_pcs(i)
+        return self._nonchord_pcs[i]
+
+    def chord_pcs_at_harmony_i(self, i):
+        if i not in self._chord_pcs:
+            self._get_chord_and_nonchord_pcs(i)
+        return self._chord_pcs[i]
+
+    def _get_chord_and_nonchord_pcs(self, i):
+        chord_pcs = []
+        non_chord_pcs = []
+        pc_scale, pc_chord = self.get(i, "pc_scales", "pc_chords")
+        for pc in pc_scale:
+            if pc in pc_chord:
+                chord_pcs.append(pc)
+            else:
+                non_chord_pcs.append(pc)
+        self._chord_pcs[i] = tuple(chord_pcs)
+        self._nonchord_pcs[i] = tuple(non_chord_pcs)
+
+    def nonchord_indices_at_harmony_i(self, i):
+        if i not in self._nonchord_indices:
+            self._get_chord_and_nonchord_indices(i)
+        return self._nonchord_indices[i]
+
+    def chord_indices_at_harmony_i(self, i):
+        if i not in self._chord_indices:
+            self._get_chord_and_nonchord_indices(i)
+        return self._chord_indices[i]
+
+    def _get_chord_and_nonchord_indices(self, i):
+        # TODO should we combine this and _get_chord_and_nonchord_pcs? How
+        # likely are the functions to be called/not-called at the same time?
+        chord_indices = {}
+        chord_i = 0
+        nonchord_indices = {}
+        nonchord_i = 0
+        pc_scale, pc_chord = self.get(i, "pc_scales", "pc_chords")
+        for j, pc in enumerate(pc_scale):
+            if pc in pc_chord:
+                chord_indices[chord_i] = j
+                chord_i += 1
+            else:
+                nonchord_indices[nonchord_i] = j
+                nonchord_i += 1
+        self._chord_indices[i] = chord_indices
+        self._nonchord_indices[i] = nonchord_indices
 
 
 def preprocess_settings(
     user_settings, script_dir=SCRIPT_DIR, random_settings=False, seed=None
 ):
 
-    er = read_in_settings(user_settings, er_settings.ERSettings)
+    # er = read_in_settings(user_settings, er_settings.ERSettings)
+    er = read_in_settings(user_settings, SettingsProcesser)
     if seed is not None:
         er.seed = seed
     er.seed = er_misc_funcs.set_seed(er.seed)
@@ -841,9 +917,10 @@ def preprocess_settings(
             script_dir, er.output_path.replace("EFFRHY/", "", 1)
         )
 
-    if not os.path.exists(os.path.dirname(er.output_path)):
-        os.makedirs(os.path.dirname(er.output_path))
-    if os.path.dirname(er.output_path) == er.output_path.rstrip(os.path.sep):
+    dir_name = os.path.dirname(er.output_path)
+    if dir_name and not os.path.exists(dir_name):
+        os.makedirs(dir_name)
+    if dir_name == er.output_path.rstrip(os.path.sep):
         if user_settings is None:
             er.output_path = os.path.join(er.output_path, "effrhy.mid")
         else:
@@ -855,6 +932,13 @@ def preprocess_settings(
 
     if not er.overwrite and os.path.exists(er.output_path):
         er.output_path = er_misc_funcs.increment_fname(er.output_path)
+
+    if er.max_super_pattern_len is None:
+        er.max_super_pattern_len = (
+            er_settings.MAX_SUPER_PATTERN_LEN_RANDOM
+            if random_settings
+            else er_settings.MAX_SUPER_PATTERN_LEN
+        )
 
     if random_settings:
         randomize = er_randomize.ERRandomize(er)
@@ -1033,7 +1117,9 @@ def preprocess_settings(
         # else:
         er.super_pattern_len = er_misc_funcs.lcm(
             ([max(er.pattern_len)] if er.truncate_patterns else er.pattern_len)
-            + [er.length_of_all_harmonies,],
+            + [
+                er.length_of_all_harmonies,
+            ],
             max_n=max_super_pattern_len,
         )
     except er_misc_funcs.LCMError as exc:
@@ -1078,14 +1164,11 @@ def preprocess_settings(
     def _prepare_sub_subdivisions(er):
         er.sub_subdiv_props = []
         for voice_i in range(er.num_voices):
-            subs, attack_div = er.get(
-                voice_i, "sub_subdivisions", "attack_subdivision"
+            subs, onset_div = er.get(
+                voice_i, "sub_subdivisions", "onset_subdivision"
             )
             er.sub_subdiv_props.append(
-                [
-                    fractions.Fraction(sub, sum(subs)) * attack_div
-                    for sub in subs
-                ]
+                [fractions.Fraction(sub, sum(subs)) * onset_div for sub in subs]
             )
 
     def _min_dur_process(er):
@@ -1093,30 +1176,30 @@ def preprocess_settings(
             for min_dur_i, min_dur in enumerate(er.min_dur):
                 if min_dur <= 0:
                     er.min_dur[min_dur_i] = er.get(
-                        min_dur_i, "attack_subdivision"
+                        min_dur_i, "onset_subdivision"
                     )
                 # QUESTION what is this? Is it for continuous rhythms?
                 # if isinstance(min_dur, int):
                 # er.min_dur[min_dur_i] = er.tempo[0] / 60 * (0.001 * min_dur)
         elif er.min_dur <= 0:
-            er.min_dur = er.get(0, "attack_subdivision")
+            er.min_dur = er.get(0, "onset_subdivision")
             # QUESTION what is this? Is it for continuous rhythms?
             # er.min_dur = er.tempo[0] / 60 * (0.001 * er.min_dur)
         er.min_dur = er_misc_funcs.convert_to_fractions(er.min_dur)
 
-    er.attack_density = _process_rhythm_list(
-        er.attack_density, replace_negative_with_random=True
+    er.onset_density = _process_rhythm_list(
+        er.onset_density, replace_negative_with_random=True
     )
     er.dur_density = _process_rhythm_list(
         er.dur_density, replace_negative_with_random=True
     )
-    er.attack_subdivision = _process_rhythm_list(er.attack_subdivision)
+    er.onset_subdivision = _process_rhythm_list(er.onset_subdivision)
     _prepare_sub_subdivisions(er)
     er.dur_subdivision = _process_rhythm_list(er.dur_subdivision)
     _min_dur_process(er)
     er.min_dur = _process_rhythm_list(er.min_dur)
-    er.obligatory_attacks_modulo = _process_rhythm_list(
-        er.obligatory_attacks_modulo
+    er.obligatory_onsets_modulo = _process_rhythm_list(
+        er.obligatory_onsets_modulo
     )
     if not er.comma_position:
         er.comma_position = "end"
@@ -1125,31 +1208,31 @@ def preprocess_settings(
         er.chord_tone_before_rests
     )
 
-    for sub_list_i, sub_list in enumerate(er.obligatory_attacks):
+    for sub_list_i, sub_list in enumerate(er.obligatory_onsets):
         beats = sub_list.copy()
         for beat in beats:
             for i in range(
                 1,
                 math.ceil(
                     er.get(sub_list_i, "pattern_len")
-                    / er.get(sub_list_i, "obligatory_attacks_modulo")
+                    / er.get(sub_list_i, "obligatory_onsets_modulo")
                 ),
             ):
                 sub_list.append(
-                    beat + i * er.get(sub_list_i, "obligatory_attacks_modulo")
+                    beat + i * er.get(sub_list_i, "obligatory_onsets_modulo")
                 )
 
-    er.attack_subdivision_gcd = er_misc_funcs.gcd_from_list(
-        er.attack_subdivision,
+    er.onset_subdivision_gcd = er_misc_funcs.gcd_from_list(
+        er.onset_subdivision,
         er.sub_subdiv_props,  # pylint: disable=no-member
         er.pattern_len,
         er.harmony_len,
         er.rhythm_len,
-        er.obligatory_attacks,
-        er.obligatory_attacks_modulo,
+        er.obligatory_onsets,
+        er.obligatory_onsets_modulo,
     )
     er.dur_gcd = er_misc_funcs.gcd_from_list(
-        er.attack_subdivision_gcd, er.dur_subdivision, er.min_dur
+        er.onset_subdivision_gcd, er.dur_subdivision, er.min_dur
     )
 
     # Continuous rhythm settings
@@ -1214,7 +1297,7 @@ def preprocess_settings(
 
     rhythm_preprocessing(er)
 
-    process_pattern_voice_leading_order(er)
+    process_pattern_vl_order(er)
 
     notify_user_of_unusual_settings(er)
 
@@ -1222,15 +1305,20 @@ def preprocess_settings(
 
     cum_mod_lists(er)
 
+    check_min_dur(er)
+
     # There are a few calls to random in the preceding pre-processing functions,
     # so we re-set the seed once more in the hopes of making files produced
-    # with the --random flag reproducible
+    # with the --random flag reproducible, even if the above code changes
+    # slightly
     er_misc_funcs.set_seed(er.seed, print_out=False)
+
+    er.build_status_printer = er_interface.BuildStatusPrinter(er)
 
     return er
 
 
-# Constants for accessing er.pattern_voice_leading_order
+# Constants for accessing er.pattern_vl_order
 
 VOICE_I = 0
 PATTERN_START = 1

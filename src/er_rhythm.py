@@ -20,31 +20,35 @@ class RhythmicDict(collections.UserDict):
     def __str__(self):
         strings = []
         strings.append("#" * 51)
-        for attack_time, dur in self.items():
+        for onset, dur in self.items():
             strings.append(
                 "Attack:{:>10.6}  Duration:{:>10.6}"
-                "".format(float(attack_time), float(dur))
+                "".format(float(onset), float(dur))
             )
         strings.append("\n")
         return "\n".join(strings)[:-2]
 
-    # def make_attack_and_dur_lists(self):
-    #     self.attack_times = list(self.keys())
-    #     self.attack_times_and_durs = list(self.items())
+    # def make_onset_and_dur_lists(self):
+    #     self.onsets = list(self.keys())
+    #     self.onsets_and_durs = list(self.items())
 
-    # LONGTERM attack_times and attack_times_and_durs assume that
+    # LONGTERM onsets and onsets_and_durs assume that
     #   the contents will no longer be changed after their first access.
     #   Is there a way to enforce this?
     @functools.cached_property
-    def attack_times(self):
+    def onsets(self):
         return list(self.keys())
 
     @functools.cached_property
-    def attack_times_and_durs(self):
+    def onsets_and_durs(self):
         return list(self.items())
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.data})"
 
 
 class Rhythm(RhythmicDict):
+    # TODO refactor this using some sort of sorted container
     # LONGTERM provide "re-generate" method, rather than
     #   re-initializing an entire new rhythm at each failure in er_make.py
     @functools.cached_property
@@ -58,8 +62,8 @@ class Rhythm(RhythmicDict):
                 running_length += self.rhythm_len
                 out += self.num_notes
             else:
-                for attack_time in self:
-                    if running_length + attack_time >= self.total_rhythm_len:
+                for onset in self:
+                    if running_length + onset >= self.total_rhythm_len:
                         break_out = True
                         break
                     out += 1
@@ -70,6 +74,7 @@ class Rhythm(RhythmicDict):
     def __init__(self, er, voice_i):
         super().__init__()
         self.voice_i = voice_i
+        # TODO "rhythm_dur" rather than "rhythm_len"
         (
             self.num_notes,
             self.rhythm_len,
@@ -103,15 +108,6 @@ class Rhythm(RhythmicDict):
         self._check_min_dur()
 
     def _check_min_dur(self):
-        if self.rhythm_len < self.min_dur * self.num_notes:
-            new_min_dur = er_misc_funcs.convert_to_fractions(
-                self.rhythm_len / self.num_notes
-            )
-            print(
-                f"Notice: min_dur too long in voice {self.voice_i} rhythm; "
-                f"reducing from {self.min_dur} to {new_min_dur}."
-            )
-            self.min_dur = new_min_dur
         if self.rhythm_len <= self.min_dur * self.num_notes:
             # LONGTERM move this notice outside of the initial_pattern loop
             if isinstance(self, (Grid, ContinuousRhythm)):
@@ -119,7 +115,7 @@ class Rhythm(RhythmicDict):
                     "Notice: 'cont_rhythms' will have no effect in voice "
                     f"{self.voice_i} because "
                     "'min_dur' is the maximum value compatible with "
-                    "'rhythm_len' and 'attack_subdivision'. "
+                    "'rhythm_len' and 'onset_subdivision'. "
                     "To allow 'cont_rhythms' to have an effect, reduce "
                     f"'min_dur' to less than {self.min_dur}"
                 )
@@ -132,8 +128,8 @@ class Rhythm(RhythmicDict):
         if not self.truncate_len:
             raise ValueError("This is a bug in the 'efficient_rhythms' script")
         self._truncated_pattern_num_notes = 0
-        for attack_time in self:
-            if (attack_time + self.min_dur) > (
+        for onset in self:
+            if (onset + self.min_dur) > (
                 self.truncate_len % self.total_rhythm_len
             ):
                 break
@@ -142,18 +138,84 @@ class Rhythm(RhythmicDict):
 
     @functools.cached_property
     def loop_num_notes(self):
+        # TODO rename this property?
+        # it is the number of notes in the rhythm up to the end of the truncate
         return (
             self.truncate_len // self.pattern_len * self.total_num_notes
             + self.truncated_pattern_num_notes
         )
 
-    def get_attack_time_and_dur(self, rhythm_i):
+    def get_i_at_or_after(self, time):
+        # TODO use sortedcontainers
+        if self.truncate_len:
+            truncated, untruncated = divmod(time, self.truncate_len)
+            truncated_num_notes = int(truncated) * self.loop_num_notes
+        else:
+            truncated_num_notes, untruncated = 0, time
+        reps, remainder = divmod(untruncated, self.total_rhythm_len)
+        for remainder_i, onset in enumerate(self.onsets):
+            if onset >= remainder:
+                break
+        if remainder > onset:
+            remainder_i += 1
+        return (
+            truncated_num_notes + int(reps) * self.total_num_notes + remainder_i
+        )
+
+    def get_i_before(self, time):
+        if self.truncate_len:
+            truncated, untruncated = divmod(time, self.truncate_len)
+            truncated_num_notes = int(truncated) * self.loop_num_notes
+        else:
+            truncated_num_notes, untruncated = 0, time
+        reps, remainder = divmod(untruncated, self.total_rhythm_len)
+        for remainder_i, onset in enumerate(self.onsets):
+            if onset >= remainder:
+                remainder_i -= 1
+                break
+        return (
+            truncated_num_notes + int(reps) * self.total_num_notes + remainder_i
+        )
+
+    def get_i_at_or_before(self, time):
+        """Returns -1 if time is before first note in rhythm."""
+        if self.truncate_len:
+            truncated, untruncated = divmod(time, self.truncate_len)
+            truncated_num_notes = int(truncated) * self.loop_num_notes
+        else:
+            truncated_num_notes, untruncated = 0, time
+        reps, remainder = divmod(untruncated, self.total_rhythm_len)
+        # 0 1 2 3
+        #    ^
+        for remainder_i, onset in enumerate(self.onsets):
+            if onset > remainder:
+                remainder_i -= 1
+                break
+        return (
+            truncated_num_notes + int(reps) * self.total_num_notes + remainder_i
+        )
+
+    def get_i_after(self, time):
+        if self.truncate_len:
+            truncated, untruncated = divmod(time, self.truncate_len)
+            truncated_num_notes = int(truncated) * self.loop_num_notes
+        else:
+            truncated_num_notes, untruncated = 0, time
+        reps, remainder = divmod(untruncated, self.total_rhythm_len)
+        for remainder_i, onset in enumerate(self.onsets):
+            if onset > remainder:
+                break
+        if remainder >= onset:
+            remainder_i += 1
+        return (
+            truncated_num_notes + int(reps) * self.total_num_notes + remainder_i
+        )
+
+    def get_onset_and_dur(self, rhythm_i):
         if not self.truncate_len:
             offset = (rhythm_i // self.total_num_notes) * self.total_rhythm_len
-            attack_time, dur = self.attack_times_and_durs[
-                rhythm_i % self.total_num_notes
-            ]
-            return attack_time + offset, dur
+            onset, dur = self.onsets_and_durs[rhythm_i % self.total_num_notes]
+            return onset + offset, dur
         # else: we need to take truncated patterns into account
         # LONGTERM it would probably be better to just write the whole
         #   loop to the rhythm rather than do all this complicated logic
@@ -161,16 +223,16 @@ class Rhythm(RhythmicDict):
         loop_offset = (rhythm_i // self.loop_num_notes) * self.truncate_len
         n_patterns = (rhythm_i % self.loop_num_notes) // self.total_num_notes
         offset = n_patterns * self.total_rhythm_len
-        attack_time, dur = self.attack_times_and_durs[
+        onset, dur = self.onsets_and_durs[
             (rhythm_i % self.loop_num_notes) % self.total_num_notes
         ]
-        attack_time += loop_offset + offset
+        onset += loop_offset + offset
         if n_patterns != self.n_patterns_per_truncate - 1:
-            return attack_time, dur
-        overdur = loop_offset + self.truncate_len - (attack_time + dur)
+            return onset, dur
+        overdur = loop_offset + self.truncate_len - (onset + dur)
         if self.overlap:
-            overdur += self.attack_times[0]
-        return attack_time, dur + min(0, overdur)
+            overdur += self.onsets[0]
+        return onset, dur + min(0, overdur)
 
 
 class ContinuousRhythmicObject(RhythmicDict):
@@ -191,7 +253,7 @@ class ContinuousRhythmicObject(RhythmicDict):
                 adj_len = self.pattern_len
             else:
                 adj_len = self.rhythm_len
-        for var in self.rel_attacks:  # pylint: disable=no-member
+        for var in self.rel_onsets:  # pylint: disable=no-member
             for j, dur in enumerate(var):
                 var[j] = round(dur, 4)
             var[j] += adj_len - var.sum()
@@ -218,7 +280,7 @@ class ContinuousRhythmicObject(RhythmicDict):
     #             adj_len = self.pattern_len
     #         else:
     #             adj_len = self.rhythm_len
-    #     for var_i, var in enumerate(self.rel_attacks):
+    #     for var_i, var in enumerate(self.rel_onsets):
     #         for j, dur in enumerate(var):
     #             var[j] = fractions.Fraction(dur).limit_denominator(
     #                 max_denominator=max_denominator)
@@ -233,16 +295,16 @@ class ContinuousRhythmicObject(RhythmicDict):
     #             var[j] = fractions.Fraction(dur).limit_denominator(
     #                 max_denominator=max_denominator)
 
-    def apply_min_dur_to_rel_attacks(self, rel_attacks):
+    def apply_min_dur_to_rel_onsets(self, rel_onsets):
         while True:
             remaining = 0
             indices = np.ones(self.num_notes)
-            for i, rel_attack in enumerate(rel_attacks):
-                if rel_attack >= self.min_dur:
+            for i, rel_onset in enumerate(rel_onsets):
+                if rel_onset >= self.min_dur:
                     continue
                 indices[i] = 0
-                remaining += rel_attack - self.min_dur
-                rel_attacks[i] = self.min_dur
+                remaining += rel_onset - self.min_dur
+                rel_onsets[i] = self.min_dur
             if not remaining:
                 break
             adjust = np.where(
@@ -252,32 +314,28 @@ class ContinuousRhythmicObject(RhythmicDict):
             )
             if adjust.sum():
                 adjust = adjust / adjust.sum() * remaining
-            rel_attacks = rel_attacks + adjust
-        return rel_attacks
+            rel_onsets = rel_onsets + adjust
+        return rel_onsets
 
-    def generate_continuous_attacks(self):
+    def generate_continuous_onsets(self):
         rand_array = np.random.randint(0, RANDOM_CARD, self.num_notes)
-        attacks = rand_array / rand_array.sum() * self.rhythm_len
-        self.rel_attacks[0] = self.apply_min_dur_to_rel_attacks(attacks)
+        onsets = rand_array / rand_array.sum() * self.rhythm_len
+        self.rel_onsets[0] = self.apply_min_dur_to_rel_onsets(onsets)
 
-    def vary_continuous_attacks(self, apply_to_durs=True):
+    def vary_continuous_onsets(self, apply_to_durs=True):
 
-        # def _vary_continuous_attacks_randomly(self, i, apply_to_durs=True):
-        def _vary_continuous_attacks_randomly(
+        # def _vary_continuous_onsets_randomly(self, i, apply_to_durs=True):
+        def _vary_continuous_onsets_randomly(
             rhythm, i
         ):  # LONGTERM apply_to_durs?
             deltas = np.random.randint(0, RANDOM_CARD, rhythm.num_notes)
             deltas = deltas / deltas.sum() * rhythm.increment
             deltas = deltas - deltas.mean()
-            attacks = rhythm.rel_attacks[i] + deltas
-            rhythm.rel_attacks[i + 1] = self.apply_min_dur_to_rel_attacks(
-                attacks
-            )
+            onsets = rhythm.rel_onsets[i] + deltas
+            rhythm.rel_onsets[i + 1] = self.apply_min_dur_to_rel_onsets(onsets)
             # LONGTERM vary durations
 
-        def _vary_continuous_attacks_consistently(
-            rhythm, i, apply_to_durs=True
-        ):
+        def _vary_continuous_onsets_consistently(rhythm, i, apply_to_durs=True):
             def _update_deltas():
                 deltas = np.random.randint(1, RANDOM_CARD, rhythm.num_notes)
                 deltas2 = deltas / deltas.sum()
@@ -292,20 +350,19 @@ class ContinuousRhythmicObject(RhythmicDict):
 
                 while True:
                     if np.all(
-                        rhythm.rel_attacks[i] + deltas4
-                        >= rhythm.min_dur - COMMA
+                        rhythm.rel_onsets[i] + deltas4 >= rhythm.min_dur - COMMA
                     ):
                         rhythm.deltas = deltas4
                         return
                     if np.all(
-                        rhythm.rel_attacks[i] + deltas4 * -1
+                        rhythm.rel_onsets[i] + deltas4 * -1
                         >= rhythm.min_dur - COMMA
                     ):
                         rhythm.deltas = deltas4 * -1
                         return
                     indices = np.array(
                         [
-                            rhythm.rel_attacks[i][j] + deltas4[j]
+                            rhythm.rel_onsets[i][j] + deltas4[j]
                             >= rhythm.min_dur - COMMA
                             and indices[j]
                             for j in range(rhythm.num_notes)
@@ -326,14 +383,14 @@ class ContinuousRhythmicObject(RhythmicDict):
 
             if rhythm.deltas is None:
                 _update_deltas()
-            elif np.any(rhythm.rel_attacks[i] + rhythm.deltas < rhythm.min_dur):
+            elif np.any(rhythm.rel_onsets[i] + rhythm.deltas < rhythm.min_dur):
                 _update_deltas()
 
-            rhythm.rel_attacks[i + 1] = rhythm.rel_attacks[i] + rhythm.deltas
+            rhythm.rel_onsets[i + 1] = rhythm.rel_onsets[i] + rhythm.deltas
 
             if apply_to_durs:
                 rhythm.durs[i + 1] = rhythm.durs[i]
-                remaining_durs = rhythm.rel_attacks[i + 1] - rhythm.durs[i + 1]
+                remaining_durs = rhythm.rel_onsets[i + 1] - rhythm.durs[i + 1]
                 while np.any(remaining_durs < 0):
                     negative_durs = np.where(
                         remaining_durs < 0, remaining_durs, 0
@@ -351,28 +408,28 @@ class ContinuousRhythmicObject(RhythmicDict):
                     deltas2 = deltas / deltas.sum() * dur_to_add
                     rhythm.durs[i + 1] += deltas2
                     remaining_durs = (
-                        rhythm.rel_attacks[i + 1] - rhythm.durs[i + 1]
+                        rhythm.rel_onsets[i + 1] - rhythm.durs[i + 1]
                     )
 
         for i in range(self.num_cont_rhythm_vars - 1):
             if self.full:
-                self.rel_attacks[i + 1] = self.rel_attacks[i]
+                self.rel_onsets[i + 1] = self.rel_onsets[i]
             elif self.vary_rhythm_consistently:
-                _vary_continuous_attacks_consistently(
+                _vary_continuous_onsets_consistently(
                     self, i, apply_to_durs=apply_to_durs
                 )
             else:
-                _vary_continuous_attacks_randomly(self, i)
+                _vary_continuous_onsets_randomly(self, i)
 
-    def rel_attacks_to_rhythm(
+    def rel_onsets_to_rhythm(
         self, offset=0, first_var_only=False, comma=fractions.Fraction(1, 5000)
     ):
 
         if first_var_only:
             # For use with Grid
-            rel_attacks = self.rel_attacks[0]  # pylint: disable=no-member
+            rel_onsets = self.rel_onsets[0]  # pylint: disable=no-member
         else:
-            rel_attacks = self.rel_attacks.reshape(  # pylint: disable=no-member
+            rel_onsets = self.rel_onsets.reshape(  # pylint: disable=no-member
                 -1
             )
 
@@ -380,36 +437,30 @@ class ContinuousRhythmicObject(RhythmicDict):
             durs = self.durs.reshape(-1)
         except AttributeError:
             # Grid does not have durs attribute.
-            durs = rel_attacks
+            durs = rel_onsets
 
-        for i, rel_attack in enumerate(rel_attacks):
-            frac_rel_attack = fractions.Fraction(rel_attack).limit_denominator(
+        for i, rel_onset in enumerate(rel_onsets):
+            frac_rel_onset = fractions.Fraction(rel_onset).limit_denominator(
                 max_denominator=100000
             )
             frac_dur = fractions.Fraction(durs[i]).limit_denominator(
                 max_denominator=100000
             )
-            if frac_rel_attack == 0:
+            if frac_rel_onset == 0:
                 continue
             self[offset] = frac_dur
-            offset += frac_rel_attack
-            # if rel_attack == 0:
+            offset += frac_rel_onset
+            # if rel_onset == 0:
             #     continue
             # self[offset] = durs[i]
-            # offset += rel_attack
+            # offset += rel_onset
 
-        for attack_i, attack_time in enumerate(self.attack_times[:-1]):
-            overlap = (
-                attack_time
-                + self[attack_time]
-                - self.attack_times[attack_i + 1]
-            )
+        for onset_i, onset in enumerate(self.onsets[:-1]):
+            overlap = onset + self[onset] - self.onsets[onset_i + 1]
             if overlap > comma:
                 warnings.warn("Unexpectedly long overlap in rhythm")
             if overlap > 0:
-                self[attack_time] = (
-                    self.attack_times[attack_i + 1] - attack_time
-                )
+                self[onset] = self.onsets[onset_i + 1] - onset
 
 
 def get_cont_rhythm(er, voice_i):
@@ -417,12 +468,12 @@ def get_cont_rhythm(er, voice_i):
     if rhythm.num_notes == 0:
         print(f"Notice: voice {voice_i} is empty.")
         return rhythm
-    rhythm.generate_continuous_attacks()
+    rhythm.generate_continuous_onsets()
     rhythm.fill_continuous_durs()
-    rhythm.vary_continuous_attacks()
+    rhythm.vary_continuous_onsets()
     rhythm.truncate_or_extend()
     rhythm.round()
-    rhythm.rel_attacks_to_rhythm()
+    rhythm.rel_onsets_to_rhythm()
     return rhythm
 
 
@@ -441,8 +492,8 @@ class ContinuousRhythm(Rhythm, ContinuousRhythmicObject):
             "vary_rhythm_consistently",
         )
         self.increment = self.rhythm_len * self.cont_var_increment
-        self.rel_attacks = np.zeros((self.num_cont_rhythm_vars, self.num_notes))
-        self.durs = np.full_like(self.rel_attacks, self.min_dur)
+        self.rel_onsets = np.zeros((self.num_cont_rhythm_vars, self.num_notes))
+        self.durs = np.full_like(self.rel_onsets, self.min_dur)
         self.deltas = None
         if (
             self.rhythm_len < self.pattern_len
@@ -458,7 +509,7 @@ class ContinuousRhythm(Rhythm, ContinuousRhythmicObject):
             (self.dur_density * self.rhythm_len, self.rhythm_len)
         )
         actual_total_dur = self.durs[0].sum()
-        available_durs = self.rel_attacks[0] - self.durs[0]
+        available_durs = self.rel_onsets[0] - self.durs[0]
         if not available_durs.sum():
             return
         available_durs_prop = available_durs / available_durs.sum()
@@ -475,13 +526,13 @@ class ContinuousRhythm(Rhythm, ContinuousRhythmicObject):
             deltas = (weights_3) * (missing_dur * available_durs_prop)
             self.durs[0] += deltas
             overlaps = np.where(
-                self.durs[0] - self.rel_attacks[0] > 0,
-                self.durs[0] - self.rel_attacks[0],
+                self.durs[0] - self.rel_onsets[0] > 0,
+                self.durs[0] - self.rel_onsets[0],
                 0,
             )
             self.durs[0] -= overlaps
             actual_total_dur = self.durs[0].sum()
-            available_durs = self.rel_attacks[0] - self.durs[0]
+            available_durs = self.rel_onsets[0] - self.durs[0]
             if available_durs.sum():
                 available_durs_prop = available_durs / available_durs.sum()
                 missing_dur = target_total_dur - actual_total_dur
@@ -501,33 +552,33 @@ class ContinuousRhythm(Rhythm, ContinuousRhythmicObject):
             min_j = (
                 math.ceil(self.pattern_len / self.rhythm_len) * self.num_notes
             )
-            temp_rel_attacks = np.zeros((self.num_cont_rhythm_vars, min_j))
+            temp_rel_onsets = np.zeros((self.num_cont_rhythm_vars, min_j))
             temp_durs = np.zeros((self.num_cont_rhythm_vars, min_j))
-            for var_i, var in enumerate(self.rel_attacks):
-                temp_rel_attacks[var_i, : self.num_notes] = var
+            for var_i, var in enumerate(self.rel_onsets):
+                temp_rel_onsets[var_i, : self.num_notes] = var
                 temp_durs[var_i, : self.num_notes] = self.durs[var_i]
                 time = self.rhythm_len
                 j = self.num_notes
                 while time < self.pattern_len:
-                    attack_dur = var[j % self.num_notes]
+                    onset_dur = var[j % self.num_notes]
                     dur = self.durs[var_i][j % self.num_notes]
-                    temp_rel_attacks[var_i, j] = min(
-                        (attack_dur, self.pattern_len - time)
+                    temp_rel_onsets[var_i, j] = min(
+                        (onset_dur, self.pattern_len - time)
                     )
                     temp_durs[var_i, j] = min((dur, self.pattern_len - time))
-                    time += attack_dur
+                    time += onset_dur
                     j += 1
                 if j < min_j:
                     min_j = j
             # If each repetition of the rhythm doesn't have the same number of
             # notes, the algorithm won't work. For now we just address this
             # by truncating to the minumum length.
-            self.rel_attacks = temp_rel_attacks[:, :min_j]
+            self.rel_onsets = temp_rel_onsets[:, :min_j]
             self.durs = temp_durs[:, :min_j]
-            # If we truncated one (or conceivably more) attacks from some
-            # rhythms, we need to add the extra duration back on to the attacks.
+            # If we truncated one (or conceivably more) onsets from some
+            # rhythms, we need to add the extra duration back on to the onsets.
             # Thus doesn't effect rhythm.durs, however.
-            for var_i, var in enumerate(self.rel_attacks):
+            for var_i, var in enumerate(self.rel_onsets):
                 var[min_j - 1] += self.pattern_len - var.sum()
 
 
@@ -535,23 +586,23 @@ def print_rhythm(rhythm):
     if isinstance(rhythm, list):
         strings = []
         strings.append("#" * 51)
-        for attack_time in rhythm:
-            strings.append("Attack:{:>10.3}" "".format(float(attack_time)))
+        for onset in rhythm:
+            strings.append("Attack:{:>10.3}" "".format(float(onset)))
         strings.append("\n")
         print("\n".join(strings)[:-2])
     elif isinstance(rhythm, dict):
         strings = []
         strings.append("#" * 51)
-        for attack_time, dur in rhythm.items():
+        for onset, dur in rhythm.items():
             strings.append(
                 "Attack:{:>10.3}  Duration:{:>10.3}"
-                "".format(float(attack_time), float(dur))
+                "".format(float(onset), float(dur))
             )
         strings.append("\n")
         print("\n".join(strings)[:-2])
 
 
-def _get_attack_positions(er, voice_i):
+def _get_onset_positions(er, voice_i):
 
     if er.cont_rhythms == "grid":
         return list(er.grid.keys())
@@ -559,18 +610,18 @@ def _get_attack_positions(er, voice_i):
     rhythm_len, sub_subdiv_props = er.get(
         voice_i, "rhythm_len", "sub_subdiv_props"
     )
-    attack_positions = []
+    onset_positions = []
     time_i = 0
     time = fractions.Fraction(0, 1)
     while time < rhythm_len:
-        attack_positions.append(time)
+        onset_positions.append(time)
         time += sub_subdiv_props[time_i % len(sub_subdiv_props)]
         time_i += 1
 
-    return attack_positions
+    return onset_positions
 
 
-def _get_available_for_hocketing(er, voice_i, prev_rhythms, attack_positions):
+def _get_available_for_hocketing(er, voice_i, prev_rhythms, onset_positions):
     """Used for er.hocketing. Returns those subdivisions
     that are available for to be selected. (I.e., those
     that do not belong to the previously constructed
@@ -578,43 +629,43 @@ def _get_available_for_hocketing(er, voice_i, prev_rhythms, attack_positions):
     beats in other voices.)
     """
     out = []
-    for attack in attack_positions:
+    for onset in onset_positions:
         write = True
         for prev_rhythm in prev_rhythms:
-            if attack in prev_rhythm:
+            if onset in prev_rhythm:
                 write = False
                 break
         if not write:
             continue
-        for oblig_attacks_i, oblig_attacks in enumerate(er.obligatory_attacks):
-            if oblig_attacks_i != voice_i % len(er.obligatory_attacks):
-                if attack in oblig_attacks:
+        for oblig_onsets_i, oblig_onsets in enumerate(er.obligatory_onsets):
+            if oblig_onsets_i != voice_i % len(er.obligatory_onsets):
+                if onset in oblig_onsets:
                     write = False
                     break
         if not write:
             continue
-        out.append(attack)
+        out.append(onset)
 
     return out
 
 
 def _get_available_for_quasi_unison(
-    er, voice_i, leader_rhythms, attack_positions
+    er, voice_i, leader_rhythms, onset_positions
 ):
     out = []
-    for attack in attack_positions:
+    for onset in onset_positions:
         go_on = False
         for leader_rhythm in leader_rhythms:
-            if attack in leader_rhythm:
-                out.append(attack)
+            if onset in leader_rhythm:
+                out.append(onset)
                 go_on = False
                 break
         if go_on:
             continue
-        for oblig_attacks_i, oblig_attacks in enumerate(er.obligatory_attacks):
-            if oblig_attacks_i != voice_i % len(er.obligatory_attacks):
-                if attack in oblig_attacks:
-                    out.append(attack)
+        for oblig_onsets_i, oblig_onsets in enumerate(er.obligatory_onsets):
+            if oblig_onsets_i != voice_i % len(er.obligatory_onsets):
+                if onset in oblig_onsets:
+                    out.append(onset)
                     break
 
     return out
@@ -628,7 +679,7 @@ def _get_leader_available(er, remaining, leader_rhythm):
         leader_time = time
 
         while leader_time >= 0 and leader_time not in leader_rhythm:
-            leader_time -= er.attack_subdivision_gcd
+            leader_time -= er.onset_subdivision_gcd
         if leader_time < 0:
             continue
         if time <= leader_time + leader_rhythm[leader_time]:
@@ -637,120 +688,120 @@ def _get_leader_available(er, remaining, leader_rhythm):
     return out
 
 
-def _get_attack_list(
-    er, voice_i, attack_positions, available, leader_rhythm=None
+def _get_onset_list(
+    er, voice_i, onset_positions, available, leader_rhythm=None
 ):
-    def _add_attack(attack, remove_oblig=False):
+    def _add_onset(onset, remove_oblig=False):
         nonlocal num_notes
-        out.append(attack)
+        out.append(onset)
         num_notes -= 1
-        if attack in remaining:
-            remaining.remove(attack)
-        if attack in available:
-            available.remove(attack)
-        if remove_oblig and attack in oblig:
-            oblig.remove(attack)
+        if onset in remaining:
+            remaining.remove(onset)
+        if onset in available:
+            available.remove(onset)
+        if remove_oblig and onset in oblig:
+            oblig.remove(onset)
 
-    num_notes, obligatory_attacks = er.get(
-        voice_i, "num_notes", "obligatory_attacks"
+    num_notes, obligatory_onsets = er.get(
+        voice_i, "num_notes", "obligatory_onsets"
     )
-    remaining = attack_positions.copy()
+    remaining = onset_positions.copy()
     # I'm not sure whether it's necessary to make a copy of obligatory
-    #   attacks, but doing it to be safe, for now, at least.
-    oblig = obligatory_attacks.copy()
+    #   onsets, but doing it to be safe, for now, at least.
+    oblig = obligatory_onsets.copy()
 
     out = []
     if voice_i == 0 and er.force_foot_in_bass in (
         "first_beat",
         "global_first_beat",
     ):
-        _add_attack(fractions.Fraction(0, 1), remove_oblig=True)
+        _add_onset(fractions.Fraction(0, 1), remove_oblig=True)
 
-    for attack in oblig:
-        if attack in remaining:
-            _add_attack(attack)
+    for onset in oblig:
+        if onset in remaining:
+            _add_onset(onset)
         else:
             print(
-                f"Note: obligatory attack {attack} in voice {voice_i} "
+                f"Note: obligatory onset {onset} in voice {voice_i} "
                 "not available."
             )
 
     while num_notes and available:
         choose = random.choice(available)
-        _add_attack(choose)
+        _add_onset(choose)
 
     if num_notes and leader_rhythm:
         available = _get_leader_available(er, remaining, leader_rhythm)
         while num_notes and available:
             choose = random.choice(available)
-            _add_attack(choose)
+            _add_onset(choose)
 
-    # Add attacks to obtain the specified number of notes.
+    # Add onsets to obtain the specified number of notes.
     for _ in range(num_notes):
         choose = random.choice(remaining)
-        _add_attack(choose)
+        _add_onset(choose)
     out.sort()
 
     return out
 
 
-def _get_attack_dict_and_durs_to_next_attack(er, voice_i, attack_list):
-    """Returns a dictionary of attacks (with minimum durations)
-    as well as a dictionary of the duration between attacks
+def _get_onset_dict_and_durs_to_next_onset(er, voice_i, onset_list):
+    """Returns a dictionary of onsets (with minimum durations)
+    as well as a dictionary of the duration between onsets
     """
 
     min_dur, rhythm_len = er.get(voice_i, "min_dur", "rhythm_len")
 
-    attack_times = {}
+    onsets = {}
     durs = {}
 
-    for attack_i, attack in enumerate(attack_list):
+    for onset_i, onset in enumerate(onset_list):
         try:
-            dur = attack_list[attack_i + 1] - attack
+            dur = onset_list[onset_i + 1] - onset
         except IndexError:
-            dur = rhythm_len - attack
+            dur = rhythm_len - onset
             if er.overlap:
-                dur += attack_list[0]
-        durs[attack] = dur
-        attack_times[attack] = min(dur, min_dur)
+                dur += onset_list[0]
+        durs[onset] = dur
+        onsets[onset] = min(dur, min_dur)
 
-    return attack_times, durs
+    return onsets, durs
 
 
-def _fill_quasi_unison_durs(er, voice_i, attacks, leader_rhythm):
-    leader_durs_at_attacks = {}
+def _fill_quasi_unison_durs(er, voice_i, onsets, leader_rhythm):
+    leader_durs_at_onsets = {}
     rhythm_length = er.rhythm_len[voice_i]
     time = rhythm_length
-    leader_attack = rhythm_length
+    leader_onset = rhythm_length
     current_dur = 0
     while time > 0:
-        time -= er.attack_subdivision_gcd
+        time -= er.onset_subdivision_gcd
         if time in leader_rhythm:
             leader_dur = leader_rhythm[time]
-            if time + leader_dur == leader_attack:
+            if time + leader_dur == leader_onset:
                 current_dur += leader_dur
             else:
                 current_dur = leader_dur
-            if time in attacks:
-                leader_durs_at_attacks[time] = current_dur
-            leader_attack = time
+            if time in onsets:
+                leader_durs_at_onsets[time] = current_dur
+            leader_onset = time
 
-    return leader_durs_at_attacks
+    return leader_durs_at_onsets
 
 
-def _fill_attack_durs(
-    er, voice_i, attacks, durs, leader_i=None, leader_durs_at_attacks=()
+def _fill_onset_durs(
+    er, voice_i, onsets, durs, leader_i=None, leader_durs_at_onsets=()
 ):
-    """Adds to the attack durations until the specified
+    """Adds to the onset durations until the specified
     density is achieved. Doesn't return anything, just
-    alters the attack dictionary in place.
+    alters the onset dictionary in place.
     """
 
-    def _fill_attacks_sub(dur_dict, remaining_dict):
-        actual_total_dur = sum(attacks.values())
+    def _fill_onsets_sub(dur_dict, remaining_dict):
+        actual_total_dur = sum(onsets.values())
         available = []
-        for time in attacks:
-            if time in dur_dict and attacks[time] != dur_dict[time]:
+        for time in onsets:
+            if time in dur_dict and onsets[time] != dur_dict[time]:
                 available.append(time)
 
         # We round dur_density to the nearest dur_subdivision
@@ -759,17 +810,16 @@ def _fill_attack_durs(
             and available
         ):
             choose = random.choice(available)
-            remaining_dur = remaining_dict[choose] - attacks[choose]
+            remaining_dur = remaining_dict[choose] - onsets[choose]
             dur_to_add = min(dur_subdivision, remaining_dur)
-            attacks[choose] += dur_to_add
+            onsets[choose] += dur_to_add
             actual_total_dur += dur_to_add
             if (
-                attacks[choose] >= dur_dict[choose]
-                or attacks[choose] >= remaining_dict[choose]
+                onsets[choose] >= dur_dict[choose]
+                or onsets[choose] >= remaining_dict[choose]
             ):
                 available.remove(choose)
 
-        # breakpoint()
         return actual_total_dur
 
     dur_subdivision = er.get(voice_i, "dur_subdivision")
@@ -778,18 +828,18 @@ def _fill_attack_durs(
         er.dur_density[voice_i] * er.rhythm_len[voice_i]
     ).limit_denominator(max_denominator=8192)
 
-    if leader_durs_at_attacks:
-        actual_total_dur = _fill_attacks_sub(leader_durs_at_attacks, durs)
+    if leader_durs_at_onsets:
+        actual_total_dur = _fill_onsets_sub(leader_durs_at_onsets, durs)
         if (actual_total_dur >= target_total_dur) or (
             er.rhythmic_quasi_unison_constrain
-            and er.attack_density[voice_i] < er.attack_density[leader_i]
+            and er.onset_density[voice_i] < er.onset_density[leader_i]
         ):
             return
 
-    _fill_attacks_sub(durs, durs)
+    _fill_onsets_sub(durs, durs)
 
 
-def _add_comma(er, voice_i, attacks):
+def _add_comma(er, voice_i, onsets):
 
     # This function shouldn't run with any sort of continuous rhythms.
     if er.cont_rhythms != "none":
@@ -797,7 +847,7 @@ def _add_comma(er, voice_i, attacks):
 
     # LONGTERM verify that this is working with complex subdivisions
     rhythm_length = er.rhythm_len[voice_i]
-    subdivision = er.attack_subdivision[voice_i]
+    subdivision = er.onset_subdivision[voice_i]
     comma_position = er.comma_position[voice_i]
 
     if comma_position == "end":
@@ -807,35 +857,34 @@ def _add_comma(er, voice_i, attacks):
 
     if isinstance(comma_position, int):
         comma_i = comma_position
-        if comma_i > len(attacks):
+        if comma_i > len(onsets):
             warnings.warn(
                 f"Comma position for voice {voice_i} greater "
-                "than number of attacks in rhythm. Choosing a "
+                "than number of onsets in rhythm. Choosing a "
                 "random comma position."
             )
-            comma_i = random.randrange(len(attacks))
+            comma_i = random.randrange(len(onsets))
     else:
         comma_i = 0
 
         if comma_position == "middle":
-            comma_i = random.randrange(1, len(attacks))
+            comma_i = random.randrange(1, len(onsets))
         else:
-            comma_i = random.randrange(len(attacks) + 1)
+            comma_i = random.randrange(len(onsets) + 1)
 
-    attack_list = list(attacks.keys())
+    onset_list = list(onsets.keys())
 
-    for attack in attack_list[comma_i:]:
-        new_attack = attack + comma
-        dur = attacks[attack]
-        del attacks[attack]
-        attacks[new_attack] = dur
+    for onset in onset_list[comma_i:]:
+        new_onset = onset + comma
+        dur = onsets[onset]
+        del onsets[onset]
+        onsets[new_onset] = dur
 
 
-def _fit_rhythm_to_pattern(er, voice_i, attacks):
-    """If the rhythm is shorter than the pattern, extend it as necessary.
-    """
+def _fit_rhythm_to_pattern(er, voice_i, onsets):
+    """If the rhythm is shorter than the pattern, extend it as necessary."""
 
-    if not attacks:
+    if not onsets:
         return
 
     rhythm_len, pattern_len, num_notes = er.get(
@@ -845,25 +894,25 @@ def _fit_rhythm_to_pattern(er, voice_i, attacks):
     if rhythm_len >= pattern_len:
         return
 
-    attack_list = list(attacks.keys())
+    onset_list = list(onsets.keys())
 
-    attack_i = num_notes
+    onset_i = num_notes
     while True:
-        prev_attack = attack_list[attack_i % len(attack_list)]
-        new_attack = prev_attack + rhythm_len * (attack_i // num_notes)
-        if new_attack >= pattern_len:
+        prev_onset = onset_list[onset_i % len(onset_list)]
+        new_onset = prev_onset + rhythm_len * (onset_i // num_notes)
+        if new_onset >= pattern_len:
             break
-        attacks[new_attack] = attacks[prev_attack]
-        attack_i += 1
+        onsets[new_onset] = onsets[prev_onset]
+        onset_i += 1
 
-    last_attack_time = max(attacks)
-    last_attack_dur = attacks[last_attack_time]
-    overshoot = last_attack_time + last_attack_dur - pattern_len
+    last_onset = max(onsets)
+    last_onset_dur = onsets[last_onset]
+    overshoot = last_onset + last_onset_dur - pattern_len
     if er.overlap:
-        first_attack_time = min(attacks)
-        overshoot -= first_attack_time
+        first_onset = min(onsets)
+        overshoot -= first_onset
     if overshoot > 0:
-        attacks[last_attack_time] -= overshoot
+        onsets[last_onset] -= overshoot
 
 
 def generate_rhythm1(er, voice_i, prev_rhythms=()):
@@ -874,7 +923,7 @@ def generate_rhythm1(er, voice_i, prev_rhythms=()):
             hocketed rhythms.
 
     Returns:
-        A dictionary of (Fraction:attack time, Fraction:duration) pairs.
+        A dictionary of (Fraction:onset time, Fraction:duration) pairs.
     """
 
     if voice_i in er.rhythmic_unison_followers:
@@ -884,14 +933,14 @@ def generate_rhythm1(er, voice_i, prev_rhythms=()):
     if er.cont_rhythms == "all":
         return get_cont_rhythm(er, voice_i)
 
-    subdivision = er.attack_subdivision[voice_i]
+    subdivision = er.onset_subdivision[voice_i]
 
     if er.min_dur[voice_i] == 0:
         er.min_dur[voice_i] = subdivision
     if er.dur_subdivision[voice_i] == 0:
         er.dur_subdivision[voice_i] = subdivision
 
-    attack_positions = _get_attack_positions(er, voice_i)
+    onset_positions = _get_onset_positions(er, voice_i)
 
     available = []
     if voice_i in er.hocketing_followers:
@@ -899,80 +948,88 @@ def generate_rhythm1(er, voice_i, prev_rhythms=()):
         for leader_i in er.hocketing_followers[voice_i]:
             leaders.append(prev_rhythms[leader_i % len(prev_rhythms)])
         available = _get_available_for_hocketing(
-            er, voice_i, leaders, attack_positions
+            er, voice_i, leaders, onset_positions
         )
     elif voice_i in er.rhythmic_quasi_unison_followers:
         leader_i = er.rhythmic_quasi_unison_followers[voice_i]
         leader_rhythm = prev_rhythms[leader_i % len(prev_rhythms)]
         available = _get_available_for_quasi_unison(
-            er, voice_i, [prev_rhythms[leader_i],], attack_positions
+            er,
+            voice_i,
+            [
+                prev_rhythms[leader_i],
+            ],
+            onset_positions,
         )
 
         if (
-            er.attack_density[voice_i] > er.attack_density[leader_i]
+            er.onset_density[voice_i] > er.onset_density[leader_i]
             and er.rhythmic_quasi_unison_constrain
         ):
-            attack_list = _get_attack_list(
-                er, voice_i, attack_positions, available, leader_rhythm
+            onset_list = _get_onset_list(
+                er, voice_i, onset_positions, available, leader_rhythm
             )
         else:
-            attack_list = _get_attack_list(
-                er, voice_i, attack_positions, available
+            onset_list = _get_onset_list(
+                er, voice_i, onset_positions, available
             )
 
-        attacks, durs = _get_attack_dict_and_durs_to_next_attack(
-            er, voice_i, attack_list
+        onsets, durs = _get_onset_dict_and_durs_to_next_onset(
+            er, voice_i, onset_list
         )
 
-        leader_durs_at_attacks = _fill_quasi_unison_durs(
-            er, voice_i, attacks, prev_rhythms[leader_i],
-        )
-
-        _fill_attack_durs(
+        leader_durs_at_onsets = _fill_quasi_unison_durs(
             er,
             voice_i,
-            attacks,
+            onsets,
+            prev_rhythms[leader_i],
+        )
+
+        _fill_onset_durs(
+            er,
+            voice_i,
+            onsets,
             durs,
             leader_i=leader_i,
-            leader_durs_at_attacks=leader_durs_at_attacks,
+            leader_durs_at_onsets=leader_durs_at_onsets,
         )
         if er.cont_rhythms == "grid":
-            rhythm = er.grid.return_varied_rhythm(er, attacks, voice_i)
+            rhythm = er.grid.return_varied_rhythm(er, onsets, voice_i)
             return rhythm
-        _add_comma(er, voice_i, attacks)
+        _add_comma(er, voice_i, onsets)
 
-        _fit_rhythm_to_pattern(er, voice_i, attacks)
+        _fit_rhythm_to_pattern(er, voice_i, onsets)
 
         rhythm = Rhythm(er, voice_i)
-        rhythm.data = attacks
+        rhythm.data = onsets
         return rhythm
     # LONGTERM consolidate this code with above (a lot of duplication!)
-    attack_list = _get_attack_list(er, voice_i, attack_positions, available)
+    onset_list = _get_onset_list(er, voice_i, onset_positions, available)
 
-    attacks, durs = _get_attack_dict_and_durs_to_next_attack(
-        er, voice_i, attack_list
+    onsets, durs = _get_onset_dict_and_durs_to_next_onset(
+        er, voice_i, onset_list
     )
 
-    _fill_attack_durs(er, voice_i, attacks, durs)
+    _fill_onset_durs(er, voice_i, onsets, durs)
 
-    _add_comma(er, voice_i, attacks)
+    _add_comma(er, voice_i, onsets)
 
     if er.cont_rhythms == "grid":
-        rhythm = er.grid.return_varied_rhythm(er, attacks, voice_i)
+        rhythm = er.grid.return_varied_rhythm(er, onsets, voice_i)
         return rhythm
 
-    _fit_rhythm_to_pattern(er, voice_i, attacks)
+    _fit_rhythm_to_pattern(er, voice_i, onsets)
 
     rhythm = Rhythm(er, voice_i)
-    rhythm.data = attacks
+    rhythm.data = onsets
     return rhythm
 
 
-def update_pattern_voice_leading_order(er, rhythms):
+def update_pattern_vl_order(er, rhythms):
     if er.cont_rhythms != "none":
         er.num_notes_by_pattern = [
-            len(rhythms[voice_i].rel_attacks[0])
-            # len(rhythms[voice_i].attack_times[0])
+            len(rhythms[voice_i].rel_onsets[0])
+            # len(rhythms[voice_i].onsets[0])
             for voice_i in range(er.num_voices)
         ]
         # The next lines seem a little kludgy, it would be nice to
@@ -1000,14 +1057,14 @@ def update_pattern_voice_leading_order(er, rhythms):
     #     er.num_notes_by_truncated_pattern = [0 for i in range(er.num_voices)]
     #     for voice_i, truncate_len in enumerate(truncate_lens):
     #         if truncate_len:
-    #             for attack_time in rhythms[voice_i]:
-    #                 if attack_time >= truncate_len:
+    #             for onset in rhythms[voice_i]:
+    #                 if onset >= truncate_len:
     #                     break
     #                 er.num_notes_by_truncated_pattern[voice_i] += 1
 
     totals = [0 for rhythm in rhythms]
-    for i in range(len(er.pattern_voice_leading_order)):
-        vl_item = er.pattern_voice_leading_order[i]
+    for i in range(len(er.pattern_vl_order)):
+        vl_item = er.pattern_vl_order[i]
         start_rhythm_i = totals[vl_item.voice_i]
         if (
             er.truncate_patterns
@@ -1024,8 +1081,9 @@ def update_pattern_voice_leading_order(er, rhythms):
             totals[vl_item.voice_i] += er.num_notes_by_pattern[vl_item.voice_i]
         # end_rhythm_i is the first note *after* the rhythm ends
         end_rhythm_i = totals[vl_item.voice_i]
-        vl_item.start_rhythm_i = start_rhythm_i
-        vl_item.end_rhythm_i = end_rhythm_i
+        vl_item.start_i = start_rhythm_i
+        vl_item.end_i = end_rhythm_i
+        vl_item.len = end_rhythm_i - start_rhythm_i
 
 
 class Grid(ContinuousRhythmicObject):
@@ -1081,7 +1139,7 @@ class Grid(ContinuousRhythmicObject):
         #   er_preprocess.py. It would also be possible to use num_notes instead,
         #   with a somewhat different result.
         num_divs = [
-            int(er.rhythm_len[voice_i] / er.attack_subdivision[voice_i])
+            int(er.rhythm_len[voice_i] / er.onset_subdivision[voice_i])
             for voice_i in range(er.num_voices)
         ]
         # Although "num_notes" is perhaps not the best name for the next
@@ -1102,7 +1160,7 @@ class Grid(ContinuousRhythmicObject):
             print(
                 "Notice: 'cont_rhythms' will have no effect because "
                 "'min_dur' is the maximum value compatible with "
-                "'rhythm_len' and 'attack_subdivision'. "
+                "'rhythm_len' and 'onset_subdivision'. "
                 "To allow 'cont_rhythms' to have an effect, reduce 'min_dur' "
                 f"to less than {self.min_dur}"
             )
@@ -1110,14 +1168,14 @@ class Grid(ContinuousRhythmicObject):
         else:
             self.full = False
 
-        self.rel_attacks = np.zeros((self.num_cont_rhythm_vars, self.num_notes))
+        self.rel_onsets = np.zeros((self.num_cont_rhythm_vars, self.num_notes))
         self.deltas = None
-        self.generate_continuous_attacks()
-        self.vary_continuous_attacks(apply_to_durs=False)
+        self.generate_continuous_onsets()
+        self.vary_continuous_onsets(apply_to_durs=False)
         self.round()
-        self.rel_attacks_to_rhythm(first_var_only=True)
-        self.cum_attacks = self.rel_attacks.cumsum(axis=1) - self.rel_attacks
-        # self.dur_deltas is the difference between the rel_attack time
+        self.rel_onsets_to_rhythm(first_var_only=True)
+        self.cum_onsets = self.rel_onsets.cumsum(axis=1) - self.rel_onsets
+        # self.dur_deltas is the difference between the rel_onset time
         # of each grid position on each variation. (The first row is
         # the difference between the last variation and the first.)
         # It would have been better to do this directly when creating
@@ -1127,35 +1185,35 @@ class Grid(ContinuousRhythmicObject):
         self.dur_deltas = np.zeros((self.num_cont_rhythm_vars, self.num_notes))
         for var_i in range(self.num_cont_rhythm_vars):
             self.dur_deltas[var_i] = (
-                self.rel_attacks[var_i]
-                - self.rel_attacks[(var_i - 1) % self.num_cont_rhythm_vars]
+                self.rel_onsets[var_i]
+                - self.rel_onsets[(var_i - 1) % self.num_cont_rhythm_vars]
             )
 
-    def return_varied_rhythm(self, er, attacks, voice_i):
+    def return_varied_rhythm(self, er, onsets, voice_i):
         def _get_grid_indices():
             indices = []
             for time_i, time in enumerate(self):
-                if time in attacks:
+                if time in onsets:
                     indices.append(time_i)
             return indices
 
-        rhythm_num_notes = len(attacks)
+        rhythm_num_notes = len(onsets)
         if rhythm_num_notes == 0:
             print(f"Notice: voice {voice_i} is empty.")
             return ContinuousRhythm(er, voice_i)
         indices = _get_grid_indices()
-        var_attacks = np.zeros((self.num_cont_rhythm_vars, rhythm_num_notes))
-        rel_attacks = np.zeros((self.num_cont_rhythm_vars, rhythm_num_notes))
-        # var_attacks[0] = list(attacks.keys())
+        var_onsets = np.zeros((self.num_cont_rhythm_vars, rhythm_num_notes))
+        rel_onsets = np.zeros((self.num_cont_rhythm_vars, rhythm_num_notes))
+        # var_onsets[0] = list(onsets.keys())
         var_durs = np.zeros((self.num_cont_rhythm_vars, rhythm_num_notes))
-        var_durs[0] = list(attacks.values())
+        var_durs[0] = list(onsets.values())
         for var_i in range(self.num_cont_rhythm_vars):
-            var_attacks[var_i] = self.cum_attacks[var_i, indices]
-            rel_attacks[var_i, : rhythm_num_notes - 1] = np.diff(
-                var_attacks[var_i]
+            var_onsets[var_i] = self.cum_onsets[var_i, indices]
+            rel_onsets[var_i, : rhythm_num_notes - 1] = np.diff(
+                var_onsets[var_i]
             )
-            rel_attacks[var_i, rhythm_num_notes - 1] = (
-                self.rhythm_len - var_attacks[var_i, rhythm_num_notes - 1]
+            rel_onsets[var_i, rhythm_num_notes - 1] = (
+                self.rhythm_len - var_onsets[var_i, rhythm_num_notes - 1]
             )
             if var_i != 0:
                 var_durs[var_i] = (
@@ -1163,17 +1221,16 @@ class Grid(ContinuousRhythmicObject):
                 )
 
         rhythm = ContinuousRhythm(er, voice_i)
-        rhythm.rel_attacks = rel_attacks
+        rhythm.rel_onsets = rel_onsets
         rhythm.durs = var_durs
         rhythm.truncate_or_extend()
         rhythm.round()
-        rhythm.rel_attacks_to_rhythm()
+        rhythm.rel_onsets_to_rhythm()
         return rhythm
 
 
 def rhythms_handler(er):
-    """According to the parameters in er, return rhythms.
-    """
+    """According to the parameters in er, return rhythms."""
 
     if er.rhythms_specified_in_midi:
         rhythms = er_midi.get_rhythms_from_midi(er)
@@ -1193,56 +1250,56 @@ def rhythms_handler(er):
             "No notes in any rhythms! This is a bug in the script."
         )
 
-    update_pattern_voice_leading_order(er, rhythms)
+    update_pattern_vl_order(er, rhythms)
 
     return rhythms
 
 
-def get_attack_order(er):
+def get_onset_order(er):
 
     end_time = max(er.pattern_len)
 
     class NoMoreAttacksError(Exception):
         pass
 
-    def _get_next_attack():
-        next_attack = end_time ** 2
+    def _get_next_onset():
+        next_onset = end_time ** 2
         increment_i = -1
         for i in er.voice_order:
             try:
-                next_attack_in_voice = attacks[i][voice_is[i]]
+                next_onset_in_voice = onsets[i][voice_is[i]]
             except IndexError:
                 continue
-            if next_attack_in_voice < next_attack:
-                next_attack = next_attack_in_voice
+            if next_onset_in_voice < next_onset:
+                next_onset = next_onset_in_voice
                 increment_i = i
-        if next_attack == end_time ** 2:
-            raise NoMoreAttacksError("No more attacks found")
+        if next_onset == end_time ** 2:
+            raise NoMoreAttacksError("No more onsets found")
         voice_is[increment_i] += 1
-        return next_attack, increment_i
+        return next_onset, increment_i
 
-    attacks = [list(rhythm.keys()) for rhythm in er.rhythms]
+    onsets = [list(rhythm.keys()) for rhythm in er.rhythms]
     voice_is = [0 for i in range(er.num_voices)]
-    ordered_attacks = []
+    ordered_onsets = []
     while True:
         try:
-            next_attack, voice_i = _get_next_attack()
+            next_onset, voice_i = _get_next_onset()
         except NoMoreAttacksError:
             break
-        if next_attack >= end_time:
+        if next_onset >= end_time:
             break
-        ordered_attacks.append((voice_i, next_attack))
+        ordered_onsets.append((voice_i, next_onset))
 
-    return ordered_attacks
+    return ordered_onsets
 
 
-def rest_before_next_note(rhythm, attack, min_rest_len):
-    release = attack + rhythm[attack]
-    for next_attack in sorted(rhythm.keys()):
-        if next_attack >= release:
+def rest_before_next_note(rhythm, onset, min_rest_len):
+    release = onset + rhythm[onset]
+    for next_onset in sorted(rhythm.keys()):
+        if next_onset >= release:
             break
 
-    gap = next_attack - release
+    gap = next_onset - release
     if gap >= min_rest_len:
         return True
 

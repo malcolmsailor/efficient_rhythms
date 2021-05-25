@@ -4,19 +4,19 @@ import src.er_misc_funcs as er_misc_funcs
 
 
 def check_parallel_intervals(
-    er, super_pattern, new_pitch, prev_pitch, new_attack_time, voice_i
+    er, super_pattern, new_pitch, prev_pitch, new_onset, voice_i
 ):
     # LONGTERM make this work with `existing_voices?`
     for other_voice in super_pattern.voices:
         if other_voice.voice_i == voice_i:
             continue
         try:
-            other_voice[new_attack_time]
+            other_voice[new_onset]
         except KeyError:
             continue
         # LONGTERM should we stop at rests?
         other_prev_pitch, other_pitch = other_voice.get_last_n_pitches(
-            2, new_attack_time
+            2, new_onset
         )
         if -1 in (other_prev_pitch, other_pitch):
             continue
@@ -48,32 +48,30 @@ def get_foot_to_force(er, voice_i, harmony_i):
     return min(foot_pitches)
 
 
-def get_repeated_pitch(poss_note, min_attack_time=0):
-    prev_pitch = poss_note.voice.get_prev_pitch(
-        poss_note.attack_time, min_attack_time=min_attack_time
-    )
-    if prev_pitch < 0:
+def get_repeated_pitch(poss_note, min_onset=0):
+    # prev_pitch = poss_note.voice.get_prev_pitch(
+    #     poss_note.onset, min_onset=min_onset
+    # )
+    if poss_note.onset < min_onset or poss_note.prev_pitch < 0:
         return None
-    return prev_pitch
+    return poss_note.prev_pitch
 
 
 # LONGTERM consolidate this and previous function!
-def get_repeated_pitch2(voice, attack_time, min_attack_time=0):
-    prev_pitch = voice.get_prev_pitch(
-        attack_time, min_attack_time=min_attack_time
-    )
+def get_repeated_pitch2(voice, onset, min_onset=0):
+    prev_pitch = voice.get_prev_pitch(onset, min_onset=min_onset)
     if prev_pitch < 0:
         return None
     return prev_pitch
 
 
 def check_harmonic_intervals(
-    er, super_pattern, pitch, attack_time, dur, voice_i, other_voices="all"
+    er, score, pitch, onset, dur, voice_i, other_voices=None
 ):
     # LONGTERM poss_note
 
-    other_pitches = super_pattern.get_all_pitches_sounding_during_duration(
-        attack_time, dur, voices=other_voices
+    other_pitches = score.get_all_ps_sounding_in_dur(
+        onset, dur, voices=other_voices
     )
 
     if not other_pitches:
@@ -82,9 +80,11 @@ def check_harmonic_intervals(
     forbidden_interval_modulo = er.get(voice_i, "forbidden_interval_modulo")
 
     if (
-        forbidden_interval_modulo != [0,]
-        and er_misc_funcs.check_modulo(attack_time, forbidden_interval_modulo)
-        != 0
+        forbidden_interval_modulo
+        != [
+            0,
+        ]
+        and er_misc_funcs.check_modulo(onset, forbidden_interval_modulo) != 0
     ):
         return True
 
@@ -94,12 +94,18 @@ def check_harmonic_intervals(
         ):
             return False
 
+    for forbidden_interval in er.forbidden_intervals:
+        if er_misc_funcs.check_interval(
+            forbidden_interval, pitch, other_pitches
+        ):
+            return False
+
     return True
 
 
-def check_if_chord_tone(er, super_pattern, attack_time, pitch):
+def check_if_chord_tone(er, super_pattern, onset, pitch):
 
-    harmony_i = super_pattern.get_harmony_i(attack_time)
+    harmony_i = super_pattern.get_harmony_i(onset)
     pc_chord = er.get(harmony_i, "pc_chords")
     if pitch % er.tet in pc_chord:
         return True
@@ -107,9 +113,8 @@ def check_if_chord_tone(er, super_pattern, attack_time, pitch):
     return False
 
 
-def check_consonance(er, super_pattern, pitch, attack_time, dur, voice_i):
-    """Checks whether the given pitch fulfills the consonance parameters.
-    """
+def check_consonance(er, super_pattern, pitch, onset, dur, voice_i):
+    """Checks whether the given pitch fulfills the consonance parameters."""
     # LONGTERM use possible note class (but first update voice-leading functions.)
 
     if er.consonance_treatment == "none":
@@ -119,20 +124,23 @@ def check_consonance(er, super_pattern, pitch, attack_time, dur, voice_i):
         voice_i, "consonance_modulo", "min_dur_for_cons_treatment"
     )
     if (
-        consonance_modulo != [0,]
-        and er_misc_funcs.check_modulo(attack_time, consonance_modulo) != 0
+        consonance_modulo
+        != [
+            0,
+        ]
+        and er_misc_funcs.check_modulo(onset, consonance_modulo) != 0
     ):
-        # MAYBE comma here, to allow for very close attacks?
+        # MAYBE comma here, to allow for very close onsets?
         return True
 
     if er.consonance_treatment == "all_durs":
-        other_pitches = super_pattern.get_all_pitches_sounding_during_duration(
-            attack_time, dur, min_dur=min_dur
+        other_pitches = super_pattern.get_all_ps_sounding_in_dur(
+            onset, dur, min_dur=min_dur
         )
 
     else:
-        other_pitches = super_pattern.get_simultaneously_attacked_pitches(
-            attack_time, min_dur=min_dur
+        other_pitches = super_pattern.get_simultaneously_onset_ps(
+            onset, min_dur=min_dur
         )
 
     if not other_pitches:
@@ -228,9 +236,7 @@ def check_melodic_intervals(
         return None
 
     if isinstance(new_p, int):
-        new_p = [
-            new_p,
-        ]
+        new_p = [new_p]
 
     if max_interval == 0 and min_interval == 0:
         return new_p

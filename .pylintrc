@@ -16,9 +16,13 @@ ignore-patterns=test_settings.*\.py,
 # From https://github.com/PyCQA/pylint/issues/2686#issuecomment-621927895
 init-hook=
     sys.path.append(os.getcwd());
-    from src.pylint_ignore import PylintIgnorePaths;
+    from src.third_party.pylint_ignore import PylintIgnorePaths;
     PylintIgnorePaths(
-        'favorites', 'tests/test_settings', 'examples', 'docs/resources/midani'
+        'favorites',
+        'tests/test_settings',
+        'docs/examples',
+        'docs/resources/midani',
+        'src/third_party',
     )
 
 [MESSAGES CONTROL]
@@ -34,6 +38,8 @@ disable=too-many-instance-attributes,
     too-many-arguments,
     too-many-nested-blocks,
     missing-function-docstring,
+    invalid-name,
+    pointless-string-statement,
     duplicate-code,
     too-many-lines,
     fixme,
