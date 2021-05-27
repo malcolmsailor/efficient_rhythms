@@ -17,7 +17,9 @@ CSS_PATH1 = "resources/third_party/github-markdown-css/github-markdown.css"
 CSS_PATH2 = "resources/css/markdown-body.css"
 
 # Constants for processing settings.py
-SETTINGS_PY_PATH = os.path.join(SCRIPT_DIR, "../../../src/er_settings.py")
+SETTINGS_PY_PATH = os.path.join(
+    SCRIPT_DIR, "../../../efficient_rhythms/er_settings.py"
+)
 SETTINGS_MD_PATH = os.path.join(SCRIPT_DIR, "../../settings.md")
 SETTINGS_HTML_PATH = os.path.join(SCRIPT_DIR, "../../settings.html")
 SETTINGS_N_INTRO_PARAGRAPHS_TO_TRIM = 2

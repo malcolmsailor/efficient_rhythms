@@ -17,9 +17,9 @@ import re
 import shutil
 from fractions import Fraction
 
-import src.er_misc_funcs as er_misc_funcs
-import src.er_spelling as er_spelling
-import src.er_tuning as er_tuning
+from . import er_misc_funcs
+from . import er_spelling
+from . import er_tuning
 
 
 TEMP_NOTATION_DIR = os.path.join(

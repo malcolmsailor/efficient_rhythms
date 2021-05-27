@@ -11,7 +11,7 @@ import typing
 
 import numpy as np
 
-import src.er_shell_constants as er_shell_constants
+from . import er_shell_constants
 
 MAX_DENOMINATOR = 8192
 

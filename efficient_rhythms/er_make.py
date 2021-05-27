@@ -9,12 +9,12 @@ import random
 
 import numpy as np
 
-import src.er_classes as er_classes
-import src.er_exceptions as er_exceptions
-import src.er_make2 as er_make2
-import src.er_misc_funcs as er_misc_funcs
-import src.er_rhythm as er_rhythm
-import src.er_vl_strict_and_flex as er_vl_strict_and_flex
+from . import er_classes
+from . import er_exceptions
+from . import er_make2
+from . import er_misc_funcs
+from . import er_rhythm
+from . import er_vl_strict_and_flex
 
 
 class PossibleNoteError(Exception):

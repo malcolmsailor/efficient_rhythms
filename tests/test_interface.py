@@ -11,7 +11,7 @@ sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 )
 
-import src.er_changers as er_changers  # pylint: disable=wrong-import-position
+import efficient_rhythms.er_changers as er_changers  # pylint: disable=wrong-import-position
 
 SCRIPT_DIR = os.path.dirname((os.path.realpath(__file__)))
 EFFRHY = os.path.join(SCRIPT_DIR, "../efficient_rhythms.py")

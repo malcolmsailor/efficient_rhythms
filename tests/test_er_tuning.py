@@ -6,8 +6,8 @@ sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 )
 
-import src.er_tuning as er_tuning  # pylint: disable=wrong-import-position
-import src.er_constants as er_constants  # pylint: disable=wrong-import-position
+import efficient_rhythms.er_tuning as er_tuning  # pylint: disable=wrong-import-position
+import efficient_rhythms.er_constants as er_constants  # pylint: disable=wrong-import-position
 
 
 def test_approximate_just_interval():

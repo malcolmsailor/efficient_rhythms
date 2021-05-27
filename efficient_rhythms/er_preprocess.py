@@ -12,15 +12,15 @@ import warnings
 
 import numpy as np
 
-import src.er_choirs as er_choirs
-import src.er_constants as er_constants
-import src.er_interface as er_interface
-import src.er_midi as er_midi
-import src.er_misc_funcs as er_misc_funcs
-import src.er_randomize as er_randomize
-import src.er_settings as er_settings
-import src.er_tuning as er_tuning
-import src.er_voice_leadings as er_voice_leadings
+from . import er_choirs
+from . import er_constants
+from . import er_interface
+from . import er_midi
+from . import er_misc_funcs
+from . import er_randomize
+from . import er_settings
+from . import er_tuning
+from . import er_voice_leadings
 
 SCRIPT_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
 

@@ -5,16 +5,17 @@ import os
 import random
 import sys
 
-import src.er_choirs as er_choirs
-import src.er_exceptions as er_exceptions
-import src.er_interface as er_interface
-import src.er_make as er_make
-import src.er_misc_funcs as er_misc_funcs
-import src.er_midi as er_midi
-import src.er_midi_settings as er_midi_settings
-import src.er_output_notation as er_output_notation
-import src.er_playback as er_playback
-import src.er_preprocess as er_preprocess
+
+from . import er_choirs
+from . import er_exceptions
+from . import er_interface
+from . import er_make
+from . import er_misc_funcs
+from . import er_midi
+from . import er_midi_settings
+from . import er_output_notation
+from . import er_playback
+from . import er_preprocess
 
 # MAYBE wait a moment when sending midi messages, see if this solves
 #   issue of first messages sometimes not sounding?
@@ -125,7 +126,3 @@ def main():
             args.verovio_arguments,
             debug=args.debug,
         )
-
-
-if __name__ == "__main__":
-    main()

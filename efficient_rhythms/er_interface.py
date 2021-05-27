@@ -9,14 +9,14 @@ import subprocess
 import sys
 import traceback
 
-import src.er_changers as er_changers
-import src.er_midi as er_midi
-import src.er_misc_funcs as er_misc_funcs
-import src.er_output_notation as er_output_notation
-import src.er_playback as er_playback
-import src.er_prob_funcs as er_prob_funcs
-import src.er_settings as er_settings
-import src.er_shell_constants as er_shell_constants
+from . import er_changers
+from . import er_midi
+from . import er_misc_funcs
+from . import er_output_notation
+from . import er_playback
+from . import er_prob_funcs
+from . import er_settings
+from . import er_shell_constants
 
 
 SELECT_HEADER = "Active filters and transformers"

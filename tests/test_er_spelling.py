@@ -6,7 +6,7 @@ sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 )
 
-import src.er_spelling as er_spelling  # pylint: disable=wrong-import-position
+import efficient_rhythms.er_spelling as er_spelling  # pylint: disable=wrong-import-position
 
 
 def test_build_spelling_dict():

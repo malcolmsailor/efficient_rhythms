@@ -4,8 +4,8 @@ import numbers
 import os
 import typing
 
-import src.er_misc_funcs as er_misc_funcs
-import src.er_tuning as er_tuning
+from . import er_misc_funcs
+from . import er_tuning
 
 # User probably won't need to access these settings
 @dataclasses.dataclass
@@ -13,7 +13,9 @@ class MidiSettings:
 
     num_tracks: int = None  # Not to be set by user, will be overwritten later
     _output_path: str = None  # Not to be set by user, will be overwritten later
-    _original_path: str = None  # Not to be set by user, will be overwritten later
+    _original_path: str = (
+        None  # Not to be set by user, will be overwritten later
+    )
     output_dir: str = None  #
     tet: int = 12
     time_sig: typing.Tuple[int, int] = None
@@ -52,7 +54,8 @@ class MidiSettings:
         if self._output_path is None or os.path.exists(self._output_path):
             self._output_path = er_misc_funcs.get_changed_midi_path(
                 os.path.join(
-                    self.output_dir, (os.path.basename(self._original_path)),
+                    self.output_dir,
+                    (os.path.basename(self._original_path)),
                 )
             )
         return self._output_path

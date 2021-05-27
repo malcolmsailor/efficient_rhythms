@@ -6,10 +6,10 @@ import traceback
 sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 )
-import src.er_choirs as er_choirs  # pylint: disable=wrong-import-position
-import src.er_make as er_make  # pylint: disable=wrong-import-position
-import src.er_midi as er_midi  # pylint: disable=wrong-import-position
-import src.er_preprocess as er_preprocess  # pylint: disable=wrong-import-position
+import efficient_rhythms.er_choirs as er_choirs  # pylint: disable=wrong-import-position
+import efficient_rhythms.er_make as er_make  # pylint: disable=wrong-import-position
+import efficient_rhythms.er_midi as er_midi  # pylint: disable=wrong-import-position
+import efficient_rhythms.er_preprocess as er_preprocess  # pylint: disable=wrong-import-position
 
 
 def assay_write_track_names(

@@ -3,8 +3,8 @@ import typing
 
 import numpy as np
 
-import src.er_misc_funcs as er_misc_funcs
-import src.er_tuning as er_tuning
+from . import er_misc_funcs
+from . import er_tuning
 
 
 def get_accidental(n, flat_sign="b"):

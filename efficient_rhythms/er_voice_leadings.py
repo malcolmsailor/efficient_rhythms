@@ -1,7 +1,7 @@
 import functools
 import numpy as np
 
-import src.er_exceptions as er_exceptions
+from . import er_exceptions
 
 
 class VoiceLeadingOrderItem:

@@ -9,8 +9,8 @@ import warnings
 
 import numpy as np
 
-import src.er_midi as er_midi
-import src.er_misc_funcs as er_misc_funcs
+from . import er_midi
+from . import er_misc_funcs
 
 RANDOM_CARD = 200
 COMMA = 10 ** -5

@@ -1,6 +1,6 @@
 import collections
 
-import src.er_misc_funcs as er_misc_funcs
+from . import er_misc_funcs
 
 
 class ErMakeException(Exception):
