@@ -9,6 +9,7 @@ import random
 
 import numpy as np
 
+from . import er_choirs
 from . import er_classes
 from . import er_exceptions
 from . import er_make2
@@ -1030,6 +1031,8 @@ def make_super_pattern(er):
     if er.extend_bass_range_for_foots > 0:
         transpose_foots(er, super_pattern)
 
+    complete_pattern(er, super_pattern)
+
     return super_pattern
 
 
@@ -1209,6 +1212,8 @@ def complete_pattern(er, super_pattern):
             er.total_len,
             apply_to_existing_voices=er.existing_voices_transpose,
         )
+
+    er_choirs.assign_choirs(er, super_pattern)
 
 
 try:
