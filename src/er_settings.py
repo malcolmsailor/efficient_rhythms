@@ -1,4 +1,6 @@
 import dataclasses
+from dataclasses import field as fld
+import re
 import numbers
 import typing
 from fractions import Fraction
@@ -12,6 +14,24 @@ DEFAULT_NUM_HARMONIES = 4
 # somewhat more likely
 MAX_SUPER_PATTERN_LEN = 128
 MAX_SUPER_PATTERN_LEN_RANDOM = 64
+
+CATEGORIES = (
+    "global",
+    "midi",
+    "scale_and_chord",
+    "tuning",
+    "voice_leading",
+    "chord_tones",
+    "melody",
+    "consonance",
+    "rhythm",
+    "choir",
+    "transpose",
+    "tempo",
+    "shell_only",
+    "randomization",
+)
+
 
 # TODO use this type annotation for sequences that can be ndarrays as well
 # Note that Seq_or_arr will match strings
@@ -148,7 +168,7 @@ class ERSettings:
             voices have the same length; if a sequence, sets the length for each
             voice individually.  If `pattern_len` is 0 or negative, it will be
             assigned the length of the complete harmonic progression (determined
-            by `harmony_len` and `num_harmonies`)
+            by `harmony_len` and `num_harmonies`).
 
             If `cont_rhythms != "none"`, then this argument must consist of
             a single number.
@@ -176,7 +196,7 @@ class ERSettings:
             If `cont_rhythms != "none"`, then this argument must consist of
             a single number, which must be the same as the value of
             `pattern_len`.
-        num_harmonies: int. The number of harmonies in the pattern. If a
+        num_harmonies: int. The number of harmonies in the pattern. If
             not passed, the length of `foot_pcs` will be assigned to this
             setting. If `foot_pcs` is not passed either, will be set to a
             default value of 4.
@@ -956,6 +976,7 @@ class ERSettings:
             `2`, then times of 2, 4, 6, ... will be equivalent to 0. Has no
             effect if `obligatory_onsets` is empty.
             Default: 4
+        # TODO how to handle possible values can be string *or* int
         comma_position: string, int, or sequence of strings and/or ints.  If
             the `rhythm_len` is not divisible by `onset_subdivision`
             (e.g., `rhythm_len == 3` and `onset_subdivision == 2/3`), then
@@ -1190,7 +1211,7 @@ class ERSettings:
             following settings. Note that the limits imposed by `voice_ranges`
             are not followed by the transposition settings.
             Default: False
-        tranpose_type: string. For explanation of the possible values, see the
+        transpose_type: string. For explanation of the possible values, see the
             discussion of "generic" and "specific" transposition above.
             Possible values:
                 "generic"
@@ -1333,19 +1354,73 @@ class ERSettings:
     ###################################################################
     # Global settings
 
-    # LONGTERM type checking? (is there a library that will perform this automatically?)
-    seed: int = None
-    output_path: str = "EFFRHY/output_midi/effrhy.mid"
-    overwrite: bool = False
+    # I retrieve the "doc" attribute of the dataclass fields dynamically, from
+    # the docstring of this class. But the metadata dict is wrapped in
+    # MappingProxyType() which does not support assignment. Thus, in order to
+    # support assignment, I add a "mutable_attrs" dict to metadata.
 
-    tet: int = 12
+    # I also tried getting parsing the docstring into per-field docs immediately
+    # after defining it in the class body. But if I do that, I can't see a way
+    # of programmatically retrieving the correct docstring fragment (i.e.,
+    # the fragment that describes "seed" when assigning the field for `seed`)
+    # and I don't want to have to hard-code all of these.
+    seed: typing.Union[int, None] = fld(
+        default=None,
+        metadata={
+            "mutable_attrs": {},
+            "category": "global",
+            "priority": 0,
+        },
+    )
+    output_path: str = fld(
+        default="EFFRHY/output_midi/effrhy.mid",
+        metadata={
+            "mutable_attrs": {},
+            "category": "global",
+            "shell_only": True,
+            "priority": 0,
+        },
+    )
+    overwrite: bool = fld(
+        default=False,
+        metadata={
+            "mutable_attrs": {},
+            "category": "global",
+            "shell_only": True,
+            "priority": 0,
+        },
+    )
+
+    tet: int = fld(
+        default=12,
+        metadata={
+            "mutable_attrs": {},
+            "category": "global",
+            "priority": 0,
+            "val_dict": {"min_": (1,), "max_": (1200,)},
+        },
+    )
 
     # num_voices: int. If existing_voices is employed, num_voices
     #   specifies the number of voices that will be added, not the total
     #   number including the existing voices.
 
-    num_voices: int = 3
-    num_reps_super_pattern: int = 2
+    num_voices: int = fld(
+        default=3,
+        metadata={
+            "mutable_attrs": {},
+            "category": "global",
+            "priority": 0,
+        },
+    )
+    num_reps_super_pattern: int = fld(
+        default=2,
+        metadata={
+            "mutable_attrs": {},
+            "category": "global",
+            "priority": 0,
+        },
+    )
 
     # existing_voices: string. The path to a midi file that contains
     #   some pre-existing music to be added to. The chord/scale parameters
@@ -1364,84 +1439,342 @@ class ERSettings:
     # existing_voices_erase_choirs: boolean.
     # existing_voices_max_denominator: int. If 0 or false, set to 8192.
 
-    existing_voices: str = ""
-    existing_voices_offset: numbers.Number = 0
-    bass_in_existing_voice: bool = False
-    existing_voices_repeat: bool = True
-    existing_voices_transpose: bool = True
-    existing_voices_erase_choirs: bool = True  # LONGTERM implement False
-    existing_voices_max_denominator: int = 8192
+    existing_voices: str = fld(
+        default="",
+        metadata={
+            "mutable_attrs": {},
+            "category": "global",
+            "shell_only": True,
+            "priority": 0,
+        },
+    )
+    existing_voices_offset: numbers.Number = fld(
+        default=0,
+        metadata={
+            "mutable_attrs": {},
+            "category": "global",
+            "shell_only": True,
+            "priority": 0,
+        },
+    )
+    bass_in_existing_voice: bool = fld(
+        default=False,
+        metadata={
+            "mutable_attrs": {},
+            "category": "global",
+            "shell_only": True,
+            "priority": 0,
+        },
+    )
+    existing_voices_repeat: bool = fld(
+        default=True,
+        metadata={
+            "mutable_attrs": {},
+            "category": "global",
+            "shell_only": True,
+            "priority": 0,
+        },
+    )
+    existing_voices_transpose: bool = fld(
+        default=True,
+        metadata={
+            "mutable_attrs": {},
+            "category": "global",
+            "shell_only": True,
+            "priority": 0,
+        },
+    )
+    existing_voices_erase_choirs: bool = fld(
+        default=True,
+        metadata={
+            "mutable_attrs": {},
+            "category": "global",
+            "shell_only": True,
+            "priority": 0,
+        },
+    )  # LONGTERM implement False
+    existing_voices_max_denominator: int = fld(
+        default=8192,
+        metadata={
+            "mutable_attrs": {},
+            "category": "global",
+            "shell_only": True,
+            "priority": 0,
+        },
+    )
 
     # LONGTERM make continuous rhythms work with non-identical pattern_len/rhythm_len
     # TODO Document conditions specific to continuous rhythms
     pattern_len: typing.Union[
         numbers.Number, typing.Sequence[numbers.Number]
-    ] = 0
+    ] = fld(
+        default=0,
+        metadata={
+            "mutable_attrs": {},
+            "category": "global",
+            "priority": 0,
+        },
+    )
     rhythm_len: typing.Union[
-        numbers.Number, typing.Sequence[numbers.Number]
-    ] = None
-    num_harmonies: int = None
-    pitch_loop: typing.Union[int, typing.Sequence[int]] = ()
-    hard_pitch_loop: bool = False
-    time_sig: typing.Tuple[int, int] = None
+        numbers.Number, typing.Sequence[numbers.Number], None
+    ] = fld(
+        default=None,
+        metadata={
+            "mutable_attrs": {},
+            "category": "global",
+            "priority": 0,
+        },
+    )
+    num_harmonies: typing.Union[int, None] = fld(
+        default=None,
+        metadata={
+            "mutable_attrs": {},
+            "category": "global",
+            "priority": 0,
+        },
+    )
+    time_sig: typing.Union[None, typing.Tuple[int, int]] = fld(
+        default=None,
+        metadata={
+            "mutable_attrs": {},
+            "category": "global",
+            "priority": 0,
+        },
+    )
     harmony_len: typing.Union[
         numbers.Number, typing.Sequence[numbers.Number]
-    ] = 4
-    truncate_patterns: bool = False
-    max_super_pattern_len: numbers.Number = None
+    ] = fld(
+        default=4,
+        metadata={
+            "mutable_attrs": {},
+            "category": "global",
+            "priority": 0,
+        },
+    )
+    truncate_patterns: bool = fld(
+        default=False,
+        metadata={
+            "mutable_attrs": {},
+            "category": "global",
+            "priority": 0,
+        },
+    )
+    max_super_pattern_len: typing.Union[None, numbers.Number] = fld(
+        default=None,
+        metadata={
+            "mutable_attrs": {},
+            "category": "global",
+            "priority": 0,
+        },
+    )
     voice_ranges: typing.Union[
         typing.Sequence[typing.Tuple[numbers.Number, numbers.Number]], str
-    ] = "CONTIGUOUS_OCTAVES * OCTAVE3 * C"
+    ] = fld(
+        default="CONTIGUOUS_OCTAVES * OCTAVE3 * C",
+        metadata={
+            "mutable_attrs": {},
+            "category": "global",
+            "priority": 0,
+        },
+    )
     hard_bounds: typing.Sequence[
         typing.Tuple[
             typing.Union[str, numbers.Number], typing.Union[str, numbers.Number]
         ]
-    ] = (
-        (
-            "OCTAVE0 * A",
-            "OCTAVE8 * C",
+    ] = fld(
+        default=(
+            (
+                "OCTAVE0 * A",
+                "OCTAVE8 * C",
+            ),
         ),
+        metadata={
+            "mutable_attrs": {},
+            "category": "global",
+            "priority": 0,
+        },
     )
     # MAYBE add other possible voice orders, e.g., (melody, bass, inner voices)
-    voice_order_str: str = "usual"
-    allow_voice_crossings: typing.Union[bool, typing.Sequence[bool]] = True
+    voice_order_str: str = fld(
+        default="usual",
+        metadata={
+            "mutable_attrs": {},
+            "category": "global",
+            "priority": 0,
+        },
+    )
+    allow_voice_crossings: typing.Union[bool, typing.Sequence[bool]] = fld(
+        default=True,
+        metadata={
+            "mutable_attrs": {},
+            "category": "global",
+            "priority": 0,
+        },
+    )
 
     ###################################################################
     # Scale and chord settings
-    scales_and_chords_specified_in_midi: str = None
-    foot_pcs: typing.Sequence[numbers.Number] = None
+    scales_and_chords_specified_in_midi: str = fld(
+        default=None,
+        metadata={
+            "mutable_attrs": {},
+            "category": "scale_and_chord",
+            "shell_only": True,
+            "priority": 0,
+        },
+    )
+    foot_pcs: typing.Union[None, typing.Sequence[numbers.Number]] = fld(
+        default=None,
+        metadata={
+            "mutable_attrs": {},
+            "category": "scale_and_chord",
+            "priority": 0,
+        },
+    )
     interval_cycle: typing.Union[
-        numbers.Number, typing.Sequence[numbers.Number]
-    ] = None
+        None, numbers.Number, typing.Sequence[numbers.Number]
+    ] = fld(
+        default=None,
+        metadata={
+            "mutable_attrs": {},
+            "category": "scale_and_chord",
+            "priority": 0,
+        },
+    )
     scales: typing.Sequence[
         typing.Union[str, typing.Sequence[numbers.Number]]
-    ] = dataclasses.field(default_factory=lambda: ["DIATONIC_SCALE"])
+    ] = fld(
+        default_factory=lambda: ["DIATONIC_SCALE"],
+        metadata={
+            "mutable_attrs": {},
+            "category": "scale_and_chord",
+            "priority": 0,
+        },
+    )
     # QUESTION is there a way to implement octave equivalence settings for
     #   chords here as well as for consonant_chords?
     chords: typing.Sequence[
         typing.Union[str, typing.Sequence[numbers.Number]]
-    ] = dataclasses.field(default_factory=lambda: ["MAJOR_TRIAD"])
+    ] = fld(
+        default_factory=lambda: ["MAJOR_TRIAD"],
+        metadata={
+            "mutable_attrs": {},
+            "category": "scale_and_chord",
+            "priority": 0,
+        },
+    )
 
     ###################################################################
     # Midi settings
 
-    voices_separate_tracks: bool = True
-    choirs_separate_tracks: bool = True
-    choirs_separate_channels: bool = True
-    write_program_changes: bool = True
-    humanize: bool = True
-    humanize_onset: float = 0.0
-    humanize_dur: float = 0.0
-    humanize_velocity: float = 0.1
-    humanize_tuning: float = 0.0
-    logic_type_pitch_bend: bool = False
-    num_channels_pitch_bend_loop: int = 9
-    pitch_bend_time_prop: numbers.Number = 0.75
+    voices_separate_tracks: bool = fld(
+        default=True,
+        metadata={
+            "mutable_attrs": {},
+            "category": "midi",
+            "priority": 0,
+        },
+    )
+    choirs_separate_tracks: bool = fld(
+        default=True,
+        metadata={
+            "mutable_attrs": {},
+            "category": "midi",
+            "priority": 0,
+        },
+    )
+    choirs_separate_channels: bool = fld(
+        default=True,
+        metadata={
+            "mutable_attrs": {},
+            "category": "midi",
+            "priority": 0,
+        },
+    )
+    write_program_changes: bool = fld(
+        default=True,
+        metadata={
+            "mutable_attrs": {},
+            "category": "midi",
+            "priority": 0,
+        },
+    )
+    humanize: bool = fld(
+        default=True,
+        metadata={
+            "mutable_attrs": {},
+            "category": "midi",
+            "priority": 0,
+        },
+    )
+    humanize_onset: float = fld(
+        default=0.0,
+        metadata={
+            "mutable_attrs": {},
+            "category": "midi",
+            "priority": 0,
+        },
+    )
+    humanize_dur: float = fld(
+        default=0.0,
+        metadata={
+            "mutable_attrs": {},
+            "category": "midi",
+            "priority": 0,
+        },
+    )
+    humanize_velocity: float = fld(
+        default=0.1,
+        metadata={
+            "mutable_attrs": {},
+            "category": "midi",
+            "priority": 0,
+        },
+    )
+    humanize_tuning: float = fld(
+        default=0.0,
+        metadata={
+            "mutable_attrs": {},
+            "category": "midi",
+            "priority": 0,
+        },
+    )
+    logic_type_pitch_bend: bool = fld(
+        default=False,
+        metadata={
+            "mutable_attrs": {},
+            "category": "midi",
+            "priority": 0,
+        },
+    )
+    num_channels_pitch_bend_loop: int = fld(
+        default=9,
+        metadata={
+            "mutable_attrs": {},
+            "category": "midi",
+            "priority": 0,
+        },
+    )
+    pitch_bend_time_prop: numbers.Number = fld(
+        default=0.75,
+        metadata={
+            "mutable_attrs": {},
+            "category": "midi",
+            "priority": 0,
+        },
+    )
 
     ###################################################################
     # Tuning settings
 
-    integers_in_12_tet: bool = False
+    integers_in_12_tet: bool = fld(
+        default=False,
+        metadata={
+            "mutable_attrs": {},
+            "category": "tuning",
+            "priority": 0,
+        },
+    )
 
     ###################################################################
     # Voice-leading settings
@@ -1453,173 +1786,727 @@ class ERSettings:
     #       These settings govern how the initial pattern is voice-led
     #       through subsequent harmonies.
 
-    parallel_voice_leading: bool = False
-    parallel_direction: int = 0
+    parallel_voice_leading: bool = fld(
+        default=False,
+        metadata={
+            "mutable_attrs": {},
+            "category": "voice_leading",
+            "priority": 0,
+        },
+    )
+    parallel_direction: int = fld(
+        default=0,
+        metadata={
+            "mutable_attrs": {},
+            "category": "voice_leading",
+            "priority": 0,
+        },
+    )
 
-    voice_lead_chord_tones: bool = False
+    voice_lead_chord_tones: bool = fld(
+        default=False,
+        metadata={
+            "mutable_attrs": {},
+            "category": "voice_leading",
+            "priority": 0,
+        },
+    )
 
     # LONGTERM address fact that otherwise forbidden intervals can occur
     #   if this setting is not "none"
 
-    preserve_foot_in_bass: str = "none"
+    preserve_foot_in_bass: str = fld(
+        default="none",
+        metadata={
+            "mutable_attrs": {},
+            "category": "voice_leading",
+            "priority": 0,
+            "possible_values": ("lowest", "all", "none"),
+        },
+    )
 
     # LONGTERM allow transposition by multiple octaves if necessary.
 
-    extend_bass_range_for_foots: numbers.Number = 0
-    constrain_voice_leading_to_ranges: bool = False
-    allow_flexible_voice_leading: bool = False
-    vl_maintain_consonance: bool = True
-    vl_maintain_limit_intervals: str = "across_harmonies"
+    extend_bass_range_for_foots: numbers.Number = fld(
+        default=0,
+        metadata={
+            "mutable_attrs": {},
+            "category": "voice_leading",
+            "priority": 0,
+        },
+    )
+    constrain_voice_leading_to_ranges: bool = fld(
+        default=False,
+        metadata={
+            "mutable_attrs": {},
+            "category": "voice_leading",
+            "priority": 0,
+        },
+    )
+    allow_flexible_voice_leading: bool = fld(
+        default=False,
+        metadata={
+            "mutable_attrs": {},
+            "category": "voice_leading",
+            "priority": 0,
+        },
+    )
+    vl_maintain_consonance: bool = fld(
+        default=True,
+        metadata={
+            "mutable_attrs": {},
+            "category": "voice_leading",
+            "priority": 0,
+        },
+    )
+    vl_maintain_limit_intervals: str = fld(
+        default="across_harmonies",
+        metadata={
+            "mutable_attrs": {},
+            "category": "voice_leading",
+            "priority": 0,
+            "possible_values": ("all", "across_harmonies", "none"),
+        },
+    )
     # LONGTERM maintain max_repeated_notes
-    vl_maintain_forbidden_intervals: bool = True
-    vl_maintain_prohibit_parallels: bool = True
+    vl_maintain_forbidden_intervals: bool = fld(
+        default=True,
+        metadata={
+            "mutable_attrs": {},
+            "category": "voice_leading",
+            "priority": 0,
+        },
+    )
+    vl_maintain_prohibit_parallels: bool = fld(
+        default=True,
+        metadata={
+            "mutable_attrs": {},
+            "category": "voice_leading",
+            "priority": 0,
+        },
+    )
 
     ###################################################################
     # Chord tones settings
 
-    chord_tone_and_foot_disable: bool = False
-    chord_tone_selection: bool = True
-    chord_tone_prob_func: str = "linear"
-    max_n_between_chord_tones: int = 4
-    min_prob_chord_tone: float = 0.25
-    try_to_force_non_chord_tones: bool = False
-    len_to_force_chord_tone: int = 1
-    scale_chord_tone_prob_by_dur: bool = True
-    scale_chord_tone_neutral_dur: numbers.Number = 0.5
-    scale_short_chord_tones_down: bool = False
+    chord_tone_and_foot_disable: bool = fld(
+        default=False,
+        metadata={
+            "mutable_attrs": {},
+            "category": "chord_tones",
+            "priority": 0,
+        },
+    )
+    chord_tone_selection: bool = fld(
+        default=True,
+        metadata={
+            "mutable_attrs": {},
+            "category": "chord_tones",
+            "priority": 0,
+        },
+    )
+    chord_tone_prob_func: str = fld(
+        default="linear",
+        metadata={
+            "mutable_attrs": {},
+            "category": "chord_tones",
+            "priority": 0,
+        },
+    )
+    max_n_between_chord_tones: int = fld(
+        default=4,
+        metadata={
+            "mutable_attrs": {},
+            "category": "chord_tones",
+            "priority": 0,
+        },
+    )
+    min_prob_chord_tone: float = fld(
+        default=0.25,
+        metadata={
+            "mutable_attrs": {},
+            "category": "chord_tones",
+            "priority": 0,
+        },
+    )
+    try_to_force_non_chord_tones: bool = fld(
+        default=False,
+        metadata={
+            "mutable_attrs": {},
+            "category": "chord_tones",
+            "priority": 0,
+        },
+    )
+    len_to_force_chord_tone: int = fld(
+        default=1,
+        metadata={
+            "mutable_attrs": {},
+            "category": "chord_tones",
+            "priority": 0,
+        },
+    )
+    scale_chord_tone_prob_by_dur: bool = fld(
+        default=True,
+        metadata={
+            "mutable_attrs": {},
+            "category": "chord_tones",
+            "priority": 0,
+        },
+    )
+    scale_chord_tone_neutral_dur: numbers.Number = fld(
+        default=0.5,
+        metadata={
+            "mutable_attrs": {},
+            "category": "chord_tones",
+            "priority": 0,
+        },
+    )
+    scale_short_chord_tones_down: bool = fld(
+        default=False,
+        metadata={
+            "mutable_attrs": {},
+            "category": "chord_tones",
+            "priority": 0,
+        },
+    )
     # LONGTERM what about chord tone *after* rests?
     chord_tone_before_rests: typing.Union[
         numbers.Number, typing.Sequence[numbers.Number]
-    ] = 0.26
+    ] = fld(
+        default=0.26,
+        metadata={
+            "mutable_attrs": {},
+            "category": "chord_tones",
+            "priority": 0,
+        },
+    )
     chord_tones_no_diss_treatment: typing.Union[
         bool, typing.Sequence[bool]
-    ] = False
-    force_chord_tone: str = "none"
-    chord_tones_sync_onset_in_all_voices: bool = False
-    force_foot_in_bass: str = "none"
+    ] = fld(
+        default=False,
+        metadata={
+            "mutable_attrs": {},
+            "category": "chord_tones",
+            "priority": 0,
+        },
+    )
+    force_chord_tone: str = fld(
+        default="none",
+        metadata={
+            "mutable_attrs": {},
+            "category": "chord_tones",
+            "priority": 0,
+            "possible_values": (
+                "global_first_beat",
+                "global_first_note",
+                "first_beat",
+                "first_note",
+                "none",
+            ),
+        },
+    )
+    chord_tones_sync_onset_in_all_voices: bool = fld(
+        default=False,
+        metadata={
+            "mutable_attrs": {},
+            "category": "chord_tones",
+            "priority": 0,
+        },
+    )
+    force_foot_in_bass: str = fld(
+        default="none",
+        metadata={
+            "mutable_attrs": {},
+            "category": "chord_tones",
+            "priority": 0,
+            "possible_values": (
+                "global_first_beat",
+                "global_first_note",
+                "first_beat",
+                "first_note",
+                "none",
+            ),
+        },
+    )
 
     ###################################################################
     # Melody settings
 
-    prefer_small_melodic_intervals: bool = True
-    prefer_small_melodic_intervals_coefficient: numbers.Number = 1
-    unison_weighted_as: int = "FIFTH"
+    prefer_small_melodic_intervals: bool = fld(
+        default=True,
+        metadata={
+            "mutable_attrs": {},
+            "category": "melody",
+            "priority": 0,
+        },
+    )
+    prefer_small_melodic_intervals_coefficient: numbers.Number = fld(
+        default=1,
+        metadata={
+            "mutable_attrs": {},
+            "category": "melody",
+            "priority": 0,
+        },
+    )
+    unison_weighted_as: int = fld(
+        default="FIFTH",
+        metadata={
+            "mutable_attrs": {},
+            "category": "melody",
+            "priority": 0,
+        },
+    )
 
     # LONGTERM min rest value across which limit intervals do not apply
     # LONGTERM avoid enforcing limit intervals with voice-led foot
 
     max_interval: typing.Union[
         str, numbers.Number, typing.Sequence[typing.Union[str, numbers.Number]]
-    ] = "-OCTAVE"
+    ] = fld(
+        default="-OCTAVE",
+        metadata={
+            "mutable_attrs": {},
+            "category": "melody",
+            "priority": 0,
+        },
+    )
     max_interval_for_non_chord_tones: typing.Union[
         str, numbers.Number, typing.Sequence[typing.Union[str, numbers.Number]]
-    ] = "take_from_max_interval"
+    ] = fld(
+        default="take_from_max_interval",  # TODO document this!
+        metadata={
+            "mutable_attrs": {},
+            "category": "melody",
+            "priority": 0,
+        },
+    )
     min_interval: typing.Union[
-        str, numbers.Number, typing.Sequence[typing.Union[str, numbers.Number]]
-    ] = None
+        None,
+        str,
+        numbers.Number,
+        typing.Sequence[typing.Union[str, numbers.Number]],
+    ] = fld(
+        default=None,
+        metadata={
+            "mutable_attrs": {},
+            "category": "melody",
+            "priority": 0,
+        },
+    )
     min_interval_for_non_chord_tones: typing.Union[
         str, numbers.Number, typing.Sequence[typing.Union[str, numbers.Number]]
-    ] = "take_from_min_interval"
+    ] = fld(
+        default="take_from_min_interval",
+        metadata={
+            "mutable_attrs": {},
+            "category": "melody",
+            "priority": 0,
+        },
+    )
 
     # LONGTERM apply on a per-voice basis
-    force_repeated_notes: bool = False
+    force_repeated_notes: bool = fld(
+        default=False,
+        metadata={
+            "mutable_attrs": {},
+            "category": "melody",
+            "priority": 0,
+        },
+    )
     # max_repeated_notes only applies to the initial pattern, not to
     # the subsequent voice-leading (LONGTERM: fix)
-    max_repeated_notes: int = 1
-    max_alternations: typing.Union[int, typing.Sequence[int]] = 2
-    # LONGTERM: prefer_alternations bool
-    prohibit_parallels: typing.Sequence[typing.Union[numbers.Number, str]] = (
-        "OCTAVE",
+    max_repeated_notes: int = fld(
+        default=1,
+        metadata={
+            "mutable_attrs": {},
+            "category": "melody",
+            "priority": 0,
+        },
     )
-    antiparallels: bool = True
+    max_alternations: typing.Union[int, typing.Sequence[int]] = fld(
+        default=2,
+        metadata={
+            "mutable_attrs": {},
+            "category": "melody",
+            "priority": 0,
+        },
+    )
+    pitch_loop: typing.Union[int, typing.Sequence[int]] = fld(
+        default=(),
+        metadata={
+            "mutable_attrs": {},
+            "category": "melody",
+            "priority": 0,
+        },
+    )
+    hard_pitch_loop: bool = fld(
+        default=False,
+        metadata={
+            "mutable_attrs": {},
+            "category": "melody",
+            "priority": 0,
+        },
+    )
+    # LONGTERM: prefer_alternations bool
+    prohibit_parallels: typing.Sequence[
+        typing.Union[numbers.Number, str]
+    ] = fld(
+        default=("OCTAVE",),
+        metadata={
+            "mutable_attrs": {},
+            "category": "melody",
+            "priority": 0,
+        },
+    )
+    antiparallels: bool = fld(
+        default=True,
+        metadata={
+            "mutable_attrs": {},
+            "category": "melody",
+            "priority": 0,
+        },
+    )
 
     # MAYBE think about other types of parallel motion (e.g.,
     #   choosing a generic harmonic interval and maintaining it)
     # MAYBE make force_parallel_motion interact with consonance settings better
     force_parallel_motion: typing.Union[
         bool, typing.Dict[typing.Sequence[int], bool]
-    ] = False
+    ] = fld(
+        default=False,
+        metadata={
+            "mutable_attrs": {},
+            "category": "melody",
+            "priority": 0,
+        },
+    )
 
     ###################################################################
     # Consonance and dissonance settings
 
-    consonance_type: str = "pairwise"
-    consonance_treatment: str = "all_onsets"
+    consonance_type: str = fld(
+        default="pairwise",
+        metadata={
+            "mutable_attrs": {},
+            "category": "consonance",
+            "priority": 0,
+            "possible_values": (
+                "pairwise",
+                "chordwise",
+            ),
+        },
+    )
+    consonance_treatment: str = fld(
+        default="all_onsets",
+        metadata={
+            "mutable_attrs": {},
+            "category": "consonance",
+            "priority": 0,
+            "possible_values": ("all_onsets", "all_durs", "none"),
+        },
+    )
     # MAYBE all modulos have boolean to be truncated by initial_pattern_len?
     consonance_modulo: typing.Union[
         numbers.Number,
         typing.Sequence[numbers.Number],
         typing.Sequence[typing.Sequence[numbers.Number]],
-    ] = 0
-    min_dur_for_cons_treatment: numbers.Number = 0
-    forbidden_intervals: typing.Sequence[numbers.Number] = ()
-    forbidden_interval_classes: typing.Sequence[numbers.Number] = ()
+    ] = fld(
+        default=0,
+        metadata={
+            "mutable_attrs": {},
+            "category": "consonance",
+            "priority": 0,
+        },
+    )
+    min_dur_for_cons_treatment: numbers.Number = fld(
+        default=0,
+        metadata={
+            "mutable_attrs": {},
+            "category": "consonance",
+            "priority": 0,
+        },
+    )
+    forbidden_intervals: typing.Sequence[numbers.Number] = fld(
+        default=(),
+        metadata={
+            "mutable_attrs": {},
+            "category": "consonance",
+            "priority": 0,
+        },
+    )
+    forbidden_interval_classes: typing.Sequence[numbers.Number] = fld(
+        default=(),
+        metadata={
+            "mutable_attrs": {},
+            "category": "consonance",
+            "priority": 0,
+        },
+    )
     forbidden_interval_modulo: typing.Union[
         numbers.Number,
         typing.Sequence[numbers.Number],
         typing.Sequence[typing.Sequence[numbers.Number]],
-    ] = 0
-    exclude_augmented_triad: bool = True
-    consonances: typing.Sequence[
-        typing.Union[numbers.Number, str]
-    ] = "CONSONANCES"
-    invert_consonances: bool = False
+    ] = fld(
+        default=0,
+        metadata={
+            "mutable_attrs": {},
+            "category": "consonance",
+            "priority": 0,
+        },
+    )
+    exclude_augmented_triad: bool = fld(
+        default=True,
+        metadata={
+            "mutable_attrs": {},
+            "category": "consonance",
+            "priority": 0,
+        },
+    )
+    consonances: typing.Sequence[typing.Union[numbers.Number, str]] = fld(
+        default="CONSONANCES",
+        metadata={
+            "mutable_attrs": {},
+            "category": "consonance",
+            "priority": 0,
+        },
+    )
+    invert_consonances: bool = fld(
+        default=False,
+        metadata={
+            "mutable_attrs": {},
+            "category": "consonance",
+            "priority": 0,
+        },
+    )
     consonant_chords: typing.Sequence[
         typing.Sequence[typing.Union[numbers.Number, str]]
-    ] = (
-        "MAJOR_TRIAD",
-        "MINOR_TRIAD",
+    ] = fld(
+        default=(
+            "MAJOR_TRIAD",
+            "MINOR_TRIAD",
+        ),
+        metadata={
+            "mutable_attrs": {},
+            "category": "consonance",
+            "priority": 0,
+        },
     )
-    chord_octave_equi_type: str = "all"
-    chord_permit_doublings: str = "all"
+    chord_octave_equi_type: str = fld(
+        default="all",
+        metadata={
+            "mutable_attrs": {},
+            "category": "consonance",
+            "priority": 0,
+        },
+    )
+    chord_permit_doublings: str = fld(
+        default="all",
+        metadata={
+            "mutable_attrs": {},
+            "category": "consonance",
+            "priority": 0,
+            "possible_values": ("all", "complete", "none"),
+        },
+    )
 
     ###################################################################
     # Rhythm settings.
 
     rhythmic_unison: typing.Union[
         bool, typing.Sequence[typing.Sequence[int]]
-    ] = False
+    ] = fld(
+        default=False,
+        metadata={
+            "mutable_attrs": {},
+            "category": "rhythm",
+            "priority": 0,
+        },
+    )
     rhythmic_quasi_unison: typing.Union[
         bool, typing.Sequence[typing.Sequence[int]]
-    ] = False  # not implemented for cont_rhythms
-    hocketing: typing.Union[bool, typing.Sequence[typing.Sequence[int]]] = False
-    rhythmic_quasi_unison_constrain: bool = False
-    cont_rhythms: str = "none"
+    ] = fld(
+        default=False,
+        metadata={
+            "mutable_attrs": {},
+            "category": "rhythm",
+            "priority": 0,
+        },
+    )  # not implemented for cont_rhythms
+    hocketing: typing.Union[bool, typing.Sequence[typing.Sequence[int]]] = fld(
+        default=False,
+        metadata={
+            "mutable_attrs": {},
+            "category": "rhythm",
+            "priority": 0,
+        },
+    )
+    rhythmic_quasi_unison_constrain: bool = fld(
+        default=False,
+        metadata={
+            "mutable_attrs": {},
+            "category": "rhythm",
+            "priority": 0,
+        },
+    )
+    cont_rhythms: str = fld(
+        default="none",
+        metadata={
+            "mutable_attrs": {},
+            "category": "rhythm",
+            "priority": 0,
+        },
+    )
     # LONGTERM add obligatory_onsets to grid
-    num_cont_rhythm_vars: typing.Union[int, typing.Sequence[int]] = 1
-    vary_rhythm_consistently: bool = True
-    cont_var_increment: numbers.Number = 0.1
-    super_pattern_reps_cont_var: bool = True
-    rhythms_specified_in_midi: str = ""
-    rhythms_in_midi_reverse_voices: bool = False
+    num_cont_rhythm_vars: typing.Union[int, typing.Sequence[int]] = fld(
+        default=1,
+        metadata={
+            "mutable_attrs": {},
+            "category": "rhythm",
+            "priority": 0,
+        },
+    )
+    vary_rhythm_consistently: bool = fld(
+        default=True,
+        metadata={
+            "mutable_attrs": {},
+            "category": "rhythm",
+            "priority": 0,
+        },
+    )
+    cont_var_increment: numbers.Number = fld(
+        default=0.1,
+        metadata={
+            "mutable_attrs": {},
+            "category": "rhythm",
+            "priority": 0,
+        },
+    )
+    super_pattern_reps_cont_var: bool = fld(
+        default=True,
+        metadata={
+            "mutable_attrs": {},
+            "category": "rhythm",
+            "priority": 0,
+        },
+    )
+    rhythms_specified_in_midi: str = fld(
+        default="",
+        metadata={
+            "mutable_attrs": {},
+            "category": "rhythm",
+            "shell_only": True,
+            "priority": 0,
+        },
+    )
+    rhythms_in_midi_reverse_voices: bool = fld(
+        default=False,
+        metadata={
+            "mutable_attrs": {},
+            "category": "rhythm",
+            "shell_only": True,
+            "priority": 0,
+        },
+    )
     onset_density: typing.Union[
         typing.Union[float, int], typing.Sequence[typing.Union[float, int]]
-    ] = 0.5
-    dur_density: typing.Union[float, typing.Sequence[float]] = 1.0
+    ] = fld(
+        default=0.5,
+        metadata={
+            "mutable_attrs": {},
+            "category": "rhythm",
+            "priority": 0,
+        },
+    )
+    dur_density: typing.Union[float, typing.Sequence[float]] = fld(
+        default=1.0,
+        metadata={
+            "mutable_attrs": {},
+            "category": "rhythm",
+            "priority": 0,
+        },
+    )
     onset_subdivision: typing.Union[
         numbers.Number, typing.Sequence[numbers.Number]
-    ] = Fraction(1, 4)
+    ] = fld(
+        default=Fraction(1, 4),
+        metadata={
+            "mutable_attrs": {},
+            "category": "rhythm",
+            "priority": 0,
+        },
+    )
     sub_subdivisions: typing.Union[
         int,
         typing.Sequence[typing.Union[int, typing.Sequence[int]]],
-    ] = 1
+    ] = fld(
+        default=1,
+        metadata={
+            "mutable_attrs": {},
+            "category": "rhythm",
+            "priority": 0,
+        },
+    )
     dur_subdivision: typing.Union[
         numbers.Number, typing.Sequence[numbers.Number]
-    ] = 0
+    ] = fld(
+        default=0,
+        metadata={
+            "mutable_attrs": {},
+            "category": "rhythm",
+            "priority": 0,
+        },
+    )
     # MAYBE raise error if min_dur is empty,
     #    or other settings that cannot be empty are empty?
-    min_dur: typing.Union[numbers.Number, typing.Sequence[numbers.Number]] = 0
+    min_dur: typing.Union[
+        numbers.Number, typing.Sequence[numbers.Number]
+    ] = fld(
+        default=0,
+        metadata={
+            "mutable_attrs": {},
+            "category": "rhythm",
+            "priority": 0,
+        },
+    )
     obligatory_onsets: typing.Union[
         typing.Sequence[numbers.Number],
         typing.Sequence[typing.Sequence[numbers.Number]],
-    ] = ()
+    ] = fld(
+        default=(),
+        metadata={
+            "mutable_attrs": {},
+            "category": "rhythm",
+            "priority": 0,
+        },
+    )
     obligatory_onsets_modulo: typing.Union[
         numbers.Number, typing.Sequence[numbers.Number]
-    ] = 4
+    ] = fld(
+        default=4,
+        metadata={
+            "mutable_attrs": {},
+            "category": "rhythm",
+            "priority": 0,
+        },
+    )
     comma_position: typing.Union[
         str, int, typing.Sequence[typing.Union[str, int]]
-    ] = "end"
-    overlap: bool = True
+    ] = fld(
+        default="end",
+        metadata={
+            "mutable_attrs": {},
+            "category": "rhythm",
+            "priority": 0,
+        },
+    )
+    overlap: bool = fld(
+        default=True,
+        metadata={
+            "mutable_attrs": {},
+            "category": "rhythm",
+            "priority": 0,
+        },
+    )
 
     ###################################################################
     # Choir settings
@@ -1632,44 +2519,173 @@ class ERSettings:
             #     typing.Sequence[int], typing.Union[int, typing.Sequence[int]]
             # ],
         ]
-    ] = (
-        "GUITAR",
-        "ELECTRIC_PIANO",
-        "PIANO",
-        "XYLOPHONE",
+    ] = fld(
+        default=(
+            "GUITAR",
+            "ELECTRIC_PIANO",
+            "PIANO",
+            "XYLOPHONE",
+        ),
+        metadata={
+            "mutable_attrs": {},
+            "category": "choir",
+            "priority": 0,
+        },
     )
-    choir_assignments: typing.Sequence[int] = None
-    randomly_distribute_between_choirs: bool = False
-    length_choir_segments: numbers.Number = 1
-    length_choir_loop: numbers.Number = 0
-    choir_segments_dovetail: bool = False
-    max_consec_seg_from_same_choir: int = 0
-    all_voices_from_different_choirs: bool = False
-    each_choir_combination_only_once: bool = False
+    choir_assignments: typing.Union[None, typing.Sequence[int]] = fld(
+        default=None,
+        metadata={
+            "mutable_attrs": {},
+            "category": "choir",
+            "priority": 0,
+        },
+    )
+    randomly_distribute_between_choirs: bool = fld(
+        default=False,
+        metadata={
+            "mutable_attrs": {},
+            "category": "choir",
+            "priority": 0,
+        },
+    )
+    length_choir_segments: numbers.Number = fld(
+        default=1,
+        metadata={
+            "mutable_attrs": {},
+            "category": "choir",
+            "priority": 0,
+        },
+    )
+    length_choir_loop: numbers.Number = fld(
+        default=0,
+        metadata={
+            "mutable_attrs": {},
+            "category": "choir",
+            "priority": 0,
+        },
+    )
+    choir_segments_dovetail: bool = fld(
+        default=False,
+        metadata={
+            "mutable_attrs": {},
+            "category": "choir",
+            "priority": 0,
+        },
+    )
+    max_consec_seg_from_same_choir: int = fld(
+        default=0,
+        metadata={
+            "mutable_attrs": {},
+            "category": "choir",
+            "priority": 0,
+        },
+    )
+    all_voices_from_different_choirs: bool = fld(
+        default=False,
+        metadata={
+            "mutable_attrs": {},
+            "category": "choir",
+            "priority": 0,
+        },
+    )
+    each_choir_combination_only_once: bool = fld(
+        default=False,
+        metadata={
+            "mutable_attrs": {},
+            "category": "choir",
+            "priority": 0,
+        },
+    )
 
     ###################################################################
     # Transpose settings
 
-    transpose: bool = False
-    transpose_type: str = "specific"
+    transpose: bool = fld(
+        default=False,
+        metadata={
+            "mutable_attrs": {},
+            "category": "transpose",
+            "priority": 0,
+        },
+    )
+    transpose_type: str = fld(
+        default="specific",
+        metadata={
+            "mutable_attrs": {},
+            "category": "transpose",
+            "priority": 0,
+            "possible_values": ("generic", "specific"),
+        },
+    )
     transpose_len: typing.Union[
         numbers.Number, typing.Sequence[numbers.Number]
-    ] = 4
+    ] = fld(
+        default=4,
+        metadata={
+            "mutable_attrs": {},
+            "category": "transpose",
+            "priority": 0,
+        },
+    )
     transpose_intervals: typing.Union[
         numbers.Number, typing.Sequence[numbers.Number]
-    ] = ()
-    cumulative_max_transpose_interval: numbers.Number = 5
-    transpose_before_repeat: bool = False
+    ] = fld(
+        default=(),
+        metadata={
+            "mutable_attrs": {},
+            "category": "transpose",
+            "priority": 0,
+        },
+    )
+    cumulative_max_transpose_interval: numbers.Number = fld(
+        default=5,
+        metadata={
+            "mutable_attrs": {},
+            "category": "transpose",
+            "priority": 0,
+        },
+    )
+    transpose_before_repeat: bool = fld(
+        default=False,
+        metadata={
+            "mutable_attrs": {},
+            "category": "transpose",
+            "priority": 0,
+        },
+    )
 
     ###################################################################
     # Tempo settings
 
     # LONGTERM debug tempos
-    tempo: typing.Union[numbers.Number, typing.Sequence[numbers.Number]] = 120
-    tempo_len: typing.Union[numbers.Number, typing.Sequence[numbers.Number]] = 0
-    tempo_bounds: typing.Tuple[numbers.Number, numbers.Number] = (
-        80,
-        144,
+    tempo: typing.Union[numbers.Number, typing.Sequence[numbers.Number]] = fld(
+        default=120,
+        metadata={
+            "mutable_attrs": {},
+            "category": "tempo",
+            "priority": 0,
+        },
+    )
+    tempo_len: typing.Union[
+        numbers.Number, typing.Sequence[numbers.Number]
+    ] = fld(
+        default=0,
+        metadata={
+            "mutable_attrs": {},
+            "category": "tempo",
+            "priority": 0,
+        },
+    )
+    tempo_bounds: typing.Tuple[numbers.Number, numbers.Number] = fld(
+        default=(
+            80,
+            144,
+        ),
+        metadata={
+            "mutable_attrs": {},
+            "category": "tempo",
+            "priority": 0,
+        },
     )
 
     # LONGTERM implement, also update to effect a voice leading from
@@ -1679,12 +2695,80 @@ class ERSettings:
 
     # reset_to_original_voicing: typing.Sequence[int] = ()
 
-    initial_pattern_attempts: int = 50
-    voice_leading_attempts: int = 50
-    ask_for_more_attempts: bool = False
-    max_available_pitch_materials_deadends: int = 1000
+    initial_pattern_attempts: int = fld(
+        default=50,
+        metadata={
+            "mutable_attrs": {},
+            "category": "global",
+            "shell_only": True,
+            "priority": 0,
+        },
+    )
+    voice_leading_attempts: int = fld(
+        default=50,
+        metadata={
+            "mutable_attrs": {},
+            "category": "global",
+            "shell_only": True,
+            "priority": 0,
+        },
+    )
+    ask_for_more_attempts: bool = fld(
+        default=False,
+        metadata={
+            "mutable_attrs": {},
+            "category": "global",
+            "shell_only": True,
+            "priority": 0,
+        },
+    )
+    max_available_pitch_materials_deadends: int = fld(
+        default=1000,
+        metadata={
+            "mutable_attrs": {},
+            "category": "global",
+            "shell_only": True,
+            "priority": 0,
+        },
+    )
 
     ###################################################################
     # Randomization settings
 
-    exclude_from_randomization: typing.Sequence[str] = ()
+    exclude_from_randomization: typing.Sequence[str] = fld(
+        default=(),
+        metadata={
+            "mutable_attrs": {},
+            "category": "randomization",
+            "priority": 0,
+        },
+    )
+
+
+heading_pattern = re.compile(r"\n {8}[^\n]+\n {8}=+\n", re.MULTILINE)
+default_pattern = re.compile(r"\n {12}Default.*", re.MULTILINE)
+line_break_pattern = re.compile(r"(.)\n {12}(\S)", re.MULTILINE)
+indent_pattern = re.compile(r"\n {12}(\S)", re.MULTILINE)
+
+
+def _reformat_setting_doc(setting_doc):
+    setting_doc = re.sub(default_pattern, "", setting_doc)
+    setting_doc = re.sub(heading_pattern, "", setting_doc)
+    setting_doc = re.sub(line_break_pattern, r"\1 \2", setting_doc)
+    setting_doc = re.sub(indent_pattern, r"\n\1", setting_doc)
+    return setting_doc
+
+
+# I don't use __post_init__ for this function because I want to add the docs
+# to the class rather than to its instances
+def add_metadata_docs():
+    ds = ERSettings.__doc__
+    bits = re.split(r"\n {8}(\w+): ", ds)[1:]
+    for setting_name, setting_doc in zip(*([iter(bits)] * 2)):
+        reformatted = _reformat_setting_doc(setting_doc)
+        dataclass_field = ERSettings.__dataclass_fields__[setting_name]
+        mutable_attrs = dataclass_field.metadata["mutable_attrs"]
+        mutable_attrs["doc"] = reformatted
+
+
+add_metadata_docs()
