@@ -22,7 +22,7 @@ from . import er_settings
 from . import er_tuning
 from . import er_voice_leadings
 
-SCRIPT_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
+from . import PACKAGE_DIR
 
 PITCH_MATERIAL_LISTS = (
     "scales",
@@ -902,19 +902,32 @@ class SettingsProcesser(er_settings.ERSettings):
         self._nonchord_indices[i] = nonchord_indices
 
 
-def preprocess_settings(
-    user_settings, script_dir=SCRIPT_DIR, random_settings=False, seed=None
-):
+def preprocess_settings(user_settings, random_settings=False, seed=None):
+    """Preprocesses settings and returns settings object.
 
-    # er = read_in_settings(user_settings, er_settings.ERSettings)
+    description
+
+    Args:
+        user_settings: either a Python dictionary, or the path to a
+            file containing a Python dictionary suitable for parsing
+            with `eval`.
+
+    Keyword args:
+        random_settings: boolean
+        seed: integer.
+
+    Returns:
+        ERSettings object
+    """
+
     er = read_in_settings(user_settings, SettingsProcesser)
     if seed is not None:
         er.seed = seed
     er.seed = er_misc_funcs.set_seed(er.seed)
-
+    # TODO find a better solution for saving files than parent directory
     if er.output_path.startswith("EFFRHY/"):
         er.output_path = os.path.join(
-            script_dir, er.output_path.replace("EFFRHY/", "", 1)
+            PACKAGE_DIR, er.output_path.replace("EFFRHY/", "", 1)
         )
 
     dir_name = os.path.dirname(er.output_path)
