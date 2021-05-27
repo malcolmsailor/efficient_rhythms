@@ -8,9 +8,9 @@ sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 )
 
-import src.er_constants as er_constants  # pylint: disable=wrong-import-position
-import src.er_preprocess as er_preprocess  # pylint: disable=wrong-import-position
-import src.er_settings as er_settings  # pylint: disable=wrong-import-position
+import efficient_rhythms.er_constants as er_constants  # pylint: disable=wrong-import-position
+import efficient_rhythms.er_preprocess as er_preprocess  # pylint: disable=wrong-import-position
+import efficient_rhythms.er_settings as er_settings  # pylint: disable=wrong-import-position
 
 SCRIPT_DIR = os.path.dirname((os.path.realpath(__file__)))
 

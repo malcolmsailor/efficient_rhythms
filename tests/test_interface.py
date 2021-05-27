@@ -1,5 +1,6 @@
-"""This module tests whether various transformers/filters run without crashing.
-It doesn't actually veryify that they behave as expected!
+"""This module only tests whether various transformers/filters run without 
+crashing. It doesn't actually veryify that they behave as expected! (That is
+still a to-do.)
 """
 import os
 import subprocess
@@ -11,10 +12,13 @@ sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 )
 
-import src.er_changers as er_changers  # pylint: disable=wrong-import-position
+import efficient_rhythms.er_changers as er_changers  # pylint: disable=wrong-import-position
 
 SCRIPT_DIR = os.path.dirname((os.path.realpath(__file__)))
-EFFRHY = os.path.join(SCRIPT_DIR, "../efficient_rhythms.py")
+
+os.environ["PYTHONPATH"] = os.path.abspath(os.path.join(SCRIPT_DIR, ".."))
+os.environ["EFFICIENT_RHYTHMS_DEBUG"] = "true"
+
 SETTINGS = os.path.join(SCRIPT_DIR, "test_settings/test_interface_settings.py")
 
 N_PROB_FUNCS = 9
@@ -26,7 +30,7 @@ class ProcError(Exception):
 
 def run(user_input):
     proc = subprocess.run(
-        ["python3", EFFRHY, "--settings", SETTINGS, "--debug"],
+        ["python3", "-m", "efficient_rhythms", "--settings", SETTINGS],
         input=user_input.encode(encoding="utf-8"),
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,

@@ -7,9 +7,9 @@ sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 )
 
-import src.er_output_notation as er_output_notation  # pylint: disable=wrong-import-position
-import src.er_misc_funcs as er_misc_funcs  # pylint: disable=wrong-import-position
-import src.er_classes as er_classes  # pylint: disable=wrong-import-position
+import efficient_rhythms.er_output_notation as er_output_notation  # pylint: disable=wrong-import-position
+import efficient_rhythms.er_misc_funcs as er_misc_funcs  # pylint: disable=wrong-import-position
+import efficient_rhythms.er_classes as er_classes  # pylint: disable=wrong-import-position
 
 
 def test_get_kern():

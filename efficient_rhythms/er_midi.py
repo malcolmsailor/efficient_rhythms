@@ -10,10 +10,10 @@ from multiprocessing.dummy import Pool as ThreadPool
 
 import mido
 
-import src.er_choirs as er_choirs
-import src.er_midi_settings as er_midi_settings
-import src.er_classes as er_classes
-import src.er_tuning as er_tuning
+from . import er_choirs
+from . import er_midi_settings
+from . import er_classes
+from . import er_tuning
 
 # midi constants
 META_TRACK = 0

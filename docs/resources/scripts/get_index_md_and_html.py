@@ -45,7 +45,7 @@ def insert_examples(md_content):
 
 
 def insert_links(md):
-    # we could also parse src/er_settings.py to get the attributes of the
+    # we could also parse efficient_rhythms/er_settings.py to get the attributes of the
     #   ERSettings object, but it seems easier to just do a regex search
     #   on the documentation as follows
     find_attr_pattern = re.compile(

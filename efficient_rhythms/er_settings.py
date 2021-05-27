@@ -5,7 +5,7 @@ import numbers
 import typing
 from fractions import Fraction
 
-# import src.er_type_check as er_type_check
+# from . import er_type_check
 
 DEFAULT_NUM_HARMONIES = 4
 
@@ -78,7 +78,7 @@ class ERSettings:
     ========================================
 
     For most use cases, it will be most convenient to specify pitch materials
-    using strings denoting constants which are provided in `src/er_constants.py`
+    using strings denoting constants which are provided in `efficient_rhythms/er_constants.py`
     and documented in `docs/constants.md` and `docs/constants.html`. A few
     examples: `"PERFECT_4TH"`, `"C# * OCTAVE4"`, `"F * PHRYGIAN"`, etc.
 

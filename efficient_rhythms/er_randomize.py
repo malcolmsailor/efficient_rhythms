@@ -7,7 +7,7 @@ from fractions import Fraction
 
 import numpy as np
 
-import src.er_constants as er_constants
+from . import er_constants
 
 # LONGTERM Warnings to address:
 # Notice: 'parallel_voice_leading' is not compatible with checking voice-leadings

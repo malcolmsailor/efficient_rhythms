@@ -8,7 +8,7 @@ import subprocess
 SCRIPT_DIR = os.path.dirname((os.path.realpath(__file__)))
 CSS_PATH1 = "resources/third_party/github-markdown-css/github-markdown.css"
 CSS_PATH2 = "resources/css/markdown-body.css"
-CONSTANTS_PY_PATH = os.path.join(SCRIPT_DIR, "../../../src/er_constants.py")
+CONSTANTS_PY_PATH = os.path.join(SCRIPT_DIR, "../../../efficient_rhythms/er_constants.py")
 CONSTANTS_MD_IN_PATH = os.path.join(
     SCRIPT_DIR, "../markdown/constants_intro.md"
 )

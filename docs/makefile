@@ -1,4 +1,4 @@
-EFFRHY_SOURCE_FILES = $(wildcard ../src/er*.py)
+EFFRHY_SOURCE_FILES = $(wildcard ../efficient_rhythms/er*.py)
 EFFRHY = ../efficient_rhythms.py $(EFFRHY_SOURCE_FILES)
 
 EXAMPLE_SRC = $(shell fd '^example[0-9]+\.py$$' examples)
@@ -157,10 +157,10 @@ clean: clean_pngs clean_svgs clean_midi # clean_m4as
 html: settings.html index.html constants.html
 
 settings.html : resources/scripts/get_settings_md_and_html.py \
-		../src/er_settings.py $(CSS_FILES)
+		../efficient_rhythms/er_settings.py $(CSS_FILES)
 	python3 $<
 
-constants.html : resources/scripts/get_constants.py ../src/er_constants.py \
+constants.html : resources/scripts/get_constants.py ../efficient_rhythms/er_constants.py \
 		$(CSS_FILES)
 	python3 $<
 

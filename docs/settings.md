@@ -31,9 +31,9 @@ as “looping sequences”.
 
 For most use cases, it will be most convenient to specify pitch
 materials using strings denoting constants which are provided in
-`src/er_constants.py` and documented in `docs/constants.md` and
-`[docs/constants.html](constants.html)`. A few examples:
-`"PERFECT_4TH"`, `"C# * OCTAVE4"`, `"F * PHRYGIAN"`, etc.
+`efficient_rhythms/er_constants.py` and documented in
+`docs/constants.md` and `[docs/constants.html](constants.html)`. A few
+examples: `"PERFECT_4TH"`, `"C# * OCTAVE4"`, `"F * PHRYGIAN"`, etc.
 
 Otherwise, pitch materials can be specified either as integers, or as
 other numeric types (e.g., floats). **If you don’t care about tuning or

@@ -3,7 +3,7 @@ title: "Efficient rhythms documentation: constants"
 ---
 <!-- Uses pandoc markdown -->
 
-When specifying pitch materials like chords, scales, and intervals, as well as when specifying general-midi instruments, the constants defined in `src/er_constants.py` can be used. For ease of reference, these constants are also listed below.
+When specifying pitch materials like chords, scales, and intervals, as well as when specifying general-midi instruments, the constants defined in `efficient_rhythms/er_constants.py` can be used. For ease of reference, these constants are also listed below.
 
 In settings files, these constants can be indicated in either of the following ways:
 

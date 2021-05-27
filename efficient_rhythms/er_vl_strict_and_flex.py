@@ -1,9 +1,9 @@
 import itertools
-import src.er_exceptions as er_exceptions
-import src.er_classes as er_classes
-import src.er_voice_leadings as er_voice_leadings
+from . import er_exceptions
+from . import er_classes
+from . import er_voice_leadings
 
-import src.er_apply_vl as er_apply_vl
+from . import er_apply_vl
 
 
 def flex_vl_loop(er, score, voice_lead_error, voice, vl_item):

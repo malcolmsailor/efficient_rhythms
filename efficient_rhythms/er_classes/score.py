@@ -2,8 +2,8 @@ import copy
 
 import sortedcontainers
 
-import src.er_classes as er_classes
-import src.er_spelling as er_spelling
+from .. import er_classes
+from .. import er_spelling
 
 
 class HarmonyTimes:

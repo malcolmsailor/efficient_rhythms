@@ -1,6 +1,6 @@
 import warnings
 
-import src.er_misc_funcs as er_misc_funcs
+from . import er_misc_funcs
 
 
 def check_parallel_intervals(

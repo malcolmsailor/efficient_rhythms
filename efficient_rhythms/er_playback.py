@@ -9,7 +9,7 @@ import pygame  # pylint: disable=wrong-import-position
 sys.stdout.close()
 sys.stdout = sys.__stdout__
 
-import src.er_midi as er_midi  # pylint: disable=wrong-import-position
+from . import er_midi  # pylint: disable=wrong-import-position
 
 
 def init_and_return_midi_player(shell=False):
@@ -52,8 +52,7 @@ def init_and_return_midi_player(shell=False):
 
 
 def playback_midi(midi_player, breaker, midi_path):
-    """Plays a midi file.
-    """
+    """Plays a midi file."""
     if midi_player == "environment":
         midi_exec = os.environ["EFFRHY_MIDI_PLAYER"]
         command = midi_exec + " '" + midi_path + "'"
