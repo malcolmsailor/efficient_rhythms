@@ -5,6 +5,8 @@ import numbers
 import typing
 from fractions import Fraction
 
+import numpy as np
+
 # from . import er_type_check
 
 DEFAULT_NUM_HARMONIES = 4
@@ -1369,7 +1371,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "global",
-            "priority": 0,
+            "priority": 1,
         },
     )
     output_path: str = fld(
@@ -1396,7 +1398,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "global",
-            "priority": 0,
+            "priority": 2,
             "val_dict": {"min_": (1,), "max_": (1200,)},
         },
     )
@@ -1410,7 +1412,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "global",
-            "priority": 0,
+            "priority": 1,
         },
     )
     num_reps_super_pattern: int = fld(
@@ -1418,7 +1420,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "global",
-            "priority": 0,
+            "priority": 3,
         },
     )
 
@@ -1512,7 +1514,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "global",
-            "priority": 0,
+            "priority": 1,
         },
     )
     rhythm_len: typing.Union[
@@ -1522,7 +1524,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "global",
-            "priority": 0,
+            "priority": 1,
         },
     )
     num_harmonies: typing.Union[int, None] = fld(
@@ -1530,7 +1532,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "global",
-            "priority": 0,
+            "priority": 1,
         },
     )
     time_sig: typing.Union[None, typing.Tuple[int, int]] = fld(
@@ -1538,7 +1540,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "global",
-            "priority": 0,
+            "priority": 3,
         },
     )
     harmony_len: typing.Union[
@@ -1548,7 +1550,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "global",
-            "priority": 0,
+            "priority": 1,
         },
     )
     truncate_patterns: bool = fld(
@@ -1556,7 +1558,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "global",
-            "priority": 0,
+            "priority": 2,
         },
     )
     max_super_pattern_len: typing.Union[None, numbers.Number] = fld(
@@ -1564,23 +1566,25 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "global",
-            "priority": 0,
+            "priority": 3,
         },
     )
     voice_ranges: typing.Union[
-        typing.Sequence[typing.Tuple[numbers.Number, numbers.Number]], str
+        typing.Sequence[typing.Tuple[numbers.Number, numbers.Number]],
+        np.ndarray,
     ] = fld(
         default="CONTIGUOUS_OCTAVES * OCTAVE3 * C",
         metadata={
             "mutable_attrs": {},
             "category": "global",
-            "priority": 0,
+            "priority": 2,
         },
     )
     hard_bounds: typing.Sequence[
-        typing.Tuple[
-            typing.Union[str, numbers.Number], typing.Union[str, numbers.Number]
-        ]
+        # typing.Tuple[
+        #     typing.Union[str, numbers.Number], typing.Union[str, numbers.Number]
+        # ]
+        typing.Tuple[numbers.Number, numbers.Number]
     ] = fld(
         default=(
             (
@@ -1591,7 +1595,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "global",
-            "priority": 0,
+            "priority": 3,
         },
     )
     # MAYBE add other possible voice orders, e.g., (melody, bass, inner voices)
@@ -1600,7 +1604,8 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "global",
-            "priority": 0,
+            "priority": 4,
+            # TODO possible values
         },
     )
     allow_voice_crossings: typing.Union[bool, typing.Sequence[bool]] = fld(
@@ -1608,7 +1613,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "global",
-            "priority": 0,
+            "priority": 3,
         },
     )
 
@@ -1628,7 +1633,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "scale_and_chord",
-            "priority": 0,
+            "priority": 1,
         },
     )
     interval_cycle: typing.Union[
@@ -1638,29 +1643,29 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "scale_and_chord",
-            "priority": 0,
+            "priority": 2,
         },
     )
     scales: typing.Sequence[
-        typing.Union[str, typing.Sequence[numbers.Number]]
+        typing.Union[np.ndarray, typing.Sequence[numbers.Number]]
     ] = fld(
         default_factory=lambda: ["DIATONIC_SCALE"],
         metadata={
             "mutable_attrs": {},
             "category": "scale_and_chord",
-            "priority": 0,
+            "priority": 1,
         },
     )
     # QUESTION is there a way to implement octave equivalence settings for
     #   chords here as well as for consonant_chords?
     chords: typing.Sequence[
-        typing.Union[str, typing.Sequence[numbers.Number]]
+        typing.Union[np.ndarray, typing.Sequence[numbers.Number]]
     ] = fld(
         default_factory=lambda: ["MAJOR_TRIAD"],
         metadata={
             "mutable_attrs": {},
             "category": "scale_and_chord",
-            "priority": 0,
+            "priority": 1,
         },
     )
 
@@ -1791,7 +1796,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "voice_leading",
-            "priority": 0,
+            "priority": 2,
         },
     )
     parallel_direction: int = fld(
@@ -1799,7 +1804,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "voice_leading",
-            "priority": 0,
+            "priority": 2,
         },
     )
 
@@ -1808,7 +1813,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "voice_leading",
-            "priority": 0,
+            "priority": 1,
         },
     )
 
@@ -1820,7 +1825,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "voice_leading",
-            "priority": 0,
+            "priority": 1,
             "possible_values": ("lowest", "all", "none"),
         },
     )
@@ -1832,7 +1837,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "voice_leading",
-            "priority": 0,
+            "priority": 2,
         },
     )
     constrain_voice_leading_to_ranges: bool = fld(
@@ -1840,7 +1845,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "voice_leading",
-            "priority": 0,
+            "priority": 3,
         },
     )
     allow_flexible_voice_leading: bool = fld(
@@ -1848,7 +1853,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "voice_leading",
-            "priority": 0,
+            "priority": 3,
         },
     )
     vl_maintain_consonance: bool = fld(
@@ -1856,7 +1861,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "voice_leading",
-            "priority": 0,
+            "priority": 2,
         },
     )
     vl_maintain_limit_intervals: str = fld(
@@ -1864,7 +1869,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "voice_leading",
-            "priority": 0,
+            "priority": 2,
             "possible_values": ("all", "across_harmonies", "none"),
         },
     )
@@ -1874,7 +1879,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "voice_leading",
-            "priority": 0,
+            "priority": 2,
         },
     )
     vl_maintain_prohibit_parallels: bool = fld(
@@ -1882,7 +1887,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "voice_leading",
-            "priority": 0,
+            "priority": 2,
         },
     )
 
@@ -1894,7 +1899,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "chord_tones",
-            "priority": 0,
+            "priority": 1,
         },
     )
     chord_tone_selection: bool = fld(
@@ -1902,7 +1907,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "chord_tones",
-            "priority": 0,
+            "priority": 1,
         },
     )
     chord_tone_prob_func: str = fld(
@@ -1910,7 +1915,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "chord_tones",
-            "priority": 0,
+            "priority": 4,
         },
     )
     max_n_between_chord_tones: int = fld(
@@ -1918,7 +1923,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "chord_tones",
-            "priority": 0,
+            "priority": 2,
         },
     )
     min_prob_chord_tone: float = fld(
@@ -1926,7 +1931,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "chord_tones",
-            "priority": 0,
+            "priority": 2,
         },
     )
     try_to_force_non_chord_tones: bool = fld(
@@ -1934,7 +1939,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "chord_tones",
-            "priority": 0,
+            "priority": 3,
         },
     )
     len_to_force_chord_tone: int = fld(
@@ -1942,7 +1947,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "chord_tones",
-            "priority": 0,
+            "priority": 3,
         },
     )
     scale_chord_tone_prob_by_dur: bool = fld(
@@ -1950,7 +1955,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "chord_tones",
-            "priority": 0,
+            "priority": 2,
         },
     )
     scale_chord_tone_neutral_dur: numbers.Number = fld(
@@ -1958,7 +1963,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "chord_tones",
-            "priority": 0,
+            "priority": 4,
         },
     )
     scale_short_chord_tones_down: bool = fld(
@@ -1966,7 +1971,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "chord_tones",
-            "priority": 0,
+            "priority": 3,
         },
     )
     # LONGTERM what about chord tone *after* rests?
@@ -1977,7 +1982,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "chord_tones",
-            "priority": 0,
+            "priority": 2,
         },
     )
     chord_tones_no_diss_treatment: typing.Union[
@@ -1987,7 +1992,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "chord_tones",
-            "priority": 0,
+            "priority": 2,
         },
     )
     force_chord_tone: str = fld(
@@ -1995,7 +2000,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "chord_tones",
-            "priority": 0,
+            "priority": 2,
             "possible_values": (
                 "global_first_beat",
                 "global_first_note",
@@ -2010,7 +2015,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "chord_tones",
-            "priority": 0,
+            "priority": 2,
         },
     )
     force_foot_in_bass: str = fld(
@@ -2018,7 +2023,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "chord_tones",
-            "priority": 0,
+            "priority": 1,
             "possible_values": (
                 "global_first_beat",
                 "global_first_note",
@@ -2037,7 +2042,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "melody",
-            "priority": 0,
+            "priority": 1,
         },
     )
     prefer_small_melodic_intervals_coefficient: numbers.Number = fld(
@@ -2045,7 +2050,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "melody",
-            "priority": 0,
+            "priority": 4,
         },
     )
     unison_weighted_as: int = fld(
@@ -2053,7 +2058,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "melody",
-            "priority": 0,
+            "priority": 3,
         },
     )
 
@@ -2061,46 +2066,45 @@ class ERSettings:
     # LONGTERM avoid enforcing limit intervals with voice-led foot
 
     max_interval: typing.Union[
-        str, numbers.Number, typing.Sequence[typing.Union[str, numbers.Number]]
+        numbers.Number, typing.Sequence[numbers.Number]
     ] = fld(
         default="-OCTAVE",
         metadata={
             "mutable_attrs": {},
             "category": "melody",
-            "priority": 0,
+            "priority": 2,
         },
     )
     max_interval_for_non_chord_tones: typing.Union[
-        str, numbers.Number, typing.Sequence[typing.Union[str, numbers.Number]]
+        numbers.Number, typing.Sequence[numbers.Number]
     ] = fld(
         default="take_from_max_interval",  # TODO document this!
         metadata={
             "mutable_attrs": {},
             "category": "melody",
-            "priority": 0,
+            "priority": 2,
         },
     )
     min_interval: typing.Union[
         None,
-        str,
         numbers.Number,
-        typing.Sequence[typing.Union[str, numbers.Number]],
+        typing.Sequence[numbers.Number],
     ] = fld(
         default=None,
         metadata={
             "mutable_attrs": {},
             "category": "melody",
-            "priority": 0,
+            "priority": 2,
         },
     )
     min_interval_for_non_chord_tones: typing.Union[
-        str, numbers.Number, typing.Sequence[typing.Union[str, numbers.Number]]
+        numbers.Number, typing.Sequence[numbers.Number]
     ] = fld(
         default="take_from_min_interval",
         metadata={
             "mutable_attrs": {},
             "category": "melody",
-            "priority": 0,
+            "priority": 2,
         },
     )
 
@@ -2110,7 +2114,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "melody",
-            "priority": 0,
+            "priority": 2,
         },
     )
     # max_repeated_notes only applies to the initial pattern, not to
@@ -2120,7 +2124,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "melody",
-            "priority": 0,
+            "priority": 2,
         },
     )
     max_alternations: typing.Union[int, typing.Sequence[int]] = fld(
@@ -2128,7 +2132,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "melody",
-            "priority": 0,
+            "priority": 2,
         },
     )
     pitch_loop: typing.Union[int, typing.Sequence[int]] = fld(
@@ -2136,7 +2140,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "melody",
-            "priority": 0,
+            "priority": 2,
         },
     )
     hard_pitch_loop: bool = fld(
@@ -2144,18 +2148,16 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "melody",
-            "priority": 0,
+            "priority": 3,
         },
     )
     # LONGTERM: prefer_alternations bool
-    prohibit_parallels: typing.Sequence[
-        typing.Union[numbers.Number, str]
-    ] = fld(
+    prohibit_parallels: typing.Sequence[numbers.Number] = fld(
         default=("OCTAVE",),
         metadata={
             "mutable_attrs": {},
             "category": "melody",
-            "priority": 0,
+            "priority": 2,
         },
     )
     antiparallels: bool = fld(
@@ -2163,7 +2165,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "melody",
-            "priority": 0,
+            "priority": 3,
         },
     )
 
@@ -2177,7 +2179,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "melody",
-            "priority": 0,
+            "priority": 2,
         },
     )
 
@@ -2189,7 +2191,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "consonance",
-            "priority": 0,
+            "priority": 2,
             "possible_values": (
                 "pairwise",
                 "chordwise",
@@ -2201,7 +2203,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "consonance",
-            "priority": 0,
+            "priority": 1,
             "possible_values": ("all_onsets", "all_durs", "none"),
         },
     )
@@ -2211,7 +2213,7 @@ class ERSettings:
         typing.Sequence[numbers.Number],
         typing.Sequence[typing.Sequence[numbers.Number]],
     ] = fld(
-        default=0,
+        default=3,
         metadata={
             "mutable_attrs": {},
             "category": "consonance",
@@ -2219,7 +2221,7 @@ class ERSettings:
         },
     )
     min_dur_for_cons_treatment: numbers.Number = fld(
-        default=0,
+        default=2,
         metadata={
             "mutable_attrs": {},
             "category": "consonance",
@@ -2231,7 +2233,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "consonance",
-            "priority": 0,
+            "priority": 2,
         },
     )
     forbidden_interval_classes: typing.Sequence[numbers.Number] = fld(
@@ -2239,7 +2241,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "consonance",
-            "priority": 0,
+            "priority": 2,
         },
     )
     forbidden_interval_modulo: typing.Union[
@@ -2251,7 +2253,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "consonance",
-            "priority": 0,
+            "priority": 3,
         },
     )
     exclude_augmented_triad: bool = fld(
@@ -2259,15 +2261,15 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "consonance",
-            "priority": 0,
+            "priority": 2,
         },
     )
-    consonances: typing.Sequence[typing.Union[numbers.Number, str]] = fld(
+    consonances: typing.Sequence[numbers.Number] = fld(
         default="CONSONANCES",
         metadata={
             "mutable_attrs": {},
             "category": "consonance",
-            "priority": 0,
+            "priority": 1,
         },
     )
     invert_consonances: bool = fld(
@@ -2275,12 +2277,10 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "consonance",
-            "priority": 0,
+            "priority": 4,
         },
     )
-    consonant_chords: typing.Sequence[
-        typing.Sequence[typing.Union[numbers.Number, str]]
-    ] = fld(
+    consonant_chords: typing.Sequence[typing.Sequence[numbers.Number]] = fld(
         default=(
             "MAJOR_TRIAD",
             "MINOR_TRIAD",
@@ -2288,7 +2288,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "consonance",
-            "priority": 0,
+            "priority": 2,
         },
     )
     chord_octave_equi_type: str = fld(
@@ -2296,7 +2296,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "consonance",
-            "priority": 0,
+            "priority": 3,
         },
     )
     chord_permit_doublings: str = fld(
@@ -2304,7 +2304,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "consonance",
-            "priority": 0,
+            "priority": 3,
             "possible_values": ("all", "complete", "none"),
         },
     )
@@ -2319,7 +2319,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "rhythm",
-            "priority": 0,
+            "priority": 2,
         },
     )
     rhythmic_quasi_unison: typing.Union[
@@ -2329,7 +2329,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "rhythm",
-            "priority": 0,
+            "priority": 2,
         },
     )  # not implemented for cont_rhythms
     hocketing: typing.Union[bool, typing.Sequence[typing.Sequence[int]]] = fld(
@@ -2337,7 +2337,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "rhythm",
-            "priority": 0,
+            "priority": 2,
         },
     )
     rhythmic_quasi_unison_constrain: bool = fld(
@@ -2345,7 +2345,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "rhythm",
-            "priority": 0,
+            "priority": 2,
         },
     )
     cont_rhythms: str = fld(
@@ -2414,7 +2414,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "rhythm",
-            "priority": 0,
+            "priority": 1,
         },
     )
     dur_density: typing.Union[float, typing.Sequence[float]] = fld(
@@ -2422,7 +2422,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "rhythm",
-            "priority": 0,
+            "priority": 1,
         },
     )
     onset_subdivision: typing.Union[
@@ -2432,7 +2432,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "rhythm",
-            "priority": 0,
+            "priority": 1,
         },
     )
     sub_subdivisions: typing.Union[
@@ -2443,7 +2443,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "rhythm",
-            "priority": 0,
+            "priority": 3,
         },
     )
     dur_subdivision: typing.Union[
@@ -2453,7 +2453,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "rhythm",
-            "priority": 0,
+            "priority": 1,
         },
     )
     # MAYBE raise error if min_dur is empty,
@@ -2465,7 +2465,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "rhythm",
-            "priority": 0,
+            "priority": 2,
         },
     )
     obligatory_onsets: typing.Union[
@@ -2476,7 +2476,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "rhythm",
-            "priority": 0,
+            "priority": 2,
         },
     )
     obligatory_onsets_modulo: typing.Union[
@@ -2486,7 +2486,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "rhythm",
-            "priority": 0,
+            "priority": 2,
         },
     )
     comma_position: typing.Union[
@@ -2496,7 +2496,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "rhythm",
-            "priority": 0,
+            "priority": 4,
         },
     )
     overlap: bool = fld(
@@ -2504,7 +2504,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "rhythm",
-            "priority": 0,
+            "priority": 4,
         },
     )
 
@@ -2512,13 +2512,10 @@ class ERSettings:
     # Choir settings
 
     choirs: typing.Sequence[
-        typing.Union[
-            int,
-            str,
-            # typing.Tuple[
-            #     typing.Sequence[int], typing.Union[int, typing.Sequence[int]]
-            # ],
-        ]
+        int,
+        # typing.Tuple[
+        #     typing.Sequence[int], typing.Union[int, typing.Sequence[int]]
+        # ],
     ] = fld(
         default=(
             "GUITAR",
@@ -2605,7 +2602,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "transpose",
-            "priority": 0,
+            "priority": 2,
         },
     )
     transpose_type: str = fld(
@@ -2613,7 +2610,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "transpose",
-            "priority": 0,
+            "priority": 2,
             "possible_values": ("generic", "specific"),
         },
     )
@@ -2624,7 +2621,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "transpose",
-            "priority": 0,
+            "priority": 2,
         },
     )
     transpose_intervals: typing.Union[
@@ -2634,7 +2631,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "transpose",
-            "priority": 0,
+            "priority": 2,
         },
     )
     cumulative_max_transpose_interval: numbers.Number = fld(
@@ -2642,7 +2639,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "transpose",
-            "priority": 0,
+            "priority": 3,
         },
     )
     transpose_before_repeat: bool = fld(
@@ -2650,7 +2647,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "transpose",
-            "priority": 0,
+            "priority": 3,
         },
     )
 
@@ -2663,7 +2660,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "tempo",
-            "priority": 0,
+            "priority": 1,
         },
     )
     tempo_len: typing.Union[
@@ -2673,7 +2670,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "tempo",
-            "priority": 0,
+            "priority": 2,
         },
     )
     tempo_bounds: typing.Tuple[numbers.Number, numbers.Number] = fld(
@@ -2684,7 +2681,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "tempo",
-            "priority": 0,
+            "priority": 3,
         },
     )
 
@@ -2740,7 +2737,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "randomization",
-            "priority": 0,
+            "priority": 4,
         },
     )
 
