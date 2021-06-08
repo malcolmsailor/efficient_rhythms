@@ -2345,7 +2345,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "rhythm",
-            "priority": 2,
+            "priority": 3,
         },
     )
     cont_rhythms: str = fld(
@@ -2428,7 +2428,7 @@ class ERSettings:
     onset_subdivision: typing.Union[
         numbers.Number, typing.Sequence[numbers.Number]
     ] = fld(
-        default=Fraction(1, 4),
+        default=0.25,
         metadata={
             "mutable_attrs": {},
             "category": "rhythm",
@@ -2526,7 +2526,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "choir",
-            "priority": 0,
+            "priority": 1,
         },
     )
     choir_assignments: typing.Union[None, typing.Sequence[int]] = fld(
@@ -2534,7 +2534,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "choir",
-            "priority": 0,
+            "priority": 1,
         },
     )
     randomly_distribute_between_choirs: bool = fld(
@@ -2542,7 +2542,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "choir",
-            "priority": 0,
+            "priority": 2,
         },
     )
     length_choir_segments: numbers.Number = fld(
@@ -2550,7 +2550,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "choir",
-            "priority": 0,
+            "priority": 2,
         },
     )
     length_choir_loop: numbers.Number = fld(
@@ -2558,7 +2558,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "choir",
-            "priority": 0,
+            "priority": 3,
         },
     )
     choir_segments_dovetail: bool = fld(
@@ -2566,7 +2566,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "choir",
-            "priority": 0,
+            "priority": 4,
         },
     )
     max_consec_seg_from_same_choir: int = fld(
@@ -2574,7 +2574,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "choir",
-            "priority": 0,
+            "priority": 3,
         },
     )
     all_voices_from_different_choirs: bool = fld(
@@ -2582,7 +2582,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "choir",
-            "priority": 0,
+            "priority": 3,
         },
     )
     each_choir_combination_only_once: bool = fld(
@@ -2590,7 +2590,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "choir",
-            "priority": 0,
+            "priority": 3,
         },
     )
 

@@ -165,16 +165,12 @@ def return_track_name_base(midi_fname, abbr=True):
 def _build_track_dict(er, score_num_voices):
     def _get_track_number(voice_i, choir_i):
         if er.voices_separate_tracks and not er.choirs_separate_tracks:
-            return voice_i + existing_voices_offset
+            return voice_i + offset
         if er.choirs_separate_tracks and not er.voices_separate_tracks:
-            return choir_i + existing_voices_offset
+            return choir_i + offset
         if er.voices_separate_tracks and er.choirs_separate_tracks:
-            return (
-                voice_i * er.num_choir_programs
-                + choir_i
-                + existing_voices_offset
-            )
-        return 0 + existing_voices_offset
+            return voice_i * er.num_choir_programs + choir_i + offset
+        return 0 + offset
 
     if er.voices_separate_tracks and not er.choirs_separate_tracks:
         num_tracks = score_num_voices
@@ -212,6 +208,9 @@ def _build_track_dict(er, score_num_voices):
             # for voice in er.existing_score:
             #     for note_obj in voice:
             #         existing_voices_choirs.add(note_obj.choir)
+
+    # we start from 1 for track "0", the "meta-track" with tempo changes etc.
+    offset = 1 + existing_voices_offset
 
     for voice_i in range(score_num_voices):
         for choir_i in range(er.num_choir_programs):
@@ -281,8 +280,9 @@ def add_er_voice(er, voice_i, voice, mf, force_choir=None):
         choir_program_i = er_choirs.get_choir_prog(
             er.choirs, choir_i, note.pitch
         )
-        # Add 1 because meta track is track 0
-        track_i = er.track_dict[(voice_i, choir_program_i)] + 1
+        # I used to add 1 because meta track is track 0 but now I've moved that
+        # operation into the construction of er.track_dict above
+        track_i = er.track_dict[(voice_i, choir_program_i)]
         if er.logic_type_pitch_bend and er.tet != 12:
             channel = er.note_counter[track_i] % er.num_channels_pitch_bend_loop
             note_count = er.note_counter[track_i]
@@ -294,6 +294,8 @@ def add_er_voice(er, voice_i, voice, mf, force_choir=None):
         if er.humanize:
             note = humanize(er, note=note)
         if er.tet == 12:
+            # TODO we should raise an error if pitch is not in range, or else
+            # remove this check
             if 0 <= note.pitch <= 127:
                 add_note(mf.tracks[track_i], note)
                 empty = False
@@ -472,7 +474,12 @@ def init_midi(er, super_pattern):
 
 
 def write_er_midi(
-    er, super_pattern, midi_fname, reverse_tracks=True, return_mf=False
+    er,
+    super_pattern,
+    midi_fname,
+    reverse_tracks=True,
+    return_mf=False,
+    dont_write_empty=True,
 ):
     """Write a midi file with an ERSettings class.
 
@@ -508,15 +515,17 @@ def write_er_midi(
 
     if er.write_program_changes:
         write_program_changes(er, mf)
-    non_empty = False
+    # non_empty = False
+    empty_voices = []
     for voice_i, voice in enumerate(
         super_pattern.voices
         if not reverse_tracks
         else reversed(super_pattern.voices)
     ):
         empty = add_er_voice(er, voice_i, voice, mf)
-        if not empty:
-            non_empty = True
+        empty_voices.append(empty)
+        # if not empty:
+        #     non_empty = True
     for existing_voice_i, existing_voice in enumerate(
         super_pattern.existing_voices
         if not reverse_tracks
@@ -532,11 +541,19 @@ def write_er_midi(
             mf,
             force_choir=0,
         )
-        if not empty:
-            non_empty = True
+        # if not empty:
+        #     non_empty = True
+        empty_voices.append(empty)
+
+    non_empty = not all(empty_voices)
 
     if non_empty:
         abs_to_delta_times(mf)
+        if dont_write_empty:
+            for i in range(len(mf.tracks) - 1, -1, -1):
+                if not any(msg.type == "note_on" for msg in mf.tracks[i]):
+                    # if empty_voices[i]:
+                    mf.tracks.pop(i)
         if return_mf:
             return mf
         mf.save(filename=midi_fname)
