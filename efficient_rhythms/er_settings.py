@@ -1413,6 +1413,7 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "global",
             "priority": 1,
+            "val_dict": {"min_": (1,)},
         },
     )
     num_reps_super_pattern: int = fld(
@@ -1541,6 +1542,7 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "global",
             "priority": 3,
+            "shell_only": True,
         },
     )
     harmony_len: typing.Union[
@@ -1605,7 +1607,7 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "global",
             "priority": 4,
-            # TODO possible values
+            "possible_values": ("usual", "reverse"),
         },
     )
     allow_voice_crossings: typing.Union[bool, typing.Sequence[bool]] = fld(
@@ -1899,7 +1901,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "chord_tones",
-            "priority": 1,
+            "priority": 3,
         },
     )
     chord_tone_selection: bool = fld(
@@ -2542,7 +2544,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "choir",
-            "priority": 2,
+            "priority": 1,
         },
     )
     length_choir_segments: numbers.Number = fld(
@@ -2550,7 +2552,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "choir",
-            "priority": 2,
+            "priority": 1,
         },
     )
     length_choir_loop: numbers.Number = fld(
