@@ -3,7 +3,6 @@ from dataclasses import field as fld
 import re
 import numbers
 import typing
-from fractions import Fraction
 
 import numpy as np
 
@@ -387,15 +386,18 @@ class ERSettings:
         ======================
 
         parallel_voice_leading: bool. If `True`, then the voice-leading between
-            harmonies is conducted in pure (generic) parallel motion.
+            harmonies is conducted in pure (generic) parallel motion. The
+            present implementation of this setting is incompatible with
+            `constrain_voice_leading_to_ranges`, so if this setting is `True`,
+            the latter setting is ignored.
             Default: False
-        parallel_direction: int. Only has an effect if `parallel_voice_leading`
-            is True. Governs the direction of the parallel voice-leading:
-                - if positive, the motion is always upwards
-                - if negative, the motion is always downwards
-                - if 0, then the motion is either upwards or downwards,
-                    depending on which is shorter.
-            Default: 0
+        parallel_direction: str. Only has an effect if `parallel_voice_leading`
+            is True. Governs the direction of the parallel voice-leading.
+            Possible values:
+                "closest": takes the shortest path to the next chord.
+                "up": voice-leading is always up.
+                "down": voice-leading is always down.
+            Default: "closest"
         voice_lead_chord_tones: bool. If True, then chord-tones on each harmony
             are voice-led to chord-tones on the next harmony, and
             non-chord-tones to non-chord-tones. So, if moving from a C major
@@ -1793,6 +1795,7 @@ class ERSettings:
     #       These settings govern how the initial pattern is voice-led
     #       through subsequent harmonies.
 
+    # TODO make compatible with constrain_voice_leading_to_ranges
     parallel_voice_leading: bool = fld(
         default=False,
         metadata={
@@ -1801,12 +1804,14 @@ class ERSettings:
             "priority": 2,
         },
     )
-    parallel_direction: int = fld(
-        default=0,
+    # TODO "alternate" option
+    parallel_direction: str = fld(
+        default="closest",
         metadata={
             "mutable_attrs": {},
             "category": "voice_leading",
             "priority": 2,
+            "possible_values": ("up", "down", "closest"),
         },
     )
 
@@ -1918,6 +1923,7 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "chord_tones",
             "priority": 4,
+            "possible_values": ("linear", "quadratic"),
         },
     )
     max_n_between_chord_tones: int = fld(
@@ -1926,6 +1932,7 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "chord_tones",
             "priority": 2,
+            "val_dict": {"min_": (0,)},
         },
     )
     min_prob_chord_tone: float = fld(
@@ -1934,6 +1941,7 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "chord_tones",
             "priority": 2,
+            "val_dict": {"min_": (0,), "max_": (1,)},
         },
     )
     try_to_force_non_chord_tones: bool = fld(
@@ -1950,6 +1958,7 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "chord_tones",
             "priority": 3,
+            "val_dict": {"min_": (0,)},
         },
     )
     scale_chord_tone_prob_by_dur: bool = fld(
@@ -1966,6 +1975,7 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "chord_tones",
             "priority": 4,
+            "val_dict": {"min_": (0,)},
         },
     )
     scale_short_chord_tones_down: bool = fld(
@@ -1985,6 +1995,7 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "chord_tones",
             "priority": 2,
+            "val_dict": {"min_": (0,)},
         },
     )
     chord_tones_no_diss_treatment: typing.Union[
@@ -2053,6 +2064,7 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "melody",
             "priority": 4,
+            "val_dict": {"open_min": (0,)},
         },
     )
     unison_weighted_as: int = fld(
@@ -2075,24 +2087,25 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "melody",
             "priority": 2,
+            "val_dict": {"open_min": (0,)},
         },
     )
     max_interval_for_non_chord_tones: typing.Union[
-        numbers.Number, typing.Sequence[numbers.Number]
+        None, numbers.Number, typing.Sequence[numbers.Number]
     ] = fld(
-        default="take_from_max_interval",  # TODO document this!
+        default=None,
         metadata={
             "mutable_attrs": {},
             "category": "melody",
             "priority": 2,
+            "val_dict": {"open_min": (0,)},
         },
     )
     min_interval: typing.Union[
-        None,
         numbers.Number,
         typing.Sequence[numbers.Number],
     ] = fld(
-        default=None,
+        default=0,
         metadata={
             "mutable_attrs": {},
             "category": "melody",
@@ -2100,9 +2113,9 @@ class ERSettings:
         },
     )
     min_interval_for_non_chord_tones: typing.Union[
-        numbers.Number, typing.Sequence[numbers.Number]
+        None, numbers.Number, typing.Sequence[numbers.Number]
     ] = fld(
-        default="take_from_min_interval",
+        default=None,
         metadata={
             "mutable_attrs": {},
             "category": "melody",
@@ -2135,14 +2148,21 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "melody",
             "priority": 2,
+            "val_dict": {
+                "min_": (0,),
+            },
         },
     )
-    pitch_loop: typing.Union[int, typing.Sequence[int]] = fld(
-        default=(),
+    pitch_loop: typing.Union[None, int, typing.Sequence[int]] = fld(
+        default=None,
         metadata={
             "mutable_attrs": {},
             "category": "melody",
             "priority": 2,
+            "val_dict": {
+                "min_": (0,),
+                "max_": (1024,),
+            },
         },
     )
     hard_pitch_loop: bool = fld(
@@ -2211,35 +2231,40 @@ class ERSettings:
     )
     # MAYBE all modulos have boolean to be truncated by initial_pattern_len?
     consonance_modulo: typing.Union[
+        None,
         numbers.Number,
         typing.Sequence[numbers.Number],
         typing.Sequence[typing.Sequence[numbers.Number]],
     ] = fld(
-        default=3,
+        default=None,
         metadata={
             "mutable_attrs": {},
             "category": "consonance",
-            "priority": 0,
+            "priority": 3,
         },
     )
     min_dur_for_cons_treatment: numbers.Number = fld(
-        default=2,
-        metadata={
-            "mutable_attrs": {},
-            "category": "consonance",
-            "priority": 0,
-        },
-    )
-    forbidden_intervals: typing.Sequence[numbers.Number] = fld(
-        default=(),
+        default=0.25,
         metadata={
             "mutable_attrs": {},
             "category": "consonance",
             "priority": 2,
         },
     )
-    forbidden_interval_classes: typing.Sequence[numbers.Number] = fld(
-        default=(),
+    forbidden_intervals: typing.Union[
+        None, typing.Sequence[numbers.Number]
+    ] = fld(
+        default=None,
+        metadata={
+            "mutable_attrs": {},
+            "category": "consonance",
+            "priority": 2,
+        },
+    )
+    forbidden_interval_classes: typing.Union[
+        None, typing.Sequence[numbers.Number]
+    ] = fld(
+        default=None,
         metadata={
             "mutable_attrs": {},
             "category": "consonance",
@@ -2282,7 +2307,9 @@ class ERSettings:
             "priority": 4,
         },
     )
-    consonant_chords: typing.Sequence[typing.Sequence[numbers.Number]] = fld(
+    consonant_chords: typing.Sequence[
+        typing.Union[np.ndarray, typing.Sequence[numbers.Number]]
+    ] = fld(
         default=(
             "MAJOR_TRIAD",
             "MINOR_TRIAD",

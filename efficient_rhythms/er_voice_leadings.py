@@ -189,27 +189,39 @@ class VoiceLeader:
 
     Arguments:
         er: the settings object.
-        source_harmony_i
+        src_harmony_i
         dest_harmony_i
     """
 
-    def __init__(self, er, source_harmony_i, dest_harmony_i):
+    def __init__(self, er, src_harmony_i, dest_harmony_i):
         self.er = er
         self.tet = er.tet
-        self.source_harmony_i = source_harmony_i
+        self.src_harmony_i = src_harmony_i
         self.dest_harmony_i = dest_harmony_i
-        self.source_pc_scale, self.source_pc_chord = er.get(
-            source_harmony_i, "pc_scales", "pc_chords"
+        self.src_pc_scale, self.src_pc_chord = er.get(
+            src_harmony_i, "pc_scales", "pc_chords"
         )
         self.dest_pc_scale, self.dest_pc_chord = er.get(
             dest_harmony_i, "pc_scales", "pc_chords"
         )
-        self.scale_roots = (
-            er.get(source_harmony_i, "foot_pcs"),
+        self.scale_foots = (
+            er.get(src_harmony_i, "foot_pcs"),
             er.get(dest_harmony_i, "foot_pcs"),
         )
         self.parallel_voice_leading = er.parallel_voice_leading
-        self.parallel_direction = er.parallel_direction
+        if self.parallel_voice_leading:
+            self.parallel_str = er.parallel_direction
+            # this implementation of "alternate" does not work because
+            # the VoiceLeader only applies to two chords, then a new instance
+            # is created.
+            # TODO
+            if self.parallel_str == "alternate":
+                self.parallel_dir = None
+            elif self.parallel_str == "up":
+                self.parallel_dir = 1
+            elif self.parallel_str == "down":
+                self.parallel_dir = -1
+
         self.voice_lead_chord_tones = er.voice_lead_chord_tones
         self.voice_leading_i = -1
         # self._chords_last_updated is for updating chord-tone voice leadings.
@@ -222,7 +234,7 @@ class VoiceLeader:
 
     def _init_excluded_motions(self):
         self.excluded_vl_motions = {
-            i: [] for i in range(len(self.source_pc_scale))
+            i: [] for i in range(len(self.src_pc_scale))
         }
         if self.voice_lead_chord_tones:
             # The values of both of the following dicts are the same lists
@@ -239,70 +251,71 @@ class VoiceLeader:
 
     def _parallel_voice_leading(self):
 
-        # if chord_tones, then the "root" of each harmony is the root of the chord
-        # (which we can think of as a roman numeral), measured from the root of the
-        # scale
-
-        scale_len = len(self.source_pc_scale)
+        # both src and dest scales must have same length
+        scale_len = len(self.src_pc_scale)
 
         if self.voice_lead_chord_tones:
-            source_chord_root = self.source_pc_chord[0]
-            source_scale_root_i = self.source_pc_scale.index(source_chord_root)
-            dest_chord_root = self.dest_pc_chord[0]
-            dest_scale_root_i = self.dest_pc_scale.index(dest_chord_root)
+            # if chord_tones, then the "foot" of each harmony is the foot of the
+            # chord (which we can think of as a roman numeral), measured from
+            # the foot of the scale
+            src_foot, dest_foot = self.src_pc_chord[0], self.dest_pc_chord[0]
+            # src_scale_foot_i = self.src_pc_scale.index(src_chord_foot)
+            # dest_scale_foot_i = self.dest_pc_scale.index(dest_chord_foot)
 
-        # else the "root" of each harmony is the root of the scale
         else:
-            source_scale_root = self.scale_roots[0]
-            source_scale_root_i = self.source_pc_scale.index(source_scale_root)
-            dest_scale_root = self.scale_roots[1]
-            dest_scale_root_i = self.dest_pc_scale.index(dest_scale_root)
+            # else the "foot" of each harmony is the foot of the scale
+            src_foot, dest_foot = self.scale_foots
 
-        adjust_i = (dest_scale_root_i - source_scale_root_i) % scale_len
+        src_scale_foot_i = self.src_pc_scale.index(src_foot)
+        dest_scale_foot_i = self.dest_pc_scale.index(dest_foot)
 
-        voice_leading_intervals = []
+        foot_interval = (dest_scale_foot_i - src_scale_foot_i) % scale_len
+
+        vl_intervals = []
 
         for i in range(scale_len):
-            source_pitch_class = self.source_pc_scale[i % scale_len]
-            dest_pitch_class = self.dest_pc_scale[(i + adjust_i) % scale_len]
-            interval = (dest_pitch_class - source_pitch_class) % self.tet
-            voice_leading_intervals.append(interval)
+            src_pc = self.src_pc_scale[i % scale_len]
+            dest_pc = self.dest_pc_scale[(i + foot_interval) % scale_len]
+            interval = (dest_pc - src_pc) % self.tet
+            vl_intervals.append(interval)
 
-        if self.parallel_direction == 0:
-            avg_interval = sum(voice_leading_intervals) / scale_len
+        if all(i == 0 for i in vl_intervals):
+            return [vl_intervals], 0
+
+        if self.parallel_str == "closest" or (
+            self.parallel_str == "alternate" and self.parallel_dir is None
+        ):
+            avg_interval = sum(vl_intervals) / scale_len
             if avg_interval > 6:
-                self.parallel_direction = -1
+                self.parallel_dir = -1
             else:
-                self.parallel_direction = 1
+                self.parallel_dir = 1
+        elif self.parallel_str == "alternate":
+            # TODO
+            self.parallel_dir *= -1
 
-        if self.parallel_direction < 0:
-            voice_leading_intervals = [
-                interval - self.tet for interval in voice_leading_intervals
-            ]
+        if self.parallel_dir < 0:
+            vl_intervals = [interval - self.tet for interval in vl_intervals]
 
-        displacement = sum(
-            [abs(interval) for interval in voice_leading_intervals]
-        )
+        displacement = sum([abs(interval) for interval in vl_intervals])
 
-        return [
-            voice_leading_intervals,
-        ], displacement
+        return [vl_intervals], displacement
 
     @functools.cached_property
     def chord_indices(self):
-        return self.er.chord_indices_at_harmony_i(self.source_harmony_i)
+        return self.er.chord_indices_at_harmony_i(self.src_harmony_i)
 
     @functools.cached_property
     def nonchord_indices(self):
-        return self.er.nonchord_indices_at_harmony_i(self.source_harmony_i)
+        return self.er.nonchord_indices_at_harmony_i(self.src_harmony_i)
 
     @functools.cached_property
-    def source_chord_pcs(self):
-        return self.er.chord_pcs_at_harmony_i(self.source_harmony_i)
+    def src_chord_pcs(self):
+        return self.er.chord_pcs_at_harmony_i(self.src_harmony_i)
 
     @functools.cached_property
-    def source_nonchord_pcs(self):
-        return self.er.nonchord_pcs_at_harmony_i(self.source_harmony_i)
+    def src_nonchord_pcs(self):
+        return self.er.nonchord_pcs_at_harmony_i(self.src_harmony_i)
 
     @functools.cached_property
     def dest_chord_pcs(self):
@@ -314,7 +327,7 @@ class VoiceLeader:
 
     def _update_chord_vls(self):
         self.chord_intervals, self.c_displacement = efficient_voice_leading(
-            self.source_chord_pcs,
+            self.src_chord_pcs,
             self.dest_chord_pcs,
             tet=self.tet,
             exclude_motions=self.excluded_chord_motions,
@@ -324,7 +337,7 @@ class VoiceLeader:
 
     def _update_nonchord_vls(self):
         self.nonchord_intervals, self.nc_displacement = efficient_voice_leading(
-            self.source_nonchord_pcs,
+            self.src_nonchord_pcs,
             self.dest_nonchord_pcs,
             tet=self.tet,
             exclude_motions=self.excluded_nonchord_motions,
@@ -350,7 +363,7 @@ class VoiceLeader:
             self.zip_voice_leadings()
         else:
             self.intervals, self.displacement = efficient_voice_leading(
-                self.source_pc_scale,
+                self.src_pc_scale,
                 self.dest_pc_scale,
                 tet=self.tet,
                 displacement_more_than=self.displacement,
@@ -387,8 +400,8 @@ class VoiceLeader:
         ):
             chord_vl_i = nonchord_vl_i = 0
             zipped_voice_leading = []
-            for pc in self.source_pc_scale:
-                if pc in self.source_pc_chord:
+            for pc in self.src_pc_scale:
+                if pc in self.src_pc_chord:
                     zipped_voice_leading.append(chord_voice_leading[chord_vl_i])
                     chord_vl_i += 1
                 else:
@@ -411,10 +424,11 @@ class VoiceLeader:
             try:
                 voice_leading = self.intervals[self.voice_leading_i]
             except IndexError:
-                if self.voice_lead_chord_tones:
-                    self._update_voice_leadings()
-                else:
-                    self._update_voice_leadings()
+                if self.parallel_voice_leading:
+                    # there is only *one* parallel voice-leading, so if we are
+                    # here, the voice-leading has failed
+                    raise er_exceptions.NoMoreVoiceLeadingsError
+                self._update_voice_leadings()
                 self.voice_leading_i = 0
                 voice_leading = self.intervals[self.voice_leading_i]
             for interval_i, interval in enumerate(voice_leading):

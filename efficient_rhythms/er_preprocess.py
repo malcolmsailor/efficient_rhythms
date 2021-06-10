@@ -308,6 +308,8 @@ def rhythmic_values_to_fractions(er):
 
 def ensure_lists_or_tuples(er):
     def _ensure_list_of_iterables(in_iter):
+        if in_iter is None:
+            return [()]
         try:
             iter(in_iter[0])
             return in_iter
@@ -330,6 +332,8 @@ def ensure_lists_or_tuples(er):
         "pitch_loop",
         "hard_pitch_loop",
         "allow_voice_crossings",
+        "forbidden_intervals",
+        "forbidden_interval_classes",
         "pattern_len",
         "transpose_len",
         "transpose_intervals",
@@ -348,13 +352,14 @@ def ensure_lists_or_tuples(er):
         "tempo",
         "tempo_len",
     ]
+
     for attr in to_list:
         val = getattr(er, attr)
         if val is None:
-            continue
-        if not isinstance(val, typing.Sequence) or isinstance(val, str):
+            # continue
+            setattr(er, attr, [])
+        elif not isinstance(val, typing.Sequence) or isinstance(val, str):
             setattr(er, attr, [val])
-
     to_list_of_iters = [
         "hard_bounds",
         "scales",
@@ -959,9 +964,9 @@ def preprocess_settings(user_settings, random_settings=False, seed=None):
         # we re-set the seed in the hopes that the music will be reproducible
         er_misc_funcs.set_seed(er.seed, print_out=False)
 
-    if er.max_interval_for_non_chord_tones == "take_from_max_interval":
+    if er.max_interval_for_non_chord_tones is None:
         er.max_interval_for_non_chord_tones = er.max_interval
-    if er.min_interval_for_non_chord_tones == "take_from_min_interval":
+    if er.min_interval_for_non_chord_tones is None:
         er.min_interval_for_non_chord_tones = er.min_interval
 
     process_np_arrays(er)
@@ -1103,7 +1108,8 @@ def preprocess_settings(user_settings, random_settings=False, seed=None):
         if er.pattern_len[pattern_i] <= 0:
             er.pattern_len[pattern_i] = er.length_of_all_harmonies
 
-    if er.rhythm_len is None:
+    # if er.rhythm_len is None:
+    if not er.rhythm_len:
         er.rhythm_len = er.pattern_len
     else:
         i = 0

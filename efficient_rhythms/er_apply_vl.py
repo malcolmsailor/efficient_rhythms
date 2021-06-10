@@ -72,7 +72,7 @@ def apply_voice_leading(
 
     new_pitch = prev_pitch + voice_leading_interval
 
-    if er.constrain_voice_leading_to_ranges:
+    if er.constrain_voice_leading_to_ranges and not er.parallel_voice_leading:
         min_pitch, max_pitch = er.get(voice_i, "voice_ranges")
         if min_pitch > new_pitch or max_pitch < new_pitch:
             voice_lead_error.out_of_range()

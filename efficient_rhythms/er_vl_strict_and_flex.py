@@ -1,4 +1,3 @@
-import itertools
 from . import er_exceptions
 from . import er_classes
 from . import er_voice_leadings
@@ -76,10 +75,6 @@ def flex_vl_loop(er, score, voice_lead_error, voice, vl_item):
                 ] += 1
                 return None
 
-    try:
-        assert len(new_notes._data) == vl_item.end_i - vl_item.start_i
-    except AssertionError:
-        breakpoint()
     for note in new_notes:
         voice.add_note(note)
 
@@ -220,10 +215,6 @@ def strict_voice_leading_loop(er, score, voice_lead_error, voice, vl_item):
             voice_leading = voice_leader()
             prev_pc_scale = er.get(prev_htimes.i, "pc_scales")
 
-    try:
-        assert len(new_notes._data) == vl_item.end_i - vl_item.start_i
-    except AssertionError:
-        breakpoint()
     voice.append(new_notes)
     return new_notes
 

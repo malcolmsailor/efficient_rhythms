@@ -125,9 +125,7 @@ def check_consonance(er, super_pattern, pitch, onset, dur, voice_i):
     )
     if (
         consonance_modulo
-        != [
-            0,
-        ]
+        and list(consonance_modulo) != [0]
         and er_misc_funcs.check_modulo(onset, consonance_modulo) != 0
     ):
         # MAYBE comma here, to allow for very close onsets?

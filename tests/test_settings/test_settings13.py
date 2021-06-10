@@ -10,4 +10,7 @@
     "preserve_foot_in_bass": "lowest",
     "scales": [NATURAL_MINOR_SCALE],
     "chords": [MINOR_TRIAD],
+    "parallel_voice_leading": True,
+    # "parallel_direction": "down",
+    "constrain_voice_leading_to_ranges": True,
 }
