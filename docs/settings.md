@@ -139,7 +139,7 @@ Less often used general settings are under
     <a href="#pattern_len">`pattern_len`</a> is 0 or negative, it will
     be assigned the length of the complete harmonic progression
     (determined by <a href="#harmony_len">`harmony_len`</a> and
-    <a href="#num_harmonies">`num_harmonies`</a>)
+    <a href="#num_harmonies">`num_harmonies`</a>).
     
     If `cont_rhythms != "none"`, then this argument must consist of a
     single number.
@@ -184,7 +184,7 @@ Less often used general settings are under
     <a href="#pattern_len">`pattern_len`</a>.
 
   - <span id="num_harmonies">**`num_harmonies`**</span>: int. The number
-    of harmonies in the pattern. If a not passed, the length of
+    of harmonies in the pattern. If not passed, the length of
     <a href="#foot_pcs">`foot_pcs`</a> will be assigned to this setting.
     If <a href="#foot_pcs">`foot_pcs`</a> is not passed either, will be
     set to a default value of 4.
@@ -438,23 +438,24 @@ Less often used general settings are under
 
   - <span id="parallel_voice_leading">**`parallel_voice_leading`**</span>:
     bool. If `True`, then the voice-leading between harmonies is
-    conducted in pure (generic) parallel motion.
+    conducted in pure (generic) parallel motion. The present
+    implementation of this setting is incompatible with
+    <a href="#constrain_voice_leading_to_ranges">`constrain_voice_leading_to_ranges`</a>,
+    so if this setting is `True`, the latter setting is ignored.
     
     *Default*: `False`
 
-  - <span id="parallel_direction">**`parallel_direction`**</span>: int.
+  - <span id="parallel_direction">**`parallel_direction`**</span>: str.
     Only has an effect if
     <a href="#parallel_voice_leading">`parallel_voice_leading`</a> is
-    True. Governs the direction of the parallel voice-leading:
+    True. Governs the direction of the parallel voice-leading. Possible
+    values:
     
-      - if positive, the motion is always upwards
+      - `"closest"`: takes the shortest path to the next chord.
+      - `"up"`: voice-leading is always up.
+      - `"down"`: voice-leading is always down.
     
-      - if negative, the motion is always downwards
-    
-      - if 0, then the motion is either upwards or downwards, depending
-        on which is shorter.
-    
-    *Default*: `0`
+    *Default*: `"closest"`
 
   - <span id="voice_lead_chord_tones">**`voice_lead_chord_tones`**</span>:
     bool. If True, then chord-tones on each harmony are voice-led to
@@ -1271,7 +1272,8 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
     equivalent to 0. Has no effect if
     <a href="#obligatory_onsets">`obligatory_onsets`</a> is empty.
     
-    *Default*: `4`
+    *Default*: `4` \# TODO how to handle possible values can be string
+    *or* int
 
   - <span id="comma_position">**`comma_position`**</span>: string, int,
     or sequence of strings and/or ints. If the
@@ -1592,7 +1594,7 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
     
     *Default*: `False`
 
-  - <span id="tranpose_type">**`tranpose_type`**</span>: string. For
+  - <span id="transpose_type">**`transpose_type`**</span>: string. For
     explanation of the possible values, see the discussion of “generic”
     and “specific” transposition above. Possible values:
     
