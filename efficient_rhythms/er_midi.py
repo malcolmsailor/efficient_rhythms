@@ -432,13 +432,6 @@ def write_program_changes(er, mf, time=0):
 
 
 def write_tempi(er, mf, total_len):
-    if er.tempo_len[0] == 0:
-        mf.tracks[META_TRACK].append(
-            mido.MetaMessage(
-                "set_tempo", tempo=mido.bpm2tempo(er.tempo[0]), time=0
-            )
-        )
-        return
     tempo_i = 0
     time = 0
     while time < total_len:
@@ -447,8 +440,12 @@ def write_tempi(er, mf, total_len):
         else:
             tempo = random.randrange(*er.tempo_bounds)
         mf.tracks[META_TRACK].append(
-            mido.MetaMessage("set_tempo", tempo=mido.bpm2tempo(tempo), time=0)
+            mido.MetaMessage(
+                "set_tempo", tempo=mido.bpm2tempo(tempo), time=time
+            )
         )
+        if not er.tempo_len:
+            break
         time += er.get(tempo_i, "tempo_len")
         tempo_i += 1
 

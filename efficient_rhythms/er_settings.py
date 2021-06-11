@@ -1194,14 +1194,14 @@ class ERSettings:
         tempo: a number or a sequence of numbers. Specifies a tempo or tempi in
             quarter-note beats-per-minute. If a sequence, the length of each
             tempo segment is set with `tempo_len`. If a sequence, will be looped
-            through if necessary. If an empty sequence, a tempo or tempi will
+            through if necessary. If not passed, a tempo or tempi will
             be randomly generated.
             Default: 120
         tempo_len: a number or a sequence of numbers. Specifies the duration of
             each tempo in `tempo` in quarter-note beats. If a sequence, will be
             looped through as necessary. Has no effect if `tempo` is a single
-            number.  If 0, then the first tempo in `tempo` applies to the whole
-            file.
+            number.  If not passed, then the first tempo in `tempo` applies
+            to the whole file.
             Default: 0
         tempo_bounds: a tuple of form (number, number). If `tempo` is an empty
             sequence, then tempi are randomly generated within the (inclusive)
@@ -2686,7 +2686,9 @@ class ERSettings:
     # Tempo settings
 
     # LONGTERM debug tempos
-    tempo: typing.Union[numbers.Number, typing.Sequence[numbers.Number]] = fld(
+    tempo: typing.Union[
+        None, numbers.Number, typing.Sequence[numbers.Number]
+    ] = fld(
         default=120,
         metadata={
             "mutable_attrs": {},
@@ -2694,11 +2696,10 @@ class ERSettings:
             "priority": 1,
         },
     )
-    # TODO allow None
     tempo_len: typing.Union[
-        numbers.Number, typing.Sequence[numbers.Number]
+        None, numbers.Number, typing.Sequence[numbers.Number]
     ] = fld(
-        default=0,
+        default=None,
         metadata={
             "mutable_attrs": {},
             "category": "tempo",
