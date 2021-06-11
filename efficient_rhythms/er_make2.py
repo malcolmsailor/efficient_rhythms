@@ -81,9 +81,10 @@ def check_harmonic_intervals(
 
     if (
         forbidden_interval_modulo
-        != [
-            0,
-        ]
+        and
+        # I believe the next check (and similar for consonance_modulo) is only
+        # there for legacy reasons. Can we delete it?
+        list(forbidden_interval_modulo) != [0]
         and er_misc_funcs.check_modulo(onset, forbidden_interval_modulo) != 0
     ):
         return True
