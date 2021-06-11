@@ -1110,8 +1110,8 @@ def apply_specific_transpositions(
         end_time += er.get(transpose_i, "transpose_len")
         super_pattern.transpose(
             transpose_interval,
-            start_time,
-            end_time,
+            start_time=start_time,
+            end_time=end_time,
             apply_to_existing_voices=apply_to_existing_voices,
         )
 
