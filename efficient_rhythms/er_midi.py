@@ -550,7 +550,7 @@ def write_er_midi(
     if non_empty:
         abs_to_delta_times(mf)
         if dont_write_empty:
-            for i in range(len(mf.tracks) - 1, -1, -1):
+            for i in range(len(mf.tracks) - 1, 0, -1):
                 if not any(msg.type == "note_on" for msg in mf.tracks[i]):
                     mf.tracks.pop(i)
         if return_mf:

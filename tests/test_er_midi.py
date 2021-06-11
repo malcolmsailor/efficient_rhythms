@@ -58,7 +58,9 @@ def test_voices_to_tracks():
         for track_i, track in enumerate(mf.tracks):
             for msg in track:
                 if msg.type in ("note_on", "note_off", "program_change"):
-                    assert msg.channel == er.choir_assignments[track_i]
+                    # the meta track is track 0, so we need to subtract 1
+                    #   to get the right element from er.choir_assignments
+                    assert msg.channel == er.choir_assignments[track_i - 1]
     except:  # pylint: disable=bare-except
         exc_type, exc_value, exc_traceback = sys.exc_info()
         traceback.print_exception(
