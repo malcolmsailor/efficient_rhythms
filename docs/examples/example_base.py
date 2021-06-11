@@ -13,4 +13,15 @@
     "force_foot_in_bass": "global_first_beat",
     "force_chord_tone": "global_first_note",
     "forbidden_interval_classes": [0],
+    # overriding web defaults
+    "randomly_distribute_between_choirs": False,
+    "tempo": 120,
+    "onset_density": 1.0,
+    "dur_density": 1.0,
+    "max_consec_seg_from_same_choir": 0,
+    "length_choir_segments": 1,
+    "preserve_foot_in_bass": "none",
+    "scales": ["DIATONIC_SCALE"],
+    "chords": ["MAJOR_TRIAD"],
+    "voice_lead_chord_tones": False,
 }

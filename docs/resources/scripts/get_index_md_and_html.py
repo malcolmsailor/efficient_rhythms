@@ -1,8 +1,16 @@
 import os
 import re
+import sys
 import subprocess
+import urllib
 
 import get_settings_md_and_html
+
+sys.path.insert(
+    0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+)
+
+import efficient_rhythms.er_preprocess as er_preprocess
 
 SCRIPT_DIR = os.path.dirname((os.path.realpath(__file__)))
 
@@ -12,14 +20,40 @@ OUT_HTML_PATH = os.path.join(SCRIPT_DIR, "../../index.html")
 CSS_PATH1 = "resources/third_party/github-markdown-css/github-markdown.css"
 CSS_PATH2 = "resources/css/markdown-body.css"
 
+ER_WEB_URL = "http://127.0.0.1:5000/"  # TODO update
+ER_WEB_EXCLUDE = ("choirs",)
+
+
+def er_web_query(example):
+    settings_files = (
+        os.path.join(
+            SCRIPT_DIR,
+            "../../examples",
+            re.sub(r"\d+", "", example) + "_base.py",
+        ),
+        os.path.join(SCRIPT_DIR, "../../examples", f"{example}.py"),
+    )
+    merged = er_preprocess.merge_settings(settings_files)
+
+    for name in ER_WEB_EXCLUDE:
+        if name in merged:
+            del merged[name]
+    for name in merged:
+        if isinstance(merged[name], bool):
+            merged[name] = "y" if merged[name] else "n"
+    query = urllib.parse.urlencode(merged, doseq=False)
+    return ER_WEB_URL + "?" + query
+
 
 def insert_examples(md_content):
     example_pattern = re.compile(r"EXAMPLE:(\w+)")
     example_matches = re.findall(example_pattern, md_content)
     for example in example_matches:
+
         svg_path = f"resources/svgs/{example}.svg"
         png_path = f"resources/pngs/{example}_00001.png"
         m4a_path = f"resources/m4as/{example}.m4a"
+        web_url = er_web_query(example)
         repl = [
             f'<span id="{example}">**Example:**'
             f" `docs/examples/{example}.py`</span><br>"
@@ -34,6 +68,7 @@ def insert_examples(md_content):
             )
         if os.path.exists(os.path.join(SCRIPT_DIR, "../..", m4a_path)):
             repl.append(f"![\1 audio]({m4a_path})\n")
+        repl.append(f"[Click to open this example in the web app]({web_url})\n")
         md_content = re.sub(
             fr"\bEXAMPLE:{example}\b", "".join(repl), md_content
         )

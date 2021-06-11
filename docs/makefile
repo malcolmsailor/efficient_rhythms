@@ -1,5 +1,7 @@
-EFFRHY_SOURCE_FILES = $(wildcard ../efficient_rhythms/er*.py)
-EFFRHY = ../efficient_rhythms.py $(EFFRHY_SOURCE_FILES)
+# This makefile assumes that efficient_rhythms is installed with pip as a
+# module (so that py -m efficient_rhythms works)
+
+EFFRHY = $(shell find ../efficient_rhythms -type f -name '*.py')
 
 EXAMPLE_SRC = $(shell fd '^example[0-9]+\.py$$' examples)
 EXAMPLE_MID = $(EXAMPLE_SRC:examples/%.py=examples/midi/%.mid)
@@ -26,6 +28,9 @@ RHYTHM_EXAMPLE_SVG = \
 	$(RHYTHM_EXAMPLE_SRC:examples/%.py=resources/svgs/%.svg)
 RHYTHM_EXAMPLE_PNG = \
 	$(RHYTHM_EXAMPLE_SRC:examples/%.py=resources/pngs/%_00001.png)
+
+RHYTHM_EXAMPLES_NO_NOTATION =$(filter %example5.py %example6.py \
+	%example11.py %example12.py, $(RHYTHM_EXAMPLE_SRC))
 
 
 CSS_FILES = $(resources/third_party/github-markdown-css/github-markdown.css \
@@ -54,7 +59,7 @@ svgs: midi
 #
 # resources/svgs/example%.svg: examples/example%.py \
 # 		examples/example_base.py $(EFFRHY)
-# 	python3 ../efficient_rhythms.py --settings examples/example_base.py $< \
+# 	python3 -m efficient_rhythms --settings examples/example_base.py $< \
 #         --verovio-arguments "--page-height 450" --no-interface \
 #         --output-notation svg
 # 	mv examples/midi/example$*.svg resources/svgs/example$*.svg
@@ -68,24 +73,27 @@ midi: $(EXAMPLE_MID) $(HARMONY_EXAMPLE_MID) $(RHYTHM_EXAMPLE_MID)
 # it would be nice to consolidate these rules into one if possible!
 
 # This recipe *also* builds the associated SVG file and moves it into place
+# SVG_HEIGHT was 450. TODO verify
 examples/midi/example%.mid: examples/example%.py \
 		examples/example_base.py $(EFFRHY)
 	$(eval SVG_HEIGHT = $(SVG_HEIGHT_$(shell \
 			resources/scripts/get_n_voices.sh examples/example_base.py $<)))
-	python3 ../efficient_rhythms.py --settings examples/example_base.py $< \
-        --verovio-arguments "--page-height 450" --no-interface \
+	python3 -m efficient_rhythms --settings examples/example_base.py $< \
+        --verovio-arguments "--page-height $(SVG_HEIGHT)" --no-interface \
         --output-notation svg
 	mv examples/midi/example$*.svg resources/svgs/example$*.svg
 
 
 # This recipe *also* builds the associated SVG file and moves it into place
+# SVG_HEIGHT was 600. TODO verify
 examples/midi/harmony_example%.mid: examples/harmony_example%.py \
 		examples/harmony_example_base.py $(EFFRHY)
 	$(eval SVG_HEIGHT = $(SVG_HEIGHT_$(shell \
-			resources/scripts/get_n_voices.sh examples/harmony_example_base.py $<)))
-	python3 ../efficient_rhythms.py --settings \
+			resources/scripts/get_n_voices.sh \
+			examples/harmony_example_base.py $<)))
+	python3 -m efficient_rhythms --settings \
 		examples/harmony_example_base.py $< \
-        --verovio-arguments "--page-height 600" --no-interface \
+        --verovio-arguments "--page-height $(SVG_HEIGHT)" --no-interface \
         --output-notation svg
 	mv examples/midi/harmony_example$*.svg \
 		resources/svgs/harmony_example$*.svg
@@ -93,17 +101,25 @@ examples/midi/harmony_example%.mid: examples/harmony_example%.py \
 # This recipe *also* builds the associated SVG file and moves it into place
 examples/midi/rhythm_example%.mid: examples/rhythm_example%.py \
 		examples/rhythm_example_base.py $(EFFRHY)
+	$(eval match=$(filter $(<), $(RHYTHM_EXAMPLES_NO_NOTATION)))
 	$(eval SVG_HEIGHT = $(SVG_HEIGHT_$(shell \
-			resources/scripts/get_n_voices.sh examples/rhythm_example_base.py $<)))
-	python3 ../efficient_rhythms.py --settings \
-		examples/rhythm_example_base.py $< \
-        --verovio-arguments "--page-height $(SVG_HEIGHT)" --no-interface \
-        --output-notation svg
-	if [[ -e examples/midi/rhythm_example$*.svg ]]; \
+			resources/scripts/get_n_voices.sh \
+			examples/rhythm_example_base.py $<)))
+	if ! [[ -z "$(match)" ]] ; \
 	then \
+		python3 -m efficient_rhythms --settings \
+			examples/rhythm_example_base.py $< \
+        	--no-interface ; \
+	else \
+		python3 -m efficient_rhythms --settings \
+			examples/rhythm_example_base.py $< \
+			--verovio-arguments "--page-height $(SVG_HEIGHT)" --no-interface \
+			--output-notation svg ; \
 		mv examples/midi/rhythm_example$*.svg \
-			resources/svgs/rhythm_example$*.svg; \
+			resources/svgs/rhythm_example$*.svg ; \
 	fi;
+
+
 
 ########
 # PNGs #
