@@ -3,6 +3,7 @@ use.
 """
 
 import collections
+from efficient_rhythms import er_exceptions
 import fractions
 import math
 import os
@@ -843,27 +844,10 @@ def merge_settings(settings_paths, silent=True):
 
 
 def read_in_settings(settings_input, settings_class):
-    # def _merge(dict1, dict2):
-    #     for key, val in dict2.items():
-    #         if (
-    #             isinstance(val, dict)
-    #             and key in dict1
-    #             and isinstance(dict1[key], dict)
-    #         ):
-    #             _merge(dict1[key], val)
-    #             dict2[key] = dict1[key]
-    #     dict1.update(dict2)
-
     if settings_input is None:
         settings_input = {}
     if isinstance(settings_input, dict):
         return settings_class(**settings_input)
-    # merged_dict = {}
-    # for user_settings_path in settings_input:
-    #     print(f"Reading settings from {user_settings_path}")
-    #     with open(user_settings_path, "r", encoding="utf-8") as inf:
-    #         user_settings = eval(inf.read(), vars(er_constants))
-    #     _merge(merged_dict, user_settings)
     return settings_class(**merge_settings(settings_input, silent=False))
 
 
@@ -874,6 +858,16 @@ class SettingsProcesser(er_settings.ERSettings):
         self._nonchord_pcs = {}
         self._chord_indices = {}
         self._nonchord_indices = {}
+        self._timeout_event = None
+
+    def check_time(self):
+        if self._timeout_event is None:
+            return
+        if self._timeout_event.is_set():
+            raise er_exceptions.TimeoutError
+
+    def add_timeout_event(self, timeout_event):
+        self._timeout_event = timeout_event
 
     def nonchord_pcs_at_harmony_i(self, i):
         if i not in self._nonchord_pcs:

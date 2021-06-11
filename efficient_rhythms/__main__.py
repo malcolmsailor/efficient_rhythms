@@ -2,19 +2,18 @@ import itertools
 import os
 import random
 import sys
+import time
+import threading
 
 
 from . import er_exceptions
 from . import er_interface
-from . import er_make
+from . import er_make_handler
 from . import er_misc_funcs
 from . import er_midi
 from . import er_midi_settings
 from . import er_output_notation
 from . import er_preprocess
-
-# MAYBE wait a moment when sending midi messages, see if this solves
-#   issue of first messages sometimes not sounding?
 
 MAX_RANDOM_TRIES = 10
 
@@ -59,7 +58,7 @@ def make_pattern(args, settings):
         settings.num_tracks_from(pattern)
         settings.original_path = abs_path
         return pattern
-    pattern = er_make.make_super_pattern(settings)
+    pattern = er_make_handler.make_super_pattern(settings)
     save(args, settings, pattern)
     return pattern
 

@@ -1337,6 +1337,8 @@ class ERSettings:
             of "deadends" the recursive algorithm for building the initial
             pattern can reach before it will be aborted.
             Default: 1000
+        timeout: number. If passed, the script will stop if it has not suceeded
+            in this many seconds.
 
     """
 
@@ -2751,6 +2753,16 @@ class ERSettings:
     )
     max_available_pitch_materials_deadends: int = fld(
         default=1000,
+        metadata={
+            "mutable_attrs": {},
+            "category": "global",
+            "shell_only": True,
+            "priority": 0,
+        },
+    )
+    # TODO document
+    timeout: typing.Union[None, numbers.Number] = fld(
+        default=None,
         metadata={
             "mutable_attrs": {},
             "category": "global",

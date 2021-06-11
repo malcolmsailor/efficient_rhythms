@@ -707,6 +707,7 @@ def attempt_initial_pattern(
 ):
 
     er.build_status_printer.spin()
+    er.check_time()
 
     try:
         poss_note = PossibleNote(er, super_pattern, onset_i)
@@ -1011,6 +1012,7 @@ def make_super_pattern(er):
                 success = True
                 break
             er.build_status_printer.spin()
+            er.check_time()
             voice_lead_error.status()
 
             success = False

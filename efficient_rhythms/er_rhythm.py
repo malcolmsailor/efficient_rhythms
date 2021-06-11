@@ -926,6 +926,8 @@ def generate_rhythm1(er, voice_i, prev_rhythms=()):
         A dictionary of (Fraction:onset time, Fraction:duration) pairs.
     """
 
+    # TODO revise this code... it gets *really* slow when the rhythms get long
+
     if voice_i in er.rhythmic_unison_followers:
         leader_i = er.rhythmic_unison_followers[voice_i]
         return prev_rhythms[leader_i]
@@ -941,6 +943,7 @@ def generate_rhythm1(er, voice_i, prev_rhythms=()):
         er.dur_subdivision[voice_i] = subdivision
 
     onset_positions = _get_onset_positions(er, voice_i)
+    er.check_time()
 
     available = []
     if voice_i in er.hocketing_followers:
@@ -1004,20 +1007,21 @@ def generate_rhythm1(er, voice_i, prev_rhythms=()):
         rhythm.data = onsets
         return rhythm
     # LONGTERM consolidate this code with above (a lot of duplication!)
+    er.check_time()
     onset_list = _get_onset_list(er, voice_i, onset_positions, available)
-
+    er.check_time()
     onsets, durs = _get_onset_dict_and_durs_to_next_onset(
         er, voice_i, onset_list
     )
-
+    er.check_time()
     _fill_onset_durs(er, voice_i, onsets, durs)
-
+    er.check_time()
     _add_comma(er, voice_i, onsets)
-
+    er.check_time()
     if er.cont_rhythms == "grid":
         rhythm = er.grid.return_varied_rhythm(er, onsets, voice_i)
         return rhythm
-
+    er.check_time()
     _fit_rhythm_to_pattern(er, voice_i, onsets)
 
     rhythm = Rhythm(er, voice_i)

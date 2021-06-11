@@ -3,6 +3,10 @@ import collections
 from . import er_misc_funcs
 
 
+class TimeoutError(Exception):
+    pass
+
+
 class ErSettingsError(Exception):
     pass
 

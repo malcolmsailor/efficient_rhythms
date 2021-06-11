@@ -6,6 +6,7 @@ from . import er_apply_vl
 
 
 def flex_vl_loop(er, score, voice_lead_error, voice, vl_item):
+    er.check_time()
     rhythm = er.rhythms[vl_item.voice_i]
     new_notes = er_classes.Voice()
 
@@ -121,6 +122,7 @@ def voice_lead_pattern_flexibly(er, score, vl_error, pattern_vl_i=0):
 
 
 def strict_voice_leading_loop(er, score, voice_lead_error, voice, vl_item):
+    er.check_time()
     rhythm = er.rhythms[vl_item.voice_i]
     new_notes = er_classes.Voice()
 
