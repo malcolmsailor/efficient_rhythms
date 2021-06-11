@@ -2235,8 +2235,9 @@ class ERSettings:
     consonance_modulo: typing.Union[
         None,
         numbers.Number,
-        typing.Sequence[numbers.Number],
-        typing.Sequence[typing.Sequence[numbers.Number]],
+        typing.Sequence[
+            typing.Union[numbers.Number, typing.Sequence[numbers.Number]]
+        ],
     ] = fld(
         default=None,
         metadata={
@@ -2274,11 +2275,13 @@ class ERSettings:
         },
     )
     forbidden_interval_modulo: typing.Union[
+        None,
         numbers.Number,
-        typing.Sequence[numbers.Number],
-        typing.Sequence[typing.Sequence[numbers.Number]],
+        typing.Sequence[
+            typing.Union[numbers.Number, typing.Sequence[numbers.Number]]
+        ],
     ] = fld(
-        default=0,
+        default=None,
         metadata={
             "mutable_attrs": {},
             "category": "consonance",
@@ -2499,9 +2502,8 @@ class ERSettings:
             "priority": 2,
         },
     )
-    obligatory_onsets: typing.Union[
-        typing.Sequence[numbers.Number],
-        typing.Sequence[typing.Sequence[numbers.Number]],
+    obligatory_onsets: typing.Sequence[
+        typing.Union[numbers.Number, typing.Sequence[numbers.Number]],
     ] = fld(
         default=(),
         metadata={
@@ -2542,12 +2544,7 @@ class ERSettings:
     ###################################################################
     # Choir settings
 
-    choirs: typing.Sequence[
-        int,
-        # typing.Tuple[
-        #     typing.Sequence[int], typing.Union[int, typing.Sequence[int]]
-        # ],
-    ] = fld(
+    choirs: typing.Sequence[int] = fld(
         default=(
             "GUITAR",
             "ELECTRIC_PIANO",
