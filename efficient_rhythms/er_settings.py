@@ -2692,6 +2692,7 @@ class ERSettings:
             "priority": 1,
         },
     )
+    # TODO allow None
     tempo_len: typing.Union[
         numbers.Number, typing.Sequence[numbers.Number]
     ] = fld(

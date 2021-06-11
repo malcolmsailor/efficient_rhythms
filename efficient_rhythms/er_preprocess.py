@@ -20,6 +20,7 @@ from . import er_misc_funcs
 from . import er_randomize
 from . import er_settings
 from . import er_tuning
+from . import er_validate
 from . import er_voice_leadings
 
 from . import PACKAGE_DIR
@@ -51,10 +52,6 @@ PITCH_MATERIALS = ("unison_weighted_as",)
 #   rest of the script
 
 
-class SettingsError(Exception):
-    pass
-
-
 def notify_user_of_unusual_settings(er):
     def print_(text):
         print(er_misc_funcs.add_line_breaks(text))
@@ -70,13 +67,13 @@ def notify_user_of_unusual_settings(er):
             "'rhythm_len' have the same, unique value"
         )
 
-    if er.len_to_force_chord_tone == 0 and er.scale_chord_tone_prob_by_dur:
-        raise SettingsError(
-            "If 'scale_chord_tone_prob_by_dur' is True, then "
-            "'len_to_force_chord_tone' must be non-zero."
-        )
-    if len(er.voice_ranges) < er.num_voices:
-        raise SettingsError("len(voice_ranges) < num_voices")
+    # if er.len_to_force_chord_tone == 0 and er.scale_chord_tone_prob_by_dur:
+    #     raise er_exceptions.ErSettingsError(
+    #         "If 'scale_chord_tone_prob_by_dur' is True, then "
+    #         "'len_to_force_chord_tone' must be non-zero."
+    #     )
+    # if len(er.voice_ranges) < er.num_voices:
+    #     raise er_exceptions.ErSettingsError("len(voice_ranges) < num_voices")
     if er.scale_short_chord_tones_down and er.try_to_force_non_chord_tones:
         print_(
             "Warning: 'scale_short_chord_tones_down' and "
@@ -452,19 +449,19 @@ def process_choir_settings(er):
     """Prepares the choir settings."""
     # LONGTERM check if midi programs are defined in midi player? (To avoid
     #   tracks that mysteriously don't play back.)
-    if not er.choirs:
-        raise SettingsError("'choirs' cannot be empty")
+    # if not er.choirs:
+    #     raise er_exceptions.ErSettingsError("'choirs' cannot be empty")
     if not er.randomly_distribute_between_choirs:
         if not er.choir_assignments:
             er.choir_assignments = [
                 i % len(er.choirs) for i in range(er.num_voices)
             ]
-        if max(er.choir_assignments) > len(er.choirs) - 1:
-            raise SettingsError(
-                "'choir_assignments' assigns a voice to choir "
-                f"{max(er.choir_assignments)}, but the "
-                f"maximum index for 'choirs' is {len(er.choirs) - 1}"
-            )
+        # if max(er.choir_assignments) > len(er.choirs) - 1:
+        #     raise er_exceptions.ErSettingsError(
+        #         "'choir_assignments' assigns a voice to choir "
+        #         f"{max(er.choir_assignments)}, but the "
+        #         f"maximum index for 'choirs' is {len(er.choirs) - 1}"
+        #     )
         er.num_choirs = len(set(er.choir_assignments))
         er.choir_order = [
             er.choir_assignments,
@@ -823,7 +820,7 @@ def cum_mod_lists(er):
             ]
 
 
-def read_in_settings(settings_input, settings_class):
+def merge_settings(settings_paths, silent=True):
     def _merge(dict1, dict2):
         for key, val in dict2.items():
             if (
@@ -835,17 +832,39 @@ def read_in_settings(settings_input, settings_class):
                 dict2[key] = dict1[key]
         dict1.update(dict2)
 
+    merged_dict = {}
+    for user_settings_path in settings_paths:
+        if not silent:
+            print(f"Reading settings from {user_settings_path}")
+        with open(user_settings_path, "r", encoding="utf-8") as inf:
+            user_settings = eval(inf.read(), vars(er_constants))
+        _merge(merged_dict, user_settings)
+    return merged_dict
+
+
+def read_in_settings(settings_input, settings_class):
+    # def _merge(dict1, dict2):
+    #     for key, val in dict2.items():
+    #         if (
+    #             isinstance(val, dict)
+    #             and key in dict1
+    #             and isinstance(dict1[key], dict)
+    #         ):
+    #             _merge(dict1[key], val)
+    #             dict2[key] = dict1[key]
+    #     dict1.update(dict2)
+
     if settings_input is None:
         settings_input = {}
     if isinstance(settings_input, dict):
         return settings_class(**settings_input)
-    merged_dict = {}
-    for user_settings_path in settings_input:
-        print(f"Reading settings from {user_settings_path}")
-        with open(user_settings_path, "r", encoding="utf-8") as inf:
-            user_settings = eval(inf.read(), vars(er_constants))
-        _merge(merged_dict, user_settings)
-    return settings_class(**merged_dict)
+    # merged_dict = {}
+    # for user_settings_path in settings_input:
+    #     print(f"Reading settings from {user_settings_path}")
+    #     with open(user_settings_path, "r", encoding="utf-8") as inf:
+    #         user_settings = eval(inf.read(), vars(er_constants))
+    #     _merge(merged_dict, user_settings)
+    return settings_class(**merge_settings(settings_input, silent=False))
 
 
 class SettingsProcesser(er_settings.ERSettings):
@@ -1003,12 +1022,6 @@ def preprocess_settings(user_settings, random_settings=False, seed=None):
     if not er.foot_pcs:
         if er.num_harmonies is None:
             er.num_harmonies = er_settings.DEFAULT_NUM_HARMONIES
-        if er.num_harmonies <= 0:
-
-            class KeyNotesError(Exception):
-                pass
-
-            raise KeyNotesError("num_harmonies <= 0 and no key notes specified")
         er.foot_pcs = [
             random.randrange(0, er.tet) for i in range(er.num_harmonies)
         ]
@@ -1056,17 +1069,17 @@ def preprocess_settings(user_settings, random_settings=False, seed=None):
 
     # Check to ensure chords and scales are consistent.
 
-    for chord_i, chord in enumerate(er.pc_chords):
-        for pitch_class in chord:
-            if pitch_class not in er.get(chord_i, "pc_scales"):
+    # TODO remove
+    # for chord_i, chord in enumerate(er.pc_chords):
+    #     for pc in chord:
+    #         if pc not in er.get(chord_i, "pc_scales"):
 
-                class InconsistentChordsAndScalesError(Exception):
-                    pass
-
-                raise InconsistentChordsAndScalesError(
-                    "pitch-class {} in chord {} but not in scale {}!"
-                    "".format(pitch_class, chord_i, chord_i % len(er.pc_scales))
-                )
+    #             raise er_exceptions.ErSettingsError(
+    #                 f"Inconsistent chords and scales: pitch-class {pc} is in "
+    #                 f"chord {chord_i + 1} but not in "
+    #                 "scale {chord_i % len(er.pc_scales) + 1}.\n"
+    #                 "Every scale must be a superset of the corresponding chord."
+    #             )
 
     # Calculate augmented triad, if necessary
 
@@ -1317,6 +1330,8 @@ def preprocess_settings(user_settings, random_settings=False, seed=None):
     rhythm_preprocessing(er)
 
     process_pattern_vl_order(er)
+
+    er_validate.validate_settings(er)
 
     notify_user_of_unusual_settings(er)
 
