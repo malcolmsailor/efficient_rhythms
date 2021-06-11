@@ -28,7 +28,7 @@ def _check_chords_and_scales_consistent(er, errors):
                 errors.append(
                     f"Inconsistent chords and scales: pitch-class {pc} is in "
                     f"chord {chord_i} (zero-indexed) but not in "
-                    "scale {chord_i % len(er.pc_scales)} (zero-indexed). "
+                    f"scale {chord_i % len(er.pc_scales)} (zero-indexed). "
                     "Every scale must be a superset of the corresponding chord."
                 )
 
