@@ -1,4 +1,4 @@
-"""Provides the user interface for efficient_rhythms.py
+"""Provides the user interface for efficient_rhythms
 """
 
 import collections
@@ -650,7 +650,7 @@ def changer_interface(super_pattern, active_changers, changer_counter):
                 er_shell_constants.BOLD_TEXT
                 + "There was an exception applying "
                 f"{active_changer.pretty_name}\n"
-                "This is a bug in `efficient_rhythms.py`. I would be "
+                "This is a bug in `efficient_rhythms`. I would be "
                 "grateful if you would file an "
                 f"issue at {GITHUB_URL}" + er_shell_constants.RESET_TEXT
             )
@@ -781,7 +781,7 @@ def fail_and_exit(exc, random_failures=None):
 
 
 def input_loop(er, super_pattern, args):
-    """Run the user input loop for efficient_rhythms.py"""
+    """Run the user input loop for efficient_rhythms"""
 
     def get_input_prompt():
         return "".join(

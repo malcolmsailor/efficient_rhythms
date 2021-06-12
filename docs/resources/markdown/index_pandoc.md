@@ -54,13 +54,13 @@ Verovio installation instructions are [here](https://github.com/rism-ch/verovio/
 
 ## Quick start
 
-To quickly try the script out, you can run it with the default settings:
+To quickly try the script out, you can run it with the default settings:[^This command needs to be run from the root directory of the repository.]
 
-`python3 efficient_rhythms.py`
+`python3 -m efficient_rhythms`
 
 You can also try running it with randomized settings, although be warned that the results are sometimes strange:
 
-`python3 efficient_rhythms.py --random`
+`python3 -m efficient_rhythms`
 
 There are many configurable settings that shape the output. Full documentation is available in [`settings.html`](settings.html). But a gentler introduction is provided in the next section.
 
@@ -76,7 +76,7 @@ The basic settings that control the script are
 
 For instance, in REF:example1, the initial pattern is two beats long (i.e., `pattern_len = 2`). Each harmony, however, is four beats (`harmony_len = 4`). Thus you can see that the pattern repeats twice on each harmony, and is then adjusted to fit the next harmony.[^example_settings]
 
-[^example_settings]: You can find the settings files that generated all the examples in this section in the `docs/examples` folder. `docs/examples/example_base.py` is shared among each example. So you can build the first example with the command `python3 efficient_rhythms.py --settings docs/examples/example_base.py docs/examples/example1.py`; for subsequent examples, just replace `example1.py` with the appropriate file.
+[^example_settings]: You can find the settings files that generated all the examples in this section in the `docs/examples` folder. `docs/examples/example_base.py` is shared among each example. So you can build the first example with the command `python3 -m efficient_rhythms --settings docs/examples/example_base.py docs/examples/example1.py`; for subsequent examples, just replace `example1.py` with the appropriate file.
 
 EXAMPLE:example1
 
@@ -113,7 +113,7 @@ EXAMPLE:example7
 
 In the preceding sections, we looked at how to adjust the lengths of patterns, rhythms and harmonies. Now we'll see how to specify chords and scales to create harmonic progressions.[^harmony_example_settings]
 
-[^harmony_example_settings]: The settings files that generated the examples in this section all begin with `harmony_example` and are found in the `docs/examples` folder. `docs/examples/harmony_example_base.py` is shared among each example. So you can build the first example with the command `python3 efficient_rhythms.py --settings docs/examples/harmony_example_base.py docs/examples/harmony_example1.py`.
+[^harmony_example_settings]: The settings files that generated the examples in this section all begin with `harmony_example` and are found in the `docs/examples` folder. `docs/examples/harmony_example_base.py` is shared among each example. So you can build the first example with the command `python3 -m efficient_rhythms --settings docs/examples/harmony_example_base.py docs/examples/harmony_example1.py`.
 
 The most straightforward way is to specify all chords and scales explicitly. As a first example, I've specified [one of the most (over?-)used chord progressions](https://youtu.be/5pidokakU4I) in pop music, the I-V-vi-IV progression, in C major. The results are in REF:harmony_example1. The relevant lines in `harmony_example1.py` are
 
@@ -241,7 +241,7 @@ EXAMPLE:harmony_example9
 
 Besides setting `rhythm_len` as we did [above](#how-it-works), there are many other ways of controlling the rhythms that are produced.[^rhythm_example_settings]
 
-[^rhythm_example_settings]: The settings files that generated the examples in this section all begin with `rhythm_example` and are found in the `docs/examples` folder. `docs/examples/rhythm_example_base.py` is shared among each example. So you can build the first example with the command `python3 efficient_rhythms.py --settings docs/examples/rhythm_example_base.py docs/examples/rhythm_example1.py`.
+[^rhythm_example_settings]: The settings files that generated the examples in this section all begin with `rhythm_example` and are found in the `docs/examples` folder. `docs/examples/rhythm_example_base.py` is shared among each example. So you can build the first example with the command `python3 -m efficient_rhythms --settings docs/examples/rhythm_example_base.py docs/examples/rhythm_example1.py`.
 
 
 To begin with, we have `onset_subdivision` and `onset_density`:

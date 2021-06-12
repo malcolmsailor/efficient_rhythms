@@ -2,19 +2,14 @@
 
 # Run misc. settings files, make sure they complete without error
 
-BASEDIR=$(dirname "$0")
-EFF_RHY_DIR="${BASEDIR}"/../
-cd $EFF_RHY_DIR
-TEMP_OUT="${BASEDIR}"/.temp_test_settings
+TEMP_OUT=.temp_test_settings
 
-settings=(
-    "/test_settings/test_repeated_notes.py"
-)
-
-for item in "${settings[@]}"
+for item in test_settings/*.py
 do
-    echo python3 efficient_rhythms.py --no-interface --settings "${BASEDIR}${item}"
-    python3 efficient_rhythms.py --no-interface --settings "${BASEDIR}${item}" >& "$TEMP_OUT"
+    echo python3 -m efficient_rhythms --no-interface --settings "${item}"
+
+    python3 -m efficient_rhythms --no-interface --settings "${item}" \
+        >& "$TEMP_OUT"
     if [[ $? -ne 0 ]]
     then
         cat "$TEMP_OUT"
