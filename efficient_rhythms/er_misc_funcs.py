@@ -11,6 +11,7 @@ import typing
 
 import numpy as np
 
+from . import er_globals
 from . import er_shell_constants
 
 MAX_DENOMINATOR = 8192
@@ -396,7 +397,7 @@ def remove_non_existing_voices(iterable, num_voices, iter_name=None):
     for item in iterable:
         if isinstance(item, (list, tuple)):
             sub_out = remove_non_existing_voices(item, num_voices)
-            if sub_out is not None:
+            if sub_out != item:
                 altered_output = True
                 if len(sub_out) > 0:
                     out.append(sub_out)
@@ -567,7 +568,7 @@ def set_seed(seed, print_out=True):
         print("Seed: ", seed)
 
     random.seed(seed)
-    np.random.seed(seed)
+    er_globals.set_np_seed(seed)
 
     return seed
 

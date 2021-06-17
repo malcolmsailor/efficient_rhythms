@@ -936,15 +936,16 @@ class ERSettings:
             indicating the average grid duration, rather than the exact grid
             duration.
             Default: Fraction(1, 4)
-        sub_subdivisions: a sequence of ints, or a per-voice sequence of
-            sequences of ints.  Further subdivides `onset_subdivision`, into
-            parts defined by the ratio of the integers in the sequence. This can
-            be used to apply "swing" or any other irregular subdivision you
-            like. For instance, if passed a value of `(3, 4, 2)`, each unit of
-            length `onset_subdivision` will be subdivided into a portion of
-            3/9, a portion of 4/9, and a portion of 2/9. If a sequence of
-            sequences, each sub-sequence applies to an individual voice,
-            interpreted in the looping per-voice manner described above.
+        sub_subdivisions: an optional sequence of ints, or a per-voice sequence
+            of sequences of ints. If passed, further subdivides
+            `onset_subdivision`, into parts defined by the ratio of the integers
+            in the sequence. This can be used to apply "swing" or any other
+            irregular subdivision you like. For instance, if passed a value of
+            `(3, 4, 2)`, each unit of length `onset_subdivision` will be
+            subdivided into a portion of 3/9, a portion of 4/9, and a portion
+            of 2/9. If a sequence of sequences, each sub-sequence applies to an
+            individual voice, interpreted in the looping per-voice manner
+            described above.
 
             Note that this parameter is ignored if `cont_rhythms != "none"`.
         dur_subdivision: a number, or a per-voice sequence of numbers.
@@ -955,6 +956,7 @@ class ERSettings:
             will be given a duration of at least `min_dur`, so it is possible
             that the total duration will exceed the value implied by
             `dur_subdivision` somewhat.
+            # TODO use None rather than 0
             Default: 0
         min_dur: a number, or a per-voice sequence of numbers. Indicates the
             minimum duration of a note. Values <= 0 will be assigned the
@@ -970,9 +972,12 @@ class ERSettings:
             every measure of 4/4.
 
             If `obligatory_onsets` specifies more onsets than would be
-            implied by `onset_density`, `obligatory_onsets` takes precedence.
+            implied by `onset_density`, the onsets will be selected from the
+            obligatory onsets until `onset_density` is reached, but precisely
+            which onsets are selected is undefined.
 
             Default: ()
+
         obligatory_onsets_modulo: a number, or a sequence of numbers.
             Specifies which times (if any) should be understood as equivalent
             to the values in `obligatory_onsets`. Thus, if `obligatory_onsets`
@@ -1050,13 +1055,14 @@ class ERSettings:
             fewer onsets than the leader. The effect on other rhythmic
             parameters like `dur_density` is similar.  See also
             `rhythmic_quasi_unison_constrain` below.
+            # TODO add examples to make this more immediately obvious
             Default: False
         rhythmic_quasi_unison_constrain: boolean. If `rhythmic_quasi_unison`
             is False, has no effect. If True, and `rhythmic_quasi_unison` is
             True, then
-                - if the follower voice has a smaller onset density than the
-                leader, it will be constrained not to contain any durations
-                that lie outside the durations of the leader.
+                - to the extent possible, the follower voice's note durations
+                will be constrained to lie within the note durations of the
+                leader voice.
                 - if the follower has a greater onset density than the leader,
                 it will be constrained to have all its onsets occur during the
                 durations of the leader, if possible.
@@ -2470,10 +2476,11 @@ class ERSettings:
         },
     )
     sub_subdivisions: typing.Union[
+        None,
         int,
         typing.Sequence[typing.Union[int, typing.Sequence[int]]],
     ] = fld(
-        default=1,
+        default=None,
         metadata={
             "mutable_attrs": {},
             "category": "rhythm",
@@ -2758,7 +2765,6 @@ class ERSettings:
             "priority": 0,
         },
     )
-    # TODO document
     timeout: typing.Union[None, numbers.Number] = fld(
         default=None,
         metadata={

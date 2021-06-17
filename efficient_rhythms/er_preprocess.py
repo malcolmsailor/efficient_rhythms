@@ -52,9 +52,20 @@ PITCH_MATERIALS = ("unison_weighted_as",)
 #   or figure out a way to integrate their appearance more closely into the
 #   rest of the script
 
+# TODO move this class into its own file?
+class VoiceSettings:
+    def __init__(self, voice_i, er):
+        self.voice_i = voice_i
+        self.er = er
 
-def notify_user_of_unusual_settings(er):
+    def __getattr__(self, name):
+        return self.er.get(self.voice_i, name)
+
+
+def notify_user_of_unusual_settings(er, silent=False):
     def print_(text):
+        if silent:
+            return
         print(er_misc_funcs.add_line_breaks(text))
 
     if er.cont_rhythms != "none" and (
@@ -687,6 +698,9 @@ def rhythm_preprocessing(er):
         else:
             # if isinstance(density, float):
             num_notes = min(round(density * num_div), num_div)
+        # this will fail if er.obligatory_onsets contains many notes and they
+        #   are not valid times (don't lie on onset_subdivision)
+        # TODO raise an error for invalid obligatory onsets
         er.num_notes[voice_i] = max(
             num_notes, 1, len(er.obligatory_onsets[voice_i])
         )
@@ -742,6 +756,10 @@ def rhythm_preprocessing(er):
 
     er.num_notes = [None for i in range(er.num_voices)]
     for voice_i in range(er.num_voices):
+        if not er.min_dur[voice_i]:
+            er.min_dur[voice_i] = er.onset_subdivision[voice_i]
+        if not er.dur_subdivision[voice_i]:
+            er.dur_subdivision[voice_i] = er.onset_subdivision[voice_i]
         _num_notes(voice_i)
 
 
@@ -843,12 +861,12 @@ def merge_settings(settings_paths, silent=True):
     return merged_dict
 
 
-def read_in_settings(settings_input, settings_class):
+def read_in_settings(settings_input, settings_class, silent=False):
     if settings_input is None:
         settings_input = {}
     if isinstance(settings_input, dict):
         return settings_class(**settings_input)
-    return settings_class(**merge_settings(settings_input, silent=False))
+    return settings_class(**merge_settings(settings_input, silent=silent))
 
 
 class SettingsProcesser(er_settings.ERSettings):
@@ -920,7 +938,9 @@ class SettingsProcesser(er_settings.ERSettings):
         self._nonchord_indices[i] = nonchord_indices
 
 
-def preprocess_settings(user_settings, random_settings=False, seed=None):
+def preprocess_settings(
+    user_settings, random_settings=False, seed=None, silent=False
+):
     """Preprocesses settings and returns settings object.
 
     description
@@ -938,10 +958,10 @@ def preprocess_settings(user_settings, random_settings=False, seed=None):
         ERSettings object
     """
 
-    er = read_in_settings(user_settings, SettingsProcesser)
+    er = read_in_settings(user_settings, SettingsProcesser, silent=silent)
     if seed is not None:
         er.seed = seed
-    er.seed = er_misc_funcs.set_seed(er.seed)
+    er.seed = er_misc_funcs.set_seed(er.seed, print_out=not silent)
     # TODO find a better solution for saving files than parent directory
     if er.output_path.startswith("EFFRHY/"):
         er.output_path = os.path.join(
@@ -1126,9 +1146,9 @@ def preprocess_settings(user_settings, random_settings=False, seed=None):
         while len(er.pattern_len) < len(er.rhythm_len):
             er.pattern_len.append(er.pattern_len[i % len(er.pattern_len)])
             i += 1
-        for i, pattern_length in enumerate(er.pattern_len):
-            if er.rhythm_len[i] > pattern_length or er.rhythm_len[i] == 0:
-                er.rhythm_len[i] = pattern_length
+        for j, pattern_length in enumerate(er.pattern_len):
+            if er.rhythm_len[j] > pattern_length or er.rhythm_len[j] == 0:
+                er.rhythm_len[j] = pattern_length
     try:
         max_super_pattern_len = (
             er.max_super_pattern_len
@@ -1150,10 +1170,11 @@ def preprocess_settings(user_settings, random_settings=False, seed=None):
         )
     except er_misc_funcs.LCMError as exc:
         er.super_pattern_len = max_super_pattern_len
-        print(
-            f"Notice: {exc} Reducing `super_pattern_len` to "
-            f"{max_super_pattern_len}"
-        )
+        if not silent:
+            print(
+                f"Notice: {exc} Reducing `super_pattern_len` to "
+                f"{max_super_pattern_len}"
+            )
 
     if (
         er.max_super_pattern_len
@@ -1193,9 +1214,15 @@ def preprocess_settings(user_settings, random_settings=False, seed=None):
             subs, onset_div = er.get(
                 voice_i, "sub_subdivisions", "onset_subdivision"
             )
-            er.sub_subdiv_props.append(
-                [fractions.Fraction(sub, sum(subs)) * onset_div for sub in subs]
-            )
+            if not subs:
+                er.sub_subdiv_props.append([onset_div])
+            else:
+                er.sub_subdiv_props.append(
+                    [
+                        fractions.Fraction(sub, sum(subs)) * onset_div
+                        for sub in subs
+                    ]
+                )
 
     def _min_dur_process(er):
         if isinstance(er.min_dur, typing.Sequence):
@@ -1227,26 +1254,29 @@ def preprocess_settings(user_settings, random_settings=False, seed=None):
     er.obligatory_onsets_modulo = _process_rhythm_list(
         er.obligatory_onsets_modulo
     )
-    if not er.comma_position:
+    if er.comma_position is None:
         er.comma_position = "end"
     er.comma_position = _process_rhythm_list(er.comma_position)
     er.chord_tone_before_rests = _process_rhythm_list(
         er.chord_tone_before_rests
     )
-
-    for sub_list_i, sub_list in enumerate(er.obligatory_onsets):
-        beats = sub_list.copy()
-        for beat in beats:
-            for i in range(
-                1,
-                math.ceil(
-                    er.get(sub_list_i, "pattern_len")
-                    / er.get(sub_list_i, "obligatory_onsets_modulo")
-                ),
-            ):
-                sub_list.append(
-                    beat + i * er.get(sub_list_i, "obligatory_onsets_modulo")
-                )
+    # TODO delete this code, I moved it to the refactored Rhythm class
+    # here I pad obligatory onsets to match 'pattern_len' (but why
+    # 'pattern_len' and not 'rhythm_len'?)
+    # Not sure this is the best place to do this (and not in er_rhythm module)
+    # for sub_list_i, sub_list in enumerate(er.obligatory_onsets):
+    #     beats = sub_list.copy()
+    #     for beat in beats:
+    #         for i in range(
+    #             1,
+    #             math.ceil(
+    #                 er.get(sub_list_i, "pattern_len")
+    #                 / er.get(sub_list_i, "obligatory_onsets_modulo")
+    #             ),
+    #         ):
+    #             sub_list.append(
+    #                 beat + i * er.get(sub_list_i, "obligatory_onsets_modulo")
+    #             )
 
     er.onset_subdivision_gcd = er_misc_funcs.gcd_from_list(
         er.onset_subdivision,
@@ -1327,7 +1357,7 @@ def preprocess_settings(user_settings, random_settings=False, seed=None):
 
     er_validate.validate_settings(er)
 
-    notify_user_of_unusual_settings(er)
+    notify_user_of_unusual_settings(er, silent=silent)
 
     prepare_warnings(er)
 
@@ -1341,7 +1371,10 @@ def preprocess_settings(user_settings, random_settings=False, seed=None):
     # slightly
     er_misc_funcs.set_seed(er.seed, print_out=False)
 
-    er.build_status_printer = er_interface.BuildStatusPrinter(er)
+    if not silent:
+        er.build_status_printer = er_interface.BuildStatusPrinter(er)
+
+    er.vsettings = tuple(VoiceSettings(i, er) for i in range(er.num_voices))
 
     return er
 
