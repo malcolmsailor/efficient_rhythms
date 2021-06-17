@@ -90,7 +90,7 @@ class Rhythm(RhythmicDict):
         n_reps, rem_i = divmod(rhythm_i, len(self._data))
         reps_time = n_reps * self.total_dur
         onset, dur = self._data.peekitem(rem_i)
-        return onset + reps_time, dur + reps_time
+        return onset + reps_time, dur
 
     def at_or_after(self, time):
         # TODO fix cast
@@ -103,7 +103,7 @@ class Rhythm(RhythmicDict):
             # raise ValueError(f"No onset at or after {time}")
         onset, dur = self._data.peekitem(rem_i)
         reps_time = prev_reps * self.total_dur
-        return onset + reps_time, dur + reps_time
+        return onset + reps_time, dur
 
     def rest_before_onset(self, onset, min_rest_len):
         # TODO test
