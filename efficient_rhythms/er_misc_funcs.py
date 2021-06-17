@@ -11,6 +11,7 @@ import typing
 
 import numpy as np
 
+from . import er_globals
 from . import er_shell_constants
 
 MAX_DENOMINATOR = 8192
@@ -396,7 +397,7 @@ def remove_non_existing_voices(iterable, num_voices, iter_name=None):
     for item in iterable:
         if isinstance(item, (list, tuple)):
             sub_out = remove_non_existing_voices(item, num_voices)
-            if sub_out is not None:
+            if sub_out != item:
                 altered_output = True
                 if len(sub_out) > 0:
                     out.append(sub_out)
@@ -518,12 +519,7 @@ def fraction_gcd(frac1, frac2, min_n=2 ** (-15)):
 
     result = fractions.Fraction(
         math.gcd(frac1.numerator, frac2.numerator),
-        lcm(
-            [
-                frac1.denominator,
-                frac2.denominator,
-            ]
-        ),
+        lcm([frac1.denominator, frac2.denominator]),
     )
 
     if result < min_n:
@@ -536,10 +532,14 @@ def gcd_from_list(*numbers, min_n=2 ** (-15)):
     """Can take any list, not necessarily a flat list. Converts all numbers
     to fractions.
 
-    Any values of 0 in the input are ignored.
+    Any values of 0 or None in the input are ignored.
     """
 
-    numbers = [number for number in flatten(numbers) if number != 0]
+    numbers = [
+        number
+        for number in flatten(numbers)
+        if (number != 0 and number is not None)
+    ]
     numbers = convert_to_fractions(numbers)
 
     while True:
@@ -567,7 +567,7 @@ def set_seed(seed, print_out=True):
         print("Seed: ", seed)
 
     random.seed(seed)
-    np.random.seed(seed)
+    er_globals.set_np_seed(seed)
 
     return seed
 

@@ -294,14 +294,18 @@ def choose_whether_chord_tone(er, super_pattern, poss_note):
     # Finally, apply remaining chord_tone settings.
     rest_dur = er.get(poss_note.voice_i, "chord_tone_before_rests")
 
+    # TODO if voice_i dur_density is 1.0, then set rest_dur to False
+    #   since there will never be a rest before a note
     if rest_dur:
-        mod_onset = (
-            poss_note.onset % er.rhythms[poss_note.voice_i].total_rhythm_len
-        )
-        if er_rhythm.rest_before_next_note(
-            er.rhythms[poss_note.voice_i], mod_onset, rest_dur
+        if er.rhythms[poss_note.voice_i].rest_before_onset(
+            poss_note.onset, rest_dur
         ):
             return True
+        # mod_onset = poss_note.onset % er.rhythms[poss_note.voice_i].total_dur
+        # if er_rhythm.rest_before_next_note(
+        #     er.rhythms[poss_note.voice_i], mod_onset, rest_dur
+        # ):
+        #     return True
 
     if er.chord_tones_sync_onset_in_all_voices:
         prev_voices = er_misc_funcs.get_prev_voice_indices(
@@ -1083,9 +1087,7 @@ def repeat_super_pattern(er, super_pattern, apply_to_existing_voices=False):
                     new_note_onset_i % len(rhythm_list)
                 ]
                 new_note.onset += (
-                    new_note_onset_i
-                    // len(rhythm_list)
-                    * rhythm.total_rhythm_len
+                    new_note_onset_i // len(rhythm_list) * rhythm.total_dur
                 )
                 new_voice.add_note(new_note)
         voice.append(new_voice)
