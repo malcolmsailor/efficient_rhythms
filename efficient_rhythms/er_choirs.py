@@ -93,7 +93,10 @@ def order_choirs(er, max_len=100, warn_if_loop_too_short=False):
         choices = choices.copy()
         while choices:
             choice = random.choice(choices)
-            if er.max_consec_seg_from_same_choir <= 0:
+            if (
+                er.max_consec_seg_from_same_choir is None
+                or er.max_consec_seg_from_same_choir <= 0
+            ):
                 return choice
             if len(out) < er.max_consec_seg_from_same_choir + 1:
                 return choice

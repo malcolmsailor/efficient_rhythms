@@ -483,7 +483,7 @@ def process_choir_settings(er):
         if er.length_choir_segments < 0:
             er.choir_order = er_choirs.order_choirs(er, max_len=1)
         else:
-            if er.length_choir_loop <= 0:
+            if er.length_choir_loop is None or er.length_choir_loop <= 0:
                 warn_if_loop_too_short = False
                 num_choir_segments = er.total_len / er.length_choir_segments
             else:
@@ -1234,7 +1234,7 @@ def preprocess_settings(
                 # QUESTION what is this? Is it for continuous rhythms?
                 # if isinstance(min_dur, int):
                 # er.min_dur[min_dur_i] = er.tempo[0] / 60 * (0.001 * min_dur)
-        elif er.min_dur <= 0:
+        elif er.min_dur is None or er.min_dur <= 0:
             er.min_dur = er.get(0, "onset_subdivision")
             # QUESTION what is this? Is it for continuous rhythms?
             # er.min_dur = er.tempo[0] / 60 * (0.001 * er.min_dur)

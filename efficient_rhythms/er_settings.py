@@ -951,19 +951,16 @@ class ERSettings:
         dur_subdivision: a number, or a per-voice sequence of numbers.
             Indicates the "grid" on which note durations are extended (and thus
             on which releases take place), which will be measured from the
-            note onset. Values of 0 will be assigned the corresponding value of
-            onset_subdivision. Note that, regardless of this value, all notes
-            will be given a duration of at least `min_dur`, so it is possible
-            that the total duration will exceed the value implied by
-            `dur_subdivision` somewhat.
-            # TODO use None rather than 0
-            Default: 0
+            note onset. If not passed, or if `None`, will be assigned the
+            corresponding value of onset_subdivision. Note that, regardless of
+            this value, all notes will be given a duration of at least
+            `min_dur`, so it is possible that the total duration will exceed
+            the value implied by `dur_subdivision` somewhat.
         min_dur: a number, or a per-voice sequence of numbers. Indicates the
-            minimum duration of a note. Values <= 0 will be assigned the
-            corresponding value of `onset_subdivision`.
-            Default: 0
-        obligatory_onsets: a sequence of numbers, or a per-voice sequence of
-            sequences of numbers. Numbers specify obligatory
+            minimum duration of a note. If not passed, or if `None` will be
+            assigned the corresponding value of `onset_subdivision`.
+        obligatory_onsets: an optional sequence of numbers, or a per-voice
+            sequence of sequences of numbers. Numbers specify obligatory
             onset times to include in the rhythm. Zero-indexed, so beat "1"
             (in musical terms) is `0`. Thus a value of `[0, 2, 3]`, with
             an `obligatory_onsets` value of `4` would enforce onsets on beats
@@ -975,9 +972,6 @@ class ERSettings:
             implied by `onset_density`, the onsets will be selected from the
             obligatory onsets until `onset_density` is reached, but precisely
             which onsets are selected is undefined.
-
-            Default: ()
-
         obligatory_onsets_modulo: a number, or a sequence of numbers.
             Specifies which times (if any) should be understood as equivalent
             to the values in `obligatory_onsets`. Thus, if `obligatory_onsets`
@@ -1165,11 +1159,10 @@ class ERSettings:
             `randomly_distribute_between_choirs` is True. If positive, sets the
             duration of a loop for the random choir assignments. Shorter values
             will be readily audible loops; longer values are likely to be less
-            apparent as loops. If 0 or negative, then no loop.  Note that
+            apparent as loops. If not passed, then there is no loop.  Note that
             depending on the combination of settings applied, it may not be
             possible to construct a loop of sufficient length. In this case, a
             warning will be emitted, but the script will otherwise continue.
-            Default: 0
         choir_segments_dovetail: bool. Only has an effect if
             `randomly_distribute_between_choirs` is True. If True, then choir
             assignments will be extended by one note, so that they overlap with
@@ -1177,10 +1170,9 @@ class ERSettings:
             easier for humans to play.)
             Default: False
         max_consec_seg_from_same_choir: int. Only has an effect if
-            `randomly_distribute_between_choirs` is True. If positive, then no
+            `randomly_distribute_between_choirs` is True. If passed, then no
             voice will be assigned to the same choir for more than the specified
             number of segments in a row.
-            Default: 0
         all_voices_from_different_choirs: bool. Only has an effect if
             `randomly_distribute_between_choirs` is True. If True, then at each
             new choir assignment, it will be ensured that no two voices are
@@ -1231,15 +1223,15 @@ class ERSettings:
             segments to be transposed. If a single number, all segments have the
             same length. If a sequence of numbers, will be looped through.
             Default: 4
-        transpose_intervals: number, or sequence of numbers. The interval
-            or intervals by which to transpose segments. If a single number,
-            all segments will be transposed by the same amount. If a sequence
-            of numbers, will be looped through. The transposition is cumulative,
-            so, for example, if `transpose_intervals` is `3`, then the first
-            segment will be transposed by `3`, the second by `6`, etc.
+        transpose_intervals: an optional number or sequence of numbers. The
+            interval or intervals by which to transpose segments. If a single
+            number, all segments will be transposed by the same amount. If a
+            sequence of numbers, will be looped through. The transposition is
+            cumulative, so, for example, if `transpose_intervals` is `3`, then
+            the first segment will be transposed by `3`, the second by `6`, etc.
             (See also `cumulative_max_transpose_interval`.)
-            If an empty sequence, segments will be transposed at random.
-            Default: ()
+            If not passed, but transpose is True, segments will be transposed
+            at random.
         cumulative_max_transpose_interval: a number. Sets an absolute maximum
             bound for cumulative transposition, after which segments will be
             transposed up or down an octave. The bound is inclusive. To disable,
@@ -1324,7 +1316,7 @@ class ERSettings:
             constructing initial pattern before giving up or asking whether
             to make more attempts.
             Default: 50
-        exclude_from_randomization: sequence of strings. A list of
+        exclude_from_randomization: optional sequence of strings. A list of
             attribute names of this class. Only has an effect when the script is
             invoked with "-r" or "--random", in which case any attribute names
             found in this list will be excluded from randomization. (Although
@@ -1666,6 +1658,7 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "scale_and_chord",
             "priority": 1,
+            "val_dict": {"equal_subseq_lens": ()},
         },
     )
     # QUESTION is there a way to implement octave equivalence settings for
@@ -1678,6 +1671,7 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "scale_and_chord",
             "priority": 1,
+            "val_dict": {"equal_subseq_lens": ()},
         },
     )
 
@@ -2455,6 +2449,11 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "rhythm",
             "priority": 1,
+            "val_dict": {
+                "int_min": (1,),
+                "float_min": (0.0,),
+                "float_max": (1.0,),
+            },
         },
     )
     dur_density: typing.Union[float, typing.Sequence[float]] = fld(
@@ -2463,6 +2462,7 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "rhythm",
             "priority": 1,
+            "val_dict": {"min_": (0.0,), "max_": (1.0,)},
         },
     )
     onset_subdivision: typing.Union[
@@ -2473,6 +2473,7 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "rhythm",
             "priority": 1,
+            "val_dict": {"min_": (1 / 64,)},
         },
     )
     sub_subdivisions: typing.Union[
@@ -2488,31 +2489,32 @@ class ERSettings:
         },
     )
     dur_subdivision: typing.Union[
-        numbers.Number, typing.Sequence[numbers.Number]
+        None, numbers.Number, typing.Sequence[numbers.Number]
     ] = fld(
-        default=0,
+        default=None,
         metadata={
             "mutable_attrs": {},
             "category": "rhythm",
             "priority": 1,
         },
     )
-    # MAYBE raise error if min_dur is empty,
-    #    or other settings that cannot be empty are empty?
     min_dur: typing.Union[
-        numbers.Number, typing.Sequence[numbers.Number]
+        None, numbers.Number, typing.Sequence[numbers.Number]
     ] = fld(
-        default=0,
+        default=None,
         metadata={
             "mutable_attrs": {},
             "category": "rhythm",
             "priority": 2,
         },
     )
-    obligatory_onsets: typing.Sequence[
-        typing.Union[numbers.Number, typing.Sequence[numbers.Number]],
+    obligatory_onsets: typing.Union[
+        None,
+        typing.Sequence[
+            typing.Union[numbers.Number, typing.Sequence[numbers.Number]],
+        ],
     ] = fld(
-        default=(),
+        default=None,
         metadata={
             "mutable_attrs": {},
             "category": "rhythm",
@@ -2588,8 +2590,8 @@ class ERSettings:
             "priority": 1,
         },
     )
-    length_choir_loop: numbers.Number = fld(
-        default=0,
+    length_choir_loop: typing.Union[None, numbers.Number] = fld(
+        default=None,
         metadata={
             "mutable_attrs": {},
             "category": "choir",
@@ -2604,8 +2606,8 @@ class ERSettings:
             "priority": 4,
         },
     )
-    max_consec_seg_from_same_choir: int = fld(
-        default=0,
+    max_consec_seg_from_same_choir: typing.Union[None, int] = fld(
+        default=None,
         metadata={
             "mutable_attrs": {},
             "category": "choir",
@@ -2660,9 +2662,9 @@ class ERSettings:
         },
     )
     transpose_intervals: typing.Union[
-        numbers.Number, typing.Sequence[numbers.Number]
+        None, numbers.Number, typing.Sequence[numbers.Number]
     ] = fld(
-        default=(),
+        default=None,
         metadata={
             "mutable_attrs": {},
             "category": "transpose",
@@ -2778,11 +2780,13 @@ class ERSettings:
     ###################################################################
     # Randomization settings
 
-    exclude_from_randomization: typing.Sequence[str] = fld(
-        default=(),
+    # TODO debug None
+    exclude_from_randomization: typing.Union[None, typing.Sequence[str]] = fld(
+        default=None,
         metadata={
             "mutable_attrs": {},
             "category": "randomization",
+            "shell_only": True,
             "priority": 4,
         },
     )

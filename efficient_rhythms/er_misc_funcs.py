@@ -519,12 +519,7 @@ def fraction_gcd(frac1, frac2, min_n=2 ** (-15)):
 
     result = fractions.Fraction(
         math.gcd(frac1.numerator, frac2.numerator),
-        lcm(
-            [
-                frac1.denominator,
-                frac2.denominator,
-            ]
-        ),
+        lcm([frac1.denominator, frac2.denominator]),
     )
 
     if result < min_n:
@@ -537,10 +532,14 @@ def gcd_from_list(*numbers, min_n=2 ** (-15)):
     """Can take any list, not necessarily a flat list. Converts all numbers
     to fractions.
 
-    Any values of 0 in the input are ignored.
+    Any values of 0 or None in the input are ignored.
     """
 
-    numbers = [number for number in flatten(numbers) if number != 0]
+    numbers = [
+        number
+        for number in flatten(numbers)
+        if (number != 0 and number is not None)
+    ]
     numbers = convert_to_fractions(numbers)
 
     while True:

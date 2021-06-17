@@ -370,8 +370,13 @@ class ERRandomize:
         width = os.get_terminal_size().columns
         print("#" * width)
         print("Randomized settings:")
+        exclude = (
+            ()
+            if er.exclude_from_randomization is None
+            else er.exclude_from_randomization
+        )
         for attr, randomizer in vars(self).items():
-            if attr in er.exclude_from_randomization:
+            if attr in exclude:
                 continue
             val = randomizer(er)
             setattr(er, attr, val)
