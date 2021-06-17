@@ -344,12 +344,9 @@ def test_get_i():
             assert (before == at_or_before) == (at_or_after == after)
             assert (before == at_or_before) or (at_or_before == at_or_after)
             assert (after == at_or_after) or (at_or_before == at_or_after)
-            try:
-                assert rhythm.get_onset_and_dur(
-                    at_or_after
-                ) == rhythm.at_or_after(time)
-            except ValueError:
-                assert time > max_onset
+            assert rhythm.get_onset_and_dur(at_or_after) == rhythm.at_or_after(
+                time
+            )
 
     except:  # pylint: disable=bare-except
 

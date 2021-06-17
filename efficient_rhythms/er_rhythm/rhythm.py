@@ -7,8 +7,6 @@ import numpy as np
 import sortedcontainers
 
 
-
-
 class RhythmicDict:
     def __init__(self, initial_onsets=None, initial_durs=None):
         if initial_onsets is not None and initial_durs is not None:
@@ -97,11 +95,14 @@ class Rhythm(RhythmicDict):
     def at_or_after(self, time):
         # TODO fix cast
         prev_reps, remaining = divmod(time, float(self.total_dur))
-        reps_time = prev_reps * self.total_dur
+
         rem_i = self._data.bisect_left(remaining)
         if rem_i >= len(self._data):
-            raise ValueError(f"No onset at or after {time}")
+            rem_i = 0
+            prev_reps += 1
+            # raise ValueError(f"No onset at or after {time}")
         onset, dur = self._data.peekitem(rem_i)
+        reps_time = prev_reps * self.total_dur
         return onset + reps_time, dur + reps_time
 
     def rest_before_onset(self, onset, min_rest_len):
@@ -182,6 +183,7 @@ class Rhythm(RhythmicDict):
             min_note_dur,
             overlap,
         )
+
 
 # TODO remove after revising ContinuousRhythm
 class OldRhythmicDict(collections.UserDict):
