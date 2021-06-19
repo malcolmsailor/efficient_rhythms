@@ -143,6 +143,9 @@ def test_update_pattern_vl_order():
             voice_is = {}
             for item in er.pattern_vl_order:
                 voice_i = item.voice_i
+                rhythm = er.rhythms[voice_i]
+                assert item.start_time <= rhythm.at_or_after(item.start_i)[0]
+                assert item.end_time <= rhythm.at_or_after(item.end_i)[0]
                 pattern_len = pattern_lens[voice_i]
                 if truncate:
                     truncate_len = max(pattern_lens)
@@ -151,30 +154,33 @@ def test_update_pattern_vl_order():
                     assert (
                         item.start_i == voice_is[voice_i]
                     ), "item.start_i != voice_is[voice_i]"
-                try:
-                    assert item.end_i - item.start_i == len(
-                        er.rhythms[voice_i]
-                    ), (
-                        "item.end_i - item.start_i "
-                        "!= len(er.rhythms[voice_i])"
-                    )
-                except AssertionError:
-                    # we should only get an AssertionError if truncate_len is
-                    # defined
-                    try:
-                        assert (
-                            item.start_time >= truncate_len
-                            or item.start_time % truncate_len == truncate_start
-                        ), (
-                            "item.start_time < truncate_len and item.start_time % "
-                            "truncate_len != truncate_start"
-                        )
-                    except:  # pylint: disable=bare-except
-                        exc_type, exc_value, exc_traceback = sys.exc_info()
-                        traceback.print_exception(
-                            exc_type, exc_value, exc_traceback, file=sys.stdout
-                        )
-                        breakpoint()
+                # TODO following test no longer works after rewrite of rhythm
+                # code because len(rhythm) is now the entire pattern including
+                # all truncations.
+                # try:
+                #     assert item.end_i - item.start_i == len(
+                #         er.rhythms[voice_i]
+                #     ), (
+                #         "item.end_i - item.start_i "
+                #         "!= len(er.rhythms[voice_i])"
+                #     )
+                # except AssertionError:
+                #     # we should only get an AssertionError if truncate_len is
+                #     # defined
+                #     try:
+                #         assert (
+                #             item.start_time >= truncate_len
+                #             or item.start_time % truncate_len == truncate_start
+                #         ), (
+                #             "item.start_time < truncate_len and item.start_time % "
+                #             "truncate_len != truncate_start"
+                #         )
+                #     except:  # pylint: disable=bare-except
+                #         exc_type, exc_value, exc_traceback = sys.exc_info()
+                #         traceback.print_exception(
+                #             exc_type, exc_value, exc_traceback, file=sys.stdout
+                #         )
+                #         breakpoint()
 
                 voice_is[voice_i] = item.end_i
 
@@ -355,6 +361,18 @@ def test_get_i():
             exc_type, exc_value, exc_traceback, file=sys.stdout
         )
         breakpoint()
+
+
+def test_onset_positions():
+    basesettings = {
+        "rhythm_len": 4,
+        "pattern_len": 4,
+        "onset_subdivision": 1,
+        "sub_subdivisions": (4, 3),
+    }
+    er = er_preprocess.preprocess_settings(basesettings, silent=True)
+    onset_positions = er_rhythm.make._onset_positions(er, 0)
+    assert np.all(np.less(onset_positions[:4] - [0, 4 / 7, 1, 11 / 7], 1e-6))
 
 
 def test_new_onsets():

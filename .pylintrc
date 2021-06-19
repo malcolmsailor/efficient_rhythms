@@ -20,9 +20,11 @@ init-hook=
     PylintIgnorePaths(
         'favorites',
         'tests/test_settings',
+        'tests/test_input',
         'docs/examples',
         'docs/resources/midani',
         'efficient_rhythms/third_party',
+        'temp_tests',
     )
 
 [MESSAGES CONTROL]

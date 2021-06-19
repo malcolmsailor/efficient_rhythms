@@ -91,7 +91,7 @@
 #         settings = get_settings(args, seed, settings_dict=settings_dict)
 #         try:
 #             return settings, make_pattern(args, settings)
-#         except er_exceptions.ErMakeException as exc:
+#         except er_exceptions.ErMakeError as exc:
 #             if not args.random:
 #                 er_interface.fail_and_exit(exc)
 #             elif try_i + 1 >= MAX_RANDOM_TRIES:
@@ -195,7 +195,7 @@
 # #                 super_pattern = er_make.make_super_pattern(er)
 # #                 er_make.complete_pattern(er, super_pattern)
 # #                 break
-# #             except er_exceptions.ErMakeException as exc:
+# #             except er_exceptions.ErMakeError as exc:
 # #                 if not args.random:
 # #                     er_interface.fail_and_exit(exc)
 # #                 elif try_i + 1 >= MAX_RANDOM_TRIES:

@@ -1,44 +1,53 @@
 import functools
+
 import numpy as np
 
 from . import er_exceptions
 
 
-class VoiceLeadingOrderItem:
-    def __init__(
-        self,
-        voice_i,
-        start_time,
-        end_time,
-        start_i=None,
-        end_i=None,
-        prev=None,
-    ):
+class VLOrderItem:
+    def __init__(self, voice_i, start_time, end_time, prev):
         self.voice_i = voice_i
         self.start_time = start_time
         self.end_time = end_time
-        self.start_i = start_i
-        self.end_i = end_i
-        # prev should point to the item from which the present
-        # item should be voice-led, or, if it is at the beginning,
-        # to None
         self._prev = prev
-        self.len = None
+        # The following fields are expected to be initialized later by calling
+        #   the `set_indices()` method
+        self._start_i = None
+        self._end_i = None
+        self._len = None
+        self._first_onset = None
 
     def __repr__(self):
         prev_str = (
             "None)"
-            if self.prev is None
-            else f"<starts at {self.prev.start_time}>)"
+            if self._prev is None
+            else f"<starts at {self._prev.start_time}>"
         )
         return (
-            f"{self.__class__.__name__}(\n"
-            f"    voice_i={self.voice_i},\n"
-            f"    start_time={self.start_time}, end_time={self.end_time},\n"
-            f"    start_i={self.start_i},\n"
-            f"    end_i={self.end_i},\n"
-            f"    prev={prev_str}\n"
+            f"{self.__class__.__name__}("
+            f"voice_i={self.voice_i}, "
+            f"start_time={self.start_time}, end_time={self.end_time}, "
+            f"start_i={self.start_i}, "
+            f"end_i={self.end_i}, "
+            f"first_onset={self.first_onset}, "
+            f"prev={prev_str})"
         )
+
+    def set_indices(self, start_i, end_i, first_onset):
+        self._start_i = start_i
+        self._end_i = end_i
+        self._len = end_i - start_i
+        self._first_onset = first_onset
+
+    def __len__(self):
+        # We define this method so that "empty" vl-items (where start_i == end_i
+        # evaluate to False).
+        return self._len
+
+    @property
+    def prev(self):
+        return self._prev
 
     @property
     def prev_start_time(self):
@@ -50,14 +59,31 @@ class VoiceLeadingOrderItem:
         return self._prev.start_i
 
     @property
+    def prev_first_onset(self):
+        return self._prev.first_onset
+
+    @property
     def prev_end_i(self):
         """Note that the previous item may be *longer* than the current one
         (if the current one is truncated).
         This returns the index to the end of the portion of the previous item
         from which this will be voice-led, rather than the full length.
         """
-        # Will raise an exception if prev is None
-        return self._prev.start_i + self.len
+        # Will raise an exception if prev is None (or set_indices hasn't been
+        #   called)
+        return self._prev.start_i + self._len
+
+    @property
+    def start_i(self):
+        return self._start_i
+
+    @property
+    def end_i(self):
+        return self._end_i
+
+    @property
+    def first_onset(self):
+        return self._first_onset
 
 
 def indices_to_vl(indices, chord1, chord2, tet):

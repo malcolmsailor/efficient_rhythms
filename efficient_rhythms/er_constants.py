@@ -57,6 +57,21 @@ F_SHARP_SHARP = F * SHARP * SHARP
 G_SHARP_SHARP = G * SHARP * SHARP
 A_SHARP_SHARP = A * SHARP * SHARP
 B_SHARP_SHARP = B * SHARP * SHARP
+"'FLAT' aliases for consistency with 'SHARP' names"
+C_FLAT = Cb
+D_FLAT = Db
+E_FLAT = Eb
+F_FLAT = Fb
+G_FLAT = Gb
+A_FLAT = Ab
+B_FLAT = Bb
+C_FLAT_FLAT = Cbb
+D_FLAT_FLAT = Dbb
+E_FLAT_FLAT = Ebb
+F_FLAT_FLAT = Fbb
+G_FLAT_FLAT = Gbb
+A_FLAT_FLAT = Abb
+B_FLAT_FLAT = Bbb
 
 
 """# Interval constants
@@ -70,6 +85,7 @@ MAJOR_3RD = MAJOR_THIRD = 5 / 4
 PERFECT_4TH = PERFECT_FOURTH = 4 / 3
 DIMINISHED_5TH = DIMINISHED_FIFTH = 4096 / 2916
 PERFECT_5TH = PERFECT_FIFTH = 3 / 2
+AUGMENTED_5TH = AUGMENTED_FIFTH = 25 / 16
 MINOR_6TH = MINOR_SIXTH = 8 / 5
 MAJOR_6TH = MAJOR_SIXTH = 10 / 6
 MINOR_7TH = MINOR_SEVENTH = 16 / 9
@@ -111,10 +127,10 @@ VII = MAJOR_7TH
 
 Triad constants
 """
-MAJOR_TRIAD = np.array([1.0, 5 / 4, 3 / 2])
-MINOR_TRIAD = np.array([1.0, 6 / 5, 3 / 2])
-DIMINISHED_TRIAD = np.array([1.0, 6 / 5, (6 / 5) ** 2])
-AUGMENTED_TRIAD = np.array([1.0, 5 / 4, (5 / 4) ** 2])
+MAJOR_TRIAD = np.array([UNISON, MAJOR_3RD, PERFECT_5TH])
+MINOR_TRIAD = np.array([UNISON, MINOR_3RD, PERFECT_5TH])
+DIMINISHED_TRIAD = np.array([UNISON, MINOR_3RD, DIMINISHED_5TH])
+AUGMENTED_TRIAD = np.array([UNISON, MAJOR_3RD, AUGMENTED_5TH])
 
 """Seventh-chord constants
 """
@@ -137,16 +153,18 @@ MINOR_7TH_NO3 = np.array([UNISON, PERFECT_5TH, MINOR_7TH])
 """Inverted triad constants
 """
 # Chord inversion constants (for root position use the chord constants above)
-MAJOR_63 = np.array([1.0, 6 / 5, 8 / 5])
-MINOR_63 = np.array([1.0, 5 / 4, 5 / 3])
-MAJOR_64 = np.array([1.0, 4 / 3, 5 / 3])
-MINOR_64 = np.array([1.0, 4 / 3, 8 / 5])
-MAJOR_53_OPEN = np.array([1.0, 3 / 2, 5 / 2])
-MAJOR_63_OPEN = np.array([1.0, 8 / 5, 12 / 5])
-MAJOR_64_OPEN = np.array([1.0, 5 / 3, 8 / 3])
-MINOR_53_OPEN = np.array([1.0, 3 / 2, 12 / 5])
-MINOR_63_OPEN = np.array([1.0, 5 / 3, 5 / 2])
-MINOR_64_OPEN = np.array([1.0, 8 / 5, 8 / 3])
+MAJOR_53 = MAJOR_TRIAD
+MAJOR_63 = np.array([UNISON, MINOR_3RD, MINOR_6TH])
+MAJOR_64 = np.array([UNISON, PERFECT_4TH, MAJOR_6TH])
+MINOR_53 = MINOR_TRIAD
+MINOR_63 = np.array([UNISON, MAJOR_3RD, MAJOR_6TH])
+MINOR_64 = np.array([UNISON, PERFECT_4TH, MINOR_6TH])
+MAJOR_53_OPEN = np.array([UNISON, PERFECT_5TH, MAJOR_3RD * OCTAVE])
+MAJOR_63_OPEN = np.array([UNISON, MINOR_6TH, MINOR_3RD * OCTAVE])
+MAJOR_64_OPEN = np.array([UNISON, MAJOR_6TH, PERFECT_4TH * OCTAVE])
+MINOR_53_OPEN = np.array([UNISON, PERFECT_5TH, MINOR_3RD * OCTAVE])
+MINOR_63_OPEN = np.array([UNISON, MAJOR_6TH, MAJOR_3RD * OCTAVE])
+MINOR_64_OPEN = np.array([UNISON, MINOR_6TH, PERFECT_4TH * OCTAVE])
 
 """Triad group constants
 """
@@ -187,22 +205,22 @@ Just scale constants
 PENTATONIC_SCALE = np.array([C, G, D, A, E])
 DIATONIC_SCALE = np.array([F, C, G, D, A, E, B])
 HEXACHORD_MAJOR = np.array([F, C, G, D, A, E])
-HEXACHORD_MINOR = np.array([F, C, G, D, A, E * FLAT])
+HEXACHORD_MINOR = np.array([F, C, G, D, A, Eb])
 
 MAJOR_SCALE = DIATONIC_SCALE
-NATURAL_MINOR_SCALE = DIATONIC_SCALE * E * FLAT
+NATURAL_MINOR_SCALE = DIATONIC_SCALE * Eb
 
 # Diatonic modes
 
 """Diatonic modes
 """
 IONIAN = DIATONIC_SCALE
-DORIAN = DIATONIC_SCALE * B * FLAT
-PHRYGIAN = DIATONIC_SCALE * A * FLAT
+DORIAN = DIATONIC_SCALE * Bb
+PHRYGIAN = DIATONIC_SCALE * Ab
 LYDIAN = DIATONIC_SCALE * G
 MIXOLYDIAN = DIATONIC_SCALE * F
-AEOLIAN = DIATONIC_SCALE * E * FLAT
-LOCRIAN = DIATONIC_SCALE * D * FLAT
+AEOLIAN = DIATONIC_SCALE * Eb
+LOCRIAN = DIATONIC_SCALE * Db
 
 
 # PENTATONIC_SCALE_MIN3 = np.array([C, G, D, A, E * FLAT])
@@ -216,11 +234,11 @@ LOCRIAN = DIATONIC_SCALE * D * FLAT
 """12-tone equal tempered symmetric-scale constants
 """
 WHOLE_TONE = np.array([0, 2, 4, 6, 8, 10])
-OCTATONIC = OCTATONIC01 = np.array([0, 1, 3, 4, 6, 7, 9, 10])
+OCTATONIC01 = OCTATONIC = np.array([0, 1, 3, 4, 6, 7, 9, 10])
 OCTATONIC02 = np.array([0, 2, 3, 5, 6, 8, 9, 11])
-HEXATONIC = HEXATONIC01 = np.array([0, 1, 4, 5, 8, 9])
+HEXATONIC01 = HEXATONIC = np.array([0, 1, 4, 5, 8, 9])
 HEXATONIC03 = np.array([0, 3, 4, 7, 8, 11])
-ENNEATONIC = ENNEATONIC012 = np.array([0, 1, 2, 4, 5, 6, 8, 9, 10])
+ENNEATONIC012 = ENNEATONIC = np.array([0, 1, 2, 4, 5, 6, 8, 9, 10])
 ENNEATONIC013 = np.array([0, 1, 3, 4, 5, 7, 8, 9, 11])
 ENNEATONIC023 = np.array([0, 2, 3, 4, 6, 7, 8, 10, 11])
 

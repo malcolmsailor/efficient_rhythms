@@ -59,10 +59,10 @@ def test_read_in_settings():
     result = er_preprocess.read_in_settings(
         [
             os.path.join(
-                SCRIPT_DIR, "test_settings/test_read_in_settings_merge1.py"
+                SCRIPT_DIR, "test_input/test_read_in_settings_merge1.py"
             ),
             os.path.join(
-                SCRIPT_DIR, "test_settings/test_read_in_settings_merge2.py"
+                SCRIPT_DIR, "test_input/test_read_in_settings_merge2.py"
             ),
         ],
         dict,

@@ -532,7 +532,10 @@ class Voice:
 
         _update_harmony_times()
         for onset in onsets:
-            if onset >= harmony_times.end_time:
+            if (
+                harmony_times.end_time is not None
+                and onset >= harmony_times.end_time
+            ):
                 _update_harmony_times()
             for note in self._data[onset]:
                 orig_sd = scale.index(note.pitch)

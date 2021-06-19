@@ -1582,6 +1582,7 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "global",
             "priority": 2,
+            "expected_constants": ("pitch_class", "octave", "voice_range"),
         },
     )
     hard_bounds: typing.Sequence[
@@ -1600,6 +1601,7 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "global",
             "priority": 3,
+            "expected_constants": ("pitch_class", "octave"),
         },
     )
     # MAYBE add other possible voice orders, e.g., (melody, bass, inner voices)
@@ -1638,6 +1640,7 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "scale_and_chord",
             "priority": 1,
+            "expected_constants": ("pitch_class",),
         },
     )
     interval_cycle: typing.Union[
@@ -1648,6 +1651,8 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "scale_and_chord",
             "priority": 2,
+            # TODO how to limit expected constants to specific (not generic) intervals?
+            "expected_constants": ("specific_interval",),
         },
     )
     scales: typing.Sequence[
@@ -1659,6 +1664,7 @@ class ERSettings:
             "category": "scale_and_chord",
             "priority": 1,
             "val_dict": {"equal_subseq_lens": ()},
+            "expected_constants": ("scale",),
         },
     )
     # QUESTION is there a way to implement octave equivalence settings for
@@ -1672,6 +1678,7 @@ class ERSettings:
             "category": "scale_and_chord",
             "priority": 1,
             "val_dict": {"equal_subseq_lens": ()},
+            "expected_constants": ("chord",),
         },
     )
 
@@ -1847,6 +1854,7 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "voice_leading",
             "priority": 2,
+            "expected_constants": ("specific_interval",),
         },
     )
     constrain_voice_leading_to_ranges: bool = fld(
@@ -2075,6 +2083,8 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "melody",
             "priority": 3,
+            # TODO limit to generic intervals
+            "expected_constants": ("interval",),
         },
     )
 
@@ -2090,6 +2100,8 @@ class ERSettings:
             "category": "melody",
             "priority": 2,
             "val_dict": {"open_min": (0,)},
+            # TODO make both specific and generic intervals work in er_web
+            "expected_constants": ("generic_interval",),
         },
     )
     max_interval_for_non_chord_tones: typing.Union[
@@ -2101,6 +2113,7 @@ class ERSettings:
             "category": "melody",
             "priority": 2,
             "val_dict": {"open_min": (0,)},
+            "expected_constants": ("generic_interval",),
         },
     )
     min_interval: typing.Union[
@@ -2112,6 +2125,7 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "melody",
             "priority": 2,
+            "expected_constants": ("generic_interval",),
         },
     )
     min_interval_for_non_chord_tones: typing.Union[
@@ -2122,6 +2136,7 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "melody",
             "priority": 2,
+            "expected_constants": ("generic_interval",),
         },
     )
 
@@ -2182,6 +2197,7 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "melody",
             "priority": 2,
+            "expected_constants": ("specific_interval",),
         },
     )
     antiparallels: bool = fld(
@@ -2262,6 +2278,7 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "consonance",
             "priority": 2,
+            "expected_constants": ("specific_interval",),
         },
     )
     forbidden_interval_classes: typing.Union[
@@ -2272,6 +2289,7 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "consonance",
             "priority": 2,
+            "expected_constants": ("specific_interval",),
         },
     )
     forbidden_interval_modulo: typing.Union[
@@ -2302,6 +2320,8 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "consonance",
             "priority": 1,
+            # TODO
+            "expected_constants": ("interval",),
         },
     )
     invert_consonances: bool = fld(
@@ -2323,14 +2343,18 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "consonance",
             "priority": 2,
+            # TODO
+            "expected_constants": ("chord",),
         },
     )
     chord_octave_equi_type: str = fld(
+        # TODO check possible values are working in er_web
         default="all",
         metadata={
             "mutable_attrs": {},
             "category": "consonance",
             "priority": 3,
+            "possible_values": ("all", "bass", "order", "none"),
         },
     )
     chord_permit_doublings: str = fld(
@@ -2669,6 +2693,7 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "transpose",
             "priority": 2,
+            "expected_constants": ("specific_interval",),
         },
     )
     cumulative_max_transpose_interval: numbers.Number = fld(
@@ -2677,6 +2702,7 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "transpose",
             "priority": 3,
+            "expected_constants": ("specific_interval",),
         },
     )
     transpose_before_repeat: bool = fld(

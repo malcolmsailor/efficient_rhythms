@@ -687,7 +687,7 @@ def check_whether_to_force_foot(er, super_pattern, poss_note):
     if poss_note.onset == 0 and er.force_foot_in_bass == "global_first_beat":
         return True
     if er.force_foot_in_bass == "global_first_note" and poss_note.onset == min(
-        er.rhythms[BASS]
+        er.rhythms[BASS].onsets
     ):
         return True
     if er.force_foot_in_bass in ("first_note", "first_beat"):

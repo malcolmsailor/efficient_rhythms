@@ -681,9 +681,10 @@ def rhythm_preprocessing(er):
         density = er.onset_density[voice_i]
         onset_div = er.onset_subdivision[voice_i]
 
+        subdiv_props = er.sub_subdiv_props[voice_i]
         len_sub_subdiv = (
-            len(er.sub_subdiv_props[voice_i])
-            if er.cont_rhythms == "none"
+            len(subdiv_props)
+            if er.cont_rhythms == "none" and subdiv_props is not None
             else 1
         )
         num_div = int(rhythm_len / onset_div * len_sub_subdiv)
@@ -799,7 +800,7 @@ def process_pattern_vl_order(er):
                     prev_pattern_i = pattern_i - n_since_prev_pattern
                 prev_item = er.pattern_vl_order[prev_pattern_i + voice_offset]
             er.pattern_vl_order.append(
-                er_voice_leadings.VoiceLeadingOrderItem(
+                er_voice_leadings.VLOrderItem(
                     voice_i,
                     start_time,
                     end_time,
@@ -1208,20 +1209,17 @@ def preprocess_settings(
 
         return rhythm_list
 
-    def _prepare_sub_subdivisions(er):
+    def _prepare_sub_subdivision_proportions(er):
         er.sub_subdiv_props = []
         for voice_i in range(er.num_voices):
-            subs, onset_div = er.get(
-                voice_i, "sub_subdivisions", "onset_subdivision"
-            )
-            if not subs:
-                er.sub_subdiv_props.append([onset_div])
+            subs = er.get(voice_i, "sub_subdivisions")
+            if not subs or len(subs) == 1:
+                er.sub_subdiv_props.append(None)
             else:
                 er.sub_subdiv_props.append(
-                    [
-                        fractions.Fraction(sub, sum(subs)) * onset_div
-                        for sub in subs
-                    ]
+                    # TODO data type
+                    np.cumsum([0] + list(subs)[:-1], dtype=np.float32)
+                    / np.sum(subs, dtype=np.float32)
                 )
 
     def _min_dur_process(er):
@@ -1247,7 +1245,7 @@ def preprocess_settings(
         er.dur_density, replace_negative_with_random=True
     )
     er.onset_subdivision = _process_rhythm_list(er.onset_subdivision)
-    _prepare_sub_subdivisions(er)
+    _prepare_sub_subdivision_proportions(er)
     er.dur_subdivision = _process_rhythm_list(er.dur_subdivision)
     _min_dur_process(er)
     er.min_dur = _process_rhythm_list(er.min_dur)
@@ -1260,23 +1258,6 @@ def preprocess_settings(
     er.chord_tone_before_rests = _process_rhythm_list(
         er.chord_tone_before_rests
     )
-    # TODO delete this code, I moved it to the refactored Rhythm class
-    # here I pad obligatory onsets to match 'pattern_len' (but why
-    # 'pattern_len' and not 'rhythm_len'?)
-    # Not sure this is the best place to do this (and not in er_rhythm module)
-    # for sub_list_i, sub_list in enumerate(er.obligatory_onsets):
-    #     beats = sub_list.copy()
-    #     for beat in beats:
-    #         for i in range(
-    #             1,
-    #             math.ceil(
-    #                 er.get(sub_list_i, "pattern_len")
-    #                 / er.get(sub_list_i, "obligatory_onsets_modulo")
-    #             ),
-    #         ):
-    #             sub_list.append(
-    #                 beat + i * er.get(sub_list_i, "obligatory_onsets_modulo")
-    #             )
 
     er.onset_subdivision_gcd = er_misc_funcs.gcd_from_list(
         er.onset_subdivision,

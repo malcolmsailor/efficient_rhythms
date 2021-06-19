@@ -108,7 +108,7 @@ class Grid(ContinuousRhythmicObject):
                 - self.rel_onsets[(var_i - 1) % self.num_cont_rhythm_vars]
             )
 
-    def return_varied_rhythm(self, er, onsets, voice_i):
+    def return_varied_rhythm(self, er, onsets, durs, voice_i):
         def _get_grid_indices():
             indices = []
             for time_i, time in enumerate(self):
@@ -125,7 +125,8 @@ class Grid(ContinuousRhythmicObject):
         rel_onsets = np.zeros((self.num_cont_rhythm_vars, rhythm_num_notes))
         # var_onsets[0] = list(onsets.keys())
         var_durs = np.zeros((self.num_cont_rhythm_vars, rhythm_num_notes))
-        var_durs[0] = list(onsets.values())
+        # var_durs[0] = list(onsets.values())
+        var_durs[0] = list(durs)
         for var_i in range(self.num_cont_rhythm_vars):
             var_onsets[var_i] = self.cum_onsets[var_i, indices]
             rel_onsets[var_i, : rhythm_num_notes - 1] = np.diff(

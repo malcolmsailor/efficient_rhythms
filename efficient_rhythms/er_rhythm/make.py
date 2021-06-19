@@ -184,19 +184,30 @@ def _add_comma(er, voice_i, onset_positions, comma):
     onset_positions[comma_i:] += comma
 
 
+# def _sub_subdivision_proportions(sub_subdivisions):
+#     # TODO datatype
+#     return np.cumsum(sub_subdivisions, dtype=np.float32) / np.sum(
+#         sub_subdivisions, dtype=np.float32
+#     )
+
+
 def _onset_positions(er, voice_i):
     """Returns an np array of possible onset times."""
+
+    if er.cont_rhythms == "grid":
+        # TODO cast elsewhere
+        return np.array(list(er.grid.keys()), dtype=np.float32)
+
     # TODO I believe I can remove all calls to "er.get" in this module
-    rhythm_len, onset_subdivision, sub_subdiv_props = er.get(
+    rhythm_len, onset_subdivision, proportions = er.get(
         voice_i, "rhythm_len", "onset_subdivision", "sub_subdiv_props"
     )
     n_onsets, comma = divmod(rhythm_len, onset_subdivision)
     indices = np.arange(n_onsets)
-    if len(sub_subdiv_props) > 1:
-        indices = np.repeat(indices, len(sub_subdiv_props))
-
-    # TODO cast elsewhere
-    onset_positions = indices * np.array(sub_subdiv_props, dtype=np.float32)
+    onset_positions = indices * onset_subdivision
+    if proportions is not None:
+        onset_positions = np.repeat(onset_positions, len(proportions))
+        onset_positions += np.tile(proportions, n_onsets)
     _add_comma(er, voice_i, onset_positions, comma)
     return onset_positions
 
@@ -296,7 +307,6 @@ def get_onsets(er, voice_i, prev_rhythms):
         bool_mask = np.zeros(len(onset_positions), dtype=bool)
         for i in indices[:num_notes]:
             bool_mask[i] = True
-
     onsets = onset_positions[bool_mask]
     return onsets
 
@@ -438,17 +448,20 @@ def generate_rhythm(er, voice_i, prev_rhythms=()):
     if voice_i in er.rhythmic_unison_followers:
         leader_i = er.rhythmic_unison_followers[voice_i]
         return prev_rhythms[leader_i]
-    # TODO handle continuous rhythms
+
+    if er.cont_rhythms == "all":
+        return get_cont_rhythm(er, voice_i)
 
     onsets = get_onsets(er, voice_i, prev_rhythms)
     er.check_time()
     iois = get_iois(er, voice_i, onsets)
     er.check_time()
     durs = get_durs(er, voice_i, iois, onsets, prev_rhythms)
-    # er.check_time()
-    # onsets, durs = new_fit_rhythm_to_pattern(er, voice_i, onsets, durs)
     er.check_time()
-    rhythm = Rhythm.from_er_settings(er, voice_i, onsets=onsets, durs=durs)
+    if er.cont_rhythms == "grid":
+        rhythm = er.grid.return_varied_rhythm(er, onsets, durs, voice_i)
+    else:
+        rhythm = Rhythm.from_er_settings(er, voice_i, onsets=onsets, durs=durs)
     return rhythm
 
 
@@ -916,30 +929,30 @@ def get_cont_rhythm(er, voice_i):
 #     rhythm.data = onsets
 #     return rhythm
 
-# TODO review this function
+# TODO clean up commented code
 def update_pattern_vl_order(er, rhythms):
-    if er.cont_rhythms != "none":
-        er.num_notes_by_pattern = [
-            len(rhythms[voice_i].rel_onsets[0])
-            # len(rhythms[voice_i].onsets[0])
-            for voice_i in range(er.num_voices)
-        ]
-        # The next lines seem a little kludgy, it would be nice to
-        # treat all rhythms in a more homogenous way. But for now, at least
-        # it works.
-        for voice_i in range(er.num_voices):
-            pattern_len, rhythm_len = er.get(
-                voice_i, "pattern_len", "rhythm_len"
-            )
-            if pattern_len % rhythm_len == 0:
-                num_repeats_of_rhythm = pattern_len // rhythm_len
-                er.num_notes_by_pattern[voice_i] *= num_repeats_of_rhythm
+    # if er.cont_rhythms != "none":
+    #     er.num_notes_by_pattern = [
+    #         len(rhythms[voice_i].rel_onsets[0])
+    #         # len(rhythms[voice_i].onsets[0])
+    #         for voice_i in range(er.num_voices)
+    #     ]
+    #     # The next lines seem a little kludgy, it would be nice to
+    #     # treat all rhythms in a more homogenous way. But for now, at least
+    #     # it works.
+    #     for voice_i in range(er.num_voices):
+    #         pattern_len, rhythm_len = er.get(
+    #             voice_i, "pattern_len", "rhythm_len"
+    #         )
+    #         if pattern_len % rhythm_len == 0:
+    #             num_repeats_of_rhythm = pattern_len // rhythm_len
+    #             er.num_notes_by_pattern[voice_i] *= num_repeats_of_rhythm
 
-    else:
-        # The length of each rhythm is equal to the number of notes
-        # per pattern because of the _fit_rhythm_to_pattern function
-        # previously run.
-        er.num_notes_by_pattern = [len(rhythm) for rhythm in rhythms]
+    # else:
+    #     # The length of each rhythm is equal to the number of notes
+    #     # per pattern because of the _fit_rhythm_to_pattern function
+    #     # previously run.
+    #     er.num_notes_by_pattern = [len(rhythm) for rhythm in rhythms]
 
     # if er.truncate_patterns:
     #     max_len = max(er.pattern_len)
@@ -953,30 +966,37 @@ def update_pattern_vl_order(er, rhythms):
     #                 if onset >= truncate_len:
     #                     break
     #                 er.num_notes_by_truncated_pattern[voice_i] += 1
+    start_indices = [0 for _ in rhythms]
+    for vl_item in er.pattern_vl_order:
+        voice_i = vl_item.voice_i
+        end_i = rhythms[voice_i].get_i_at_or_after(vl_item.end_time)
+        first_onset, _ = rhythms[voice_i].at_or_after(vl_item.start_time)
+        vl_item.set_indices(start_indices[voice_i], end_i, first_onset)
+        start_indices[voice_i] = end_i
 
-    totals = [0 for rhythm in rhythms]
-    for i in range(len(er.pattern_vl_order)):
-        vl_item = er.pattern_vl_order[i]
-        start_rhythm_i = totals[vl_item.voice_i]
-        if (
-            er.truncate_patterns
-            and (vl_item.end_time - vl_item.start_time)
-            < er.pattern_len[vl_item.voice_i]
-        ):
-            # TODO I believe all references to 'truncated_pattern_num_notes'
-            #   can now be replaced by 'len(rhythm)' (but make sure!)
-            # totals[vl_item.voice_i] += rhythms[
-            #     vl_item.voice_i
-            # ].truncated_pattern_num_notes
-            totals[vl_item.voice_i] += len(rhythms[vl_item.voice_i])
-        else:
-            # TODO I think "num_notes_by_pattern" may no longer be necessary
-            totals[vl_item.voice_i] += er.num_notes_by_pattern[vl_item.voice_i]
-        # end_rhythm_i is the first note *after* the rhythm ends
-        end_rhythm_i = totals[vl_item.voice_i]
-        vl_item.start_i = start_rhythm_i
-        vl_item.end_i = end_rhythm_i
-        vl_item.len = end_rhythm_i - start_rhythm_i
+    # totals = [0 for rhythm in rhythms]
+    # for i in range(len(er.pattern_vl_order)):
+    #     vl_item = er.pattern_vl_order[i]
+    #     start_rhythm_i = totals[vl_item.voice_i]
+    #     if (
+    #         er.truncate_patterns
+    #         and (vl_item.end_time - vl_item.start_time)
+    #         < er.pattern_len[vl_item.voice_i]
+    #     ):
+    #         # TODO I believe all references to 'truncated_pattern_num_notes'
+    #         #   can now be replaced by 'len(rhythm)' (but make sure!)
+    #         # totals[vl_item.voice_i] += rhythms[
+    #         #     vl_item.voice_i
+    #         # ].truncated_pattern_num_notes
+    #         totals[vl_item.voice_i] += len(rhythms[vl_item.voice_i])
+    #     else:
+    #         # TODO I think "num_notes_by_pattern" may no longer be necessary
+    #         totals[vl_item.voice_i] += er.num_notes_by_pattern[vl_item.voice_i]
+    #     # end_rhythm_i is the first note *after* the rhythm ends
+    #     end_rhythm_i = totals[vl_item.voice_i]
+    #     vl_item.start_i = start_rhythm_i
+    #     vl_item.end_i = end_rhythm_i
+    #     vl_item.len = end_rhythm_i - start_rhythm_i
 
 
 def rhythms_handler(er):

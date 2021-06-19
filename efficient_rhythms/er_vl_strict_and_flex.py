@@ -126,9 +126,10 @@ def strict_voice_leading_loop(er, score, voice_lead_error, voice, vl_item):
     rhythm = er.rhythms[vl_item.voice_i]
     new_notes = er_classes.Voice()
 
-    new_onset = vl_item.start_time
+    # TODO review this in flex
+    new_onset = vl_item.first_onset
     new_note_i = vl_item.start_i
-    prev_onset = vl_item.prev_start_time
+    prev_onset = vl_item.prev_first_onset
     prev_note_i = vl_item.prev_start_i
 
     new_htimes = score.get_harmony_times_from_onset(new_onset)
@@ -149,6 +150,8 @@ def strict_voice_leading_loop(er, score, voice_lead_error, voice, vl_item):
         first_note = True
         success = True
         prev_note_end_i = min(vl_item.prev_end_i, prev_htimes_end_i)
+        if (prev_note_i == prev_note_end_i) or (new_note_i == new_htimes_end_i):
+            breakpoint()
         for prev_note_j, new_note_j in zip(
             range(prev_note_i, prev_note_end_i),
             range(new_note_i, new_htimes_end_i),
@@ -236,7 +239,10 @@ def voice_lead_pattern_strictly(er, score, vl_error, pattern_vl_i=0):
     # I think I may be removing empty voices elsewhere in which case this
     #   check could be skipped
     # In the event that the voice is empty, skip loop.
-    if voice:
+    # Also skip loop if vl_item is empty. (We don't want to delete the vl_item
+    # because we reuse them on re-generating the rhythm, after which the vl_item
+    # may no longer be empty.)
+    if voice and vl_item:
         new_notes = strict_voice_leading_loop(
             er, score, vl_error, voice, vl_item
         )

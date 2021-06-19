@@ -53,6 +53,12 @@ class Rhythm(RhythmicDict):
         self.min_note_dur = min_note_dur
         self.full = self.rhythm_dur <= self.min_note_dur * self.num_notes
 
+    def __repr__(self):
+        return (
+            f"{self.__class__.__name__}(total_dur={self.total_dur}, "
+            f"contents: {self._data})"
+        )
+
     def get_i_at_or_after(self, time):
         prev_reps, remaining = divmod(time, self.total_dur)
         return int(prev_reps) * len(self._data) + self._data.bisect_left(

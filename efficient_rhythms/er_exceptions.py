@@ -11,11 +11,11 @@ class ErSettingsError(Exception):
     pass
 
 
-class ErMakeException(Exception):
+class ErMakeError(Exception):
     pass
 
 
-class UnableToChoosePitchError(ErMakeException):
+class UnableToChoosePitchError(ErMakeError):
     def __init__(self):
         super().__init__()
         self.too_many_alternations = 0
@@ -37,7 +37,7 @@ class UnableToChoosePitchError(ErMakeException):
         )
 
 
-class AvailablePitchMaterialsError(ErMakeException):
+class AvailablePitchMaterialsError(ErMakeError):
     """Error will be raised if at any stage of _attempt_harmony_pattern
     there are no available pitch-classes or pitches."""
 
@@ -166,11 +166,11 @@ class AvailablePitchMaterialsError(ErMakeException):
         self.printer.initial_pattern_status(*self.counts)
 
 
-class NoMoreVoiceLeadingsError(ErMakeException):
+class NoMoreVoiceLeadingsError(ErMakeError):
     """Raised if cannot find voice-leading of necessary displacement."""
 
 
-class VoiceLeadingError(ErMakeException):
+class VoiceLeadingError(ErMakeError):
     def out_of_range(self):
         self._out_of_range += 1
         self._total_out_of_range += 1

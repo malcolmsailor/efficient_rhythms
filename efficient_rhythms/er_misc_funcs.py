@@ -433,7 +433,8 @@ def convert_to_fractions(item, max_denominator=MAX_DENOMINATOR):
             sub_item = convert_to_fractions(sub_item)
             out.append(sub_item)
         return out
-
+    if isinstance(item, (np.float32, np.float64)):
+        item = float(item)
     return fractions.Fraction(item).limit_denominator(
         max_denominator=max_denominator
     )

@@ -6,3 +6,5 @@ tests/.last_ran*
 docs/resources/deprecated/
 .vscode
 *.egg-info
+temp_tests/
+.temp_pylint_output
