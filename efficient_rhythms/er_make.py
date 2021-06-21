@@ -36,6 +36,13 @@ class PossibleNote:
         self.harmony_i = super_pattern.get_harmony_i(self.onset)
         self.score = super_pattern
 
+    def __repr__(self):
+        return (
+            f"{self.__class__.__name__}(voice_i={self.voice_i}, "
+            f"onset_i={self.onset_i}, onset={self.onset}, dur={self.dur}, "
+            f"harmony_i={self.harmony_i})"
+        )
+
     @functools.cached_property
     def prev_pitch(self):
         """Returns the previous pitch, skipping over any intervening rest.
@@ -470,7 +477,6 @@ def get_available_pitches(er, score, available_pcs, poss_note):
                     if consonant:
                         sub_out.append(available_pitch)
         out.append(sub_out)
-
     return out
 
 

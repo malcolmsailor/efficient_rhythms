@@ -1049,7 +1049,10 @@ def get_onset_order(er):
         voice_is[increment_i] += 1
         return next_onset, increment_i
 
-    onsets = [rhythm.onsets for rhythm in er.rhythms]
+    onsets = [
+        rhythm.onsets_between(0, pattern_len)
+        for (rhythm, pattern_len) in zip(er.rhythms, er.pattern_len)
+    ]
     voice_is = [0 for i in range(er.num_voices)]
     ordered_onsets = []
     while True:
@@ -1059,8 +1062,8 @@ def get_onset_order(er):
             break
         if next_onset >= end_time:
             break
-        ordered_onsets.append((voice_i, next_onset))
-
+        # TODO remove this cast?
+        ordered_onsets.append((voice_i, fractions.Fraction(next_onset)))
     return ordered_onsets
 
 

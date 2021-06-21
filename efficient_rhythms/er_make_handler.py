@@ -49,7 +49,7 @@ class ThreadWithResult(threading.Thread):
         target=None,
         name=None,
         args=(),
-        kwargs={},
+        kwargs=None,
         *,
         daemon=None
     ):
@@ -59,6 +59,8 @@ class ThreadWithResult(threading.Thread):
             except Exception as exc:
                 self.exc = exc
 
+        if kwargs is None:
+            kwargs = {}
         self.exc = None
         super().__init__(group=group, target=function, name=name, daemon=daemon)
 
