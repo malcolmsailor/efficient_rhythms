@@ -7,17 +7,15 @@ import numpy as np
 import sortedcontainers
 
 
-class RhythmicDict:
-    def __init__(self, initial_onsets=None, initial_durs=None):
-        if initial_onsets is not None and initial_durs is not None:
-            initial_data = {
-                o: d for (o, d) in zip(initial_onsets, initial_durs)
-            }
+class RhythmBase:
+    def add_onsets_and_durs(self, onsets, durs):
+        if onsets is not None and durs is not None:
+            dict_ = {o: d for (o, d) in zip(onsets, durs)}
         else:
-            initial_data = {}
-        self._data = sortedcontainers.SortedDict(initial_data)
-        self.onsets = initial_onsets
-        self.durs = initial_durs
+            dict_ = {}
+        self._data = sortedcontainers.SortedDict(dict_)
+        self.onsets = onsets
+        self.durs = durs
 
     def __iter__(self):
         return self._data.items().__iter__()
@@ -28,30 +26,6 @@ class RhythmicDict:
     # TODO review uses of this
     def __getitem__(self, key):
         return self._data.__getitem__(key)
-
-
-class Rhythm(RhythmicDict):
-    def __init__(
-        self,
-        onsets,
-        durs,
-        num_notes,
-        rhythm_dur,
-        truncations,
-        min_note_dur,
-        overlap,
-    ):
-        onsets, durs = self._pad_truncations(
-            rhythm_dur, truncations, onsets, durs, overlap
-        )
-        super().__init__(initial_onsets=onsets, initial_durs=durs)
-        # TODO eliminate "num_notes" argument?
-        self.num_notes = num_notes
-        self.rhythm_dur = rhythm_dur
-        self.truncations = truncations
-        self.total_dur = truncations[-1] if truncations else rhythm_dur
-        self.min_note_dur = min_note_dur
-        self.full = self.rhythm_dur <= self.min_note_dur * self.num_notes
 
     def __repr__(self):
         return (
@@ -117,28 +91,64 @@ class Rhythm(RhythmicDict):
         next_onset, _ = self.at_or_after(release)
         return next_onset - release >= min_rest_len
 
-    # def _pad_truncations2(self):
-    #     if not self._data:
-    #         # if rhythm is empty, following loop will throw an exception
-    #         return
-    #     for prev_trunc, trunc in zip(
-    #         [self.rhythm_dur] + self.truncations, self.truncations
-    #     ):
-    #         for i in itertools.count():
-    #             prev_onset, dur = self._data.peekitem(i)
-    #             new_onset = prev_onset + prev_trunc
-    #             if new_onset >= trunc:
-    #                 break
-    #             self._data[new_onset] = dur
 
-    @staticmethod
-    def _pad_truncations(rhythm_dur, truncations, onsets, durs, overlap):
-        # This is a static method because we want to call it before we
-        # call super().__init__() and so we can't actually access any
-        # attributes from the instance yet.
+class DiscreteRhythm(RhythmBase):
+    pass
+    # def __init__(self, initial_onsets=None, initial_durs=None):
+    #     super().__init__()
+    #     if initial_onsets is not None and initial_durs is not None:
+    #         initial_data = {
+    #             o: d for (o, d) in zip(initial_onsets, initial_durs)
+    #         }
+    #     else:
+    #         initial_data = {}
+    #     self._data = sortedcontainers.SortedDict(initial_data)
+    #     self.onsets = initial_onsets
+    #     self.durs = initial_durs
+
+    # def __iter__(self):
+    #     return self._data.items().__iter__()
+
+    # def __len__(self):
+    #     return self._data.__len__()
+
+    # # TODO review uses of this
+    # def __getitem__(self, key):
+    #     return self._data.__getitem__(key)
+
+
+class Rhythm(DiscreteRhythm):
+    def add_onsets_and_durs(self, onsets, durs):
+        onsets, durs = self._pad_truncations(onsets, durs)
+        super().add_onsets_and_durs(onsets, durs)
+
+    def __init__(
+        self,
+        num_notes,
+        rhythm_len,
+        truncations,
+        min_note_dur,
+        overlap,
+    ):
+        # onsets, durs = self._pad_truncations(
+        #     rhythm_len, truncations, onsets, durs, overlap
+        # )
+        # super().__init__(initial_onsets=onsets, initial_durs=durs)
+        # TODO eliminate "num_notes" argument?
+        self.num_notes = num_notes
+        self.rhythm_len = rhythm_len
+        self.truncations = truncations
+        self.overlap = overlap
+        self.total_dur = truncations[-1] if truncations else rhythm_len
+        self.min_note_dur = min_note_dur
+        self.full = self.rhythm_len <= self.min_note_dur * self.num_notes
+
+    def _pad_truncations(self, onsets, durs):
         if len(onsets) == 0:
             return onsets, durs
-        for prev_trunc, trunc in zip([rhythm_dur] + truncations, truncations):
+        for prev_trunc, trunc in zip(
+            [self.rhythm_len] + self.truncations, self.truncations
+        ):
             n_onsets = len(onsets)
             reps, remainder = divmod(trunc, prev_trunc)
             remainder_i = np.searchsorted(onsets, remainder)
@@ -154,7 +164,7 @@ class Rhythm(RhythmicDict):
                     prev_trunc
                 )
             overshoot = temp_onsets[-1] + temp_durs[-1] - trunc
-            if overlap:
+            if self.overlap:
                 overshoot -= temp_onsets[0]
             if overshoot > 0:
                 temp_durs[-1] -= overshoot
@@ -163,7 +173,7 @@ class Rhythm(RhythmicDict):
 
     @classmethod
     def from_er_settings(cls, er, voice_i, onsets=None, durs=None):
-        (num_notes, rhythm_dur, pattern_dur, min_note_dur, overlap) = er.get(
+        (num_notes, rhythm_len, pattern_len, min_note_dur, overlap) = er.get(
             voice_i,
             "num_notes",
             "rhythm_len",
@@ -171,24 +181,25 @@ class Rhythm(RhythmicDict):
             "min_dur",
             "overlap",
         )
-        # rhythm_dur should always be <= pattern_dur; this is enforced in
+        # rhythm_len should always be <= pattern_len; this is enforced in
         #  er_preprocess.py
         truncations = []
-        if pattern_dur % rhythm_dur != 0:
-            truncations.append(pattern_dur)
+        if pattern_len % rhythm_len != 0:
+            truncations.append(pattern_len)
         if er.truncate_patterns:
             truncate_dur = max(er.pattern_len)
-            if truncate_dur % pattern_dur != 0:
+            if truncate_dur % pattern_len != 0:
                 truncations.append(truncate_dur)
-        return cls(
-            onsets,
-            durs,
+        out = cls(
             num_notes,
-            rhythm_dur,
+            rhythm_len,
             truncations,
             min_note_dur,
             overlap,
         )
+        if onsets is not None and durs is not None:
+            out.add_onsets_and_durs(onsets, durs)
+        return out
 
 
 # TODO remove after revising ContinuousRhythm

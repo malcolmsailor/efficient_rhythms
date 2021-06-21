@@ -2,10 +2,69 @@ import numpy as np
 
 from .. import er_misc_funcs
 
-from .cont_rhythm import ContinuousRhythm, ContinuousRhythmicObject
+from .cont_rhythm import ContinuousRhythm, ContRhythmBase, ContRhythmBase2
 
 
-class Grid(ContinuousRhythmicObject):
+class Grid2(ContRhythmBase2):
+    def __init__(
+        self,
+        rhythm_len,
+        min_dur,
+        num_onset_positions,
+        increment,
+        overlap,
+        num_vars,
+        vary_consistently=False,
+        dtype=np.float64,
+    ):
+
+        super().__init__(
+            rhythm_len,
+            min_dur,
+            num_onset_positions,
+            increment,
+            overlap,
+            num_vars,
+            vary_consistently,
+            dtype,
+        )
+
+    def vary_rhythm(self, onsets, durs):
+        # This function will only work as expected if the onsets are all in
+        #   the grid.
+        indices = np.nonzero(np.isin(self._onsets[0], onsets))[0]
+        # We assert that onsets are all in the grid
+        assert len(indices) == len(onsets)
+        new_onsets = self._onsets[:, indices]
+        # TODO durs
+        # TODO investigate other functions I used to call (like truncate_or_extend())
+        return new_onsets
+
+    @classmethod
+    def from_er_settings(cls, er):
+        def _num_onset_positions():
+            out = max(
+                [r / s for (r, s) in zip(er.rhythm_len, er.onset_subdivision)]
+            )
+            return int(round(out))
+
+        # TODO warnings in preprocessing
+        return cls(
+            er.rhythm_len[0],
+            er.min_dur[0],
+            _num_onset_positions(),
+            er.cont_var_increment[0],
+            er.overlap,
+            er.num_cont_rhythm_vars[0],
+            er.vary_rhythm_consistently[0],
+        )
+
+    @property
+    def onset_positions(self):
+        return self._onsets[0]
+
+
+class Grid(ContRhythmBase):
     def __init__(self, er):
         super().__init__()
         # For now, this only works if all rhythm lengths are the same.
@@ -89,7 +148,7 @@ class Grid(ContinuousRhythmicObject):
 
         self.rel_onsets = np.zeros((self.num_cont_rhythm_vars, self.num_notes))
         self.deltas = None
-        self.generate_continuous_onsets()
+        self.get_continuous_onsets()
         self.vary_continuous_onsets(apply_to_durs=False)
         self.round()
         self.rel_onsets_to_rhythm(first_var_only=True)

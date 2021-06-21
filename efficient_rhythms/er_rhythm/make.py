@@ -10,9 +10,10 @@ import numpy as np
 from .. import er_globals
 from .. import er_midi
 
+from .utils import get_iois
 from .rhythm import Rhythm
 from .cont_rhythm import ContinuousRhythm
-from .grid import Grid
+from .grid import Grid2
 
 
 def _obligatory_onsets(er, voice_i):
@@ -195,8 +196,7 @@ def _onset_positions(er, voice_i):
     """Returns an np array of possible onset times."""
 
     if er.cont_rhythms == "grid":
-        # TODO cast elsewhere
-        return np.array(list(er.grid.keys()), dtype=np.float32)
+        return er.grid.onset_positions
 
     # TODO I believe I can remove all calls to "er.get" in this module
     rhythm_len, onset_subdivision, proportions = er.get(
@@ -311,14 +311,8 @@ def get_onsets(er, voice_i, prev_rhythms):
     return onsets
 
 
-def get_iois(er, voice_i, onsets):
-    # iois = inter-onset-intervals
-    iois = np.empty(len(onsets), fractions.Fraction)
-    iois[:-1] = onsets[1:] - onsets[:-1]
-    iois[-1] = er.get(voice_i, "rhythm_len") - onsets[-1]
-    if er.overlap:
-        iois[-1] += onsets[0]
-    return iois
+def get_iois_from_er(er, voice_i, onsets):
+    return get_iois(onsets, er.rhythm_len[voice_i], er.overlap)
 
 
 def _yield_onset_and_consecutive_release(rhythm):
@@ -454,14 +448,15 @@ def generate_rhythm(er, voice_i, prev_rhythms=()):
 
     onsets = get_onsets(er, voice_i, prev_rhythms)
     er.check_time()
-    iois = get_iois(er, voice_i, onsets)
+    iois = get_iois_from_er(er, voice_i, onsets)
     er.check_time()
     durs = get_durs(er, voice_i, iois, onsets, prev_rhythms)
     er.check_time()
     if er.cont_rhythms == "grid":
         rhythm = er.grid.return_varied_rhythm(er, onsets, durs, voice_i)
     else:
-        rhythm = Rhythm.from_er_settings(er, voice_i, onsets=onsets, durs=durs)
+        rhythm = Rhythm.from_er_settings(er, voice_i)
+        rhythm.add_onsets_and_durs(onsets, durs)
     return rhythm
 
 
@@ -470,7 +465,7 @@ def get_cont_rhythm(er, voice_i):
     if rhythm.num_notes == 0:
         print(f"Notice: voice {voice_i} is empty.")
         return rhythm
-    rhythm.generate_continuous_onsets()
+    rhythm.get_continuous_onsets()
     rhythm.fill_continuous_durs()
     rhythm.vary_continuous_onsets()
     rhythm.truncate_or_extend()
@@ -1007,7 +1002,7 @@ def rhythms_handler(er):
     else:
         rhythms = []
         if er.cont_rhythms == "grid":
-            er.grid = Grid(er)
+            er.grid = Grid2.from_er_settings(er)
         for voice_i in range(er.num_voices):
             rhythms.append(generate_rhythm(er, voice_i, prev_rhythms=rhythms))
 

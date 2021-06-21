@@ -85,8 +85,9 @@ class ERSettings:
 
     Otherwise, pitch materials can be specified either as integers, or as other
     numeric types (e.g., floats). **If you don't care about tuning or
-    temperament, just specify all intervals and pitches as integers** (e.g., one
-    semitone = `1`, "middle C" = `60`). Otherwise, read on:
+    temperament, you can just specify all intervals and pitches as integers** 
+    (e.g., one semitone = `1`, "middle C" = `60`). If you *do* care about tuning
+    and temperament, read on:
 
     - integers specify equal-tempered intervals. For example, in 12-tet (the
     usual temperament employed in Western music), an interval of `7`
@@ -959,6 +960,8 @@ class ERSettings:
         min_dur: a number, or a per-voice sequence of numbers. Indicates the
             minimum duration of a note. If not passed, or if `None` will be
             assigned the corresponding value of `onset_subdivision`.
+            # TODO for continuous rhythms, should we allow setting something like
+            # "min ioi" separately?
         obligatory_onsets: an optional sequence of numbers, or a per-voice
             sequence of sequences of numbers. Numbers specify obligatory
             onset times to include in the rhythm. Zero-indexed, so beat "1"
@@ -1113,6 +1116,8 @@ class ERSettings:
         cont_var_increment: number. If `num_cont_rhythm_vars != 1`, determines
             how much rhythmic perturbation is applied to each variation. Larger
             values lead to larger perturbations.
+            # TODO document this further: what exactly does this number
+            # represent?
             Default: 0.1
         super_pattern_reps_cont_var: bool. If True, any variations of the
             rhythm implied by `num_cont_rhythm_vars` will be allowed to continue
@@ -1399,8 +1404,8 @@ class ERSettings:
         default=12,
         metadata={
             "mutable_attrs": {},
-            "category": "global",
-            "priority": 2,
+            "category": "tuning",
+            "priority": 1,
             "val_dict": {"min_": (1,), "max_": (1200,)},
         },
     )
@@ -1763,6 +1768,7 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "midi",
             "priority": 0,
+            "shell_only": True,
         },
     )
     num_channels_pitch_bend_loop: int = fld(
@@ -1771,6 +1777,7 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "midi",
             "priority": 0,
+            "shell_only": True,
         },
     )
     pitch_bend_time_prop: numbers.Number = fld(
@@ -1779,6 +1786,7 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "midi",
             "priority": 0,
+            "shell_only": True,
         },
     )
 
@@ -1790,7 +1798,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "tuning",
-            "priority": 0,
+            "priority": 2,
         },
     )
 

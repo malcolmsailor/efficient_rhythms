@@ -236,7 +236,7 @@ def add_note_and_pitch_bend(
                 pitch=pitch_bend_tuple[PITCH_BEND],
                 time=pitch_bend_time
                 if pitch_bend_time is not None
-                else note.time,
+                else note.onset,
             )
         )
         add_note(

@@ -477,7 +477,7 @@ def test_new_iois():
     for overlap, iois in tests:
         basesettings["overlap"] = overlap
         er = er_preprocess.preprocess_settings(basesettings, silent=True)
-        result = er_rhythm.make.get_iois(er, 0, onsets)
+        result = er_rhythm.make.get_iois_from_er(er, 0, onsets)
         try:
             assert np.all(np.equal(result, iois))
         except:  # pylint: disable=bare-except
@@ -592,7 +592,7 @@ def test_new_durs():
         )
         try:
             onsets = er_rhythm.make.get_onsets(er, 1, (l_rhythm,))
-            iois = er_rhythm.make.get_iois(er, 1, onsets)
+            iois = er_rhythm.make.get_iois_from_er(er, 1, onsets)
             durs = er_rhythm.make.get_durs(er, 1, iois, onsets, (l_rhythm,))
             actual_density = sum(durs) / er.rhythm_len[1]
             # TODO write a function to test that:
@@ -907,7 +907,7 @@ def test_within_leader_durs():
         er, 0, leader2_onsets, leader2_durs
     )
     follower_onsets = np.array([0, 0.25, 0.75, 1.125, 1.25, 1.375])
-    follower_iois = er_rhythm.make.get_iois(er, 1, follower_onsets)
+    follower_iois = er_rhythm.make.get_iois_from_er(er, 1, follower_onsets)
     try:
         out = er_rhythm.make._within_leader_durs(
             er, 1, follower_iois, follower_onsets, leader1
