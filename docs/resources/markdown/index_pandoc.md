@@ -169,7 +169,7 @@ Both `chords` and `scales` will be looped through if they are shorter than `foot
 
 EXAMPLE:harmony_example3
 
-`chords` and `scales` do not have to be the same length as REF:harmony_example4 demonstrates:
+The sequences `chords` and `scales` do not have to have the same number of items, as REF:harmony_example4 demonstrates:
 
 ```
     "foot_pcs": ("E", "G", "E", "C"),

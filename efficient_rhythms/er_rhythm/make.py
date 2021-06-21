@@ -36,7 +36,14 @@ def _obligatory_onsets(er, voice_i):
 
 def _obligatory_onset_indices(er, voice_i, onset_positions):
     out = []
-    i = 0
+    if voice_i == 0 and er.force_foot_in_bass in (
+        "first_beat",
+        "global_first_beat",
+    ):
+        out.append(0)
+        i = 1
+    else:
+        i = 0
     for onset in _obligatory_onsets(er, voice_i):
         while onset_positions[i] < onset:
             i += 1
@@ -231,6 +238,7 @@ def _swap_indices(indices, to_swap, start_i):
 
 def _indices_handler(er, voice_i, prev_rhythms, onset_positions):
     indices = np.arange(len(onset_positions))
+
     oblig_indices = _obligatory_onset_indices(er, voice_i, onset_positions)
     oblig_i_end = _swap_indices(indices, oblig_indices, 0)
     # hocketing and quasi_unison indices are complements of one another

@@ -243,12 +243,9 @@ def choose_whether_chord_tone(er, super_pattern, poss_note):
             result = n_since_chord_tone / x
 
         if result < 1 and er.scale_chord_tone_prob_by_dur:
-            try:
-                note_weight = math.log2(
-                    poss_note.dur / er.scale_chord_tone_neutral_dur
-                )
-            except:
-                breakpoint()
+            note_weight = math.log2(
+                poss_note.dur / er.scale_chord_tone_neutral_dur
+            )
             if note_weight > 0 or er.scale_short_chord_tones_down:
                 prob_adj = (
                     note_weight - er.len_to_force_chord_tone
@@ -489,11 +486,9 @@ def within_limit_intervals(er, super_pattern, available_pitches, poss_note):
 
     if prev_note is None:
         return available_pitches
-
     chord_tone = er_make2.check_if_chord_tone(
         er, super_pattern, prev_note.onset, prev_note.pitch
     )
-
     max_interval, min_interval = er_make2.get_limiting_intervals(
         er, poss_note.voice_i, chord_tone
     )
@@ -814,7 +809,6 @@ def attempt_initial_pattern(
     if er_misc_funcs.empty_nested(available_pitches):
         available_pitch_error.no_available_pitches()
         return False
-
     available_pitches = within_limit_intervals(
         er, super_pattern, available_pitches, poss_note
     )

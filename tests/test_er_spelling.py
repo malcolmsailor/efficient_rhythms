@@ -105,34 +105,31 @@ def test_group_speller():
     ]
     group_speller = er_spelling.GroupSpeller()
     for test, result in zip(tests, results):
-        try:
-            assert (
-                list(group_speller(test)) == result
-            ), "list(group_speller(test)) != result"
-        except:  # pylint: disable=bare-except
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            traceback.print_exception(
-                exc_type, exc_value, exc_traceback, file=sys.stdout
-            )
-            breakpoint()
+        assert (
+            list(group_speller(test)) == result
+        ), "list(group_speller(test)) != result"
     tests = [
         ((60, 63, 66), ("C4", "Eb4", "Gb4"), ("c", "e-", "g-")),
         ((24, 48, 60, 71), ("C1", "C3", "C4", "B4"), ("CCC", "C", "c", "b")),
+        # Next tests ensure that Cb and B# are in the right octaves
+        (
+            (58, 59, 61, 63, 65),
+            ("Bb3", "Cb4", "Db4", "Eb4", "F4"),
+            ("B-", "c-", "d-", "e-", "f"),
+        ),
+        (
+            (51, 52, 54, 57, 60, 61),
+            ("D#3", "E3", "F#3", "A3", "B#3", "C#4"),
+            ("D#", "E", "F#", "A", "B#", "c#"),
+        ),
     ]
     for (test, shell, kern) in tests:
-        try:
-            assert group_speller.pitches(test) == list(
-                shell
-            ), "group_speller.pitches(test) != list(shell)"
-            assert group_speller.pitches(test, letter_format="kern") == list(
-                kern
-            ), 'group_speller.pitches(test, letter_format="kern") != list(kern)'
-        except:  # pylint: disable=bare-except
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            traceback.print_exception(
-                exc_type, exc_value, exc_traceback, file=sys.stdout
-            )
-            breakpoint()
+        assert group_speller.pitches(test) == list(
+            shell
+        ), "group_speller.pitches(test) != list(shell)"
+        assert group_speller.pitches(test, letter_format="kern") == list(
+            kern
+        ), 'group_speller.pitches(test, letter_format="kern") != list(kern)'
     tests = [
         ((60, 63, None, 66), ("C4", "Eb4", "", "Gb4"), ("c", "e-", "r", "g-")),
         (
@@ -142,21 +139,14 @@ def test_group_speller():
         ),
     ]
     for (test, shell, kern) in tests:
-        try:
-            assert group_speller.pitches(test, rests="") == list(shell), (
-                "group_speller.pitches(test, rests=" ") != list(shell)"
-            )
-            assert group_speller.pitches(
-                test, letter_format="kern", rests="r"
-            ) == list(
-                kern
-            ), 'group_speller.pitches(test, letter_format="kern", rests="r") != list(kern)'
-        except:  # pylint: disable=bare-except
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            traceback.print_exception(
-                exc_type, exc_value, exc_traceback, file=sys.stdout
-            )
-            breakpoint()
+        assert group_speller.pitches(test, rests="") == list(shell), (
+            "group_speller.pitches(test, rests=" ") != list(shell)"
+        )
+        assert group_speller.pitches(
+            test, letter_format="kern", rests="r"
+        ) == list(
+            kern
+        ), 'group_speller.pitches(test, letter_format="kern", rests="r") != list(kern)'
 
 
 if __name__ == "__main__":
