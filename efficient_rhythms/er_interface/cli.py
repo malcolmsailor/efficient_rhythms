@@ -10,6 +10,7 @@ import sys
 import traceback
 
 from .. import er_changers
+from .. import er_globals
 from .. import er_midi
 from .. import er_misc_funcs
 from .. import er_output_notation
@@ -23,12 +24,6 @@ SELECT_HEADER = "Active filters and transformers"
 FILTERS_HEADER = "Filters"
 TRANSFORMERS_HEADER = "Transformers"
 GITHUB_URL = "https://github.com/malcolmsailor/efficient_rhythms"
-
-# TODO document DEBUG
-try:
-    DEBUG = os.environ["EFFICIENT_RHYTHMS_DEBUG"]
-except KeyError:
-    DEBUG = False
 
 
 def clear():  # from https://stackoverflow.com/a/684344/10155119
@@ -640,7 +635,7 @@ def changer_interface(super_pattern, active_changers, changer_counter):
                 )
             )
         except Exception:  # pylint: disable=broad-except
-            if DEBUG:
+            if er_globals.DEBUG:
                 raise
             exc_type, exc_value, exc_traceback = sys.exc_info()
             traceback.print_exception(
@@ -797,7 +792,7 @@ def input_loop(er, super_pattern, args):
                 (
                     "    'p' to print out text representation of score\n"
                     "    'b' to enter a breakpoint (for debugging)\n"
-                    if DEBUG
+                    if er_globals.DEBUG
                     else ""
                 ),
                 (
@@ -891,8 +886,8 @@ def input_loop(er, super_pattern, args):
                 current_pattern, current_midi_path, args.verovio_arguments
             )
 
-        elif DEBUG and answer == "p":
+        elif er_globals.DEBUG and answer == "p":
             print(current_pattern.head())
 
-        elif DEBUG and answer == "b":
+        elif er_globals.DEBUG and answer == "b":
             breakpoint()

@@ -1,4 +1,13 @@
+import os
+
 import numpy as np
+
+# TODO document DEBUG
+try:
+    DEBUG = os.environ["EFFICIENT_RHYTHMS_DEBUG"]
+except KeyError:
+    DEBUG = False
+
 
 RNG = np.random.default_rng()
 

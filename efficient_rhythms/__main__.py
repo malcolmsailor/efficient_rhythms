@@ -5,6 +5,7 @@ import sys
 
 
 from . import er_exceptions
+from . import er_globals
 from . import er_interface
 from . import er_make_handler
 from . import er_misc_funcs
@@ -101,7 +102,7 @@ def output_notation(settings, pattern, args):
         )
     # TODO remove ProcError
     except er_misc_funcs.ProcError as exc:
-        if not er_interface.DEBUG:
+        if not er_globals.DEBUG:
             er_output_notation.clean_up_temporary_notation_files()
         print(exc)
         sys.exit(1)

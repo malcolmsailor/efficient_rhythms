@@ -3,6 +3,7 @@ import threading
 import time
 
 from . import er_make
+from .er_globals import DEBUG
 
 
 def timer(timeout, duration):
@@ -65,7 +66,11 @@ class ThreadWithResult(threading.Thread):
         super().__init__(group=group, target=function, name=name, daemon=daemon)
 
 
-def make_super_pattern(er):
+def make_super_pattern(er, debug=DEBUG):
+    if debug:
+        # The threading seems to work havoc with pdb, so we just skip it if
+        # we are debugging.
+        return er_make.make_super_pattern(er)
     with timeout(er):
         main_thread = ThreadWithResult(
             target=er_make.make_super_pattern, args=[er]

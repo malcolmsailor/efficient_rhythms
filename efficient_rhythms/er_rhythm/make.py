@@ -206,8 +206,9 @@ def _onset_positions(er, voice_i):
     indices = np.arange(n_onsets)
     onset_positions = indices * onset_subdivision
     if proportions is not None:
+        normalized_proportions = proportions * onset_subdivision
         onset_positions = np.repeat(onset_positions, len(proportions))
-        onset_positions += np.tile(proportions, n_onsets)
+        onset_positions += np.tile(normalized_proportions, n_onsets)
     _add_comma(er, voice_i, onset_positions, comma)
     return onset_positions
 

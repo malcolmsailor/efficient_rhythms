@@ -5,7 +5,7 @@ title: Efficient rhythms documentation
 
 ## Introduction
 
-`efficient_rhythms` is a tool for musical composition. You can find it on Github at [`https://github.com/malcolmsailor/efficient_rhythms`](https://github.com/malcolmsailor/efficient_rhythms)
+`efficient_rhythms` is a tool for musical composition. You can find it on Github at [`https://github.com/malcolmsailor/efficient_rhythms`](https://github.com/malcolmsailor/efficient_rhythms). There is also an [alpha web app version of this script](http://malcolmsailor.pythonanywhere.com) you are welcome to try.
 
 Here are a few examples of things I have made using it:
 

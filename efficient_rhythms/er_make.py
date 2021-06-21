@@ -243,9 +243,12 @@ def choose_whether_chord_tone(er, super_pattern, poss_note):
             result = n_since_chord_tone / x
 
         if result < 1 and er.scale_chord_tone_prob_by_dur:
-            note_weight = math.log2(
-                poss_note.dur / er.scale_chord_tone_neutral_dur
-            )
+            try:
+                note_weight = math.log2(
+                    poss_note.dur / er.scale_chord_tone_neutral_dur
+                )
+            except:
+                breakpoint()
             if note_weight > 0 or er.scale_short_chord_tones_down:
                 prob_adj = (
                     note_weight - er.len_to_force_chord_tone
@@ -692,8 +695,9 @@ def check_whether_to_force_foot(er, super_pattern, poss_note):
         return False
     if poss_note.onset == 0 and er.force_foot_in_bass == "global_first_beat":
         return True
-    if er.force_foot_in_bass == "global_first_note" and poss_note.onset == min(
-        er.rhythms[BASS].onsets
+    if (
+        er.force_foot_in_bass == "global_first_note"
+        and poss_note.onset == er.rhythms[BASS].onsets[0]
     ):
         return True
     if er.force_foot_in_bass in ("first_note", "first_beat"):
@@ -705,8 +709,9 @@ def check_whether_to_force_foot(er, super_pattern, poss_note):
             and er.force_foot_in_bass == "first_beat"
         ):
             return True
-        if poss_note.onset == min(
-            [time for time in er.rhythms[BASS] if time >= harmony_start_time]
+        if (
+            poss_note.onset
+            == er.rhythms[BASS].at_or_after(harmony_start_time)[0]
         ):
             return True
     return False

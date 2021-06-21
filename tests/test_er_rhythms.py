@@ -373,6 +373,12 @@ def test_onset_positions():
     er = er_preprocess.preprocess_settings(basesettings, silent=True)
     onset_positions = er_rhythm.make._onset_positions(er, 0)
     assert np.all(np.less(onset_positions[:4] - [0, 4 / 7, 1, 11 / 7], 1e-6))
+    basesettings["onset_subdivision"] = 0.5
+    er = er_preprocess.preprocess_settings(basesettings, silent=True)
+    onset_positions = er_rhythm.make._onset_positions(er, 0)
+    assert np.all(
+        np.less(onset_positions[:4] - [0, 4 / 14, 0.5, 11 / 14], 1e-6)
+    )
 
 
 def test_new_onsets():

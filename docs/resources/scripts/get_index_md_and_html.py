@@ -20,7 +20,7 @@ OUT_HTML_PATH = os.path.join(SCRIPT_DIR, "../../index.html")
 CSS_PATH1 = "resources/third_party/github-markdown-css/github-markdown.css"
 CSS_PATH2 = "resources/css/markdown-body.css"
 
-ER_WEB_URL = "http://127.0.0.1:5000/"  # TODO update
+ER_WEB_URL = "http://malcolmsailor.pythonanywhere.com/"
 ER_WEB_EXCLUDE = ("choirs",)
 
 
