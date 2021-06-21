@@ -1399,8 +1399,8 @@ class ERSettings:
         default=12,
         metadata={
             "mutable_attrs": {},
-            "category": "global",
-            "priority": 2,
+            "category": "tuning",
+            "priority": 1,
             "val_dict": {"min_": (1,), "max_": (1200,)},
         },
     )
@@ -1790,7 +1790,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "tuning",
-            "priority": 0,
+            "priority": 2,
         },
     )
 
