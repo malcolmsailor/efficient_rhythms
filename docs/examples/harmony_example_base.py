@@ -19,4 +19,9 @@
     "length_choir_segments": 1 / 4,
     "tempo": 132,
     "choirs_separate_tracks": False,
+    # overriding web defaults
+    "max_consec_seg_from_same_choir": 0,
+    "preserve_foot_in_bass": "none",
+    "scales": ["DIATONIC_SCALE"],
+    "chords": ["MAJOR_TRIAD"],
 }

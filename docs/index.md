@@ -107,7 +107,7 @@ roll\](docs/resources/pngs/example1\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/example1.m4a) [Click to open this example in
 the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=2&num_voices=2&foot_pcs=%5B0%5D&interval_cycle=3&prohibit_parallels=%5B0%5D&overwrite=y&max_repeated_notes=0&num_harmonies=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&max_interval=4&force_foot_in_bass=global_first_beat&force_chord_tone=global_first_note&forbidden_interval_classes=%5B0%5D&randomly_distribute_between_choirs=n&tempo=120&onset_density=0.7&dur_density=1.0&max_consec_seg_from_same_choir=0&length_choir_segments=1&preserve_foot_in_bass=none&scales=%5B%27DIATONIC_SCALE%27%5D&chords=%5B%27MAJOR_TRIAD%27%5D&voice_lead_chord_tones=y&pattern_len=2&harmony_len=4&consonance_treatment=all_onsets&hocketing=y)
+app](http://malcolmsailor.pythonanywhere.com/?seed=2&num_voices=2&foot_pcs=0&interval_cycle=3&prohibit_parallels=0&overwrite=y&max_repeated_notes=0&num_harmonies=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&max_interval=4&force_foot_in_bass=global_first_beat&force_chord_tone=global_first_note&forbidden_interval_classes=0&randomly_distribute_between_choirs=n&tempo=120&onset_density=0.7&dur_density=1.0&max_consec_seg_from_same_choir=0&length_choir_segments=1&preserve_foot_in_bass=none&scales=DIATONIC_SCALE&chords=MAJOR_TRIAD&voice_lead_chord_tones=y&pattern_len=2&harmony_len=4&consonance_treatment=all_onsets&hocketing=y)
 
 (By the way, I made the piano-roll figures throughout this documentation
 with [midani](https://github.com/malcolmsailor/midani).)
@@ -132,7 +132,7 @@ roll\](docs/resources/pngs/example2\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/example2.m4a) [Click to open this example in
 the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=2&num_voices=2&foot_pcs=%5B0%5D&interval_cycle=3&prohibit_parallels=%5B0%5D&overwrite=y&max_repeated_notes=0&num_harmonies=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&max_interval=4&force_foot_in_bass=global_first_beat&force_chord_tone=global_first_note&forbidden_interval_classes=%5B0%5D&randomly_distribute_between_choirs=n&tempo=120&onset_density=0.7&dur_density=1.0&max_consec_seg_from_same_choir=0&length_choir_segments=1&preserve_foot_in_bass=none&scales=%5B%27DIATONIC_SCALE%27%5D&chords=%5B%27MAJOR_TRIAD%27%5D&voice_lead_chord_tones=n&pattern_len=4&rhythm_len=2&harmony_len=4&consonance_treatment=all_onsets)
+app](http://malcolmsailor.pythonanywhere.com/?seed=2&num_voices=2&foot_pcs=0&interval_cycle=3&prohibit_parallels=0&overwrite=y&max_repeated_notes=0&num_harmonies=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&max_interval=4&force_foot_in_bass=global_first_beat&force_chord_tone=global_first_note&forbidden_interval_classes=0&randomly_distribute_between_choirs=n&tempo=120&onset_density=0.7&dur_density=1.0&max_consec_seg_from_same_choir=0&length_choir_segments=1&preserve_foot_in_bass=none&scales=DIATONIC_SCALE&chords=MAJOR_TRIAD&voice_lead_chord_tones=n&pattern_len=4&rhythm_len=2&harmony_len=4&consonance_treatment=all_onsets)
 
 We aren’t constrained to have
 \[`pattern_len`\](docs/settings.md\#pattern\_len) be a whole multiple of
@@ -150,7 +150,7 @@ roll\](docs/resources/pngs/example3\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/example3.m4a) [Click to open this example in
 the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=2&num_voices=2&foot_pcs=%5B0%5D&interval_cycle=3&prohibit_parallels=%5B0%5D&overwrite=y&max_repeated_notes=0&num_harmonies=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&max_interval=4&force_foot_in_bass=global_first_beat&force_chord_tone=global_first_note&forbidden_interval_classes=%5B0%5D&randomly_distribute_between_choirs=n&tempo=120&onset_density=%5B0.7%2C+0.85%5D&dur_density=1.0&max_consec_seg_from_same_choir=0&length_choir_segments=1&preserve_foot_in_bass=none&scales=%5B%27DIATONIC_SCALE%27%5D&chords=%5B%27MAJOR_TRIAD%27%5D&voice_lead_chord_tones=n&pattern_len=4&rhythm_len=1.5&harmony_len=4&consonance_treatment=all_onsets)
+app](http://malcolmsailor.pythonanywhere.com/?seed=2&num_voices=2&foot_pcs=0&interval_cycle=3&prohibit_parallels=0&overwrite=y&max_repeated_notes=0&num_harmonies=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&max_interval=4&force_foot_in_bass=global_first_beat&force_chord_tone=global_first_note&forbidden_interval_classes=0&randomly_distribute_between_choirs=n&tempo=120&onset_density=0.7%2C+0.85&dur_density=1.0&max_consec_seg_from_same_choir=0&length_choir_segments=1&preserve_foot_in_bass=none&scales=DIATONIC_SCALE&chords=MAJOR_TRIAD&voice_lead_chord_tones=n&pattern_len=4&rhythm_len=1.5&harmony_len=4&consonance_treatment=all_onsets)
 
 Up to now, we’ve always specified the same settings in both voices. But
 we need not do so\! In
@@ -166,7 +166,7 @@ roll\](docs/resources/pngs/example4\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/example4.m4a) [Click to open this example in
 the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=2&num_voices=2&foot_pcs=%5B0%5D&interval_cycle=3&prohibit_parallels=%5B0%5D&overwrite=y&max_repeated_notes=0&num_harmonies=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&max_interval=4&force_foot_in_bass=global_first_beat&force_chord_tone=global_first_note&forbidden_interval_classes=%5B0%5D&randomly_distribute_between_choirs=n&tempo=120&onset_density=%5B0.7%2C+0.85%5D&dur_density=1.0&max_consec_seg_from_same_choir=0&length_choir_segments=1&preserve_foot_in_bass=none&scales=%5B%27DIATONIC_SCALE%27%5D&chords=%5B%27MAJOR_TRIAD%27%5D&voice_lead_chord_tones=n&pattern_len=4&rhythm_len=%5B1.5%2C+2%5D&harmony_len=4&consonance_treatment=all_onsets)
+app](http://malcolmsailor.pythonanywhere.com/?seed=2&num_voices=2&foot_pcs=0&interval_cycle=3&prohibit_parallels=0&overwrite=y&max_repeated_notes=0&num_harmonies=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&max_interval=4&force_foot_in_bass=global_first_beat&force_chord_tone=global_first_note&forbidden_interval_classes=0&randomly_distribute_between_choirs=n&tempo=120&onset_density=0.7%2C+0.85&dur_density=1.0&max_consec_seg_from_same_choir=0&length_choir_segments=1&preserve_foot_in_bass=none&scales=DIATONIC_SCALE&chords=MAJOR_TRIAD&voice_lead_chord_tones=n&pattern_len=4&rhythm_len=1.5%2C+2&harmony_len=4&consonance_treatment=all_onsets)
 
 We can also have different values of
 \[`pattern_len`\](docs/settings.md\#pattern\_len) in each voice, as in
@@ -187,7 +187,7 @@ roll\](docs/resources/pngs/example5\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/example5.m4a) [Click to open this example in
 the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=2&num_voices=2&foot_pcs=%5B0%5D&interval_cycle=3&prohibit_parallels=%5B0%5D&overwrite=y&max_repeated_notes=0&num_harmonies=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&max_interval=4&force_foot_in_bass=global_first_beat&force_chord_tone=global_first_note&forbidden_interval_classes=%5B0%5D&randomly_distribute_between_choirs=n&tempo=120&onset_density=0.7&dur_density=1.0&max_consec_seg_from_same_choir=0&length_choir_segments=1&preserve_foot_in_bass=none&scales=%5B%27DIATONIC_SCALE%27%5D&chords=%5B%27MAJOR_TRIAD%27%5D&voice_lead_chord_tones=n&pattern_len=%5B1.5%2C+4%5D&truncate_patterns=y&harmony_len=4&consonance_treatment=none&hocketing=y&overlap=n)
+app](http://malcolmsailor.pythonanywhere.com/?seed=2&num_voices=2&foot_pcs=0&interval_cycle=3&prohibit_parallels=0&overwrite=y&max_repeated_notes=0&num_harmonies=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&max_interval=4&force_foot_in_bass=global_first_beat&force_chord_tone=global_first_note&forbidden_interval_classes=0&randomly_distribute_between_choirs=n&tempo=120&onset_density=0.7&dur_density=1.0&max_consec_seg_from_same_choir=0&length_choir_segments=1&preserve_foot_in_bass=none&scales=DIATONIC_SCALE&chords=MAJOR_TRIAD&voice_lead_chord_tones=n&pattern_len=1.5%2C+4&truncate_patterns=y&harmony_len=4&consonance_treatment=none&hocketing=y&overlap=n)
 
 Up until now, whenever one pattern or rhythm didn’t line up with the
 other, we have truncated the shorter one, so that subsequent repetitions
@@ -208,7 +208,7 @@ roll\](docs/resources/pngs/example6\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/example6.m4a) [Click to open this example in
 the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=2&num_voices=2&foot_pcs=%5B0%5D&interval_cycle=3&prohibit_parallels=%5B0%5D&overwrite=y&max_repeated_notes=0&num_harmonies=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&max_interval=4&force_foot_in_bass=global_first_beat&force_chord_tone=global_first_note&forbidden_interval_classes=%5B0%5D&randomly_distribute_between_choirs=n&tempo=120&onset_density=0.7&dur_density=1.0&max_consec_seg_from_same_choir=0&length_choir_segments=1&preserve_foot_in_bass=none&scales=%5B%27DIATONIC_SCALE%27%5D&chords=%5B%27MAJOR_TRIAD%27%5D&voice_lead_chord_tones=n&pattern_len=%5B1.5%2C+4%5D&truncate_patterns=n&harmony_len=4&consonance_treatment=none&hocketing=y&overlap=n)
+app](http://malcolmsailor.pythonanywhere.com/?seed=2&num_voices=2&foot_pcs=0&interval_cycle=3&prohibit_parallels=0&overwrite=y&max_repeated_notes=0&num_harmonies=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&max_interval=4&force_foot_in_bass=global_first_beat&force_chord_tone=global_first_note&forbidden_interval_classes=0&randomly_distribute_between_choirs=n&tempo=120&onset_density=0.7&dur_density=1.0&max_consec_seg_from_same_choir=0&length_choir_segments=1&preserve_foot_in_bass=none&scales=DIATONIC_SCALE&chords=MAJOR_TRIAD&voice_lead_chord_tones=n&pattern_len=1.5%2C+4&truncate_patterns=n&harmony_len=4&consonance_treatment=none&hocketing=y&overlap=n)
 
 Another feature of all the examples up to now is that
 \[`harmony_len`\](docs/settings.md\#harmony\_len) has always been at
@@ -226,7 +226,7 @@ roll\](docs/resources/pngs/example7\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/example7.m4a) [Click to open this example in
 the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=2&num_voices=2&foot_pcs=%5B0%5D&interval_cycle=3&prohibit_parallels=%5B0%5D&overwrite=y&max_repeated_notes=0&num_harmonies=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&max_interval=4&force_foot_in_bass=first_beat&force_chord_tone=global_first_note&forbidden_interval_classes=%5B0%5D&randomly_distribute_between_choirs=n&tempo=120&onset_density=0.7&dur_density=1.0&max_consec_seg_from_same_choir=0&length_choir_segments=1&preserve_foot_in_bass=none&scales=%5B%27DIATONIC_SCALE%27%5D&chords=%5B%27MAJOR_TRIAD%27%5D&voice_lead_chord_tones=y&pattern_len=4&harmony_len=2&obligatory_onsets=%5B%5B0%5D%2C+%5B%5D%5D&obligatory_onsets_modulo=2&voice_ranges=%5B%2851%2C+60%29%2C+%2860%2C+72%29%5D&extend_bass_range_for_foots=12&consonance_treatment=all_onsets&hocketing=y&num_reps_super_pattern=4)
+app](http://malcolmsailor.pythonanywhere.com/?seed=2&num_voices=2&foot_pcs=0&interval_cycle=3&prohibit_parallels=0&overwrite=y&max_repeated_notes=0&num_harmonies=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&max_interval=4&force_foot_in_bass=first_beat&force_chord_tone=global_first_note&forbidden_interval_classes=0&randomly_distribute_between_choirs=n&tempo=120&onset_density=0.7&dur_density=1.0&max_consec_seg_from_same_choir=0&length_choir_segments=1&preserve_foot_in_bass=none&scales=DIATONIC_SCALE&chords=MAJOR_TRIAD&voice_lead_chord_tones=y&pattern_len=4&harmony_len=2&obligatory_onsets=%5B0%5D%2C+%5B%5D&obligatory_onsets_modulo=2&voice_ranges=%2848%2C+60%29%2C+%2860%2C+72%29&extend_bass_range_for_foots=6&consonance_treatment=all_onsets&hocketing=y&num_reps_super_pattern=4)
 
 ### Harmony
 
@@ -253,7 +253,7 @@ roll\](docs/resources/pngs/harmony\_example1\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/harmony\_example1.m4a) [Click to open this
 example in the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=y&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=n&foot_pcs=%28%27C%27%2C+%27G%27%2C+%27A%27%2C+%27F%27%29&chords=%28%27MAJOR_TRIAD%27%2C+%27MAJOR_TRIAD%27%2C+%27MINOR_TRIAD%27%2C+%27MAJOR_TRIAD%27%29&scales=%28%27MAJOR_SCALE%27%2C+%27MIXOLYDIAN%27%2C+%27AEOLIAN%27%2C+%27LYDIAN%27%29)
+app](http://malcolmsailor.pythonanywhere.com/?seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=y&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=n&max_consec_seg_from_same_choir=0&preserve_foot_in_bass=none&scales=MAJOR_SCALE%2C+MIXOLYDIAN%2C+AEOLIAN%2C+LYDIAN&chords=MAJOR_TRIAD%2C+MAJOR_TRIAD%2C+MINOR_TRIAD%2C+MAJOR_TRIAD&foot_pcs=C%2C+G%2C+A%2C+F)
 
 There’s a lot to explain here:
 
@@ -300,7 +300,7 @@ roll\](docs/resources/pngs/harmony\_example2\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/harmony\_example2.m4a) [Click to open this
 example in the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=y&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=n&foot_pcs=%28%27E%27%2C+%27G%27%2C+%27D%27%2C+%27A%27%29&chords=%28%27MAJOR_TRIAD%27%2C+%27MAJOR_TRIAD%27%2C+%27MINOR_TRIAD%27%2C+%27MAJOR_TRIAD%27%29&scales=%28%27MAJOR_SCALE%27%2C+%27MIXOLYDIAN%27%2C+%27AEOLIAN%27%2C+%27LYDIAN%27%29)
+app](http://malcolmsailor.pythonanywhere.com/?seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=y&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=n&max_consec_seg_from_same_choir=0&preserve_foot_in_bass=none&scales=MAJOR_SCALE%2C+MIXOLYDIAN%2C+AEOLIAN%2C+LYDIAN&chords=MAJOR_TRIAD%2C+MAJOR_TRIAD%2C+MINOR_TRIAD%2C+MAJOR_TRIAD&foot_pcs=E%2C+G%2C+D%2C+A)
 
 There are, however, two important constraints on
 \[`chords`\](docs/settings.md\#chords) and
@@ -342,11 +342,12 @@ roll\](docs/resources/pngs/harmony\_example3\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/harmony\_example3.m4a) [Click to open this
 example in the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=y&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=n&foot_pcs=%28%27E%27%2C+%27G%27%29&chords=%28%27MAJOR_TRIAD%27%2C%29&scales=%28%27MIXOLYDIAN%27%2C%29&num_reps_super_pattern=4)
+app](http://malcolmsailor.pythonanywhere.com/?seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=y&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=n&max_consec_seg_from_same_choir=0&preserve_foot_in_bass=none&scales=MIXOLYDIAN%2C&chords=MAJOR_TRIAD%2C&foot_pcs=E%2C+G&num_reps_super_pattern=4)
 
-\[`chords`\](docs/settings.md\#chords) and
-\[`scales`\](docs/settings.md\#scales) do not have to be the same length
-as <a href="#harmony_example4">`docs/examples/harmony_example4.py`</a>
+The sequences \[`chords`\](docs/settings.md\#chords) and
+\[`scales`\](docs/settings.md\#scales) do not have to have the same
+number of items, as
+<a href="#harmony_example4">`docs/examples/harmony_example4.py`</a>
 demonstrates:
 
 ``` 
@@ -363,7 +364,7 @@ roll\](docs/resources/pngs/harmony\_example4\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/harmony\_example4.m4a) [Click to open this
 example in the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=y&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=n&foot_pcs=%28%27E%27%2C+%27G%27%2C+%27E%27%2C+%27C%27%29&chords=%28%27MAJOR_TRIAD%27%2C%29&scales=%28%27MIXOLYDIAN%27%2C+%27LYDIAN%27%29)
+app](http://malcolmsailor.pythonanywhere.com/?seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=y&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=n&max_consec_seg_from_same_choir=0&preserve_foot_in_bass=none&scales=MIXOLYDIAN%2C+LYDIAN&chords=MAJOR_TRIAD%2C&foot_pcs=E%2C+G%2C+E%2C+C)
 
 So far, the length of the progression has always been taken implicitly
 from the length of \[`foot_pcs`\](docs/settings.md\#foot\_pcs). But it
@@ -389,7 +390,7 @@ roll\](docs/resources/pngs/harmony\_example5\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/harmony\_example5.m4a) [Click to open this
 example in the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=y&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=n&num_harmonies=4&foot_pcs=%28%27D%27%2C%29&chords=%28%27MAJOR_7TH_NO5%27%2C+%27DOMINANT_7TH_NO3%27%2C+%27MAJOR_64%27%2C+%27MAJOR_63%27%29&scales=%28%27MAJOR_SCALE%27%2C+%27MIXOLYDIAN%27%2C+%27MIXOLYDIAN%27%2C+%27AEOLIAN%27%29)
+app](http://malcolmsailor.pythonanywhere.com/?seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=y&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=n&max_consec_seg_from_same_choir=0&preserve_foot_in_bass=none&scales=MAJOR_SCALE%2C+MIXOLYDIAN%2C+MIXOLYDIAN%2C+AEOLIAN&chords=MAJOR_7TH_NO5%2C+DOMINANT_7TH_NO3%2C+MAJOR_64%2C+MAJOR_63&num_harmonies=4&foot_pcs=D%2C)
 
 Another useful setting for creating harmonic progressions is
 \[`interval_cycle`\](docs/settings.md\#interval\_cycle). If we pass
@@ -419,7 +420,7 @@ roll\](docs/resources/pngs/harmony\_example6\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/harmony\_example6.m4a) [Click to open this
 example in the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=y&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=n&num_harmonies=4&interval_cycle=PERFECT_4TH&foot_pcs=%28%27Eb%27%2C%29&chords=%28%27MAJOR_TRIAD%27%2C%29&scales=%28%27MAJOR_SCALE%27%2C%29)
+app](http://malcolmsailor.pythonanywhere.com/?seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=y&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=n&max_consec_seg_from_same_choir=0&preserve_foot_in_bass=none&scales=MAJOR_SCALE%2C&chords=MAJOR_TRIAD%2C&num_harmonies=4&interval_cycle=PERFECT_4TH&foot_pcs=Eb%2C)
 
 \[`interval_cycle`\](docs/settings.md\#interval\_cycle) can also consist
 of more than one interval, as in
@@ -447,7 +448,7 @@ roll\](docs/resources/pngs/harmony\_example7\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/harmony\_example7.m4a) [Click to open this
 example in the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=y&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=n&num_harmonies=4&interval_cycle=%28%27PERFECT_4TH%27%2C+%27MINOR_6TH%27%29&foot_pcs=%28%27Eb%27%2C%29&chords=%28%27MAJOR_TRIAD%27%2C%29&scales=%28%27MAJOR_SCALE%27%2C%29)
+app](http://malcolmsailor.pythonanywhere.com/?seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=y&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=n&max_consec_seg_from_same_choir=0&preserve_foot_in_bass=none&scales=MAJOR_SCALE%2C&chords=MAJOR_TRIAD%2C&num_harmonies=4&interval_cycle=PERFECT_4TH%2C+MINOR_6TH&foot_pcs=Eb%2C)
 
 Before concluding this introduction to specifying harmonies, I should
 add a few words about what the script actually does with
@@ -495,7 +496,7 @@ roll\](docs/resources/pngs/harmony\_example8\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/harmony\_example8.m4a) [Click to open this
 example in the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=n&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=n&num_harmonies=4&interval_cycle=PERFECT_4TH&foot_pcs=%28%27Eb%27%2C%29&chords=%28%27MAJOR_TRIAD%27%2C%29&scales=%28%27MAJOR_SCALE%27%2C%29)
+app](http://malcolmsailor.pythonanywhere.com/?seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=n&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=n&max_consec_seg_from_same_choir=0&preserve_foot_in_bass=none&scales=MAJOR_SCALE%2C&chords=MAJOR_TRIAD%2C&num_harmonies=4&interval_cycle=PERFECT_4TH&foot_pcs=Eb%2C)
 
 <a href="#harmony_example9">`docs/examples/harmony_example9.py`</a> is
 similar, but with `chord_tone_selection = False` as well.
@@ -508,7 +509,7 @@ roll\](docs/resources/pngs/harmony\_example9\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/harmony\_example9.m4a) [Click to open this
 example in the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=n&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=n&num_harmonies=4&interval_cycle=PERFECT_4TH&foot_pcs=%28%27Eb%27%2C%29&chords=%28%27MAJOR_TRIAD%27%2C%29&scales=%28%27MAJOR_SCALE%27%2C%29&chord_tone_selection=n)
+app](http://malcolmsailor.pythonanywhere.com/?seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=n&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=n&max_consec_seg_from_same_choir=0&preserve_foot_in_bass=none&scales=MAJOR_SCALE%2C&chords=MAJOR_TRIAD%2C&num_harmonies=4&interval_cycle=PERFECT_4TH&foot_pcs=Eb%2C&chord_tone_selection=n)
 
 ### Specifying rhythms
 
@@ -547,7 +548,7 @@ roll\](docs/resources/pngs/rhythm\_example1\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/rhythm\_example1.m4a) [Click to open this
 example in the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=0&pattern_len=4&num_harmonies=3&harmony_len=%5B4%2C+2%2C+2%5D&num_reps_super_pattern=4&foot_pcs=%5B6%5D&interval_cycle=%5B4%5D&voice_ranges=AUTHENTIC_OCTAVES+%2A+D+%2A+OCTAVE3&scales=%5B%27PENTATONIC_SCALE%27%5D&force_foot_in_bass=global_first_note&max_repeated_notes=0&forbidden_intervals=%280%2C%29&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&num_voices=1&onset_density=1.0&onset_subdivision=0.25)
+app](http://malcolmsailor.pythonanywhere.com/?seed=0&pattern_len=4&num_harmonies=3&harmony_len=4%2C+2%2C+2&num_reps_super_pattern=4&foot_pcs=6&interval_cycle=4&voice_ranges=AUTHENTIC_OCTAVES+%2A+D+%2A+OCTAVE3&scales=PENTATONIC_SCALE&force_foot_in_bass=global_first_note&max_repeated_notes=0&forbidden_intervals=0%2C&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&randomly_distribute_between_choirs=n&tempo=120&onset_density=1.0&dur_density=1.0&max_consec_seg_from_same_choir=0&length_choir_segments=1&preserve_foot_in_bass=none&chords=MAJOR_TRIAD&voice_lead_chord_tones=n&num_voices=1&onset_subdivision=0.25)
 
 If we reduce \[`onset_density`\](docs/settings.md\#onset\_density), as
 in <a href="#rhythm_example2">`docs/examples/rhythm_example2.py`</a>,
@@ -568,7 +569,7 @@ roll\](docs/resources/pngs/rhythm\_example2\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/rhythm\_example2.m4a) [Click to open this
 example in the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=0&pattern_len=4&num_harmonies=3&harmony_len=%5B4%2C+2%2C+2%5D&num_reps_super_pattern=4&foot_pcs=%5B6%5D&interval_cycle=%5B4%5D&voice_ranges=AUTHENTIC_OCTAVES+%2A+D+%2A+OCTAVE3&scales=%5B%27PENTATONIC_SCALE%27%5D&force_foot_in_bass=global_first_note&max_repeated_notes=0&forbidden_intervals=%280%2C%29&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&num_voices=1&onset_density=0.5&onset_subdivision=0.25)
+app](http://malcolmsailor.pythonanywhere.com/?seed=0&pattern_len=4&num_harmonies=3&harmony_len=4%2C+2%2C+2&num_reps_super_pattern=4&foot_pcs=6&interval_cycle=4&voice_ranges=AUTHENTIC_OCTAVES+%2A+D+%2A+OCTAVE3&scales=PENTATONIC_SCALE&force_foot_in_bass=global_first_note&max_repeated_notes=0&forbidden_intervals=0%2C&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&randomly_distribute_between_choirs=n&tempo=120&onset_density=0.5&dur_density=1.0&max_consec_seg_from_same_choir=0&length_choir_segments=1&preserve_foot_in_bass=none&chords=MAJOR_TRIAD&voice_lead_chord_tones=n&num_voices=1&onset_subdivision=0.25)
 
 Another important rhythmic parameter is
 \[`dur_density`\](docs/settings.md\#dur\_density). It specifies the
@@ -597,7 +598,7 @@ roll\](docs/resources/pngs/rhythm\_example3\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/rhythm\_example3.m4a) [Click to open this
 example in the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=0&pattern_len=4&num_harmonies=3&harmony_len=%5B4%2C+2%2C+2%5D&num_reps_super_pattern=4&foot_pcs=%5B6%5D&interval_cycle=%5B4%5D&voice_ranges=AUTHENTIC_OCTAVES+%2A+D+%2A+OCTAVE3&scales=%5B%27PENTATONIC_SCALE%27%5D&force_foot_in_bass=global_first_note&max_repeated_notes=0&forbidden_intervals=%280%2C%29&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&num_voices=1&onset_density=0.5&dur_density=0.75&onset_subdivision=0.25)
+app](http://malcolmsailor.pythonanywhere.com/?seed=0&pattern_len=4&num_harmonies=3&harmony_len=4%2C+2%2C+2&num_reps_super_pattern=4&foot_pcs=6&interval_cycle=4&voice_ranges=AUTHENTIC_OCTAVES+%2A+D+%2A+OCTAVE3&scales=PENTATONIC_SCALE&force_foot_in_bass=global_first_note&max_repeated_notes=0&forbidden_intervals=0%2C&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&randomly_distribute_between_choirs=n&tempo=120&onset_density=0.5&dur_density=0.75&max_consec_seg_from_same_choir=0&length_choir_segments=1&preserve_foot_in_bass=none&chords=MAJOR_TRIAD&voice_lead_chord_tones=n&num_voices=1&onset_subdivision=0.25)
 
 To obtain a *staccato* effect, we can make
 \[`dur_density`\](docs/settings.md\#dur\_density) still shorter, but to
@@ -621,7 +622,7 @@ roll\](docs/resources/pngs/rhythm\_example4\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/rhythm\_example4.m4a) [Click to open this
 example in the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=0&pattern_len=4&num_harmonies=3&harmony_len=%5B4%2C+2%2C+2%5D&num_reps_super_pattern=4&foot_pcs=%5B6%5D&interval_cycle=%5B4%5D&voice_ranges=AUTHENTIC_OCTAVES+%2A+D+%2A+OCTAVE3&scales=%5B%27PENTATONIC_SCALE%27%5D&force_foot_in_bass=global_first_note&max_repeated_notes=0&forbidden_intervals=%280%2C%29&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&num_voices=1&onset_density=0.5&dur_density=0.25&min_dur=0.125&onset_subdivision=0.25)
+app](http://malcolmsailor.pythonanywhere.com/?seed=0&pattern_len=4&num_harmonies=3&harmony_len=4%2C+2%2C+2&num_reps_super_pattern=4&foot_pcs=6&interval_cycle=4&voice_ranges=AUTHENTIC_OCTAVES+%2A+D+%2A+OCTAVE3&scales=PENTATONIC_SCALE&force_foot_in_bass=global_first_note&max_repeated_notes=0&forbidden_intervals=0%2C&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&randomly_distribute_between_choirs=n&tempo=120&onset_density=0.5&dur_density=0.25&max_consec_seg_from_same_choir=0&length_choir_segments=1&preserve_foot_in_bass=none&chords=MAJOR_TRIAD&voice_lead_chord_tones=n&num_voices=1&min_dur=0.125&onset_subdivision=0.25)
 
 We can change `"onset_subdivision"` as well. For example, to have a grid
 of eighth-note triplets, we would set `"onset_subdivision" = 1/3`. And
@@ -642,7 +643,7 @@ roll\](docs/resources/pngs/rhythm\_example5\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/rhythm\_example5.m4a) [Click to open this
 example in the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=0&pattern_len=4&num_harmonies=3&harmony_len=%5B4%2C+2%2C+2%5D&num_reps_super_pattern=4&foot_pcs=%5B6%5D&interval_cycle=%5B4%5D&voice_ranges=AUTHENTIC_OCTAVES+%2A+D+%2A+OCTAVE3&scales=%5B%27PENTATONIC_SCALE%27%5D&force_foot_in_bass=global_first_note&max_repeated_notes=0&forbidden_intervals=%280%2C%29&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&num_voices=1&onset_density=0.75&dur_density=0.25&min_dur=0.125&onset_subdivision=0.23076923076923078)
+app](http://malcolmsailor.pythonanywhere.com/?seed=0&pattern_len=4&num_harmonies=3&harmony_len=4%2C+2%2C+2&num_reps_super_pattern=4&foot_pcs=6&interval_cycle=4&voice_ranges=AUTHENTIC_OCTAVES+%2A+D+%2A+OCTAVE3&scales=PENTATONIC_SCALE&force_foot_in_bass=global_first_note&max_repeated_notes=0&forbidden_intervals=0%2C&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&randomly_distribute_between_choirs=n&tempo=120&onset_density=0.75&dur_density=0.25&max_consec_seg_from_same_choir=0&length_choir_segments=1&preserve_foot_in_bass=none&chords=MAJOR_TRIAD&voice_lead_chord_tones=n&num_voices=1&min_dur=0.125&onset_subdivision=0.23076923076923078)
 
 All of the settings we have been looking at so far are “per-voice”,
 meaning that they can be set to a different value in each voice. If we
@@ -667,7 +668,7 @@ roll\](docs/resources/pngs/rhythm\_example6\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/rhythm\_example6.m4a) [Click to open this
 example in the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=0&pattern_len=4&num_harmonies=3&harmony_len=%5B4%2C+2%2C+2%5D&num_reps_super_pattern=4&foot_pcs=%5B6%5D&interval_cycle=%5B4%5D&voice_ranges=AUTHENTIC_OCTAVES+%2A+D+%2A+OCTAVE3&scales=%5B%27PENTATONIC_SCALE%27%5D&force_foot_in_bass=global_first_note&max_repeated_notes=0&forbidden_intervals=%280%2C%29&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&num_voices=3&onset_density=%5B0.4%2C+0.5%2C+0.75%5D&dur_density=%5B0.4%2C+0.5%2C+0.25%5D&min_dur=%5B0.25%2C+0.25%2C+0.125%5D&onset_subdivision=%5B0.23076923076923078%2C+0.4166666666666667%2C+0.5454545454545454%5D)
+app](http://malcolmsailor.pythonanywhere.com/?seed=0&pattern_len=4&num_harmonies=3&harmony_len=4%2C+2%2C+2&num_reps_super_pattern=4&foot_pcs=6&interval_cycle=4&voice_ranges=AUTHENTIC_OCTAVES+%2A+D+%2A+OCTAVE3&scales=PENTATONIC_SCALE&force_foot_in_bass=global_first_note&max_repeated_notes=0&forbidden_intervals=0%2C&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&randomly_distribute_between_choirs=n&tempo=120&onset_density=0.4%2C+0.5%2C+0.75&dur_density=0.4%2C+0.5%2C+0.25&max_consec_seg_from_same_choir=0&length_choir_segments=1&preserve_foot_in_bass=none&chords=MAJOR_TRIAD&voice_lead_chord_tones=n&num_voices=3&min_dur=0.25%2C+0.25%2C+0.125&onset_subdivision=0.23076923076923078%2C+0.4166666666666667%2C+0.5454545454545454)
 
 There are also a few settings that govern the relation between different
 voices. If \[`hocketing`\](docs/settings.md\#hocketing) is `True`, then,
@@ -693,7 +694,7 @@ roll\](docs/resources/pngs/rhythm\_example7\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/rhythm\_example7.m4a) [Click to open this
 example in the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=0&pattern_len=4&num_harmonies=3&harmony_len=%5B4%2C+2%2C+2%5D&num_reps_super_pattern=4&foot_pcs=%5B6%5D&interval_cycle=%5B4%5D&voice_ranges=AUTHENTIC_OCTAVES+%2A+D+%2A+OCTAVE3&scales=%5B%27PENTATONIC_SCALE%27%5D&force_foot_in_bass=global_first_note&max_repeated_notes=0&forbidden_intervals=%280%2C%29&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&num_voices=2&onset_density=0.4&dur_density=0.4&min_dur=0.25&onset_subdivision=0.25&hocketing=y)
+app](http://malcolmsailor.pythonanywhere.com/?seed=0&pattern_len=4&num_harmonies=3&harmony_len=4%2C+2%2C+2&num_reps_super_pattern=4&foot_pcs=6&interval_cycle=4&voice_ranges=AUTHENTIC_OCTAVES+%2A+D+%2A+OCTAVE3&scales=PENTATONIC_SCALE&force_foot_in_bass=global_first_note&max_repeated_notes=0&forbidden_intervals=0%2C&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&randomly_distribute_between_choirs=n&tempo=120&onset_density=0.4&dur_density=0.4&max_consec_seg_from_same_choir=0&length_choir_segments=1&preserve_foot_in_bass=none&chords=MAJOR_TRIAD&voice_lead_chord_tones=n&num_voices=2&min_dur=0.25&onset_subdivision=0.25&hocketing=y)
 
 Another setting that governs the rhythmic relation between voices is
 \[`rhythmic_unison`\](docs/settings.md\#rhythmic\_unison), which causes
@@ -719,7 +720,7 @@ roll\](docs/resources/pngs/rhythm\_example8\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/rhythm\_example8.m4a) [Click to open this
 example in the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=0&pattern_len=4&num_harmonies=3&harmony_len=%5B4%2C+2%2C+2%5D&num_reps_super_pattern=4&foot_pcs=%5B6%5D&interval_cycle=%5B4%5D&voice_ranges=AUTHENTIC_OCTAVES+%2A+D+%2A+OCTAVE3&scales=%5B%27PENTATONIC_SCALE%27%5D&force_foot_in_bass=global_first_note&max_repeated_notes=0&forbidden_intervals=%280%2C%29&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&num_voices=3&rhythmic_unison=y&onset_density=0.7&dur_density=0.6&min_dur=0.25&onset_subdivision=0.25)
+app](http://malcolmsailor.pythonanywhere.com/?seed=0&pattern_len=4&num_harmonies=3&harmony_len=4%2C+2%2C+2&num_reps_super_pattern=4&foot_pcs=6&interval_cycle=4&voice_ranges=AUTHENTIC_OCTAVES+%2A+D+%2A+OCTAVE3&scales=PENTATONIC_SCALE&force_foot_in_bass=global_first_note&max_repeated_notes=0&forbidden_intervals=0%2C&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&randomly_distribute_between_choirs=n&tempo=120&onset_density=0.7&dur_density=0.6&max_consec_seg_from_same_choir=0&length_choir_segments=1&preserve_foot_in_bass=none&chords=MAJOR_TRIAD&voice_lead_chord_tones=n&num_voices=3&rhythmic_unison=y&min_dur=0.25&onset_subdivision=0.25)
 
 When \[`rhythmic_unison`\](docs/settings.md\#rhythmic\_unison) is
 applied, rhythmic settings like
@@ -759,7 +760,7 @@ roll\](docs/resources/pngs/rhythm\_example9\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/rhythm\_example9.m4a) [Click to open this
 example in the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=0&pattern_len=4&num_harmonies=3&harmony_len=%5B4%2C+2%2C+2%5D&num_reps_super_pattern=4&foot_pcs=%5B6%5D&interval_cycle=%5B4%5D&voice_ranges=AUTHENTIC_OCTAVES+%2A+D+%2A+OCTAVE3&scales=%5B%27PENTATONIC_SCALE%27%5D&force_foot_in_bass=global_first_note&max_repeated_notes=0&forbidden_intervals=%280%2C%29&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&num_voices=3&rhythmic_quasi_unison=y&onset_density=%5B0.5%2C+0.4%2C+0.6%5D&dur_density=%5B0.5%2C+0.4%2C+0.6%5D&min_dur=0.25&onset_subdivision=0.25)
+app](http://malcolmsailor.pythonanywhere.com/?seed=0&pattern_len=4&num_harmonies=3&harmony_len=4%2C+2%2C+2&num_reps_super_pattern=4&foot_pcs=6&interval_cycle=4&voice_ranges=AUTHENTIC_OCTAVES+%2A+D+%2A+OCTAVE3&scales=PENTATONIC_SCALE&force_foot_in_bass=global_first_note&max_repeated_notes=0&forbidden_intervals=0%2C&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&randomly_distribute_between_choirs=n&tempo=120&onset_density=0.5%2C+0.4%2C+0.6&dur_density=0.5%2C+0.4%2C+0.6&max_consec_seg_from_same_choir=0&length_choir_segments=1&preserve_foot_in_bass=none&chords=MAJOR_TRIAD&voice_lead_chord_tones=n&num_voices=3&rhythmic_quasi_unison=y&min_dur=0.25&onset_subdivision=0.25)
 
 We can obtain more explicit control of the rhythms through the
 \[`obligatory_onsets`\](docs/settings.md\#obligatory\_onsets) setting,
@@ -798,7 +799,7 @@ roll\](docs/resources/pngs/rhythm\_example10\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/rhythm\_example10.m4a) [Click to open this
 example in the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=0&pattern_len=4&num_harmonies=3&harmony_len=%5B4%2C+2%2C+2%5D&num_reps_super_pattern=4&foot_pcs=%5B6%5D&interval_cycle=%5B4%5D&voice_ranges=AUTHENTIC_OCTAVES+%2A+D+%2A+OCTAVE3&scales=%5B%27PENTATONIC_SCALE%27%5D&force_foot_in_bass=global_first_note&max_repeated_notes=0&forbidden_intervals=%280%2C%29&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&num_voices=3&obligatory_onsets=%5B0%2C+0.75%2C+1.5%5D&obligatory_onsets_modulo=2&onset_density=0.5&dur_density=0.5&min_dur=0.25&onset_subdivision=0.25)
+app](http://malcolmsailor.pythonanywhere.com/?seed=0&pattern_len=4&num_harmonies=3&harmony_len=4%2C+2%2C+2&num_reps_super_pattern=4&foot_pcs=6&interval_cycle=4&voice_ranges=AUTHENTIC_OCTAVES+%2A+D+%2A+OCTAVE3&scales=PENTATONIC_SCALE&force_foot_in_bass=global_first_note&max_repeated_notes=0&forbidden_intervals=0%2C&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&randomly_distribute_between_choirs=n&tempo=120&onset_density=0.5&dur_density=0.5&max_consec_seg_from_same_choir=0&length_choir_segments=1&preserve_foot_in_bass=none&chords=MAJOR_TRIAD&voice_lead_chord_tones=n&num_voices=3&obligatory_onsets=0%2C+0.75%2C+1.5&obligatory_onsets_modulo=2&min_dur=0.25&onset_subdivision=0.25)
 
 It is possible to specify an irregular grid upon which note onsets will
 take place using
@@ -833,7 +834,7 @@ roll\](docs/resources/pngs/rhythm\_example11\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/rhythm\_example11.m4a) [Click to open this
 example in the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=0&pattern_len=4&num_harmonies=3&harmony_len=%5B4%2C+2%2C+2%5D&num_reps_super_pattern=4&foot_pcs=%5B6%5D&interval_cycle=%5B4%5D&voice_ranges=AUTHENTIC_OCTAVES+%2A+D+%2A+OCTAVE3&scales=%5B%27PENTATONIC_SCALE%27%5D&force_foot_in_bass=global_first_note&max_repeated_notes=0&forbidden_intervals=%280%2C%29&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&num_voices=1&onset_density=1.0&onset_subdivision=0.5&sub_subdivisions=%5B4%2C+3%5D)
+app](http://malcolmsailor.pythonanywhere.com/?seed=0&pattern_len=4&num_harmonies=3&harmony_len=4%2C+2%2C+2&num_reps_super_pattern=4&foot_pcs=6&interval_cycle=4&voice_ranges=AUTHENTIC_OCTAVES+%2A+D+%2A+OCTAVE3&scales=PENTATONIC_SCALE&force_foot_in_bass=global_first_note&max_repeated_notes=0&forbidden_intervals=0%2C&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&randomly_distribute_between_choirs=n&tempo=120&onset_density=1.0&dur_density=1.0&max_consec_seg_from_same_choir=0&length_choir_segments=1&preserve_foot_in_bass=none&chords=MAJOR_TRIAD&voice_lead_chord_tones=n&num_voices=1&onset_subdivision=0.5&sub_subdivisions=4%2C+3)
 
 I think, however, that it is more interesting to experiment with values
 of \[`sub_subdivisions`\](docs/settings.md\#sub\_subdivisions) that are
@@ -857,7 +858,7 @@ roll\](docs/resources/pngs/rhythm\_example12\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/rhythm\_example12.m4a) [Click to open this
 example in the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=0&pattern_len=4&num_harmonies=3&harmony_len=%5B4%2C+2%2C+2%5D&num_reps_super_pattern=4&foot_pcs=%5B6%5D&interval_cycle=%5B4%5D&voice_ranges=AUTHENTIC_OCTAVES+%2A+D+%2A+OCTAVE3&scales=%5B%27PENTATONIC_SCALE%27%5D&force_foot_in_bass=global_first_note&max_repeated_notes=0&forbidden_intervals=%280%2C%29&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&num_voices=3&onset_density=0.4&onset_subdivision=2&sub_subdivisions=%5B12%2C+13%2C+11%2C+15%2C+17%2C+10%5D&obligatory_onsets=0&obligatory_onsets_modulo=2&hocketing=y)
+app](http://malcolmsailor.pythonanywhere.com/?seed=0&pattern_len=4&num_harmonies=3&harmony_len=4%2C+2%2C+2&num_reps_super_pattern=4&foot_pcs=6&interval_cycle=4&voice_ranges=AUTHENTIC_OCTAVES+%2A+D+%2A+OCTAVE3&scales=PENTATONIC_SCALE&force_foot_in_bass=global_first_note&max_repeated_notes=0&forbidden_intervals=0%2C&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=y&randomly_distribute_between_choirs=n&tempo=120&onset_density=0.4&dur_density=1.0&max_consec_seg_from_same_choir=0&length_choir_segments=1&preserve_foot_in_bass=none&chords=MAJOR_TRIAD&voice_lead_chord_tones=n&num_voices=3&onset_subdivision=2&sub_subdivisions=12%2C+13%2C+11%2C+15%2C+17%2C+10&obligatory_onsets=0&obligatory_onsets_modulo=2&hocketing=y)
 
 ## Filters and transformers
 
