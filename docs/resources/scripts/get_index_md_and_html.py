@@ -1,15 +1,13 @@
+import argparse
+import collections
 import os
 import re
-import sys
 import subprocess
 import urllib
 
 import get_settings_md_and_html
 
-sys.path.insert(
-    0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
-)
-
+import efficient_rhythms.er_constants as er_constants
 import efficient_rhythms.er_preprocess as er_preprocess
 
 SCRIPT_DIR = os.path.dirname((os.path.realpath(__file__)))
@@ -20,11 +18,43 @@ OUT_HTML_PATH = os.path.join(SCRIPT_DIR, "../../index.html")
 CSS_PATH1 = "resources/third_party/github-markdown-css/github-markdown.css"
 CSS_PATH2 = "resources/css/markdown-body.css"
 
-ER_WEB_URL = "http://127.0.0.1:5000/"  # TODO update
+ER_WEB_URL = "http://malcolmsailor.pythonanywhere.com/"
 ER_WEB_EXCLUDE = ("choirs",)
 
+ER_LOCAL_URL = "http://127.0.0.1:5000"
+TEMP_OUT_MD_PATH = os.path.join(os.environ["HOME"], "tmp/index.md")
+TEMP_OUT_HTML_PATH = os.path.join(os.environ["HOME"], "tmp/index.html")
 
-def er_web_query(example):
+
+def _contains_quoted_constant(value):
+    if isinstance(value, str):
+        return value in er_constants.__dict__
+    elif isinstance(value, collections.abc.Sequence):
+        for subvalue in value:
+            if _contains_quoted_constant(subvalue):
+                return True
+    return False
+
+
+sequence_re = re.compile(r"^\(.*\)$|^\[.*\]$|^\{.*\}$", re.DOTALL)
+quote_re = re.compile(r"'(\w+)'")
+# quote_re = re.compile(r"'(\w+)'|\"(\w+)\"")
+
+
+def _remove_quotes_around_constants(value):
+    str_value = str(value)
+    if re.match(sequence_re, str_value):
+        str_value = str_value[1:-1]
+    # I used to check for double-quotes too but Python always encloses
+    # list/tuple items in single-quotes so I don't think that's necessary
+    matches = re.findall(quote_re, str_value)
+    for match in matches:
+        if match in er_constants.__dict__:
+            str_value = re.sub(f"'{match}'", match, str_value)
+    return str_value
+
+
+def er_web_query(example, er_url):
     settings_files = (
         os.path.join(
             SCRIPT_DIR,
@@ -38,14 +68,18 @@ def er_web_query(example):
     for name in ER_WEB_EXCLUDE:
         if name in merged:
             del merged[name]
-    for name in merged:
-        if isinstance(merged[name], bool):
-            merged[name] = "y" if merged[name] else "n"
+    for name, value in merged.items():
+        if isinstance(value, bool):
+            merged[name] = "y" if value else "n"
+        elif _contains_quoted_constant(value):
+            merged[name] = _remove_quotes_around_constants(value)
+        elif isinstance(value, (list, tuple, set)):
+            merged[name] = str(value)[1:-1]
     query = urllib.parse.urlencode(merged, doseq=False)
-    return ER_WEB_URL + "?" + query
+    return er_url + "?" + query
 
 
-def insert_examples(md_content):
+def insert_examples(md_content, er_url):
     example_pattern = re.compile(r"EXAMPLE:(\w+)")
     example_matches = re.findall(example_pattern, md_content)
     for example in example_matches:
@@ -53,7 +87,7 @@ def insert_examples(md_content):
         svg_path = f"resources/svgs/{example}.svg"
         png_path = f"resources/pngs/{example}_00001.png"
         m4a_path = f"resources/m4as/{example}.m4a"
-        web_url = er_web_query(example)
+        web_url = er_web_query(example, er_url)
         repl = [
             f'<span id="{example}">**Example:**'
             f" `docs/examples/{example}.py`</span><br>"
@@ -68,7 +102,10 @@ def insert_examples(md_content):
             )
         if os.path.exists(os.path.join(SCRIPT_DIR, "../..", m4a_path)):
             repl.append(f"![\1 audio]({m4a_path})\n")
-        repl.append(f"[Click to open this example in the web app]({web_url})\n")
+        repl.append(
+            f"[Click to open this example in the web app]({web_url})"
+            '{target="_blank" rel="noopener noreferrer"}\n'
+        )
         md_content = re.sub(
             fr"\bEXAMPLE:{example}\b", "".join(repl), md_content
         )
@@ -84,7 +121,7 @@ def insert_links(md):
     #   ERSettings object, but it seems easier to just do a regex search
     #   on the documentation as follows
     find_attr_pattern = re.compile(
-        '<li><p><span id="\w+"><strong><code>(\w+)</code></strong></span>'
+        r'<li><p><span id="\w+"><strong><code>(\w+)</code></strong></span>'
     )
     with open(
         get_settings_md_and_html.SETTINGS_HTML_PATH, "r", encoding="utf-8"
@@ -96,7 +133,7 @@ def insert_links(md):
     return md
 
 
-def make_html(input_md):
+def make_html(input_md, out_html_path):
     html_content = subprocess.run(
         [
             "pandoc",
@@ -116,13 +153,13 @@ def make_html(input_md):
         encoding="utf-8",
     ).stdout
     # A hack to get github-markdown.css to display
-    with open(OUT_HTML_PATH, "w", encoding="utf-8") as outf:
+    with open(out_html_path, "w", encoding="utf-8") as outf:
         outf.write(
             html_content.replace("<body>", '<body class="markdown-body">')
         )
 
 
-def make_readme(input_md):
+def make_readme(input_md, out_md_path):
     def replace_html_links(md_content):
         html_link = re.compile(r"\(([\w/]+).html")
         html_link_repl = r"\(docs/\1.md"
@@ -141,7 +178,7 @@ def make_readme(input_md):
             "--strip-comments",
             "--toc",
             "-o",
-            OUT_MD_PATH,
+            out_md_path,
             "-f",
             "markdown",
             "-t",
@@ -153,14 +190,35 @@ def make_readme(input_md):
     )
 
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--local", action="store_true")
+    args = parser.parse_args()
+    return args
+
+
+def remote_or_local_paths(args):
+    if args.local:
+        out_html_path = TEMP_OUT_HTML_PATH
+        out_md_path = TEMP_OUT_MD_PATH
+        er_url = ER_LOCAL_URL
+    else:
+        out_html_path = OUT_HTML_PATH
+        out_md_path = OUT_MD_PATH
+        er_url = ER_WEB_URL
+    return out_html_path, out_md_path, er_url
+
+
 def main():
+    args = parse_args()
+    out_html_path, out_md_path, er_url = remote_or_local_paths(args)
     with open(IN_MD_PATH, "r", encoding="utf-8") as inf:
         input_md = inf.read()
-    input_md = insert_examples(input_md)
+    input_md = insert_examples(input_md, er_url)
     input_md = insert_links(input_md)
 
-    make_html(input_md)
-    make_readme(input_md)
+    make_html(input_md, out_html_path)
+    make_readme(input_md, out_md_path)
 
 
 if __name__ == "__main__":

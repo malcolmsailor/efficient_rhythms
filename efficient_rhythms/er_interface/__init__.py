@@ -11,5 +11,4 @@ from .cli import (
     print_hello,
     input_loop,
     fail_and_exit,
-    DEBUG,
 )

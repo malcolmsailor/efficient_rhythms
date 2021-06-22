@@ -155,15 +155,25 @@ class GroupSpeller:
                 pitches.pop(i)
 
         pcs = self(pitches, letter_format=letter_format)
+
+        # The next three lines (and the subtraction of alterations below) ensure
+        # that Cb or B# (or even Dbbb, etc.) appear in the correct octave. It
+        # feels a little hacky, but it works.
+        sharp_sign = "#"
+        flat_sign = "b" if letter_format == "shell" else "-"
+        alterations = [
+            0 + pc.count(sharp_sign) - pc.count(flat_sign) for pc in pcs
+        ]
+
         if letter_format == "shell":
             out = [
-                pc + str(pitch // self.tet - 1)
-                for (pitch, pc) in zip(pitches, pcs)
+                pc + str((pitch - alteration) // self.tet - 1)
+                for (pitch, pc, alteration) in zip(pitches, pcs, alterations)
             ]
         else:
             out = [
-                _kern_octave(pitch, pc[0]) + pc[1:]
-                for (pitch, pc) in zip(pitches, pcs)
+                _kern_octave(pitch - alteration, pc[0]) + pc[1:]
+                for (pitch, pc, alteration) in zip(pitches, pcs, alterations)
             ]
         if rests is not None:
             for i in rest_indices:

@@ -36,6 +36,13 @@ class PossibleNote:
         self.harmony_i = super_pattern.get_harmony_i(self.onset)
         self.score = super_pattern
 
+    def __repr__(self):
+        return (
+            f"{self.__class__.__name__}(voice_i={self.voice_i}, "
+            f"onset_i={self.onset_i}, onset={self.onset}, dur={self.dur}, "
+            f"harmony_i={self.harmony_i})"
+        )
+
     @functools.cached_property
     def prev_pitch(self):
         """Returns the previous pitch, skipping over any intervening rest.
@@ -470,7 +477,6 @@ def get_available_pitches(er, score, available_pcs, poss_note):
                     if consonant:
                         sub_out.append(available_pitch)
         out.append(sub_out)
-
     return out
 
 
@@ -480,11 +486,9 @@ def within_limit_intervals(er, super_pattern, available_pitches, poss_note):
 
     if prev_note is None:
         return available_pitches
-
     chord_tone = er_make2.check_if_chord_tone(
         er, super_pattern, prev_note.onset, prev_note.pitch
     )
-
     max_interval, min_interval = er_make2.get_limiting_intervals(
         er, poss_note.voice_i, chord_tone
     )
@@ -686,8 +690,9 @@ def check_whether_to_force_foot(er, super_pattern, poss_note):
         return False
     if poss_note.onset == 0 and er.force_foot_in_bass == "global_first_beat":
         return True
-    if er.force_foot_in_bass == "global_first_note" and poss_note.onset == min(
-        er.rhythms[BASS].onsets
+    if (
+        er.force_foot_in_bass == "global_first_note"
+        and poss_note.onset == er.rhythms[BASS].onsets[0]
     ):
         return True
     if er.force_foot_in_bass in ("first_note", "first_beat"):
@@ -699,8 +704,9 @@ def check_whether_to_force_foot(er, super_pattern, poss_note):
             and er.force_foot_in_bass == "first_beat"
         ):
             return True
-        if poss_note.onset == min(
-            [time for time in er.rhythms[BASS] if time >= harmony_start_time]
+        if (
+            poss_note.onset
+            == er.rhythms[BASS].at_or_after(harmony_start_time)[0]
         ):
             return True
     return False
@@ -803,7 +809,6 @@ def attempt_initial_pattern(
     if er_misc_funcs.empty_nested(available_pitches):
         available_pitch_error.no_available_pitches()
         return False
-
     available_pitches = within_limit_intervals(
         er, super_pattern, available_pitches, poss_note
     )

@@ -1,12 +1,16 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Run misc. settings files, make sure they complete without error
 
 # This script could probably be merged into the tests makefile
 
+# Any pathnames in the settings should be either relative to the repository
+# root or absolute
+cd "$(dirname "${BASH_SOURCE[0]}" )/.."
+
 TEMP_OUT=.temp_test_settings
 
-for item in test_settings/*.py
+for item in tests/test_settings/*.py
 do
     # TODO remove skip for cont_rhythms tests after implementing
     if [[ $item =~ .*test_fail.* ]] || [[ $item =~ .*cont_rhythms.* ]]

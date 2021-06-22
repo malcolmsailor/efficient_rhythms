@@ -373,6 +373,12 @@ def test_onset_positions():
     er = er_preprocess.preprocess_settings(basesettings, silent=True)
     onset_positions = er_rhythm.make._onset_positions(er, 0)
     assert np.all(np.less(onset_positions[:4] - [0, 4 / 7, 1, 11 / 7], 1e-6))
+    basesettings["onset_subdivision"] = 0.5
+    er = er_preprocess.preprocess_settings(basesettings, silent=True)
+    onset_positions = er_rhythm.make._onset_positions(er, 0)
+    assert np.all(
+        np.less(onset_positions[:4] - [0, 4 / 14, 0.5, 11 / 14], 1e-6)
+    )
 
 
 def test_new_onsets():
@@ -953,6 +959,31 @@ def test_yield_onset_and_consecutive_release():
             exc_type, exc_value, exc_traceback, file=sys.stdout
         )
         breakpoint()
+
+
+def test_onsets_between():
+    basesettings = {
+        "num_voices": 1,
+        "pattern_len": 2,
+    }
+    er = er_preprocess.preprocess_settings(basesettings, silent=True)
+    onsets = np.array([0, 0.5, 1.0, 1.5])
+    durs = np.repeat(0.25, 4)
+    rm = er_rhythm.rhythm.Rhythm.from_er_settings(er, 0, onsets, durs)
+    out = rm.onsets_between(0, 2)
+    assert np.all(out == onsets)
+    out = rm.onsets_between(0, 4)
+    assert np.all(out == np.concatenate([onsets, onsets + 2]))
+    out = rm.onsets_between(0, 8)
+    assert np.all(
+        out == np.concatenate([onsets, onsets + 2, onsets + 4, onsets + 6])
+    )
+    out = rm.onsets_between(0.25, 1.5)
+    assert np.all(out == onsets[1:3])
+    out = rm.onsets_between(0.25, 2.25)
+    assert np.all(out == [0.5, 1.0, 1.5, 2.0])
+    out = rm.onsets_between(0.25, 3.25)
+    assert np.all(out == [0.5, 1.0, 1.5, 2.0, 2.5, 3.0])
 
 
 if __name__ == "__main__":

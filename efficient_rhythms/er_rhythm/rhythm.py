@@ -25,13 +25,28 @@ class RhythmBase:
 
     # TODO review uses of this
     def __getitem__(self, key):
-        return self._data.__getitem__(key)
+        # TODO will this fail via rounding error sometimes?
+        return self._data.__getitem__(key % self.rhythm_len)
 
     def __repr__(self):
         return (
             f"{self.__class__.__name__}(total_dur={self.total_dur}, "
             f"contents: {self._data})"
         )
+
+    def onsets_between(self, start, end):
+        start_i = self.get_i_at_or_after(start)
+        end_i = self.get_i_at_or_after(end)
+        start_reps, start_i = divmod(start_i, len(self))
+        end_reps, end_i = divmod(end_i, len(self))
+        if start_reps == end_reps:
+            return self.onsets[start_i:end_i] + start_reps * self.rhythm_len
+        out = []
+        out.append(self.onsets[start_i:] + self.rhythm_len * start_reps)
+        for j in range(start_reps + 1, end_reps):
+            out.append(self.onsets + self.rhythm_len * (start_reps + j))
+        out.append(self.onsets[:end_i] + end_reps * self.rhythm_len)
+        return np.concatenate(out)
 
     def get_i_at_or_after(self, time):
         prev_reps, remaining = divmod(time, self.total_dur)
@@ -87,7 +102,7 @@ class RhythmBase:
 
     def rest_before_onset(self, onset, min_rest_len):
         # TODO test
-        release = onset + self._data[onset]
+        release = onset + self[onset]
         next_onset, _ = self.at_or_after(release)
         return next_onset - release >= min_rest_len
 

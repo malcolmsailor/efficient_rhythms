@@ -37,7 +37,14 @@ def _obligatory_onsets(er, voice_i):
 
 def _obligatory_onset_indices(er, voice_i, onset_positions):
     out = []
-    i = 0
+    if voice_i == 0 and er.force_foot_in_bass in (
+        "first_beat",
+        "global_first_beat",
+    ):
+        out.append(0)
+        i = 1
+    else:
+        i = 0
     for onset in _obligatory_onsets(er, voice_i):
         while onset_positions[i] < onset:
             i += 1
@@ -206,8 +213,9 @@ def _onset_positions(er, voice_i):
     indices = np.arange(n_onsets)
     onset_positions = indices * onset_subdivision
     if proportions is not None:
+        normalized_proportions = proportions * onset_subdivision
         onset_positions = np.repeat(onset_positions, len(proportions))
-        onset_positions += np.tile(proportions, n_onsets)
+        onset_positions += np.tile(normalized_proportions, n_onsets)
     _add_comma(er, voice_i, onset_positions, comma)
     return onset_positions
 
@@ -230,6 +238,7 @@ def _swap_indices(indices, to_swap, start_i):
 
 def _indices_handler(er, voice_i, prev_rhythms, onset_positions):
     indices = np.arange(len(onset_positions))
+
     oblig_indices = _obligatory_onset_indices(er, voice_i, onset_positions)
     oblig_i_end = _swap_indices(indices, oblig_indices, 0)
     # hocketing and quasi_unison indices are complements of one another
@@ -1044,7 +1053,10 @@ def get_onset_order(er):
         voice_is[increment_i] += 1
         return next_onset, increment_i
 
-    onsets = [rhythm.onsets for rhythm in er.rhythms]
+    onsets = [
+        rhythm.onsets_between(0, pattern_len)
+        for (rhythm, pattern_len) in zip(er.rhythms, er.pattern_len)
+    ]
     voice_is = [0 for i in range(er.num_voices)]
     ordered_onsets = []
     while True:
@@ -1054,8 +1066,8 @@ def get_onset_order(er):
             break
         if next_onset >= end_time:
             break
-        ordered_onsets.append((voice_i, next_onset))
-
+        # TODO remove this cast?
+        ordered_onsets.append((voice_i, fractions.Fraction(next_onset)))
     return ordered_onsets
 
 

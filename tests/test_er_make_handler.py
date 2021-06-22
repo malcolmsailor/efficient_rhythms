@@ -20,7 +20,7 @@ def test_timeout():
     }
     er = er_preprocess.preprocess_settings(settingsdict)
     try:
-        er_make_handler.make_super_pattern(er)
+        er_make_handler.make_super_pattern(er, debug=False)
     except er_exceptions.TimeoutError:
         pass
     else:
@@ -32,7 +32,7 @@ def test_timeout():
     }
     er = er_preprocess.preprocess_settings(settingsdict)
     # We don't expect timeout
-    er_make_handler.make_super_pattern(er)
+    er_make_handler.make_super_pattern(er, debug=False)
 
 
 if __name__ == "__main__":

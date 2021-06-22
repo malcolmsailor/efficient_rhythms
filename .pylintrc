@@ -13,19 +13,20 @@ ignore-patterns=test_settings.*\.py,
 #    .*midani_settings\.py,
 #    harmony_example.*\.py
 
+# After updating pylint, it seems this no longer works
 # From https://github.com/PyCQA/pylint/issues/2686#issuecomment-621927895
-init-hook=
-    sys.path.append(os.getcwd());
-    from efficient_rhythms.third_party.pylint_ignore import PylintIgnorePaths;
-    PylintIgnorePaths(
-        'favorites',
-        'tests/test_settings',
-        'tests/test_input',
-        'docs/examples',
-        'docs/resources/midani',
-        'efficient_rhythms/third_party',
-        'temp_tests',
-    )
+# init-hook=
+#    sys.path.append(os.getcwd());
+#    from efficient_rhythms.third_party.pylint_ignore import PylintIgnorePaths;
+#    PylintIgnorePaths(
+#        'favorites',
+#        'tests/test_settings',
+#        'tests/test_input',
+#        'docs/examples',
+#        'docs/resources/midani',
+#        'efficient_rhythms/third_party',
+#        'temp_tests',
+#    )
 
 [MESSAGES CONTROL]
 
@@ -57,6 +58,8 @@ disable=too-many-instance-attributes,
 # This fails on isinstance(foo, typing.Sequence)
 # See https://github.com/PyCQA/pylint/issues/3507
     isinstance-second-argument-not-valid-type,
+# Ideally I would disable this just for tests:
+    protected-access,
 
 
 [BASIC]

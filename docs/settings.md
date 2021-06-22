@@ -1205,10 +1205,10 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
     
     *Default*: `Fraction(1, 4)`
 
-  - <span id="sub_subdivisions">**`sub_subdivisions`**</span>: a
-    sequence of ints, or a [per-voice
+  - <span id="sub_subdivisions">**`sub_subdivisions`**</span>: an
+    optional sequence of ints, or a [per-voice
     sequence](#note-on-per-voice-sequences-and-other-looping-sequences)
-    of sequences of ints. Further subdivides
+    of sequences of ints. If passed, further subdivides
     <a href="#onset_subdivision">`onset_subdivision`</a>, into parts
     defined by the ratio of the integers in the sequence. This can be
     used to apply “swing” or any other irregular subdivision you like.
@@ -1226,25 +1226,21 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
     sequence](#note-on-per-voice-sequences-and-other-looping-sequences)
     of numbers. Indicates the “grid” on which note durations are
     extended (and thus on which releases take place), which will be
-    measured from the note onset. Values of 0 will be assigned the
-    corresponding value of onset\_subdivision. Note that, regardless of
-    this value, all notes will be given a duration of at least
-    <a href="#min_dur">`min_dur`</a>, so it is possible that the total
-    duration will exceed the value implied by
+    measured from the note onset. If not passed, or if `None`, will be
+    assigned the corresponding value of onset\_subdivision. Note that,
+    regardless of this value, all notes will be given a duration of at
+    least <a href="#min_dur">`min_dur`</a>, so it is possible that the
+    total duration will exceed the value implied by
     <a href="#dur_subdivision">`dur_subdivision`</a> somewhat.
-    
-    *Default*: `0`
 
   - <span id="min_dur">**`min_dur`**</span>: a number, or a [per-voice
     sequence](#note-on-per-voice-sequences-and-other-looping-sequences)
-    of numbers. Indicates the minimum duration of a note. Values \<= 0
-    will be assigned the corresponding value of
+    of numbers. Indicates the minimum duration of a note. If not passed,
+    or if `None` will be assigned the corresponding value of
     <a href="#onset_subdivision">`onset_subdivision`</a>.
-    
-    *Default*: `0`
 
-  - <span id="obligatory_onsets">**`obligatory_onsets`**</span>: a
-    sequence of numbers, or a [per-voice
+  - <span id="obligatory_onsets">**`obligatory_onsets`**</span>: an
+    optional sequence of numbers, or a [per-voice
     sequence](#note-on-per-voice-sequences-and-other-looping-sequences)
     of sequences of numbers. Numbers specify obligatory onset times to
     include in the rhythm. Zero-indexed, so beat “1” (in musical terms)
@@ -1256,11 +1252,10 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
     
     If <a href="#obligatory_onsets">`obligatory_onsets`</a> specifies
     more onsets than would be implied by
-    <a href="#onset_density">`onset_density`</a>,
-    <a href="#obligatory_onsets">`obligatory_onsets`</a> takes
-    precedence.
-    
-    *Default*: `()`
+    <a href="#onset_density">`onset_density`</a>, the onsets will be
+    selected from the obligatory onsets until
+    <a href="#onset_density">`onset_density`</a> is reached, but
+    precisely which onsets are selected is undefined.
 
   - <span id="obligatory_onsets_modulo">**`obligatory_onsets_modulo`**</span>:
     a number, or a sequence of numbers. Specifies which times (if any)
@@ -1359,7 +1354,7 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
     leader. The effect on other rhythmic parameters like
     <a href="#dur_density">`dur_density`</a> is similar. See also
     <a href="#rhythmic_quasi_unison_constrain">`rhythmic_quasi_unison_constrain`</a>
-    below.
+    below. \# TODO add examples to make this more immediately obvious
     
     *Default*: `False`
 
@@ -1370,9 +1365,9 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
     <a href="#rhythmic_quasi_unison">`rhythmic_quasi_unison`</a> is
     True, then
     
-      - if the follower voice has a smaller onset density than the
-        leader, it will be constrained not to contain any durations that
-        lie outside the durations of the leader.
+      - to the extent possible, the follower voice’s note durations will
+        be constrained to lie within the note durations of the leader
+        voice.
     
       - if the follower has a greater onset density than the leader, it
         will be constrained to have all its onsets occur during the
@@ -1510,13 +1505,11 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
     <a href="#randomly_distribute_between_choirs">`randomly_distribute_between_choirs`</a>
     is True. If positive, sets the duration of a loop for the random
     choir assignments. Shorter values will be readily audible loops;
-    longer values are likely to be less apparent as loops. If 0 or
-    negative, then no loop. Note that depending on the combination of
-    settings applied, it may not be possible to construct a loop of
-    sufficient length. In this case, a warning will be emitted, but the
-    script will otherwise continue.
-    
-    *Default*: `0`
+    longer values are likely to be less apparent as loops. If not
+    passed, then there is no loop. Note that depending on the
+    combination of settings applied, it may not be possible to construct
+    a loop of sufficient length. In this case, a warning will be
+    emitted, but the script will otherwise continue.
 
   - <span id="choir_segments_dovetail">**`choir_segments_dovetail`**</span>:
     bool. Only has an effect if
@@ -1530,10 +1523,8 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
   - <span id="max_consec_seg_from_same_choir">**`max_consec_seg_from_same_choir`**</span>:
     int. Only has an effect if
     <a href="#randomly_distribute_between_choirs">`randomly_distribute_between_choirs`</a>
-    is True. If positive, then no voice will be assigned to the same
-    choir for more than the specified number of segments in a row.
-    
-    *Default*: `0`
+    is True. If passed, then no voice will be assigned to the same choir
+    for more than the specified number of segments in a row.
 
   - <span id="all_voices_from_different_choirs">**`all_voices_from_different_choirs`**</span>:
     bool. Only has an effect if
@@ -1562,8 +1553,8 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
     numbers. Specifies a tempo or tempi in quarter-note
     beats-per-minute. If a sequence, the length of each tempo segment is
     set with <a href="#tempo_len">`tempo_len`</a>. If a sequence, will
-    be looped through if necessary. If an empty sequence, a tempo or
-    tempi will be randomly generated.
+    be looped through if necessary. If not passed, a tempo or tempi will
+    be randomly generated.
     
     *Default*: `120`
 
@@ -1571,8 +1562,8 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
     of numbers. Specifies the duration of each tempo in
     <a href="#tempo">`tempo`</a> in quarter-note beats. If a sequence,
     will be looped through as necessary. Has no effect if
-    <a href="#tempo">`tempo`</a> is a single number. If 0, then the
-    first tempo in <a href="#tempo">`tempo`</a> applies to the whole
+    <a href="#tempo">`tempo`</a> is a single number. If not passed, then
+    the first tempo in <a href="#tempo">`tempo`</a> applies to the whole
     file.
     
     *Default*: `0`
@@ -1610,18 +1601,17 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
     
     *Default*: `4`
 
-  - <span id="transpose_intervals">**`transpose_intervals`**</span>:
-    number, or sequence of numbers. The interval or intervals by which
-    to transpose segments. If a single number, all segments will be
-    transposed by the same amount. If a sequence of numbers, will be
+  - <span id="transpose_intervals">**`transpose_intervals`**</span>: an
+    optional number or sequence of numbers. The interval or intervals by
+    which to transpose segments. If a single number, all segments will
+    be transposed by the same amount. If a sequence of numbers, will be
     looped through. The transposition is cumulative, so, for example, if
     <a href="#transpose_intervals">`transpose_intervals`</a> is `3`,
     then the first segment will be transposed by `3`, the second by `6`,
     etc. (See also
     <a href="#cumulative_max_transpose_interval">`cumulative_max_transpose_interval`</a>.)
-    If an empty sequence, segments will be transposed at random.
-    
-    *Default*: `()`
+    If not passed, but transpose is True, segments will be transposed at
+    random.
 
   - <span id="cumulative_max_transpose_interval">**`cumulative_max_transpose_interval`**</span>:
     a number. Sets an absolute maximum bound for cumulative
@@ -1750,11 +1740,12 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
     *Default*: `50`
 
   - <span id="exclude_from_randomization">**`exclude_from_randomization`**</span>:
-    sequence of strings. A list of attribute names of this class. Only
-    has an effect when the script is invoked with “-r” or “–random”, in
-    which case any attribute names found in this list will be excluded
-    from randomization. (Although note that not all attributes are
-    randomized in any case; see the documentation for more info.)
+    optional sequence of strings. A list of attribute names of this
+    class. Only has an effect when the script is invoked with “-r” or
+    “–random”, in which case any attribute names found in this list
+    will be excluded from randomization. (Although note that not all
+    attributes are randomized in any case; see the documentation for
+    more info.)
     
     *Default*: `()`
 
@@ -1779,3 +1770,6 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
     be aborted.
     
     *Default*: `1000`
+
+  - <span id="timeout">**`timeout`**</span>: number. If passed, the
+    script will stop if it has not suceeded in this many seconds.
