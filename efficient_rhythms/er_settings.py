@@ -85,7 +85,7 @@ class ERSettings:
 
     Otherwise, pitch materials can be specified either as integers, or as other
     numeric types (e.g., floats). **If you don't care about tuning or
-    temperament, you can just specify all intervals and pitches as integers** 
+    temperament, you can just specify all intervals and pitches as integers**
     (e.g., one semitone = `1`, "middle C" = `60`). If you *do* care about tuning
     and temperament, read on:
 
@@ -1118,7 +1118,13 @@ class ERSettings:
             values lead to larger perturbations.
             # TODO document this further: what exactly does this number
             # represent?
+            # TODO why can't this be per-voice?
             Default: 0.1
+        cont_var_palindrome: bool. If True, then any variations of the rhythm
+            implied by `num_cont_rhythm_vars` will be arranged in a
+            'palindromic' manner so that they smoothly change away from and
+            then back to their initial version.
+            Default: True
         super_pattern_reps_cont_var: bool. If True, any variations of the
             rhythm implied by `num_cont_rhythm_vars` will be allowed to continue
             into repetitions of the super pattern.
@@ -1843,7 +1849,7 @@ class ERSettings:
 
     # LONGTERM address fact that otherwise forbidden intervals can occur
     #   if this setting is not "none"
-
+    # TODO add "first", "first_lowest"
     preserve_foot_in_bass: str = fld(
         default="none",
         metadata={
@@ -2420,6 +2426,7 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "rhythm",
             "priority": 0,
+            "possible_values": ("none", "all", "grid"),
         },
     )
     # LONGTERM add obligatory_onsets to grid
@@ -2429,6 +2436,7 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "rhythm",
             "priority": 0,
+            "val_dict": {"min_": (1,)},
         },
     )
     vary_rhythm_consistently: bool = fld(
@@ -2441,6 +2449,14 @@ class ERSettings:
     )
     cont_var_increment: numbers.Number = fld(
         default=0.1,
+        metadata={
+            "mutable_attrs": {},
+            "category": "rhythm",
+            "priority": 0,
+        },
+    )
+    cont_var_palindrome: bool = fld(
+        default=True,
         metadata={
             "mutable_attrs": {},
             "category": "rhythm",

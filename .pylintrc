@@ -28,6 +28,8 @@ ignore-patterns=test_settings.*\.py,
 #        'temp_tests',
 #    )
 
+extension-pkg-allow-list=math
+
 [MESSAGES CONTROL]
 
 disable=too-many-instance-attributes,

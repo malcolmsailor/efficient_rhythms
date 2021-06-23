@@ -12,7 +12,7 @@ from .. import er_midi
 
 from .utils import get_iois
 from .rhythm import Rhythm
-from .cont_rhythm import ContinuousRhythm
+from .cont_rhythm import ContRhythm
 from .grid import Grid2
 
 
@@ -23,7 +23,6 @@ def _obligatory_onsets(er, voice_i):
     if not oblig_onsets:
         return ()
     out = []
-    time = 0
     i = 0
     while True:
         rep_i, onset_i = divmod(i, len(oblig_onsets))
@@ -459,28 +458,37 @@ def generate_rhythm(er, voice_i, prev_rhythms=()):
     er.check_time()
     iois = get_iois_from_er(er, voice_i, onsets)
     er.check_time()
-    durs = get_durs(er, voice_i, iois, onsets, prev_rhythms)
+    if er.cont_rhythms == "grid":
+        durs = er.grid.get_durs(er, voice_i, onsets, prev_rhythms)
+    else:
+        durs = get_durs(er, voice_i, iois, onsets, prev_rhythms)
     er.check_time()
     if er.cont_rhythms == "grid":
-        rhythm = er.grid.return_varied_rhythm(er, onsets, durs, voice_i)
-    else:
-        rhythm = Rhythm.from_er_settings(er, voice_i)
-        rhythm.add_onsets_and_durs(onsets, durs)
+        onsets, durs = er.grid.vary(er, onsets, durs, voice_i)
+    rhythm = Rhythm.from_er_settings(er, voice_i)
+    rhythm.add_onsets_and_durs(onsets, durs)
     return rhythm
 
 
 def get_cont_rhythm(er, voice_i):
-    rhythm = ContinuousRhythm(er, voice_i)
-    if rhythm.num_notes == 0:
-        print(f"Notice: voice {voice_i} is empty.")
-        return rhythm
-    rhythm.get_continuous_onsets()
-    rhythm.fill_continuous_durs()
-    rhythm.vary_continuous_onsets()
-    rhythm.truncate_or_extend()
-    rhythm.round()
-    rhythm.rel_onsets_to_rhythm()
+    rhythm = ContRhythm.from_er_settings(er, voice_i)
+    rhythm.generate()
+    # methods from the previous version that I have not yet implemented (and
+    # I'm not sure that I need to implement):
+    #    rhythm.truncate_or_extend()
+    #    rhythm.round()
     return rhythm
+    # rhythm = ContRhythm(er, voice_i)
+    # if rhythm.num_notes == 0:
+    #     print(f"Notice: voice {voice_i} is empty.")
+    #     return rhythm
+    # rhythm.get_continuous_onsets()
+    # rhythm.fill_continuous_durs()
+    # rhythm.vary_continuous_onsets()
+    # rhythm.truncate_or_extend()
+    # rhythm.round()
+    # rhythm.rel_onsets_to_rhythm()
+    # return rhythm
 
 
 # Not sure what this was ever used for. RhythmicDict has a __str__ method.

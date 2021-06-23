@@ -1,44 +1,125 @@
+import random
+
 import numpy as np
 
 from .. import er_misc_funcs
 
-from .cont_rhythm import ContinuousRhythm, ContRhythmBase, ContRhythmBase2
+from . import utils
+from .cont_rhythm import ContRhythm
+from .deprecated import ContinuousRhythm, ContRhythmBase  # TODO remove
 
 
-class Grid2(ContRhythmBase2):
-    def __init__(
-        self,
-        rhythm_len,
-        min_dur,
-        num_onset_positions,
-        increment,
-        overlap,
-        num_vars,
-        vary_consistently=False,
-        dtype=np.float64,
-    ):
+class Grid2(ContRhythm):
+    # def __init__(
+    #     self,
+    #     rhythm_len,
+    #     min_dur,
+    #     num_onset_positions,
+    #     increment,
+    #     overlap,
+    #     num_vars,
+    #     vary_consistently=False,
+    #     dtype=np.float64,
+    # ):
 
-        super().__init__(
-            rhythm_len,
-            min_dur,
-            num_onset_positions,
-            increment,
-            overlap,
-            num_vars,
-            vary_consistently,
-            dtype,
+    #     super().__init__(
+    #         rhythm_len,
+    #         min_dur,
+    #         num_onset_positions,
+    #         increment,
+    #         overlap,
+    #         num_vars,
+    #         vary_consistently,
+    #         dtype,
+    #     )
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._releases_2d = np.empty_like(self._onsets_2d)
+
+    def _init_contents(self):
+        super()._init_contents()
+        self._releases_2d[0] = self._onsets_2d[0] + self._durs_2d[0]
+
+    def _fill_contents(self, i):
+        super()._fill_contents(i)
+        self._releases_2d[i] = self._onsets_2d[i] + self._durs_2d[i]
+
+    def onset_indices(self, onsets):
+        onset_indices = np.nonzero(np.isin(self._onsets_2d[0], onsets))[0]
+        # We assert that onsets are all in the grid
+        assert len(onset_indices) == len(onsets)
+        return onset_indices
+
+    def vary(self, onsets, durs):
+        # This function will only work as expected if the onsets and releases
+        #   are all in the grid.
+        onset_indices = self.onset_indices(onsets)
+        releases = onsets + durs
+        release_indices = np.nonzero(np.isin(self._releases_2d[0], releases))[0]
+        assert len(release_indices) == len(releases)
+
+        new_onsets = self._onsets_2d[:, onset_indices]
+        new_releases = self._releases_2d[:, release_indices]
+        new_durs = new_releases - new_onsets
+        # TODO investigate other functions I used to call (like truncate_or_extend())
+        return new_onsets, new_durs
+
+    def _get_max_releases(self, onsets):
+
+        max_releases = np.empty_like(onsets)
+        releases = self._releases_2d[0]
+        releases_iter = iter(releases)
+        release = next(releases_iter)
+        for i in range(len(onsets) - 1):
+            while (next_release := next(releases_iter)) <= onsets[i + 1]:
+                release = next_release
+            max_releases[i] = release
+            release = next_release
+        max_releases[-1] = releases[-1]
+        return max_releases
+
+    def _durs_handler(self, er, voice_i, onsets, onset_indices, durs):
+        releases = self._releases_2d[0]
+        max_releases = self._get_max_releases(onsets)
+        # remaining = utils.get_rois(
+        #     onsets, max_releases, overlap=self.overlap, dtype=self.dtype
+        # )
+        total_remaining = (
+            er.dur_density[voice_i] * er.rhythm_len[voice_i] - durs.sum()
         )
 
-    def vary_rhythm(self, onsets, durs):
-        # This function will only work as expected if the onsets are all in
-        #   the grid.
-        indices = np.nonzero(np.isin(self._onsets[0], onsets))[0]
-        # We assert that onsets are all in the grid
-        assert len(indices) == len(onsets)
-        new_onsets = self._onsets[:, indices]
-        # TODO durs
-        # TODO investigate other functions I used to call (like truncate_or_extend())
-        return new_onsets
+        available_indices = list(range(len(onsets)))
+        # map onset_indices to release indices
+        release_indices = {
+            i: k for (i, k) in zip(available_indices, onset_indices)
+        }
+        # n_indices = len(available_onset_indices)
+
+        # TODO calculate stopping_threshold
+        stopping_threshold = 0
+
+        while total_remaining > stopping_threshold and available_indices:
+            i = random.choice(available_indices)
+            k = release_indices[i] = release_indices[i] + 1
+            # TODO handle wraparound
+            increment = releases[k] - releases[k - 1]
+            durs[i] += increment
+            assert durs[i] + onsets[i] in releases
+            total_remaining -= increment
+            if onsets[i] + durs[i] >= max_releases[i]:
+                available_indices.remove(i)
+        return durs
+
+    def get_durs(self, er, voice_i, onsets):
+        onset_indices = self.onset_indices(onsets)
+        durs = self._releases_2d[0, onset_indices] - onsets
+        durs = self._durs_handler(er, voice_i, onsets, onset_indices, durs)
+
+        return durs
+
+    @property
+    def onset_positions(self):
+        return self._onsets_2d[0]
 
     @classmethod
     def from_er_settings(cls, er):
@@ -50,6 +131,9 @@ class Grid2(ContRhythmBase2):
 
         # TODO warnings in preprocessing
         return cls(
+            er.dur_density[
+                0
+            ],  # TODO how do we deal with voices of different dur_density?
             er.rhythm_len[0],
             er.min_dur[0],
             _num_onset_positions(),
@@ -57,11 +141,8 @@ class Grid2(ContRhythmBase2):
             er.overlap,
             er.num_cont_rhythm_vars[0],
             er.vary_rhythm_consistently[0],
+            er.cont_var_palindrome,
         )
-
-    @property
-    def onset_positions(self):
-        return self._onsets[0]
 
 
 class Grid(ContRhythmBase):

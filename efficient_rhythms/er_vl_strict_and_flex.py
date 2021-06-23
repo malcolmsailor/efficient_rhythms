@@ -126,7 +126,6 @@ def strict_voice_leading_loop(er, score, voice_lead_error, voice, vl_item):
     rhythm = er.rhythms[vl_item.voice_i]
     new_notes = er_classes.Voice()
 
-    # TODO review this in flex
     new_onset = vl_item.first_onset
     new_note_i = vl_item.start_i
     prev_onset = vl_item.prev_first_onset
@@ -150,8 +149,6 @@ def strict_voice_leading_loop(er, score, voice_lead_error, voice, vl_item):
         first_note = True
         success = True
         prev_note_end_i = min(vl_item.prev_end_i, prev_htimes_end_i)
-        if (prev_note_i == prev_note_end_i) or (new_note_i == new_htimes_end_i):
-            breakpoint()
         for prev_note_j, new_note_j in zip(
             range(prev_note_i, prev_note_end_i),
             range(new_note_i, new_htimes_end_i),

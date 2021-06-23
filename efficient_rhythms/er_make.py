@@ -1059,7 +1059,7 @@ def repeat_super_pattern(er, super_pattern, apply_to_existing_voices=False):
 
     if er.cont_rhythms == "none" or not er.super_pattern_reps_cont_var:
         repetition_start_time = er.super_pattern_len
-        for repetition in range(1, er.num_reps_super_pattern):
+        for _ in range(1, er.num_reps_super_pattern):
             super_pattern.repeat_passage(
                 0,
                 er.super_pattern_len,
@@ -1067,40 +1067,24 @@ def repeat_super_pattern(er, super_pattern, apply_to_existing_voices=False):
                 apply_to_existing_voices=apply_to_existing_voices,
             )
             repetition_start_time += er.super_pattern_len
-
         return
 
     for voice_i, voice in enumerate(super_pattern.voices):
         rhythm = er.rhythms[voice_i]
-        rhythm_list = list(rhythm.items())
-        num_notes_in_super_pattern = len(voice)
-        new_voice = er_classes.Voice()
-        for repetition in range(1, er.num_reps_super_pattern):
-            repetition_start_time = repetition * er.super_pattern_len
-            last_onset = -1
-            note_onset_i = -1
-
-            for note in voice:
-                if note.onset > last_onset:
-                    note_onset_i += 1
-                    last_onset = note.onset
-                new_note_onset_i = (
-                    repetition * num_notes_in_super_pattern + note_onset_i
-                )
-                new_note = note.copy()
-                new_note.onset, new_note.dur = rhythm_list[
-                    new_note_onset_i % len(rhythm_list)
-                ]
-                new_note.onset += (
-                    new_note_onset_i // len(rhythm_list) * rhythm.total_dur
-                )
-                new_voice.add_note(new_note)
-        voice.append(new_voice)
+        num_onsets = len(voice)
+        for onset_i in range(num_onsets):
+            _, notes = voice.peekitem(onset_i)
+            for note in notes:
+                for rep_i in range(1, er.num_reps_super_pattern):
+                    new_onset_i = onset_i + rep_i * num_onsets
+                    new = note.copy()
+                    new.onset, new.dur = rhythm.get_onset_and_dur(new_onset_i)
+                    voice.add_note(new)
 
     if apply_to_existing_voices:
         for voice in super_pattern.existing_voices:
             repetition_start_time = er.super_pattern_len
-            for repetition in range(1, er.num_reps_super_pattern):
+            for _ in range(1, er.num_reps_super_pattern):
                 voice.repeat_passage(
                     0, er.super_pattern_len, repetition_start_time
                 )

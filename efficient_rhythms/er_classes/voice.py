@@ -129,6 +129,14 @@ class Voice:
             self.speller = lambda x: x
         self.range = voice_range
 
+    def __len__(self):
+        # returns the number of onsets (each of which potentially has more than
+        # one note)
+        return len(self._data)
+
+    def peekitem(self, key):
+        return self._data.peekitem(key)
+
     def __iter__(self):
         for onset in self._data:
             for note in self._data[onset]:

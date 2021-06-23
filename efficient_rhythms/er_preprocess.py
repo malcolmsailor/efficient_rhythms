@@ -3,7 +3,6 @@ use.
 """
 
 import collections
-from efficient_rhythms import er_exceptions
 import fractions
 import math
 import os
@@ -15,6 +14,7 @@ import numpy as np
 
 from . import er_choirs
 from . import er_constants
+from . import er_exceptions
 from . import er_interface
 from . import er_midi
 from . import er_misc_funcs
@@ -621,6 +621,7 @@ def fill_rhythm_lists_by_voice(er):
         er.obligatory_onsets,
         er.obligatory_onsets_modulo,
         er.comma_position,
+        er.cont_var_increment,
     ]
 
     for list_to_fill in er.rhythm_lists_by_voice:

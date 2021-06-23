@@ -8,14 +8,27 @@ import sortedcontainers
 
 
 class RhythmBase:
+    def __init__(self):
+        self._data = None
+        self._onsets = None
+        self._durs = None
+
+    @property
+    def onsets(self):
+        return self._onsets
+
+    @property
+    def durs(self):
+        return self._durs
+
     def add_onsets_and_durs(self, onsets, durs):
         if onsets is not None and durs is not None:
             dict_ = {o: d for (o, d) in zip(onsets, durs)}
         else:
             dict_ = {}
         self._data = sortedcontainers.SortedDict(dict_)
-        self.onsets = onsets
-        self.durs = durs
+        self._onsets = onsets
+        self._durs = durs
 
     def __iter__(self):
         return self._data.items().__iter__()
@@ -107,32 +120,32 @@ class RhythmBase:
         return next_onset - release >= min_rest_len
 
 
-class DiscreteRhythm(RhythmBase):
-    pass
-    # def __init__(self, initial_onsets=None, initial_durs=None):
-    #     super().__init__()
-    #     if initial_onsets is not None and initial_durs is not None:
-    #         initial_data = {
-    #             o: d for (o, d) in zip(initial_onsets, initial_durs)
-    #         }
-    #     else:
-    #         initial_data = {}
-    #     self._data = sortedcontainers.SortedDict(initial_data)
-    #     self.onsets = initial_onsets
-    #     self.durs = initial_durs
+# class DiscreteRhythm(RhythmBase):
+#     pass
+# def __init__(self, initial_onsets=None, initial_durs=None):
+#     super().__init__()
+#     if initial_onsets is not None and initial_durs is not None:
+#         initial_data = {
+#             o: d for (o, d) in zip(initial_onsets, initial_durs)
+#         }
+#     else:
+#         initial_data = {}
+#     self._data = sortedcontainers.SortedDict(initial_data)
+#     self.onsets = initial_onsets
+#     self.durs = initial_durs
 
-    # def __iter__(self):
-    #     return self._data.items().__iter__()
+# def __iter__(self):
+#     return self._data.items().__iter__()
 
-    # def __len__(self):
-    #     return self._data.__len__()
+# def __len__(self):
+#     return self._data.__len__()
 
-    # # TODO review uses of this
-    # def __getitem__(self, key):
-    #     return self._data.__getitem__(key)
+# # TODO review uses of this
+# def __getitem__(self, key):
+#     return self._data.__getitem__(key)
 
 
-class Rhythm(DiscreteRhythm):
+class Rhythm(RhythmBase):
     def add_onsets_and_durs(self, onsets, durs):
         onsets, durs = self._pad_truncations(onsets, durs)
         super().add_onsets_and_durs(onsets, durs)

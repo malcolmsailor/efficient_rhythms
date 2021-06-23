@@ -17,9 +17,11 @@ def _get_cont_base(
     overlap=True,
     num_vars=8,
     vary_consistently=True,
+    var_palindrome=True,
     dtype=np.float64,
+    cls=er_rhythm.cont_rhythm.ContRhythmBase2,
 ):
-    return er_rhythm.cont_rhythm.ContRhythmBase2(
+    return cls(
         rhythm_len,
         min_dur,
         num_notes,
@@ -27,6 +29,7 @@ def _get_cont_base(
         overlap,
         num_vars,
         vary_consistently,
+        var_palindrome,
         dtype,
     )
 
@@ -40,9 +43,11 @@ def _get_cont_rhythm(
     overlap=True,
     num_vars=8,
     vary_consistently=True,
+    var_palindrome=True,
     dtype=np.float64,
+    cls=er_rhythm.cont_rhythm.ContRhythm,
 ):
-    return er_rhythm.cont_rhythm.ContRhythm2(
+    return cls(
         dur_density,
         rhythm_len,
         min_dur,
@@ -51,12 +56,23 @@ def _get_cont_rhythm(
         overlap,
         num_vars,
         vary_consistently,
+        var_palindrome,
         dtype,
     )
 
 
+def _get_grid(*args, **kwargs):
+    return _get_cont_rhythm(*args, cls=er_rhythm.grid.Grid2, **kwargs)
+
+
 def _get_er(settingsdict):
     return er_preprocess.preprocess_settings(settingsdict, silent=True)
+
+
+def _get_grid_from_er(settingsdict):
+    er = _get_er(settingsdict)
+    gd = er_rhythm.grid.Grid2.from_er_settings(er)
+    return er, gd
 
 
 # @dataclasses.dataclass
@@ -68,13 +84,23 @@ def _get_er(settingsdict):
 #     overlap: bool = True
 
 
-def test_get_continuous_onsets():
-    def _verify_onsets(onsets, r):
-        assert len(onsets) == r.num_notes
-        assert onsets[-1] <= r.rhythm_len - r.min_dur
+def _verify_onsets(
+    onsets,
+    num_notes,
+    rhythm_len,
+    min_dur,
+    starts_at_zero=True,
+    error_tolerance=1e-8,
+):
+    assert len(onsets) == num_notes
+    assert onsets[-1] <= rhythm_len - min_dur
+    if starts_at_zero:
         assert onsets[0] == 0
-        for x, y in zip(onsets, onsets[1:]):
-            assert y - x >= r.min_dur - 1e-8
+    for x, y in zip(onsets, onsets[1:]):
+        assert y - x >= min_dur - 1e-8
+
+
+def test_get_continuous_onsets():
 
     # TODO add more test cases, check that min_dur is reduced if necessary
     tests = (
@@ -82,76 +108,167 @@ def test_get_continuous_onsets():
         (16, 4.0, 0.25),
         (15, 4.0, 0.25000001),
     )
-    num_vars = 8
-    for num_notes, rhythm_len, min_dur in tests:
-        for vary_consistently in (True, False):
-            r = _get_cont_base(
-                rhythm_len,
-                num_notes,
-                min_dur,
-                num_vars=num_vars,
-                vary_consistently=vary_consistently,
-            )
-            r._init_onsets()
-            onsets = r._onsets[0]
-            _verify_onsets(onsets, r)
+    non_defaults = (
+        ("increment", 0.0),
+        ("increment", 1.0),
+        ("increment", 100.0),
+        ("num_vars", 1),
+        ("overlap", False),
+        ("vary_consistently", False),
+        ("var_palindrome", False),
+    )
+    for kw, val in non_defaults:
+        for num_notes, rhythm_len, min_dur in tests:
+            kwargs = {
+                kw: val,
+                "num_notes": num_notes,
+                "rhythm_len": rhythm_len,
+                "min_dur": min_dur,
+            }
+            cr = _get_cont_base(**kwargs)
+            cr._init_onsets()
+            onsets = cr._onsets_2d[0]
+            _verify_onsets(onsets, cr.num_notes, cr.rhythm_len, cr.min_dur)
 
             # test _vary_onsets_unif()
-            if r.full:
+            if cr.full:
                 continue
-            for i in range(1, num_vars):
-                r._vary_onsets_unif(i)
-                new_onsets = r._onsets[i]
-                _verify_onsets(new_onsets, r)
+            for i in range(1, cr.num_vars):
+                cr._vary_onsets_unif(i)
+                new_onsets = cr._onsets_2d[i]
+                _verify_onsets(
+                    new_onsets, cr.num_notes, cr.rhythm_len, cr.min_dur
+                )
                 try:
                     assert not np.all(np.equal(onsets, new_onsets))
                 except AssertionError:
-                    assert r.full
+                    assert cr.full
                 # TODO ensure that total absolute change equals increment
+                # print(cr.increment)
                 # print(np.abs(onsets - new_onsets).sum())
                 onsets = new_onsets
 
 
-def test_fill_durs():
-    def _verify_durs(onsets, durs, cr):
-        min_density = cr.min_dur / cr.rhythm_len * len(onsets)
-        iois = er_rhythm.utils.get_iois(onsets, cr.rhythm_len, cr.overlap)
-        assert np.all(np.less_equal(durs, iois))
-        if min_density >= cr.dur_density:
-            target_density = min_density
-        else:
-            target_density = cr.dur_density
-        assert abs(durs.sum() - cr.rhythm_len * target_density) < 0.1
-        assert np.all(durs >= cr.min_dur)
+def _verify_durs(
+    onsets, durs, dur_density, min_dur, rhythm_len, overlap, error_tolerance=0.1
+):
+    min_density = min_dur / rhythm_len * len(onsets)
+    iois = er_rhythm.utils.get_iois(onsets, rhythm_len, overlap)
+    assert np.all(durs - iois < 1e-10)
+    if min_density >= dur_density:
+        target_density = min_density
+    else:
+        target_density = dur_density
+    actual_density = durs.sum() / rhythm_len
+    # pretty sure we need to increase error tolerance for Grid
+    assert abs(target_density - actual_density) < error_tolerance
+    # assert abs(durs.sum() - cr.rhythm_len * target_density) < 0.1
+    assert np.all(durs >= min_dur)
 
+
+def test_fill_durs():
     densities = [0.625, 0.8, 0.5, 0.1, 0.4, 0.99, 1.0]
-    for density in densities:
-        print("DENSITY: ", density)
-        cr = _get_cont_rhythm(dur_density=density)
+    non_defaults = (
+        ("increment", 0.0),
+        ("increment", 1.0),
+        ("increment", 100.0),
+        ("num_vars", 1),
+        ("overlap", False),
+        ("vary_consistently", False),
+        ("var_palindrome", False),
+    )
+    for kw, val in non_defaults:
+        for density in densities:
+            kwargs = {kw: val, "dur_density": density}
+            cr = _get_cont_rhythm(**kwargs)
+            cr.generate()
+            for i in range(cr.num_vars):
+                float_durs = cr._durs_2d[i]
+                _verify_durs(
+                    cr._onsets_2d[i],
+                    float_durs,
+                    cr.dur_density,
+                    cr.min_dur,
+                    cr.rhythm_len,
+                    cr.overlap,
+                )
+
+
+def test_palindrome():
+    num_vars = (1, 2, 5, 10, 17, 40)
+    for n in num_vars:
+        cr = _get_cont_rhythm(var_palindrome=True, num_vars=n)
         cr.generate()
-        # float_durs = cr.fill_durs(cr.onsets[0])
-        float_durs = cr.durs[0]
-        _verify_durs(cr.onsets[0], float_durs, cr)
-        # for i in range(10):
-        #     print("I: ", i)
-        #     float_durs = cr.fill_durs(cr.onsets[0])
-        #     _verify_durs(cr.onsets[0], float_durs, cr)
+        for i in range(n):
+            j = cr._get_palindromic_index(i)
+            if j is None:
+                continue
+            assert np.all(cr._onsets_2d[i] == cr._onsets_2d[j])
+            assert np.all(cr._durs_2d[i] == cr._durs_2d[j])
 
 
 def test_grid():
-    num_vars = 8
-    settings_dict = {
-        "cont_rhythms": "grid",
-        "num_cont_rhythm_vars": num_vars,
-        "pattern_len": 2,
-        "onset_subdivision": 0.25,
+    def test_get_max_releases(gd, onsets):
+        max_releases = gd._get_max_releases(onsets)
+        assert np.all(max_releases[:-1] <= onsets[1:])
+        assert max_releases[-1] <= gd.rhythm_len
+        releases = gd._releases_2d[0]
+        for i in range(len(onsets)):
+            if i == len(onsets) - 1:
+                next_onset = gd.rhythm_len
+            else:
+                next_onset = onsets[i + 1]
+            max_r = np.max(releases[releases <= next_onset])
+            assert max_releases[i] == max_r
+
+    basesettings = {
+        "num_voices": 3,
         "min_dur": 0.125,
     }
-    er = _get_er(settings_dict)
-    g = er_rhythm.grid.Grid2.from_er_settings(er)
-    # len of g._onsets[0] should be 8
-    indices = [1, 3, 6]
-    onsets = g.onset_positions[indices]
-    varied_onsets = g.vary_rhythm(onsets, None)
-    for i in range(num_vars):
-        assert np.all(np.equal(varied_onsets[i], g._onsets[i][indices]))
+    non_defaults = (
+        ("cont_var_increment", 0.0),
+        ("cont_var_increment", 1.0),
+        ("cont_var_increment", 100.0),
+        ("num_cont_rhythm_vars", 1),
+        ("overlap", False),
+        ("vary_rhythm_consistently", False),
+        ("cont_var_palindrome", False),
+    )
+    for kw, val in non_defaults:
+        settingsdict = basesettings.copy()
+        settingsdict[kw] = val
+        er, gd = _get_grid_from_er(settingsdict)
+        gd.generate()
+        div3 = gd.num_notes // 3
+        for j in range(div3):
+            indices = [j, j + div3, j + div3 * 2]
+            onsets = gd.onset_positions[indices]
+            voice_i = 0
+            durs = gd.get_durs(er, voice_i, onsets)
+            varied_onsets, varied_durs = gd.vary(onsets, durs)
+            test_get_max_releases(gd, onsets)
+            for i in range(gd.num_vars):
+                assert np.all(
+                    np.equal(varied_onsets[i], gd._onsets_2d[i][indices])
+                )
+                assert np.all(np.isin(onsets[i] + durs[i], gd._releases_2d[i]))
+                _verify_onsets(
+                    varied_onsets[i],
+                    3,
+                    er.rhythm_len[voice_i],
+                    er.min_dur[voice_i],
+                    starts_at_zero=False,
+                )
+                _verify_durs(
+                    varied_onsets[i],
+                    varied_durs[i],
+                    er.dur_density[voice_i],
+                    er.min_dur[voice_i],
+                    er.rhythm_len[voice_i],
+                    er.overlap,
+                    error_tolerance=0.5,
+                )
+
+    # er = _get_er({"cont_rhythms": "grid"})
+    # gd = er_rhythm.grid.Grid2.from_er_settings(er)
+    # gd.generate()
