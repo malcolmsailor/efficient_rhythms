@@ -194,7 +194,10 @@ class Voice:
         return self._releases.peekitem()
 
     def get_notes_by_i(self, i):
-        return self._data.peekitem(i)[1]
+        try:
+            return self._data.peekitem(i)[1]
+        except:
+            breakpoint()
 
     def add_note(
         self,

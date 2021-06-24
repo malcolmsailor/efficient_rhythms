@@ -31,8 +31,9 @@ class ContRhythmBase2(RhythmBase):
         dtype=np.float64,
     ):
         super().__init__()
-        self.rhythm_len = rhythm_len
-        self.min_dur = min_dur
+        # TODO possibly remove these casts after including type checking?
+        self.rhythm_len = dtype(rhythm_len)
+        self.min_dur = dtype(min_dur)
         self.num_notes = num_notes
         # TODO reduce increment if necessary as a function of min_dur etc.
         self.increment = min(increment, rhythm_len)
@@ -159,9 +160,10 @@ class ContRhythmBase2(RhythmBase):
 
     def add_onsets_and_durs(self, onsets, durs):
         # expects 2d onsets and 2d durs, reshapes them
-        onsets = onsets.reshape(-1) + np.repeat(
-            np.arange(onsets.shape[0]) * self.rhythm_len, onsets.shape[1]
-        )
+        # onsets = onsets.reshape(-1) + np.repeat(
+        #     np.arange(onsets.shape[0]) * self.rhythm_len, onsets.shape[1]
+        # )
+        onsets = onsets.reshape(-1)
         # TODO what if durs is None, as in grid?
         durs = durs.reshape(-1)
         super().add_onsets_and_durs(onsets, durs)
@@ -176,6 +178,20 @@ class ContRhythmBase2(RhythmBase):
                 self._fill_palindrome(j, i)
             else:
                 self._fill_contents(i)
+        # Every row of _onsets_2d is generated to start at 0. Here, we
+        # add offsets so that every row starts at row_i * rhythm_len.
+        # Ultimately it would be more parsimonious to do this when generating
+        # the onsets. Although doing it this way simplifies the case where
+        # `cont_var_palindrome` is True.
+        onset_offsets = (
+            np.repeat(np.arange(self.num_vars), self.num_notes).reshape(
+                (self.num_vars, self.num_notes)
+            )
+            * self.rhythm_len
+        )
+        self._onsets_2d = (self._onsets_2d + onset_offsets).round(8)
+        self._durs_2d = self._durs_2d.round(8)
+
         self.add_onsets_and_durs(self._onsets_2d, self._durs_2d)
 
     # def _init_contents(self):

@@ -212,12 +212,19 @@ class Rhythm(RhythmBase):
         # rhythm_len should always be <= pattern_len; this is enforced in
         #  er_preprocess.py
         truncations = []
-        if pattern_len % rhythm_len != 0:
-            truncations.append(pattern_len)
-        if er.truncate_patterns:
-            truncate_dur = max(er.pattern_len)
-            if truncate_dur % pattern_len != 0:
-                truncations.append(truncate_dur)
+        if er.cont_rhythms == "grid":
+            # TODO ultimately I think it would be better to use a different
+            # class for this case
+            rhythm_len = (
+                er.num_cont_rhythm_vars[voice_i] * er.pattern_len[voice_i]
+            )
+        else:
+            if pattern_len % rhythm_len != 0:
+                truncations.append(pattern_len)
+            if er.truncate_patterns:
+                truncate_dur = max(er.pattern_len)
+                if truncate_dur % pattern_len != 0:
+                    truncations.append(truncate_dur)
         out = cls(
             num_notes,
             rhythm_len,

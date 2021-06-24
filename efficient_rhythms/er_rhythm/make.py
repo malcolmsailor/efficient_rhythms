@@ -202,7 +202,7 @@ def _onset_positions(er, voice_i):
     """Returns an np array of possible onset times."""
 
     if er.cont_rhythms == "grid":
-        return er.grid.onset_positions
+        return er.grid.initial_onset_positions
 
     # TODO I believe I can remove all calls to "er.get" in this module
     rhythm_len, onset_subdivision, proportions = er.get(
@@ -464,7 +464,7 @@ def generate_rhythm(er, voice_i, prev_rhythms=()):
         durs = get_durs(er, voice_i, iois, onsets, prev_rhythms)
     er.check_time()
     if er.cont_rhythms == "grid":
-        onsets, durs = er.grid.vary(er, onsets, durs, voice_i)
+        onsets, durs = er.grid.vary(onsets, durs)
     rhythm = Rhythm.from_er_settings(er, voice_i)
     rhythm.add_onsets_and_durs(onsets, durs)
     return rhythm
@@ -1020,6 +1020,7 @@ def rhythms_handler(er):
         rhythms = []
         if er.cont_rhythms == "grid":
             er.grid = Grid2.from_er_settings(er)
+            er.grid.generate()
         for voice_i in range(er.num_voices):
             rhythms.append(generate_rhythm(er, voice_i, prev_rhythms=rhythms))
 

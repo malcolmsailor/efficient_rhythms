@@ -34,56 +34,115 @@ class Grid2(ContRhythm):
     #     )
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._releases_2d = np.empty_like(self._onsets_2d)
+        self._releases = None
+
+    def add_onsets_and_durs(self, onsets, durs):
+        super().add_onsets_and_durs(onsets, durs)
+        # We construct _releases_2d from _releases (and not the other way
+        # around) because _onsets has been adjusted to be monotonically
+        # increasing whereas each row of _onsets_2d always starts at 0. (See
+        # the parent's add_onset_and_durs() method).
+        self._releases = (self.onsets + self.durs).round(8)
+        self._releases_2d = self._releases.reshape(
+            (self.num_vars, self.num_notes)
+        )
+
+    @property
+    def releases(self):
+        return self._releases
 
     def _init_contents(self):
         super()._init_contents()
-        self._releases_2d[0] = self._onsets_2d[0] + self._durs_2d[0]
+        # self._releases_2d[0] = (self._onsets_2d[0] + self._durs_2d[0]).round(
+        #     decimals=8
+        # )
 
     def _fill_contents(self, i):
         super()._fill_contents(i)
-        self._releases_2d[i] = self._onsets_2d[i] + self._durs_2d[i]
+        # self._releases_2d[i] = self._onsets_2d[i] + self._durs_2d[i]
 
     def onset_indices(self, onsets):
         onset_indices = np.nonzero(np.isin(self._onsets_2d[0], onsets))[0]
         # We assert that onsets are all in the grid
-        assert len(onset_indices) == len(onsets)
+        try:
+            assert len(onset_indices) == len(onsets)
+        except:
+            breakpoint()
         return onset_indices
 
     def vary(self, onsets, durs):
         # This function will only work as expected if the onsets and releases
         #   are all in the grid.
         onset_indices = self.onset_indices(onsets)
-        releases = onsets + durs
-        release_indices = np.nonzero(np.isin(self._releases_2d[0], releases))[0]
+        releases = (onsets + durs).round(decimals=8)
+        # after implementing the out_of_bounds check below I think wraparound
+        # is no longer necessary
+        # wraparound = releases[-1] > self.total_dur
+        # if wraparound:
+        #     releases[-1] = (releases[-1] - self.total_dur).round(8)
+        release_indices = utils.get_indices_from_sorted(
+            releases, self.releases, loop_len=self.total_dur
+        )
         assert len(release_indices) == len(releases)
 
         new_onsets = self._onsets_2d[:, onset_indices]
-        new_releases = self._releases_2d[:, release_indices]
-        new_durs = new_releases - new_onsets
+        # we have to catch the edge case where the last item in release indices
+        # is out of bounds. (It can't happen that more than the last
+        # index is out of bounds).
+        out_of_bounds = release_indices[-1] >= self.num_notes
+        if out_of_bounds:
+            wrapped_i = release_indices[-1] % self.num_notes
+            new_releases = np.empty_like(new_onsets)
+            new_releases[:, :-1] = self._releases_2d[:, release_indices[:-1]]
+            new_releases[:-1, -1] = self._releases_2d[1:, wrapped_i]
+            new_releases[-1, -1] = (
+                self._releases_2d[0, wrapped_i] + self.total_dur
+            ).round(8)
+        else:
+            new_releases = self._releases_2d[:, release_indices]
+
+        new_durs = (new_releases - new_onsets).round(8)
+        # if wraparound:
+        #     new_durs[-1, -1] = (new_durs[-1, -1] + self.total_dur).round(8)
+        assert np.all(new_durs > 0) and np.all(new_durs < self.rhythm_len)
         # TODO investigate other functions I used to call (like truncate_or_extend())
-        return new_onsets, new_durs
+        return new_onsets.reshape(-1), new_durs.reshape(-1)
 
-    def _get_max_releases(self, onsets):
+    def _get_max_releases(self, onset_indices):
+        # We expect this function to only ever be called on indices <
+        # self.num_notes (i.e., belonging to the first 'variation')
 
-        max_releases = np.empty_like(onsets)
-        releases = self._releases_2d[0]
-        releases_iter = iter(releases)
+        max_releases = np.empty(len(onset_indices), dtype=self.dtype)
+        releases_iter = iter(
+            utils.LoopSeq(self.releases, self.total_dur, decimals=8)
+        )
         release = next(releases_iter)
-        for i in range(len(onsets) - 1):
-            while (next_release := next(releases_iter)) <= onsets[i + 1]:
+        for i in range(len(onset_indices) - 1):
+            next_onset_i = onset_indices[i + 1]
+            next_onset = self.onsets[next_onset_i].round(8)
+            while (next_release := next(releases_iter)) <= next_onset:
                 release = next_release
             max_releases[i] = release
             release = next_release
-        max_releases[-1] = releases[-1]
+        if self.overlap:
+            next_onset_i = onset_indices[0] + self.num_notes
+            try:
+                next_onset = self.onsets[next_onset_i]
+            except IndexError:
+                assert self.num_vars == 1
+                next_onset = (
+                    self.onsets[next_onset_i % self.num_notes] + self.rhythm_len
+                ).round(8)
+            while (next_release := next(releases_iter)) - next_onset < 1e-7:
+                release = next_release
+            max_releases[-1] = release
+        else:
+            max_releases[-1] = self.rhythm_len
         return max_releases
 
     def _durs_handler(self, er, voice_i, onsets, onset_indices, durs):
-        releases = self._releases_2d[0]
-        max_releases = self._get_max_releases(onsets)
-        # remaining = utils.get_rois(
-        #     onsets, max_releases, overlap=self.overlap, dtype=self.dtype
-        # )
+        releases = utils.LoopSeq(self.releases, self.total_dur, decimals=8)
+        max_releases = self._get_max_releases(onset_indices)
         total_remaining = (
             er.dur_density[voice_i] * er.rhythm_len[voice_i] - durs.sum()
         )
@@ -93,32 +152,42 @@ class Grid2(ContRhythm):
         release_indices = {
             i: k for (i, k) in zip(available_indices, onset_indices)
         }
-        # n_indices = len(available_onset_indices)
+        # remove any indices that are already at the maximum release
+        for i, k in release_indices.items():
+            if releases[k] == max_releases[i]:
+                available_indices.remove(i)
 
-        # TODO calculate stopping_threshold
-        stopping_threshold = 0
-
-        while total_remaining > stopping_threshold and available_indices:
+        while total_remaining > 0 and available_indices:
             i = random.choice(available_indices)
             k = release_indices[i] = release_indices[i] + 1
-            # TODO handle wraparound
-            increment = releases[k] - releases[k - 1]
+            release = releases[k]
+            increment = release - releases[k - 1]
             durs[i] += increment
-            assert durs[i] + onsets[i] in releases
+            # release = (durs[i] + onsets[i]).round(decimals=8)
             total_remaining -= increment
-            if onsets[i] + durs[i] >= max_releases[i]:
+            if release == max_releases[i]:
                 available_indices.remove(i)
+            elif abs(release - max_releases[i]) < 1e-7:
+                breakpoint()
+            assert release <= max_releases[i]
         return durs
 
-    def get_durs(self, er, voice_i, onsets):
+    def get_durs(self, er, voice_i, onsets, prev_rhythms):
+        # TODO handle prev_rhythms
         onset_indices = self.onset_indices(onsets)
-        durs = self._releases_2d[0, onset_indices] - onsets
+        # durs are initialized as the interval to the next release
+        durs = self._releases[onset_indices] - onsets
+        # then we possibly fill durs further
         durs = self._durs_handler(er, voice_i, onsets, onset_indices, durs)
 
         return durs
 
     @property
     def onset_positions(self):
+        return self.onsets
+
+    @property
+    def initial_onset_positions(self):
         return self._onsets_2d[0]
 
     @classmethod
