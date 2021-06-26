@@ -13,3 +13,15 @@
 		padding: 15px;
 	}
 }
+
+.example-div {
+  border: 1px solid #9e9e9e;
+  border-radius: 1rem;
+  background: #fafafa;
+  padding: 0rem 1rem;
+  margin: 0.5rem 0rem;
+}
+
+.example-div p {
+	margin: 0rem;
+}

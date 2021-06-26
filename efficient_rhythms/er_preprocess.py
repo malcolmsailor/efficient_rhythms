@@ -3,6 +3,7 @@ use.
 """
 
 import collections
+from efficient_rhythms import er_rhythm
 import fractions
 import math
 import os
@@ -19,6 +20,7 @@ from . import er_interface
 from . import er_midi
 from . import er_misc_funcs
 from . import er_randomize
+from . import er_rhythm
 from . import er_settings
 from . import er_tuning
 from . import er_validate
@@ -68,16 +70,10 @@ def notify_user_of_unusual_settings(er, silent=False):
             return
         print(er_misc_funcs.add_line_breaks(text))
 
-    if er.cont_rhythms != "none" and (
-        len(set(er.pattern_len)) != 1
-        or len(set(er.rhythm_len)) != 1
-        or er.pattern_len != er.rhythm_len
-    ):
-        # LONGTERM implement this
-        raise NotImplementedError(
-            "'cont_rhythms' is not implemented unless 'pattern_len' and "
-            "'rhythm_len' have the same, unique value"
-        )
+    if er.cont_rhythms == "grid":
+        er_rhythm.Grid.validate_er_settings(er, silent=silent)
+    elif er.cont_rhythms == "all":
+        er_rhythm.ContRhythm.validate_er_settings(er, silent=silent)
 
     # if er.len_to_force_chord_tone == 0 and er.scale_chord_tone_prob_by_dur:
     #     raise er_exceptions.ErSettingsError(
@@ -715,7 +711,8 @@ def rhythm_preprocessing(er):
             er.rhythmic_quasi_unison, er.num_voices, "rhythmic_quasi_unison"
         )
         _rhythmic_relations_process(er.rhythmic_quasi_unison)
-    elif er.rhythmic_quasi_unison and not er.rhythmic_unison:
+    # elif er.rhythmic_quasi_unison and not er.rhythmic_unison:
+    elif er.rhythmic_quasi_unison:
         er.rhythmic_quasi_unison = [tuple(range(er.num_voices))]
     else:
         er.rhythmic_quasi_unison = []
@@ -729,13 +726,12 @@ def rhythm_preprocessing(er):
             er.hocketing, er.num_voices, "hocketing"
         )
         _rhythmic_relations_process(er.hocketing)
-    elif er.hocketing and not er.rhythmic_unison:
+    elif er.hocketing:
         er.hocketing = [tuple(range(er.num_voices))]
     else:
         er.hocketing = []
 
     er.hocketing_followers = _hocketing_dict_process(er.hocketing)
-
     if isinstance(er.rhythmic_unison, typing.Sequence):
         er.rhythmic_unison = er_misc_funcs.remove_non_existing_voices(
             er.rhythmic_unison, er.num_voices, "rhythmic_unison"
@@ -1234,7 +1230,8 @@ def preprocess_settings(
                 # if isinstance(min_dur, int):
                 # er.min_dur[min_dur_i] = er.tempo[0] / 60 * (0.001 * min_dur)
         elif er.min_dur is None or er.min_dur <= 0:
-            er.min_dur = er.get(0, "onset_subdivision")
+            er.min_dur = er.onset_subdivision
+            # er.min_dur = er.get(0, "onset_subdivision")
             # QUESTION what is this? Is it for continuous rhythms?
             # er.min_dur = er.tempo[0] / 60 * (0.001 * er.min_dur)
         er.min_dur = er_misc_funcs.convert_to_fractions(er.min_dur)

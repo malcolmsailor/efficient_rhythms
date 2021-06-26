@@ -32,6 +32,15 @@ RHYTHM_EXAMPLE_PNG = \
 RHYTHM_EXAMPLES_NO_NOTATION =$(filter %example5.py %example6.py \
 	%example11.py %example12.py, $(RHYTHM_EXAMPLE_SRC))
 
+CONT_RHYTHM_EXAMPLE_SRC = \
+	$(shell fd '^cont_rhythm_example[0-9]+.*\.py$$' examples)
+CONT_RHYTHM_EXAMPLE_MID = \
+	$(CONT_RHYTHM_EXAMPLE_SRC:examples/%.py=examples/midi/%.mid)
+CONT_RHYTHM_EXAMPLE_M4A = \
+	$(CONT_RHYTHM_EXAMPLE_SRC:examples/%.py=resources/m4as/%.m4a)
+CONT_RHYTHM_EXAMPLE_PNG = \
+	$(CONT_RHYTHM_EXAMPLE_SRC:examples/%.py=resources/pngs/%_00001.png)
+
 
 CSS_FILES = $(resources/third_party/github-markdown-css/github-markdown.css \
 	resources/css/markdown-body.css)
@@ -68,7 +77,8 @@ svgs: midi
 # MIDI #
 ########
 
-midi: $(EXAMPLE_MID) $(HARMONY_EXAMPLE_MID) $(RHYTHM_EXAMPLE_MID)
+midi: $(EXAMPLE_MID) $(HARMONY_EXAMPLE_MID) $(RHYTHM_EXAMPLE_MID) \
+		$(CONT_RHYTHM_EXAMPLE_MID)
 
 # it would be nice to consolidate these rules into one if possible!
 
@@ -119,13 +129,19 @@ examples/midi/rhythm_example%.mid: examples/rhythm_example%.py \
 			resources/svgs/rhythm_example$*.svg ; \
 	fi;
 
+examples/midi/cont_rhythm_example%.mid: examples/cont_rhythm_example%.py \
+		examples/cont_rhythm_example_base.py $(EFFRHY)
+	python3 -m efficient_rhythms --settings \
+		examples/cont_rhythm_example_base.py $< \
+		--no-interface ; \
 
 
 ########
 # PNGs #
 ########
 
-pngs: $(EXAMPLE_PNG) $(HARMONY_EXAMPLE_PNG) $(RHYTHM_EXAMPLE_PNG)
+pngs: $(EXAMPLE_PNG) $(HARMONY_EXAMPLE_PNG) $(RHYTHM_EXAMPLE_PNG) \
+		$(CONT_RHYTHM_EXAMPLE_PNG)
 
 # expects to find path to midani.py in an environment variable called MIDANI
 # filter-out trick from https://stackoverflow.com/a/12284855/10155119
@@ -139,7 +155,8 @@ resources/pngs/%_00001.png: examples/midi/%.mid \
 # M4As #
 ########
 
-m4as: $(EXAMPLE_M4A) $(HARMONY_EXAMPLE_M4A) $(RHYTHM_EXAMPLE_M4A)
+m4as: $(EXAMPLE_M4A) $(HARMONY_EXAMPLE_M4A) $(RHYTHM_EXAMPLE_M4A) \
+		$(CONT_RHYTHM_EXAMPLE_M4A)
 
 # next recipe expects to find pygmid2aud.py in the path
 resources/m4as/%.m4a: examples/midi/%.mid

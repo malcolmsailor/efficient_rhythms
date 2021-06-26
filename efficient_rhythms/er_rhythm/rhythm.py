@@ -1,7 +1,3 @@
-import collections
-import functools
-import math
-
 import numpy as np
 
 import sortedcontainers
@@ -21,7 +17,7 @@ class RhythmBase:
     def durs(self):
         return self._durs
 
-    def add_onsets_and_durs(self, onsets, durs):
+    def set_onsets_and_durs(self, onsets, durs):
         if onsets is not None and durs is not None:
             dict_ = {o: d for (o, d) in zip(onsets, durs)}
         else:
@@ -120,35 +116,10 @@ class RhythmBase:
         return next_onset - release >= min_rest_len
 
 
-# class DiscreteRhythm(RhythmBase):
-#     pass
-# def __init__(self, initial_onsets=None, initial_durs=None):
-#     super().__init__()
-#     if initial_onsets is not None and initial_durs is not None:
-#         initial_data = {
-#             o: d for (o, d) in zip(initial_onsets, initial_durs)
-#         }
-#     else:
-#         initial_data = {}
-#     self._data = sortedcontainers.SortedDict(initial_data)
-#     self.onsets = initial_onsets
-#     self.durs = initial_durs
-
-# def __iter__(self):
-#     return self._data.items().__iter__()
-
-# def __len__(self):
-#     return self._data.__len__()
-
-# # TODO review uses of this
-# def __getitem__(self, key):
-#     return self._data.__getitem__(key)
-
-
 class Rhythm(RhythmBase):
-    def add_onsets_and_durs(self, onsets, durs):
+    def set_onsets_and_durs(self, onsets, durs):
         onsets, durs = self._pad_truncations(onsets, durs)
-        super().add_onsets_and_durs(onsets, durs)
+        super().set_onsets_and_durs(onsets, durs)
 
     def __init__(
         self,
@@ -158,11 +129,7 @@ class Rhythm(RhythmBase):
         min_note_dur,
         overlap,
     ):
-        # onsets, durs = self._pad_truncations(
-        #     rhythm_len, truncations, onsets, durs, overlap
-        # )
-        # super().__init__(initial_onsets=onsets, initial_durs=durs)
-        # TODO eliminate "num_notes" argument?
+        super().__init__()
         self.num_notes = num_notes
         self.rhythm_len = rhythm_len
         self.truncations = truncations
@@ -213,8 +180,8 @@ class Rhythm(RhythmBase):
         #  er_preprocess.py
         truncations = []
         if er.cont_rhythms == "grid":
-            # TODO ultimately I think it would be better to use a different
-            # class for this case
+            # ultimately I think it might be cleaner to use a different
+            # (derived) class for this case
             rhythm_len = (
                 er.num_cont_rhythm_vars[voice_i] * er.pattern_len[voice_i]
             )
@@ -233,212 +200,5 @@ class Rhythm(RhythmBase):
             overlap,
         )
         if onsets is not None and durs is not None:
-            out.add_onsets_and_durs(onsets, durs)
+            out.set_onsets_and_durs(onsets, durs)
         return out
-
-
-# TODO remove after revising ContinuousRhythm
-class OldRhythmicDict(collections.UserDict):
-    def __str__(self):
-        strings = []
-        strings.append("#" * 51)
-        for onset, dur in self.items():
-            strings.append(
-                "Attack:{:>10.6}  Duration:{:>10.6}"
-                "".format(float(onset), float(dur))
-            )
-        strings.append("\n")
-        return "\n".join(strings)[:-2]
-
-    # def make_onset_and_dur_lists(self):
-    #     self.onsets = list(self.keys())
-    #     self.onsets_and_durs = list(self.items())
-
-    # LONGTERM onsets and onsets_and_durs assume that
-    #   the contents will no longer be changed after their first access.
-    #   Is there a way to enforce this?
-    @functools.cached_property
-    def onsets(self):
-        return list(self.keys())
-
-    @functools.cached_property
-    def onsets_and_durs(self):
-        return list(self.items())
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}({self.data})"
-
-
-# TODO remove after revising ContinuousRhythm
-class OldRhythm(OldRhythmicDict):
-    # LONGTERM provide "re-generate" method, rather than
-    #   re-initializing an entire new rhythm at each failure in er_make.py
-    @functools.cached_property
-    def total_num_notes(self):
-        # LONGTERM check whether this works with truncate
-        out = self.num_notes
-        running_length = self.rhythm_len
-        while running_length < self.total_rhythm_len:
-            break_out = False
-            if running_length + self.rhythm_len <= self.total_rhythm_len:
-                running_length += self.rhythm_len
-                out += self.num_notes
-            else:
-                for onset in self:
-                    if running_length + onset >= self.total_rhythm_len:
-                        break_out = True
-                        break
-                    out += 1
-            if break_out:
-                break
-        return out
-
-    def __init__(self, er, voice_i):
-        super().__init__()
-        self.voice_i = voice_i
-        (
-            self.num_notes,
-            self.rhythm_len,
-            self.pattern_len,
-            self.min_dur,
-            self.dur_density,
-            self.overlap,
-        ) = er.get(
-            voice_i,
-            "num_notes",
-            "rhythm_len",
-            "pattern_len",
-            "min_dur",
-            "dur_density",
-            "overlap",
-        )
-        self.total_rhythm_len = self.pattern_len
-        if er.truncate_patterns:
-            # max_len = max(er.pattern_len)
-            # self.truncate_len = max_len % self.pattern_len
-            self.truncate_len = max(er.pattern_len)
-            if self.truncate_len == self.pattern_len:
-                self.truncate_len = 0
-            else:
-                self.n_patterns_per_truncate = math.ceil(
-                    self.truncate_len / self.pattern_len
-                )
-            self._truncated_pattern_num_notes = None
-        else:
-            self.truncate_len = 0
-        self._check_min_dur()
-
-    def _check_min_dur(self):
-        if self.rhythm_len <= self.min_dur * self.num_notes:
-            self.full = True
-        else:
-            self.full = False
-
-    @functools.cached_property
-    def truncated_pattern_num_notes(self):
-        if not self.truncate_len:
-            raise ValueError("This is a bug in the 'efficient_rhythms' script")
-        self._truncated_pattern_num_notes = 0
-        for onset in self:
-            if (onset + self.min_dur) > (
-                self.truncate_len % self.total_rhythm_len
-            ):
-                break
-            self._truncated_pattern_num_notes += 1
-        return self._truncated_pattern_num_notes
-
-    @functools.cached_property
-    def loop_num_notes(self):
-        # it is the number of notes in the rhythm up to the end of the truncate
-        return (
-            self.truncate_len // self.pattern_len * self.total_num_notes
-            + self.truncated_pattern_num_notes
-        )
-
-    def get_i_at_or_after(self, time):
-        if self.truncate_len:
-            truncated, untruncated = divmod(time, self.truncate_len)
-            truncated_num_notes = int(truncated) * self.loop_num_notes
-        else:
-            truncated_num_notes, untruncated = 0, time
-        reps, remainder = divmod(untruncated, self.total_rhythm_len)
-        for remainder_i, onset in enumerate(self.onsets):
-            if onset >= remainder:
-                break
-        if remainder > onset:
-            remainder_i += 1
-        return (
-            truncated_num_notes + int(reps) * self.total_num_notes + remainder_i
-        )
-
-    def get_i_before(self, time):
-        if self.truncate_len:
-            truncated, untruncated = divmod(time, self.truncate_len)
-            truncated_num_notes = int(truncated) * self.loop_num_notes
-        else:
-            truncated_num_notes, untruncated = 0, time
-        reps, remainder = divmod(untruncated, self.total_rhythm_len)
-        for remainder_i, onset in enumerate(self.onsets):
-            if onset >= remainder:
-                remainder_i -= 1
-                break
-        return (
-            truncated_num_notes + int(reps) * self.total_num_notes + remainder_i
-        )
-
-    def get_i_at_or_before(self, time):
-        """Returns -1 if time is before first note in rhythm."""
-        if self.truncate_len:
-            truncated, untruncated = divmod(time, self.truncate_len)
-            truncated_num_notes = int(truncated) * self.loop_num_notes
-        else:
-            truncated_num_notes, untruncated = 0, time
-        reps, remainder = divmod(untruncated, self.total_rhythm_len)
-        # 0 1 2 3
-        #    ^
-        for remainder_i, onset in enumerate(self.onsets):
-            if onset > remainder:
-                remainder_i -= 1
-                break
-        return (
-            truncated_num_notes + int(reps) * self.total_num_notes + remainder_i
-        )
-
-    def get_i_after(self, time):
-        if self.truncate_len:
-            truncated, untruncated = divmod(time, self.truncate_len)
-            truncated_num_notes = int(truncated) * self.loop_num_notes
-        else:
-            truncated_num_notes, untruncated = 0, time
-        reps, remainder = divmod(untruncated, self.total_rhythm_len)
-        for remainder_i, onset in enumerate(self.onsets):
-            if onset > remainder:
-                break
-        if remainder >= onset:
-            remainder_i += 1
-        return (
-            truncated_num_notes + int(reps) * self.total_num_notes + remainder_i
-        )
-
-    def get_onset_and_dur(self, rhythm_i):
-        if not self.truncate_len:
-            offset = (rhythm_i // self.total_num_notes) * self.total_rhythm_len
-            onset, dur = self.onsets_and_durs[rhythm_i % self.total_num_notes]
-            return onset + offset, dur
-        # else: we need to take truncated patterns into account
-        # LONGTERM it would probably be better to just write the whole
-        #   loop to the rhythm rather than do all this complicated logic
-        #   every time
-        loop_offset = (rhythm_i // self.loop_num_notes) * self.truncate_len
-        n_patterns = (rhythm_i % self.loop_num_notes) // self.total_num_notes
-        offset = n_patterns * self.total_rhythm_len
-        onset, dur = self.onsets_and_durs[
-            (rhythm_i % self.loop_num_notes) % self.total_num_notes
-        ]
-        onset += loop_offset + offset
-        if n_patterns != self.n_patterns_per_truncate - 1:
-            return onset, dur
-        overdur = loop_offset + self.truncate_len - (onset + dur)
-        if self.overlap:
-            overdur += self.onsets[0]
-        return onset, dur + min(0, overdur)

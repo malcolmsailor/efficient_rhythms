@@ -13,7 +13,7 @@ from .. import er_midi
 from .utils import get_iois
 from .rhythm import Rhythm
 from .cont_rhythm import ContRhythm
-from .grid import Grid2
+from .grid import Grid
 
 
 def _obligatory_onsets(er, voice_i):
@@ -73,7 +73,7 @@ def _hocketing_indices(
         prev_rhythms[leader_i % len(prev_rhythms)]
         for leader_i in er.hocketing_followers[voice_i]
     )
-    # cast to set first to remove duplicate references to a rhythms, if any:
+    # cast to set first to remove duplicate references to rhythms, if any:
     leaders = [r.onsets for r in set(leaders)]
     condition = lambda x: np.isin(onset_positions, x, invert=True)
     conjunction = np.logical_and
@@ -260,6 +260,7 @@ def _indices_handler(er, voice_i, prev_rhythms, onset_positions):
             hocketing_indices = _hocketing_indices(
                 er, voice_i, onset_positions, prev_rhythms, oblig_indices
             )
+
             hocketing_i_end = _swap_indices(
                 indices, hocketing_indices, constrain_i_end
             )
@@ -272,17 +273,6 @@ def _indices_handler(er, voice_i, prev_rhythms, onset_positions):
         constrain_i_end,
         hocketing_i_end,
     ]
-
-
-# def _indices_shuffler(num_remaining, indices, start_i, end_i=None):
-#     if num_remaining <= 0:
-#         return num_remaining
-#     RNG.shuffle(indices[start_i:end_i])
-#     try:
-#         return num_remaining - end_i + start_i
-#     except TypeError:
-#         # end_i is None
-#         return 0
 
 
 def get_onsets(er, voice_i, prev_rhythms):
@@ -420,39 +410,17 @@ def get_durs(er, voice_i, iois, onsets, prev_rhythms):
     return durs
 
 
-# def new_fit_rhythm_to_pattern(er, voice_i, onsets, durs):
-#     # TODO deprecate this function in favor of _pad_truncations
-#     n_onsets = len(onsets)
-#     if n_onsets == 0:
-#         return onsets, durs
-#     pattern_len = er.pattern_len[voice_i]
-#     rhythm_len = er.rhythm_len[voice_i]
-#     if rhythm_len >= pattern_len:
-#         return onsets, durs
-#     reps, remainder = divmod(pattern_len, rhythm_len)
-#     remainder_i = np.searchsorted(onsets, remainder)
-#     rep_onsets = np.tile(onsets, reps)
-#     rep_durs = np.tile(durs, reps)
-#     out_onsets = np.concatenate((rep_onsets, onsets[:remainder_i]))
-#     out_durs = np.concatenate((rep_durs, durs[:remainder_i]))
-#     for i in range(reps + 1):
-#         out_onsets[n_onsets * i : n_onsets * (i + 1)] += i * float(rhythm_len)
-
-#     overshoot = out_onsets[-1] + out_durs[-1] - pattern_len
-#     if er.overlap:
-#         overshoot -= out_onsets[0]
-#     if overshoot > 0:
-#         out_durs[-1] -= overshoot
-#     return out_onsets, out_durs
-
-
 def generate_rhythm(er, voice_i, prev_rhythms=()):
     if voice_i in er.rhythmic_unison_followers:
-        leader_i = er.rhythmic_unison_followers[voice_i]
-        return prev_rhythms[leader_i]
+        return
 
     if er.cont_rhythms == "all":
-        return get_cont_rhythm(er, voice_i)
+        # methods from the previous version that I have not yet implemented (and
+        # I'm not sure that I need to implement):
+        #    rhythm.truncate_or_extend()
+        #    rhythm.round()
+        er.rhythms[voice_i].generate()
+        return
 
     onsets = get_onsets(er, voice_i, prev_rhythms)
     er.check_time()
@@ -465,519 +433,12 @@ def generate_rhythm(er, voice_i, prev_rhythms=()):
     er.check_time()
     if er.cont_rhythms == "grid":
         onsets, durs = er.grid.vary(onsets, durs)
-    rhythm = Rhythm.from_er_settings(er, voice_i)
-    rhythm.add_onsets_and_durs(onsets, durs)
-    return rhythm
+    # rhythm = Rhythm.from_er_settings(er, voice_i)
+    er.rhythms[voice_i].set_onsets_and_durs(onsets, durs)
 
 
-def get_cont_rhythm(er, voice_i):
-    rhythm = ContRhythm.from_er_settings(er, voice_i)
-    rhythm.generate()
-    # methods from the previous version that I have not yet implemented (and
-    # I'm not sure that I need to implement):
-    #    rhythm.truncate_or_extend()
-    #    rhythm.round()
-    return rhythm
-    # rhythm = ContRhythm(er, voice_i)
-    # if rhythm.num_notes == 0:
-    #     print(f"Notice: voice {voice_i} is empty.")
-    #     return rhythm
-    # rhythm.get_continuous_onsets()
-    # rhythm.fill_continuous_durs()
-    # rhythm.vary_continuous_onsets()
-    # rhythm.truncate_or_extend()
-    # rhythm.round()
-    # rhythm.rel_onsets_to_rhythm()
-    # return rhythm
-
-
-# Not sure what this was ever used for. RhythmicDict has a __str__ method.
-# Perhaps this is deprecated?
-# def print_rhythm(rhythm):
-#     if isinstance(rhythm, list):
-#         strings = []
-#         strings.append("#" * 51)
-#         for onset in rhythm:
-#             strings.append("Attack:{:>10.3}" "".format(float(onset)))
-#         strings.append("\n")
-#         print("\n".join(strings)[:-2])
-#     elif isinstance(rhythm, dict):
-#         strings = []
-#         strings.append("#" * 51)
-#         for onset, dur in rhythm.items():
-#             strings.append(
-#                 "Attack:{:>10.3}  Duration:{:>10.3}"
-#                 "".format(float(onset), float(dur))
-#             )
-#         strings.append("\n")
-#         print("\n".join(strings)[:-2])
-
-
-# def _get_onset_positions(er, voice_i):
-
-#     if er.cont_rhythms == "grid":
-#         return list(er.grid.keys())
-
-#     rhythm_len, sub_subdiv_props = er.get(
-#         voice_i, "rhythm_len", "sub_subdiv_props"
-#     )
-#     onset_positions = []
-#     time_i = 0
-#     time = fractions.Fraction(0, 1)
-#     while time < rhythm_len:
-#         onset_positions.append(time)
-#         time += sub_subdiv_props[time_i % len(sub_subdiv_props)]
-#         time_i += 1
-#     return onset_positions
-
-
-# def _get_available_for_hocketing(er, voice_i, prev_rhythms, onset_positions):
-#     """Used for er.hocketing. Returns those subdivisions
-#     that are available for to be selected. (I.e., those
-#     that do not belong to the previously constructed
-#     rhythms, and those that do not belong to obligatory
-#     beats in other voices.)
-#     """
-#     out = []
-#     for onset in onset_positions:
-#         write = True
-#         for prev_rhythm in prev_rhythms:
-#             if onset in prev_rhythm:
-#                 write = False
-#                 break
-#         if not write:
-#             continue
-#         for oblig_onsets_i, oblig_onsets in enumerate(er.obligatory_onsets):
-#             if oblig_onsets_i != voice_i % len(er.obligatory_onsets):
-#                 if onset in oblig_onsets:
-#                     write = False
-#                     break
-#         if not write:
-#             continue
-#         out.append(onset)
-
-#     return out
-
-
-# def _get_available_for_quasi_unison(
-#     er, voice_i, leader_rhythms, onset_positions
-# ):
-#     out = []
-#     for onset in onset_positions:
-#         go_on = False
-#         for leader_rhythm in leader_rhythms:
-#             if onset in leader_rhythm:
-#                 out.append(onset)
-#                 go_on = False
-#                 break
-#         if go_on:
-#             continue
-#         for oblig_onsets_i, oblig_onsets in enumerate(er.obligatory_onsets):
-#             if oblig_onsets_i != voice_i % len(er.obligatory_onsets):
-#                 if onset in oblig_onsets:
-#                     out.append(onset)
-#                     break
-
-#     return out
-
-
-# def _get_leader_available(er, remaining, leader_rhythm):
-#     # LONGTERM make this work when the follower rhythm is a different length
-#     #   (especially longer) than the leader rhythm?
-#     out = []
-#     for time in remaining:
-#         leader_time = time
-
-#         while leader_time >= 0 and leader_time not in leader_rhythm:
-#             leader_time -= er.onset_subdivision_gcd
-#         if leader_time < 0:
-#             continue
-#         if time <= leader_time + leader_rhythm[leader_time]:
-#             out.append(time)
-
-#     return out
-
-
-# def _get_onset_list(
-#     er, voice_i, onset_positions, available, leader_rhythm=None
-# ):
-#     def _add_onset(onset, remove_oblig=False):
-#         nonlocal num_notes
-#         out.append(onset)
-#         num_notes -= 1
-#         if onset in remaining:
-#             remaining.remove(onset)
-#         if onset in available:
-#             available.remove(onset)
-#         if remove_oblig and onset in oblig:
-#             oblig.remove(onset)
-
-#     num_notes, obligatory_onsets = er.get(
-#         voice_i, "num_notes", "obligatory_onsets"
-#     )
-#     remaining = onset_positions.copy()
-#     # I'm not sure whether it's necessary to make a copy of obligatory
-#     #   onsets, but doing it to be safe, for now, at least.
-#     oblig = obligatory_onsets.copy()
-
-#     out = []
-#     if voice_i == 0 and er.force_foot_in_bass in (
-#         "first_beat",
-#         "global_first_beat",
-#     ):
-#         _add_onset(fractions.Fraction(0, 1), remove_oblig=True)
-
-#     for onset in oblig:
-#         if onset in remaining:
-#             _add_onset(onset)
-#         else:
-#             print(
-#                 f"Note: obligatory onset {onset} in voice {voice_i} "
-#                 "not available."
-#             )
-
-#     while num_notes and available:
-#         choose = random.choice(available)
-#         _add_onset(choose)
-
-#     if num_notes and leader_rhythm:
-#         available = _get_leader_available(er, remaining, leader_rhythm)
-#         while num_notes and available:
-#             choose = random.choice(available)
-#             _add_onset(choose)
-
-#     # Add onsets to obtain the specified number of notes.
-#     for _ in range(num_notes):
-#         try:
-#             choose = random.choice(remaining)
-#         except:
-#             breakpoint()
-#         _add_onset(choose)
-#     out.sort()
-
-#     return out
-
-
-# def _get_onset_dict_and_durs_to_next_onset(er, voice_i, onset_list):
-#     """Returns a dictionary of onsets (with minimum durations)
-#     as well as a dictionary of the duration between onsets
-#     """
-
-#     min_dur, rhythm_len = er.get(voice_i, "min_dur", "rhythm_len")
-
-#     onsets = {}
-#     durs = {}
-
-#     for onset_i, onset in enumerate(onset_list):
-#         try:
-#             dur = onset_list[onset_i + 1] - onset
-#         except IndexError:
-#             dur = rhythm_len - onset
-#             if er.overlap:
-#                 dur += onset_list[0]
-#         durs[onset] = dur
-#         onsets[onset] = min(dur, min_dur)
-
-#     return onsets, durs
-
-
-# def _fill_quasi_unison_durs(er, voice_i, onsets, leader_rhythm):
-#     leader_durs_at_onsets = {}
-#     rhythm_length = er.rhythm_len[voice_i]
-#     time = rhythm_length
-#     leader_onset = rhythm_length
-#     current_dur = 0
-#     while time > 0:
-#         time -= er.onset_subdivision_gcd
-#         if time in leader_rhythm:
-#             leader_dur = leader_rhythm[time]
-#             if time + leader_dur == leader_onset:
-#                 current_dur += leader_dur
-#             else:
-#                 current_dur = leader_dur
-#             if time in onsets:
-#                 leader_durs_at_onsets[time] = current_dur
-#             leader_onset = time
-
-#     return leader_durs_at_onsets
-
-
-# def _fill_onset_durs(
-#     er, voice_i, onsets, durs, leader_i=None, leader_durs_at_onsets=()
-# ):
-#     """Adds to the onset durations until the specified
-#     density is achieved. Doesn't return anything, just
-#     alters the onset dictionary in place.
-#     """
-
-#     def _fill_onsets_sub(dur_dict, remaining_dict):
-#         actual_total_dur = sum(onsets.values())
-#         available = []
-#         for time in onsets:
-#             if time in dur_dict and onsets[time] != dur_dict[time]:
-#                 available.append(time)
-
-#         # We round dur_density to the nearest dur_subdivision
-#         while (
-#             target_total_dur - actual_total_dur > dur_subdivision / 2
-#             and available
-#         ):
-#             choose = random.choice(available)
-#             remaining_dur = remaining_dict[choose] - onsets[choose]
-#             dur_to_add = min(dur_subdivision, remaining_dur)
-#             onsets[choose] += dur_to_add
-#             actual_total_dur += dur_to_add
-#             if (
-#                 onsets[choose] >= dur_dict[choose]
-#                 or onsets[choose] >= remaining_dict[choose]
-#             ):
-#                 available.remove(choose)
-
-#         return actual_total_dur
-
-#     dur_subdivision = er.get(voice_i, "dur_subdivision")
-
-#     target_total_dur = fractions.Fraction(
-#         er.dur_density[voice_i] * er.rhythm_len[voice_i]
-#     ).limit_denominator(max_denominator=8192)
-
-#     if leader_durs_at_onsets:
-#         actual_total_dur = _fill_onsets_sub(leader_durs_at_onsets, durs)
-#         if (actual_total_dur >= target_total_dur) or (
-#             er.rhythmic_quasi_unison_constrain
-#             and er.onset_density[voice_i] < er.onset_density[leader_i]
-#         ):
-#             return
-
-#     _fill_onsets_sub(durs, durs)
-
-
-# def _add_comma(er, voice_i, onsets):
-
-#     # This function shouldn't run with any sort of continuous rhythms.
-#     if er.cont_rhythms != "none":
-#         return
-
-#     comma_position = er.comma_position[voice_i]
-#     if comma_position == "end":
-#         return
-
-#     # LONGTERM verify that this is working with complex subdivisions
-#     rhythm_length = er.rhythm_len[voice_i]
-#     subdivision = er.onset_subdivision[voice_i]
-#     comma = rhythm_length % subdivision
-
-#     if isinstance(comma_position, int):
-#         comma_i = comma_position
-#         if comma_i > len(onsets):
-#             warnings.warn(
-#                 f"Comma position for voice {voice_i} greater "
-#                 "than number of onsets in rhythm. Choosing a "
-#                 "random comma position."
-#             )
-#             comma_i = random.randrange(len(onsets))
-#     else:
-#         if comma_position == "beginning":
-#             comma_i = 0
-#         elif comma_position == "middle":
-#             comma_i = random.randrange(1, len(onsets))
-#         else:
-#             comma_i = random.randrange(len(onsets) + 1)
-
-#     onset_list = list(onsets.keys())
-
-#     for onset in onset_list[comma_i:]:
-#         new_onset = onset + comma
-#         dur = onsets[onset]
-#         del onsets[onset]
-#         onsets[new_onset] = dur
-
-
-# def _fit_rhythm_to_pattern(er, voice_i, onsets):
-#     """If the rhythm is shorter than the pattern, extend it as necessary."""
-
-#     if not onsets:
-#         return
-
-#     rhythm_len, pattern_len, num_notes = er.get(
-#         voice_i, "rhythm_len", "pattern_len", "num_notes"
-#     )
-
-#     if rhythm_len >= pattern_len:
-#         return
-
-#     onset_list = list(onsets.keys())
-
-#     onset_i = num_notes
-#     while True:
-#         prev_onset = onset_list[onset_i % len(onset_list)]
-#         new_onset = prev_onset + rhythm_len * (onset_i // num_notes)
-#         if new_onset >= pattern_len:
-#             break
-#         onsets[new_onset] = onsets[prev_onset]
-#         onset_i += 1
-
-#     last_onset = max(onsets)
-#     last_onset_dur = onsets[last_onset]
-#     overshoot = last_onset + last_onset_dur - pattern_len
-#     if er.overlap:
-#         first_onset = min(onsets)
-#         overshoot -= first_onset
-#     if overshoot > 0:
-#         onsets[last_onset] -= overshoot
-
-
-# def generate_rhythm_old(er, voice_i, prev_rhythms=()):
-#     """Constructs a rhythm randomly according to the arguments supplied.
-
-#     Keyword args:
-#         prev_rhythms (list of dictionaries): used in the construction of
-#             hocketed rhythms.
-
-#     Returns:
-#         A dictionary of (Fraction:onset time, Fraction:duration) pairs.
-#     """
-
-#     # TODO revise this code... it gets *really* slow when the rhythms get long
-
-#     if voice_i in er.rhythmic_unison_followers:
-#         leader_i = er.rhythmic_unison_followers[voice_i]
-#         return prev_rhythms[leader_i]
-
-#     if er.cont_rhythms == "all":
-#         return get_cont_rhythm(er, voice_i)
-
-#     subdivision = er.onset_subdivision[voice_i]
-#     # why am I doing this here? Shouldn't this be in preprocessing?
-#     # I moved it to preprocessing
-#     # if not er.min_dur[voice_i]:
-#     #     er.min_dur[voice_i] = subdivision
-#     # if not er.dur_subdivision[voice_i]:
-#     #     er.dur_subdivision[voice_i] = subdivision
-
-#     onset_positions = _get_onset_positions(er, voice_i)
-#     er.check_time()
-
-#     available = []
-#     if voice_i in er.hocketing_followers:
-#         leaders = []
-#         for leader_i in er.hocketing_followers[voice_i]:
-#             leaders.append(prev_rhythms[leader_i % len(prev_rhythms)])
-#         available = _get_available_for_hocketing(
-#             er, voice_i, leaders, onset_positions
-#         )
-#     elif voice_i in er.rhythmic_quasi_unison_followers:
-#         leader_i = er.rhythmic_quasi_unison_followers[voice_i]
-#         leader_rhythm = prev_rhythms[leader_i % len(prev_rhythms)]
-#         available = _get_available_for_quasi_unison(
-#             er,
-#             voice_i,
-#             [
-#                 prev_rhythms[leader_i],
-#             ],
-#             onset_positions,
-#         )
-
-#         if (
-#             er.onset_density[voice_i] > er.onset_density[leader_i]
-#             and er.rhythmic_quasi_unison_constrain
-#         ):
-#             onset_list = _get_onset_list(
-#                 er, voice_i, onset_positions, available, leader_rhythm
-#             )
-#         else:
-#             onset_list = _get_onset_list(
-#                 er, voice_i, onset_positions, available
-#             )
-
-#         onsets, durs = _get_onset_dict_and_durs_to_next_onset(
-#             er, voice_i, onset_list
-#         )
-
-#         leader_durs_at_onsets = _fill_quasi_unison_durs(
-#             er,
-#             voice_i,
-#             onsets,
-#             prev_rhythms[leader_i],
-#         )
-
-#         _fill_onset_durs(
-#             er,
-#             voice_i,
-#             onsets,
-#             durs,
-#             leader_i=leader_i,
-#             leader_durs_at_onsets=leader_durs_at_onsets,
-#         )
-#         if er.cont_rhythms == "grid":
-#             rhythm = er.grid.return_varied_rhythm(er, onsets, voice_i)
-#             return rhythm
-#         _add_comma(er, voice_i, onsets)
-
-#         _fit_rhythm_to_pattern(er, voice_i, onsets)
-
-#         rhythm = Rhythm(er, voice_i)
-#         rhythm.data = onsets
-#         return rhythm
-#     # LONGTERM consolidate this code with above (a lot of duplication!)
-#     er.check_time()
-#     onset_list = _get_onset_list(er, voice_i, onset_positions, available)
-#     er.check_time()
-#     onsets, durs = _get_onset_dict_and_durs_to_next_onset(
-#         er, voice_i, onset_list
-#     )
-#     er.check_time()
-#     _fill_onset_durs(er, voice_i, onsets, durs)
-#     er.check_time()
-#     _add_comma(er, voice_i, onsets)
-#     er.check_time()
-#     if er.cont_rhythms == "grid":
-#         rhythm = er.grid.return_varied_rhythm(er, onsets, voice_i)
-#         return rhythm
-#     er.check_time()
-#     _fit_rhythm_to_pattern(er, voice_i, onsets)
-
-#     rhythm = Rhythm(er, voice_i)
-#     rhythm.data = onsets
-#     return rhythm
-
-# TODO clean up commented code
-def update_pattern_vl_order(er, rhythms):
-    # if er.cont_rhythms != "none":
-    #     er.num_notes_by_pattern = [
-    #         len(rhythms[voice_i].rel_onsets[0])
-    #         # len(rhythms[voice_i].onsets[0])
-    #         for voice_i in range(er.num_voices)
-    #     ]
-    #     # The next lines seem a little kludgy, it would be nice to
-    #     # treat all rhythms in a more homogenous way. But for now, at least
-    #     # it works.
-    #     for voice_i in range(er.num_voices):
-    #         pattern_len, rhythm_len = er.get(
-    #             voice_i, "pattern_len", "rhythm_len"
-    #         )
-    #         if pattern_len % rhythm_len == 0:
-    #             num_repeats_of_rhythm = pattern_len // rhythm_len
-    #             er.num_notes_by_pattern[voice_i] *= num_repeats_of_rhythm
-
-    # else:
-    #     # The length of each rhythm is equal to the number of notes
-    #     # per pattern because of the _fit_rhythm_to_pattern function
-    #     # previously run.
-    #     er.num_notes_by_pattern = [len(rhythm) for rhythm in rhythms]
-
-    # if er.truncate_patterns:
-    #     max_len = max(er.pattern_len)
-    #     truncate_lens = [
-    #         max_len % pattern_len for pattern_len in er.pattern_len
-    #     ]
-    #     er.num_notes_by_truncated_pattern = [0 for i in range(er.num_voices)]
-    #     for voice_i, truncate_len in enumerate(truncate_lens):
-    #         if truncate_len:
-    #             for onset in rhythms[voice_i]:
-    #                 if onset >= truncate_len:
-    #                     break
-    #                 er.num_notes_by_truncated_pattern[voice_i] += 1
+def update_pattern_vl_order(er):
+    rhythms = er.rhythms
     start_indices = [0 for _ in rhythms]
     for vl_item in er.pattern_vl_order:
         voice_i = vl_item.voice_i
@@ -986,45 +447,17 @@ def update_pattern_vl_order(er, rhythms):
         vl_item.set_indices(start_indices[voice_i], end_i, first_onset)
         start_indices[voice_i] = end_i
 
-    # totals = [0 for rhythm in rhythms]
-    # for i in range(len(er.pattern_vl_order)):
-    #     vl_item = er.pattern_vl_order[i]
-    #     start_rhythm_i = totals[vl_item.voice_i]
-    #     if (
-    #         er.truncate_patterns
-    #         and (vl_item.end_time - vl_item.start_time)
-    #         < er.pattern_len[vl_item.voice_i]
-    #     ):
-    #         # TODO I believe all references to 'truncated_pattern_num_notes'
-    #         #   can now be replaced by 'len(rhythm)' (but make sure!)
-    #         # totals[vl_item.voice_i] += rhythms[
-    #         #     vl_item.voice_i
-    #         # ].truncated_pattern_num_notes
-    #         totals[vl_item.voice_i] += len(rhythms[vl_item.voice_i])
-    #     else:
-    #         # TODO I think "num_notes_by_pattern" may no longer be necessary
-    #         totals[vl_item.voice_i] += er.num_notes_by_pattern[vl_item.voice_i]
-    #     # end_rhythm_i is the first note *after* the rhythm ends
-    #     end_rhythm_i = totals[vl_item.voice_i]
-    #     vl_item.start_i = start_rhythm_i
-    #     vl_item.end_i = end_rhythm_i
-    #     vl_item.len = end_rhythm_i - start_rhythm_i
-
 
 def rhythms_handler(er):
     """According to the parameters in er, return rhythms."""
 
     if er.rhythms_specified_in_midi:
-        rhythms = er_midi.get_rhythms_from_midi(er)
-    else:
-        rhythms = []
-        if er.cont_rhythms == "grid":
-            er.grid = Grid2.from_er_settings(er)
-            er.grid.generate()
-        for voice_i in range(er.num_voices):
-            rhythms.append(generate_rhythm(er, voice_i, prev_rhythms=rhythms))
+        return
 
-    if not any(rhythms):
+    for voice_i in range(er.num_voices):
+        generate_rhythm(er, voice_i, prev_rhythms=er.rhythms[:voice_i])
+
+    if not any(er.rhythms):
 
         class EmptyRhythmsError(Exception):
             pass
@@ -1033,9 +466,28 @@ def rhythms_handler(er):
             "No notes in any rhythms! This is a bug in the script."
         )
 
-    update_pattern_vl_order(er, rhythms)
+    update_pattern_vl_order(er)
 
-    return rhythms
+
+def init_rhythms(er):
+    if er.rhythms_specified_in_midi:
+        er.rhythms = er_midi.get_rhythms_from_midi(er)
+        return
+    if er.cont_rhythms == "grid":
+        er.grid = Grid.from_er_settings(er)
+        er.grid.generate()
+
+    if er.cont_rhythms == "all":
+        r_class = ContRhythm
+    else:
+        r_class = Rhythm
+    er.rhythms = []
+    for voice_i in range(er.num_voices):
+        if voice_i in er.rhythmic_unison_followers:
+            leader_i = er.rhythmic_unison_followers[voice_i]
+            er.rhythms.append(er.rhythms[leader_i])
+        else:
+            er.rhythms.append(r_class.from_er_settings(er, voice_i))
 
 
 def get_onset_order(er):
@@ -1078,16 +530,3 @@ def get_onset_order(er):
         # TODO remove this cast?
         ordered_onsets.append((voice_i, fractions.Fraction(next_onset)))
     return ordered_onsets
-
-
-# def rest_before_next_note(rhythm, onset, min_rest_len):
-#     release = onset + rhythm[onset]
-#     for next_onset in rhythm.onsets:
-#         if next_onset >= release:
-#             break
-
-#     gap = next_onset - release
-#     if gap >= min_rest_len:
-#         return True
-
-#     return False

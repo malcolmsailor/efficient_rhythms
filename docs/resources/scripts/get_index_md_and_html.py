@@ -9,6 +9,7 @@ import get_settings_md_and_html
 
 import efficient_rhythms.er_constants as er_constants
 import efficient_rhythms.er_preprocess as er_preprocess
+import efficient_rhythms.er_settings as er_settings
 
 SCRIPT_DIR = os.path.dirname((os.path.realpath(__file__)))
 
@@ -54,6 +55,12 @@ def _remove_quotes_around_constants(value):
     return str_value
 
 
+def field_priority(name):
+    return er_settings.ERSettings.__dataclass_fields__[name].metadata[
+        "priority"
+    ]
+
+
 def er_web_query(example, er_url):
     settings_files = (
         os.path.join(
@@ -68,7 +75,10 @@ def er_web_query(example, er_url):
     for name in ER_WEB_EXCLUDE:
         if name in merged:
             del merged[name]
+
     for name, value in merged.items():
+        if field_priority(name) < 1:
+            continue
         if isinstance(value, bool):
             merged[name] = "y" if value else "n"
         elif _contains_quoted_constant(value):
@@ -89,8 +99,9 @@ def insert_examples(md_content, er_url):
         m4a_path = f"resources/m4as/{example}.m4a"
         web_url = er_web_query(example, er_url)
         repl = [
+            f'<div id="{example}-div" class="example-div">'
             f'<span id="{example}">**Example:**'
-            f" `docs/examples/{example}.py`</span><br>"
+            f" `docs/examples/{example}.py`</span>"  # "<br>"
         ]
         if os.path.exists(os.path.join(SCRIPT_DIR, "../..", svg_path)):
             repl.append(f'![\1 notation]({svg_path}){{class="notation"}}\n')
@@ -104,7 +115,7 @@ def insert_examples(md_content, er_url):
             repl.append(f"![\1 audio]({m4a_path})\n")
         repl.append(
             f"[Click to open this example in the web app]({web_url})"
-            '{target="_blank" rel="noopener noreferrer"}\n'
+            '{target="_blank" rel="noopener noreferrer"}\n</div>'
         )
         md_content = re.sub(
             fr"\bEXAMPLE:{example}\b", "".join(repl), md_content

@@ -54,7 +54,7 @@ Verovio installation instructions are [here](https://github.com/rism-ch/verovio/
 
 ## Quick start
 
-To quickly try the script out, you can run it with the default settings:[^This command needs to be run from the root directory of the repository.]
+To quickly try the script out, you can run it with the default settings:^[This command needs to be run from the root directory of the repository.]
 
 `python3 -m efficient_rhythms`
 
@@ -422,6 +422,61 @@ EXAMPLE:rhythm_example12
 - tinkering with the example settings in `examples/`
 - running the script with `--random`
 - checking out the documentation in [`settings.html`](settings.html) -->
+
+### Continuous rhythms
+
+What do I mean by "continuous" rhythms? Well, most if not all, human music uses "rational" rhythms, where the durations are (at least notionally) small-integer ratios of one another. For example, a quarter-note is 2 times an eighth-note, 3 times a triplet, 4/3rds of a dotted eighth-note, and so on. But computers don't need to restrict themselves in this way! We can have a computer make rhythms that arbitrarily chop up the real number line. I have implemented this possibility in this script.^[Of course, unless you have invented an infinite precision computer, the rhythms aren't truly drawn from the continuous real number line.]
+
+To better introduce the effect of these continuous rhythms, let's start with a pattern, without continuous rhythms, that is, with `cont_rhythms = "none"`, its default value. To place a single rhythm as our focus, I've set `rhythmic_unison = True`.
+
+EXAMPLE:cont_rhythm_example1
+
+Now compare the effect of REF:cont_rhythm_example2, where all the settings are the same, except for `cont_rhythms = "all"`. To me, the rhythm sounds jagged, off-kilter, and sort of incomprehensible, like some sort of alien time signature.
+
+EXAMPLE:cont_rhythm_example2
+
+However, the strangeness of the preceding example is somewhat constrained by the fact that `pattern_len` is not so long that we can't still readily hear it as a loop. If we set `pattern_len` to a briefer value, like `2`, as in REF:cont_rhythm_example3, this looping effect is made still stronger, to the extent that the effect of continuous rhythms is fairly subtle.
+
+EXAMPLE:cont_rhythm_example3
+
+On the other hand, if we increase pattern_len to `8`, as in REF:cont_rhythm_example4, the strangeness is increased, and the pattern made less obvious.
+
+
+EXAMPLE:cont_rhythm_example4
+
+<!-- TODO replace 'min_dur' with 'min_ioi' for cont rhythms -->
+
+The number of onsets in a continuous rhythm is calculated as `rhythm_len * onset_density / onset_subdivision`. Thus you can increase the number of notes by increasing `onset_density` or decreasing `onset_subdivision`. The onsets and releases are selected at random from the number line, but this randomness is subject to some constraints. In particular, consecutive note onsets are constrained to be at least `min_dur` from one another. This has the effect of causing the notes to be somewhat evenly spaced, and the larger the value of min_dur, the more evenly spaced they will be, as in REF:cont_rhythm_example5. `onset_subdivision` / `onset_density` forms an upper bound on min_dur. If `min_dur >= onset_density * onset_subdivision` in a certain voice, then the notes of that voice will be evenly spaced and `cont_rhythms` will have no real effect.^[In general, you probably won't want this to occur: if you've set `cont_rhythms` to a value other than `'none'`, you probably want it to have an effect. But as a special effect, one can have the notes evenly spaced in one voice, while `cont_rhythms` is allowed to wreak havoc in the other voices.]
+
+```
+"onset_density": 0.5,
+"onset_subdivision": 0.25,
+"min_dur": 0.45,
+```
+
+
+EXAMPLE:cont_rhythm_example5
+
+On the other hand, the more we *decrease* `min_dur`, the less evenly spaced the notes are constrained to be, and the more they may happen to cluster together randomly. To illustrate, in REF:cont_rhythm_example6, I've reduced `min_dur` from `0.1`, its value in the preceding examples, to `0.01`.
+
+EXAMPLE:cont_rhythm_example6
+
+So far, all the examples have used rhythmic unison. If we set `rhythmic_unison = False`, then each voice will have its own rhythm, as in REF:cont_rhythm_example7, which has the same settings as REF:cont_rhythm_example2, except for `rhythmic_unison`. As you can hear, the effect becomes quite chaotic. 
+
+EXAMPLE:cont_rhythm_example7
+
+This chaos emerges because, even though most music features different voices each with their own rhythm, we nevertheless expect the different rhythms to relate to a common metric structure. Here, there is no such common structure---the notes of the various voices seem to occur as random, because they do!
+
+We can reconcile continuous rhythms with a shared metric structure among the different voices by setting `cont_rhythms = 'grid'`. With this setting, the script begins by constructing a continuous metric structure or "grid", and then creating the rhythms of the various parts by selecting onsets from this grid. You can hear the effect in REF:cont_rhythm_example8.
+
+EXAMPLE:cont_rhythm_example8
+
+If `cont_rhythms = 'grid'`, you can also use other rhythmic settings, such as `hocketing`, as in REF:cont_rhythm_example9.
+
+EXAMPLE:cont_rhythm_example9
+
+
+<!-- When using continuous rhythms, it is possible to cause the rhythm to vary on each repetition by setting `vary_rhythm_consistently = True` and `num_cont_rhythm_vars` to a value greater than 1. -->
 
 
 

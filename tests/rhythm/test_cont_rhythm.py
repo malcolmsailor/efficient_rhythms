@@ -61,7 +61,7 @@ def _get_cont_rhythm(
 
 
 def _get_grid(*args, **kwargs):
-    return _get_cont_rhythm(*args, cls=er_rhythm.grid.Grid2, **kwargs)
+    return _get_cont_rhythm(*args, cls=er_rhythm.grid.Grid, **kwargs)
 
 
 def _get_er(settingsdict):
@@ -70,7 +70,7 @@ def _get_er(settingsdict):
 
 def _get_grid_from_er(settingsdict):
     er = _get_er(settingsdict)
-    gd = er.grid = er_rhythm.grid.Grid2.from_er_settings(er)
+    gd = er.grid = er_rhythm.grid.Grid.from_er_settings(er)
     return er, gd
 
 
@@ -311,10 +311,6 @@ def test_grid(set_seed):
                     er.overlap,
                     error_tolerance=0.5,
                 )
-
-    # er = _get_er({"cont_rhythms": "grid"})
-    # gd = er_rhythm.grid.Grid2.from_er_settings(er)
-    # gd.generate()
 
 
 def test_get_onsets_from_grid(set_seed):

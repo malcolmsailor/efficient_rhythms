@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 
 from .. import er_globals
@@ -9,9 +11,12 @@ from .rhythm import RhythmBase
 #   this value sometimes when adding deltas, before renormalizing
 INT_MAX = np.int64(2 ** 62 - 1)
 
+# These values seem to work ok but I'm not sure they couldn't be improved upon:
+# DUR_INT_MAX = np.int64(2 ** 16 - 1)
+DUR_TRANCHE_SIZE = INT_MAX // 2 ** 9
+
 
 class ContRhythmBase2(RhythmBase):
-    # TODO improve __repr__, merge with function in parent class?
     def __repr__(self):
         return (
             f"{self.__class__.__name__}(rhythm_len={self.rhythm_len}, "
@@ -31,7 +36,6 @@ class ContRhythmBase2(RhythmBase):
         dtype=np.float64,
     ):
         super().__init__()
-        # TODO possibly remove these casts after including type checking?
         self.rhythm_len = dtype(rhythm_len)
         self.min_dur = dtype(min_dur)
         self.num_notes = num_notes
@@ -39,11 +43,9 @@ class ContRhythmBase2(RhythmBase):
         self.increment = min(increment, rhythm_len)
         self.overlap = overlap
         self.var_palindrome = var_palindrome
-        # TODO raise an error if overfull
         self.full = self.rhythm_len <= self.min_dur * self.num_notes
 
         if self.full or increment == 0:
-            # TODO warn?
             self.num_vars = 1
         else:
             self.num_vars = num_vars
@@ -60,6 +62,7 @@ class ContRhythmBase2(RhythmBase):
         self._onsets_2d = np.empty(
             (self.num_vars, self.num_notes), dtype=self.dtype
         )
+        self._durs_2d = np.empty_like(self._onsets_2d)
         self._deltas = self._unspaced = None
         self._iois = np.empty_like(self._onsets_2d)
 
@@ -79,7 +82,7 @@ class ContRhythmBase2(RhythmBase):
         )
 
     def _update_onset_deltas(self):
-        #     # TODO maybe try the effect of a normal distribution as well?
+        # maybe try the effect of a normal distribution as well?
         deltas = (
             er_globals.RNG.random(size=self.num_notes, dtype=self.dtype) - 1
         )
@@ -119,8 +122,8 @@ class ContRhythmBase2(RhythmBase):
             )
         # The following lines are a bit of a hack. We don't constrain the final
         # onset from growing larger, so it can get too close to the first onset
-        # (on looping around). To avoid this, we divide all the onsets as
-        # follows.
+        # (on looping around). To avoid this, when necessary, we divide all
+        # the onsets as follows.
         if self._unspaced[-1] > self._rand_int_u_bound:
             self._unspaced = (
                 self._unspaced * (self._rand_int_u_bound / self._unspaced[-1])
@@ -158,15 +161,11 @@ class ContRhythmBase2(RhythmBase):
         spaced = self._space_ints(self._unspaced)
         self._onsets_2d[0] = self._ints_to_onsets(spaced)
 
-    def add_onsets_and_durs(self, onsets, durs):
+    def set_onsets_and_durs(self, onsets, durs):
         # expects 2d onsets and 2d durs, reshapes them
-        # onsets = onsets.reshape(-1) + np.repeat(
-        #     np.arange(onsets.shape[0]) * self.rhythm_len, onsets.shape[1]
-        # )
         onsets = onsets.reshape(-1)
-        # TODO what if durs is None, as in grid?
         durs = durs.reshape(-1)
-        super().add_onsets_and_durs(onsets, durs)
+        super().set_onsets_and_durs(onsets, durs)
 
     def generate(self):
         # _init_contents() and _fill_contents() are to be provided by child
@@ -192,13 +191,7 @@ class ContRhythmBase2(RhythmBase):
         self._onsets_2d = (self._onsets_2d + onset_offsets).round(8)
         self._durs_2d = self._durs_2d.round(8)
 
-        self.add_onsets_and_durs(self._onsets_2d, self._durs_2d)
-
-    # def _init_contents(self):
-    #     self._init_onsets()
-
-    # def _fill_contents(self, i):
-    #     self._vary_onsets_unif(i)
+        self.set_onsets_and_durs(self._onsets_2d, self._durs_2d)
 
     def _get_palindromic_index(self, i):
         """Maps index i to its "palindromic" index j.
@@ -243,13 +236,12 @@ class ContRhythm(ContRhythmBase2):
         super().__init__(*args, **kwargs)
         self.dur_density = dur_density
         self._min_density = self.min_dur / self.rhythm_len * self.num_notes
-        if self.dur_density - self._min_density == 0:
+        if self._min_density == 1 or self.dur_density - self._min_density == 0:
             self._free_dur_density = 0
         else:
             self._free_dur_density = (self.dur_density - self._min_density) / (
                 1 - self._min_density
             )
-        self._durs_2d = np.empty_like(self._onsets_2d)
 
     def _init_contents(self):
         self._init_onsets()
@@ -320,11 +312,6 @@ class ContRhythm(ContRhythmBase2):
         current_durs += self._fill_durs_from_iois(rois, missing_density)
         assert np.all(current_durs - self._iois[i] < 1e-10)
 
-    # TODO choose a sensible value for this
-    DUR_INT_MAX = np.int64(2 ** 16 - 1)
-    # TODO choose good value
-    DUR_TRANCHE_SIZE = INT_MAX // 2 ** 9
-
     def _init_durs(self):
         if self.dur_density == 1:
             self._durs_2d[0] = self._iois[0]
@@ -355,7 +342,7 @@ class ContRhythm(ContRhythmBase2):
         )
         # we divide the size of int_iois into "tranches" of approximately
         #  equal size
-        tranche_counts = np.rint(int_iois / self.DUR_TRANCHE_SIZE)
+        tranche_counts = np.rint(int_iois / DUR_TRANCHE_SIZE)
         n_tranches = int(tranche_counts.sum())
         x = er_globals.RNG.random(n_tranches)
         # the next line is an attempt to enforce a maximum distance ( we
@@ -386,11 +373,17 @@ class ContRhythm(ContRhythmBase2):
         y = np.empty(n_tranches)
         y[0] = x[0]
         y[1:] = np.diff(x)
-        # TODO I think the mean of y asymptotically approaches 0.5; maybe think
-        # more about this?
+        # the mean of y asymptotically approaches 0.5 rather than ever actually
+        # getting there; maybe there is a better solution
         er_globals.RNG.shuffle(y)
 
-        tranche_starts = np.empty(int(self.rhythm_len), dtype=np.int64)
+        # Previously, I was taking the size of tranche_starts
+        # from self.rhythm_len as follows:
+        # tranche_starts = np.empty(int(self.rhythm_len), dtype=np.int64)
+        # Presumably that was just an oversight but I don't see why it wasn't
+        # causing more test failures.
+
+        tranche_starts = np.empty_like(int_iois, dtype=np.int64)
         tranche_starts[0] = 0
         tranche_starts[1:] = np.cumsum(tranche_counts[:-1])
         # In spite of its name, int_durs is not an int type. Its name comes
@@ -398,7 +391,7 @@ class ContRhythm(ContRhythmBase2):
 
         # it is possible for the last tranche or even several tranches to
         # have 0 items, if the corresponding value in int_iois is <
-        # self.DUR_TRANCHE_SIZE. If the call to rint rounds some other
+        # DUR_TRANCHE_SIZE. If the call to rint rounds some other
         # tranches *up*, it is even possible for the last items in
         # tranche_starts to be > len(y). In that case, we need this special
         # case code.
@@ -408,13 +401,11 @@ class ContRhythm(ContRhythmBase2):
                 j -= 1
             int_durs = np.empty(len(int_iois))
             int_durs[:-j] = (
-                np.add.reduceat(y, tranche_starts[:-j]) * self.DUR_TRANCHE_SIZE
+                np.add.reduceat(y, tranche_starts[:-j]) * DUR_TRANCHE_SIZE
             )
             int_durs[-j:] = 0
         else:
-            int_durs = (
-                np.add.reduceat(y, tranche_starts) * self.DUR_TRANCHE_SIZE
-            )
+            int_durs = np.add.reduceat(y, tranche_starts) * DUR_TRANCHE_SIZE
         float_durs = int_durs / (INT_MAX / available_iois.max())
         # It seems that it is possible for float_durs to be > available_iois.
         # Due to rounding error, I imagine? I guess this is worth investigating
@@ -438,3 +429,59 @@ class ContRhythm(ContRhythmBase2):
             er.vary_rhythm_consistently,
             er.cont_var_palindrome,
         )
+
+    @staticmethod
+    def validate_er_settings(er, silent=False):
+        def warn_(text):
+            if not silent:
+                warnings.warn(text)
+
+        def _homogenize_list(l, take):
+            if take == "smallest":
+                min_ = min(l)
+                return [min_ for _ in l]
+            return [l[0] for _ in l]
+
+        def _enforce_unique_value(attr, take="first"):
+            if len(set(getattr(er, attr))) > 1:
+                warn_(
+                    "`cont_rhythms = 'all'` is only implemented with a unique "
+                    f"value for `{attr}`; ignoring all but the {take} value of "
+                    f"`{attr}`"
+                )
+            setattr(er, attr, _homogenize_list(getattr(er, attr), take))
+
+        _enforce_unique_value("pattern_len")
+        _enforce_unique_value("rhythm_len")
+
+        # TODO can I remove this constraint?
+        if er.pattern_len[0] != er.rhythm_len[0]:
+            warn_(
+                "`cont_rhythms = 'all'` is only implemented when "
+                "`pattern_len` "
+                "and `rhythm_len` have the same value (or when `rhythm_len` is "
+                "omitted). Ignoring `rhythm_len`."
+            )
+        er.rhythm_len = er.pattern_len
+
+        for i in range(er.num_voices):
+            density = er.onset_density[i]
+            min_dur = er.min_dur[i]
+            onset_sub = er.onset_subdivision[i]
+
+            if density * min_dur > onset_sub:
+                warn_(
+                    f"In voice {i}, `onset_density * min_dur` is greater than "
+                    "`onset_subdivision`; "
+                    "reducing `min_dur` to `onset_subdivision / "
+                    f"onset_density = {onset_sub / density}` in this voice."
+                )
+                er.min_dur[i] = onset_sub / density
+            if density * min_dur == onset_sub:
+                warn_(
+                    f"`cont_rhythms = 'all'` will have no effect in voice {i} "
+                    "because `min_dur * onset_density == onset_subdivision` in "
+                    "this voice. To allow "
+                    "`cont_rhythms = 'all'` to have an effect in this voice, "
+                    "reduce `min_dur` "
+                )

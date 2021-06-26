@@ -139,7 +139,8 @@ def test_update_pattern_vl_order():
                 "truncate_patterns": truncate,
             }
             er = er_preprocess.preprocess_settings(settingsdict, silent=True)
-            er.rhythms = er_rhythm.rhythms_handler(er)
+            er_rhythm.init_rhythms(er)
+            er_rhythm.rhythms_handler(er)
             voice_is = {}
             for item in er.pattern_vl_order:
                 voice_i = item.voice_i

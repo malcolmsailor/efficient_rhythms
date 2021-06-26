@@ -373,11 +373,13 @@ def get_pitches_to_check_for_crossings(super_pattern, onset, dur, voice_i):
     pitches_above = super_pattern.get_all_ps_sounding_in_dur(
         onset, dur, voices=voices_above
     )
+    above = min(pitches_above) if pitches_above else None
     voices_below = [i for i in range(super_pattern.num_voices) if i < voice_i]
     pitches_below = super_pattern.get_all_ps_sounding_in_dur(
         onset, dur, voices=voices_below
     )
-    return max(pitches_below), min(pitches_above)
+    below = max(pitches_below) if pitches_below else None
+    return below, above
 
 
 def _get_available_pcs(er, super_pattern, poss_note, include_if_possible=None):
@@ -428,9 +430,9 @@ def get_boundary_pitches(er, super_pattern, poss_note):
             poss_note.dur,
             poss_note.voice_i,
         )
-        if highest_pitch_below > min_pitch:
+        if highest_pitch_below is not None and highest_pitch_below > min_pitch:
             min_pitch = highest_pitch_below
-        if lowest_pitch_above < max_pitch:
+        if lowest_pitch_above is not None and lowest_pitch_above < max_pitch:
             max_pitch = lowest_pitch_above
     return min_pitch, max_pitch
 
@@ -897,12 +899,13 @@ def make_initial_pattern(er, available_pitch_error):
     """Makes the basic pattern."""
 
     er.build_status_printer.reset_ip_attempt_count()
+    er_rhythm.init_rhythms(er)
     for rep in itertools.count(start=1):
         for _ in range(er.initial_pattern_attempts):
             available_pitch_error.reset_inner_counts()
             er.build_status_printer.increment_ip_attempt()
             available_pitch_error.status()
-            er.rhythms = er_rhythm.rhythms_handler(er)
+            er_rhythm.rhythms_handler(er)
             er.initial_pattern_order = er_rhythm.get_onset_order(er)
             super_pattern = er_classes.Score(
                 num_voices=er.num_voices,

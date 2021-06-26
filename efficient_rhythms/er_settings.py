@@ -1078,6 +1078,11 @@ class ERSettings:
             voice 1 to be constructed in hocket with voice 0 (as before), but
             voice 2 to be constructed in hocket with voice 1 *but not* with
             voice 0.
+
+            `rhythmic_unison` takes precedence over `hocketing`; if the value
+            of `rhythmic_unison` implies that a pair of voices should be in
+            rhythmic unison, they will not be hocketed.
+
             Default: False
         cont_rhythms: string. Specifies whether and how to use "continuous"
             rhythms. Usually, rhythms in music are understood in a discrete
@@ -1541,6 +1546,7 @@ class ERSettings:
             "priority": 1,
         },
     )
+    # TODO I don't think the docs are accurate concerning behavior when None
     num_harmonies: typing.Union[int, None] = fld(
         default=None,
         metadata={
@@ -2425,7 +2431,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "rhythm",
-            "priority": 0,
+            "priority": 2,
             "possible_values": ("none", "all", "grid"),
         },
     )
@@ -2435,7 +2441,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "rhythm",
-            "priority": 0,
+            "priority": 3,
             "val_dict": {"min_": (1,)},
         },
     )
@@ -2444,15 +2450,15 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "rhythm",
-            "priority": 0,
+            "priority": 3,
         },
     )
     cont_var_increment: numbers.Number = fld(
-        default=0.1,
+        default=1.0,
         metadata={
             "mutable_attrs": {},
             "category": "rhythm",
-            "priority": 0,
+            "priority": 3,
         },
     )
     cont_var_palindrome: bool = fld(
@@ -2460,7 +2466,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "rhythm",
-            "priority": 0,
+            "priority": 3,
         },
     )
     super_pattern_reps_cont_var: bool = fld(
@@ -2468,7 +2474,7 @@ class ERSettings:
         metadata={
             "mutable_attrs": {},
             "category": "rhythm",
-            "priority": 0,
+            "priority": 4,
         },
     )
     rhythms_specified_in_midi: str = fld(

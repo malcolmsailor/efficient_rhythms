@@ -1,43 +1,19 @@
 import random
+import warnings
 
 import numpy as np
 
-from .. import er_misc_funcs
-
 from . import utils
 from .cont_rhythm import ContRhythm
-from .deprecated import ContinuousRhythm, ContRhythmBase  # TODO remove
 
 
-class Grid2(ContRhythm):
-    # def __init__(
-    #     self,
-    #     rhythm_len,
-    #     min_dur,
-    #     num_onset_positions,
-    #     increment,
-    #     overlap,
-    #     num_vars,
-    #     vary_consistently=False,
-    #     dtype=np.float64,
-    # ):
-
-    #     super().__init__(
-    #         rhythm_len,
-    #         min_dur,
-    #         num_onset_positions,
-    #         increment,
-    #         overlap,
-    #         num_vars,
-    #         vary_consistently,
-    #         dtype,
-    #     )
+class Grid(ContRhythm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._releases = None
 
-    def add_onsets_and_durs(self, onsets, durs):
-        super().add_onsets_and_durs(onsets, durs)
+    def set_onsets_and_durs(self, onsets, durs):
+        super().set_onsets_and_durs(onsets, durs)
         # We construct _releases_2d from _releases (and not the other way
         # around) because _onsets has been adjusted to be monotonically
         # increasing whereas each row of _onsets_2d always starts at 0. (See
@@ -50,16 +26,6 @@ class Grid2(ContRhythm):
     @property
     def releases(self):
         return self._releases
-
-    def _init_contents(self):
-        super()._init_contents()
-        # self._releases_2d[0] = (self._onsets_2d[0] + self._durs_2d[0]).round(
-        #     decimals=8
-        # )
-
-    def _fill_contents(self, i):
-        super()._fill_contents(i)
-        # self._releases_2d[i] = self._onsets_2d[i] + self._durs_2d[i]
 
     def onset_indices(self, onsets):
         onset_indices = np.nonzero(np.isin(self._onsets_2d[0], onsets))[0]
@@ -192,20 +158,13 @@ class Grid2(ContRhythm):
 
     @classmethod
     def from_er_settings(cls, er):
-        def _num_onset_positions():
-            out = max(
-                [r / s for (r, s) in zip(er.rhythm_len, er.onset_subdivision)]
-            )
-            return int(round(out))
-
-        # TODO warnings in preprocessing
         return cls(
             er.dur_density[
                 0
             ],  # TODO how do we deal with voices of different dur_density?
             er.rhythm_len[0],
             er.min_dur[0],
-            _num_onset_positions(),
+            cls._num_onset_positions(er.rhythm_len[0], er.onset_subdivision),
             er.cont_var_increment[0],
             er.overlap,
             er.num_cont_rhythm_vars[0],
@@ -213,146 +172,63 @@ class Grid2(ContRhythm):
             er.cont_var_palindrome,
         )
 
+    # _num_onset_positions() is a static method because we want to be able to
+    # call it before any instance is initialized
+    @staticmethod
+    def _num_onset_positions(rhythm_len, onset_subdivisions):
+        out = rhythm_len / min(onset_subdivisions)
+        return int(round(out))
 
-class Grid(ContRhythmBase):
-    def __init__(self, er):
-        super().__init__()
-        # For now, this only works if all rhythm lengths are the same.
-        # MAYBE handle non-identical rhythm lengths.
-        class GridError(Exception):
-            pass
+    @staticmethod
+    def validate_er_settings(er, silent=False):
+        def warn_(text):
+            if not silent:
+                warnings.warn(text)
 
-        if len(set(er.rhythm_len)) > 1:
-            raise GridError(
-                "Generate grid only works if all rhythm lengths are the same."
-            )
-        self.rhythm_len = er.rhythm_len[0]
+        def _homogenize_list(l, take):
+            if take == "smallest":
+                min_ = min(l)
+                return [min_ for _ in l]
+            return [l[0] for _ in l]
 
-        if (
-            len(set(er.pattern_len)) > 1
-            or er.pattern_len[0] != er.rhythm_len[0]
-        ):
-            raise GridError(
-                "Generate grid only works if rhythm and pattern lengths are same."
-            )
-
-        if len(set(er.num_cont_rhythm_vars)) > 1:
-            raise GridError(
-                "Generate grid only works if 'num_cont_rhythm_vars' has a single value."
-            )
-        self.num_cont_rhythm_vars = er.num_cont_rhythm_vars[0]
-
-        if len(set(er.vary_rhythm_consistently)) > 1:
-            raise GridError(
-                "Generate grid only works if 'vary_rhythm_consistently' "
-                "has a single value."
-            )
-        self.vary_rhythm_consistently = er.vary_rhythm_consistently[0]
-
-        if len(set(er.cont_var_increment)) > 1:
-            raise GridError(
-                "Generate grid only works if 'cont_var_increment' "
-                "has a single value."
-            )
-        self.increment = er.cont_var_increment[0]
-
-        self.min_dur = min(er.min_dur)
-        if len(set(er.min_dur)) > 1:
-            print(
-                "Notice: more than one value for 'min_dur', using minimum ("
-                f"{self.min_dur})"
-            )
-
-        # Below we take the "num_div" as done in subfunction _num_notes() in
-        #   er_preprocess.py. It would also be possible to use num_notes instead,
-        #   with a somewhat different result.
-        num_divs = [
-            int(er.rhythm_len[voice_i] / er.onset_subdivision[voice_i])
-            for voice_i in range(er.num_voices)
-        ]
-        # Although "num_notes" is perhaps not the best name for the next
-        #   attribute, it allows us to re-use functions that work with Rhythm
-        #   objects.
-        self.num_notes = max(num_divs)
-
-        if self.rhythm_len < self.min_dur * self.num_notes:
-            new_min_dur = er_misc_funcs.convert_to_fractions(
-                self.rhythm_len / self.num_notes
-            )
-            print(
-                "Notice: grid min_dur too long; "
-                f"reducing from {self.min_dur} to {new_min_dur}."
-            )
-            self.min_dur = new_min_dur
-        if self.rhythm_len == self.min_dur * self.num_notes:
-            print(
-                "Notice: 'cont_rhythms' will have no effect because "
-                "'min_dur' is the maximum value compatible with "
-                "'rhythm_len' and 'onset_subdivision'. "
-                "To allow 'cont_rhythms' to have an effect, reduce 'min_dur' "
-                f"to less than {self.min_dur}"
-            )
-            self.full = True
-        else:
-            self.full = False
-
-        self.rel_onsets = np.zeros((self.num_cont_rhythm_vars, self.num_notes))
-        self.deltas = None
-        self.get_continuous_onsets()
-        self.vary_continuous_onsets(apply_to_durs=False)
-        self.round()
-        self.rel_onsets_to_rhythm(first_var_only=True)
-        self.cum_onsets = self.rel_onsets.cumsum(axis=1) - self.rel_onsets
-        # self.dur_deltas is the difference between the rel_onset time
-        # of each grid position on each variation. (The first row is
-        # the difference between the last variation and the first.)
-        # It would have been better to do this directly when creating
-        # the variations, and not have the somewhat useless .deltas
-        # attribute above.
-        # LONGTERM revise?
-        self.dur_deltas = np.zeros((self.num_cont_rhythm_vars, self.num_notes))
-        for var_i in range(self.num_cont_rhythm_vars):
-            self.dur_deltas[var_i] = (
-                self.rel_onsets[var_i]
-                - self.rel_onsets[(var_i - 1) % self.num_cont_rhythm_vars]
-            )
-
-    def return_varied_rhythm(self, er, onsets, durs, voice_i):
-        def _get_grid_indices():
-            indices = []
-            for time_i, time in enumerate(self):
-                if time in onsets:
-                    indices.append(time_i)
-            return indices
-
-        rhythm_num_notes = len(onsets)
-        if rhythm_num_notes == 0:
-            print(f"Notice: voice {voice_i} is empty.")
-            return ContinuousRhythm(er, voice_i)
-        indices = _get_grid_indices()
-        var_onsets = np.zeros((self.num_cont_rhythm_vars, rhythm_num_notes))
-        rel_onsets = np.zeros((self.num_cont_rhythm_vars, rhythm_num_notes))
-        # var_onsets[0] = list(onsets.keys())
-        var_durs = np.zeros((self.num_cont_rhythm_vars, rhythm_num_notes))
-        # var_durs[0] = list(onsets.values())
-        var_durs[0] = list(durs)
-        for var_i in range(self.num_cont_rhythm_vars):
-            var_onsets[var_i] = self.cum_onsets[var_i, indices]
-            rel_onsets[var_i, : rhythm_num_notes - 1] = np.diff(
-                var_onsets[var_i]
-            )
-            rel_onsets[var_i, rhythm_num_notes - 1] = (
-                self.rhythm_len - var_onsets[var_i, rhythm_num_notes - 1]
-            )
-            if var_i != 0:
-                var_durs[var_i] = (
-                    var_durs[var_i - 1] + self.dur_deltas[var_i, indices]
+        def _enforce_unique_value(attr, take="first"):
+            if len(set(getattr(er, attr))) > 1:
+                warn_(
+                    "`cont_rhythms = 'grid'` is only implemented with a unique "
+                    f"value for `{attr}`; ignoring all but the {take} value of "
+                    f"`{attr}`"
                 )
+            setattr(er, attr, _homogenize_list(getattr(er, attr), take))
 
-        rhythm = ContinuousRhythm(er, voice_i)
-        rhythm.rel_onsets = rel_onsets
-        rhythm.durs = var_durs
-        rhythm.truncate_or_extend()
-        rhythm.round()
-        rhythm.rel_onsets_to_rhythm()
-        return rhythm
+        _enforce_unique_value("pattern_len")
+        _enforce_unique_value("rhythm_len")
+
+        if er.pattern_len[0] != er.rhythm_len[0]:
+            warn_(
+                "`cont_rhythms = 'grid'` is only implemented when "
+                "`pattern_len` "
+                "and `rhythm_len` have the same value (or when `rhythm_len` is "
+                "omitted). Ignoring `rhythm_len`."
+            )
+        er.rhythm_len = er.pattern_len
+
+        _enforce_unique_value("num_cont_rhythm_vars")
+        _enforce_unique_value("vary_rhythm_consistently")
+        _enforce_unique_value("cont_var_increment")
+        _enforce_unique_value("min_dur", "smallest")
+
+        min_sub = min(er.onset_subdivision)
+        if er.min_dur[0] > min_sub:
+            warn_(
+                "`min_dur` is greater than smallest `onset_subdivision`; "
+                f"reducing `min_dur` to `{min_sub}`."
+            )
+            er.min_dur = [min_sub for _ in er.min_dur]
+
+        if er.min_dur[0] == min_sub:
+            warn_(
+                "`cont_rhythms = 'grid'` will have no effect because "
+                "`min_dur == min(onset_subdivision)`. To allow "
+                "`cont_rhythms = 'grid'` to have an effect, reduce `min_dur` "
+                "to less than the smallest value in `onset_subdivision`"
+            )

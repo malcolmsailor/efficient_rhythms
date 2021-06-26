@@ -37,8 +37,9 @@ examples: `"PERFECT_4TH"`, `"C# * OCTAVE4"`, `"F * PHRYGIAN"`, etc.
 
 Otherwise, pitch materials can be specified either as integers, or as
 other numeric types (e.g., floats). **If you don’t care about tuning or
-temperament, just specify all intervals and pitches as integers** (e.g.,
-one semitone = `1`, “middle C” = `60`). Otherwise, read on:
+temperament, you can just specify all intervals and pitches as
+integers** (e.g., one semitone = `1`, “middle C” = `60`). If you *do*
+care about tuning and temperament, read on:
 
   - integers specify equal-tempered intervals. For example, in 12-tet
     (the usual temperament employed in Western music), an interval of
@@ -1237,7 +1238,9 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
     sequence](#note-on-per-voice-sequences-and-other-looping-sequences)
     of numbers. Indicates the minimum duration of a note. If not passed,
     or if `None` will be assigned the corresponding value of
-    <a href="#onset_subdivision">`onset_subdivision`</a>.
+    <a href="#onset_subdivision">`onset_subdivision`</a>. \# TODO for
+    continuous rhythms, should we allow setting something like \# “min
+    ioi” separately?
 
   - <span id="obligatory_onsets">**`obligatory_onsets`**</span>: an
     optional sequence of numbers, or a [per-voice
@@ -1390,6 +1393,11 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
     1 to be constructed in hocket with voice 0 (as before), but voice 2
     to be constructed in hocket with voice 1 *but not* with voice 0.
     
+    <a href="#rhythmic_unison">`rhythmic_unison`</a> takes precedence
+    over <a href="#hocketing">`hocketing`</a>; if the value of
+    <a href="#rhythmic_unison">`rhythmic_unison`</a> implies that a pair
+    of voices should be in rhythmic unison, they will not be hocketed.
+    
     *Default*: `False`
 
   - <span id="cont_rhythms">**`cont_rhythms`**</span>: string. Specifies
@@ -1443,9 +1451,18 @@ All rhythm settings use <a href="#rhythm_len">`rhythm_len`</a> above.
   - <span id="cont_var_increment">**`cont_var_increment`**</span>:
     number. If `num_cont_rhythm_vars != 1`, determines how much rhythmic
     perturbation is applied to each variation. Larger values lead to
-    larger perturbations.
+    larger perturbations. \# TODO document this further: what exactly
+    does this number \# represent? \# TODO why can’t this be per-voice?
     
     *Default*: `0.1`
+
+  - <span id="cont_var_palindrome">**`cont_var_palindrome`**</span>:
+    bool. If True, then any variations of the rhythm implied by
+    <a href="#num_cont_rhythm_vars">`num_cont_rhythm_vars`</a> will be
+    arranged in a ‘palindromic’ manner so that they smoothly change away
+    from and then back to their initial version.
+    
+    *Default*: `True`
 
   - <span id="super_pattern_reps_cont_var">**`super_pattern_reps_cont_var`**</span>:
     bool. If True, any variations of the rhythm implied by
