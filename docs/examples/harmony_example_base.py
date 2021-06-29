@@ -3,6 +3,7 @@
     #   pygame in Ubuntu (and possibly with other Linux distributions),
     #   so those voices do not play back
     "choirs": ("PIANO", "VIBRAPHONE", "ELECTRIC_PIANO"),
+    "num_reps_super_pattern": 4,
     "seed": 2,
     "pattern_len": 4,
     "consonance_treatment": "none",

@@ -621,7 +621,7 @@ irrespective of
     
     *Default*: `True`
 
-  - <span id="chord_tone_prob_func">**`chord_tone_prob_func`**</span>:
+  - <span id="chord_tone_prob_curve">**`chord_tone_prob_curve`**</span>:
     string. If
     <a href="#chord_tone_selection">`chord_tone_selection`</a> is True,
     then the probability of the next note being a nonchord tone falls
@@ -636,7 +636,7 @@ irrespective of
   - <span id="max_n_between_chord_tones">**`max_n_between_chord_tones`**</span>:
     int. Controls after how many non-chord tones the probability of the
     following note being a chord tone rises to 1. For example, if
-    <a href="#chord_tone_prob_func">`chord_tone_prob_func`</a> is
+    <a href="#chord_tone_prob_curve">`chord_tone_prob_curve`</a> is
     `"linear"`, <a href="#min_prob_chord_tone">`min_prob_chord_tone`</a>
     is 0.5, and
     <a href="#max_n_between_chord_tones">`max_n_between_chord_tones`</a>

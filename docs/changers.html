@@ -1,0 +1,3136 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>changers</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <link rel="stylesheet" href="resources/third_party/github-markdown-css/github-markdown.css" />
+  <link rel="stylesheet" href="resources/css/markdown-body.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body class="markdown-body">
+<nav id="TOC" role="doc-toc">
+<ul class="incremental">
+<li><a href="#filters">Filters</a><ul class="incremental">
+<li><a href="#pitchfilter">PitchFilter</a></li>
+<li><a href="#rangefilter">RangeFilter</a></li>
+<li><a href="#oscillatingrangefilter">OscillatingRangeFilter</a></li>
+<li><a href="#oddpitchfilter">OddPitchFilter</a></li>
+<li><a href="#evenpitchfilter">EvenPitchFilter</a></li>
+<li><a href="#filterselectedpcs">FilterSelectedPCs</a></li>
+<li><a href="#filterunselectedpcs">FilterUnselectedPCs</a></li>
+</ul></li>
+<li><a href="#transformers">Transformers</a><ul class="incremental">
+<li><a href="#forcepitchtransformer">ForcePitchTransformer</a></li>
+<li><a href="#forcepitchclassestransformer">ForcePitchClassesTransformer</a></li>
+<li><a href="#velocitytransformer">VelocityTransformer</a></li>
+<li><a href="#changedurationstransformer">ChangeDurationsTransformer</a></li>
+<li><a href="#randomoctavetransformer">RandomOctaveTransformer</a></li>
+<li><a href="#transposetransformer">TransposeTransformer</a></li>
+<li><a href="#channeltransformer">ChannelTransformer</a></li>
+<li><a href="#channelexchangertransformer">ChannelExchangerTransformer</a></li>
+<li><a href="#trackexchangertransformer">TrackExchangerTransformer</a></li>
+<li><a href="#inverttransformer">InvertTransformer</a></li>
+<li><a href="#trackrandomizertransformer">TrackRandomizerTransformer</a></li>
+<li><a href="#trackdoublertransformer">TrackDoublerTransformer</a></li>
+<li><a href="#subdividetransformer">SubdivideTransformer</a></li>
+</ul></li>
+<li><a href="#probability-curves">Probability curves</a><ul class="incremental">
+<li><a href="#alwayson">AlwaysOn</a></li>
+<li><a href="#static">Static</a></li>
+<li><a href="#linear">Linear</a></li>
+<li><a href="#quadratic">Quadratic</a></li>
+<li><a href="#linearosc">LinearOsc</a></li>
+<li><a href="#saw">Saw</a></li>
+<li><a href="#sine">Sine</a></li>
+<li><a href="#accumulating">Accumulating</a></li>
+<li><a href="#randomtoggle">RandomToggle</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="filters">Filters</h1>
+<h2 id="pitchfilter">PitchFilter</h2>
+<p>Pitch filter. Pitch filter removes notes of any pitch.</p>
+<h3 id="prob_curve">prob_curve</h3>
+<ul class="incremental">
+<li>Description: Probability curve.</li>
+<li>Default: Static</li>
+<li>Type: str</li>
+<li>Possible values: ‘AlwaysOn’, ‘Static’, ‘Linear’, ‘Quadratic’, ‘LinearOsc’, ‘Saw’, ‘Sine’, ‘Accumulating’, ‘RandomToggle’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="marked_by">marked_by</h3>
+<ul class="incremental">
+<li>Description: Only apply to notes marked by.</li>
+<li>Default:</li>
+<li>Type: str</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="start_time">start_time</h3>
+<ul class="incremental">
+<li>Description: Start time.</li>
+<li>Default: [0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="end_time">end_time</h3>
+<ul class="incremental">
+<li>Description: End time.</li>
+<li>Default: [0.0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="by_voice">by_voice</h3>
+<ul class="incremental">
+<li>Description: By voice.</li>
+<li>Default: True</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="voices">voices</h3>
+<ul class="incremental">
+<li>Description: Voices.</li>
+<li>Only has effect if by_voice == ‘true’</li>
+<li>Default: []</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exemptions">exemptions</h3>
+<ul class="incremental">
+<li>Description: Exemptions.</li>
+<li>Default: off</li>
+<li>Type: str</li>
+<li>Possible values: ‘off’, ‘metric’, ‘counting’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt">exempt</h3>
+<ul class="incremental">
+<li>Description: Exempt beats.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: ()</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_modulo">exempt_modulo</h3>
+<ul class="incremental">
+<li>Description: Exempt beats modulo.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 4</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt_n">exempt_n</h3>
+<ul class="incremental">
+<li>Description: Exempt num notes.</li>
+<li>Only has effect if exemptions == ‘counting’</li>
+<li>Default: [0]</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_comma">exempt_comma</h3>
+<ul class="incremental">
+<li>Description: Exempt comma.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 1/128</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="invert_exempt">invert_exempt</h3>
+<ul class="incremental">
+<li>Description: Invert exempt beats.</li>
+<li>Only has effect if exemptions in (‘metric’, ‘counting’)</li>
+<li>Default: False</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="adjust_dur">adjust_dur</h3>
+<ul class="incremental">
+<li>Description: Adjust durations.</li>
+<li>Default: None</li>
+<li>Type: str</li>
+<li>Possible values: ‘None’, ‘Extend_previous_notes’, ‘Subtract_duration’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="adjust_dur_comma">adjust_dur_comma</h3>
+<ul class="incremental">
+<li>Description: Adjust durations comma.</li>
+<li>Only has effect if adjust_dur == ‘Extend_previous_notes’</li>
+<li>Default: 0.25</li>
+<li>Type: float</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="subtract_dur_modulo">subtract_dur_modulo</h3>
+<ul class="incremental">
+<li>Description: Subtract durations within length.</li>
+<li>Only has effect if adjust_dur == ‘Subtract_duration’</li>
+<li>Default: 0</li>
+<li>Type: Fraction</li>
+<li>Min: 0.001</li>
+<li>Unique: yes</li>
+</ul>
+<h2 id="rangefilter">RangeFilter</h2>
+<p>Range filter. Range filter removes notes whose pitches lie outside the specified range(s).</p>
+<h3 id="prob_curve-1">prob_curve</h3>
+<ul class="incremental">
+<li>Description: Probability curve.</li>
+<li>Default: Static</li>
+<li>Type: str</li>
+<li>Possible values: ‘AlwaysOn’, ‘Static’, ‘Linear’, ‘Quadratic’, ‘LinearOsc’, ‘Saw’, ‘Sine’, ‘Accumulating’, ‘RandomToggle’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="marked_by-1">marked_by</h3>
+<ul class="incremental">
+<li>Description: Only apply to notes marked by.</li>
+<li>Default:</li>
+<li>Type: str</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="start_time-1">start_time</h3>
+<ul class="incremental">
+<li>Description: Start time.</li>
+<li>Default: [0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="end_time-1">end_time</h3>
+<ul class="incremental">
+<li>Description: End time.</li>
+<li>Default: [0.0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="by_voice-1">by_voice</h3>
+<ul class="incremental">
+<li>Description: By voice.</li>
+<li>Default: True</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="voices-1">voices</h3>
+<ul class="incremental">
+<li>Description: Voices.</li>
+<li>Only has effect if by_voice == ‘true’</li>
+<li>Default: []</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exemptions-1">exemptions</h3>
+<ul class="incremental">
+<li>Description: Exemptions.</li>
+<li>Default: off</li>
+<li>Type: str</li>
+<li>Possible values: ‘off’, ‘metric’, ‘counting’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt-1">exempt</h3>
+<ul class="incremental">
+<li>Description: Exempt beats.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: ()</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_modulo-1">exempt_modulo</h3>
+<ul class="incremental">
+<li>Description: Exempt beats modulo.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 4</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt_n-1">exempt_n</h3>
+<ul class="incremental">
+<li>Description: Exempt num notes.</li>
+<li>Only has effect if exemptions == ‘counting’</li>
+<li>Default: [0]</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_comma-1">exempt_comma</h3>
+<ul class="incremental">
+<li>Description: Exempt comma.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 1/128</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="invert_exempt-1">invert_exempt</h3>
+<ul class="incremental">
+<li>Description: Invert exempt beats.</li>
+<li>Only has effect if exemptions in (‘metric’, ‘counting’)</li>
+<li>Default: False</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="adjust_dur-1">adjust_dur</h3>
+<ul class="incremental">
+<li>Description: Adjust durations.</li>
+<li>Default: None</li>
+<li>Type: str</li>
+<li>Possible values: ‘None’, ‘Extend_previous_notes’, ‘Subtract_duration’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="adjust_dur_comma-1">adjust_dur_comma</h3>
+<ul class="incremental">
+<li>Description: Adjust durations comma.</li>
+<li>Only has effect if adjust_dur == ‘Extend_previous_notes’</li>
+<li>Default: 0.25</li>
+<li>Type: float</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="subtract_dur_modulo-1">subtract_dur_modulo</h3>
+<ul class="incremental">
+<li>Description: Subtract durations within length.</li>
+<li>Only has effect if adjust_dur == ‘Subtract_duration’</li>
+<li>Default: 0</li>
+<li>Type: Fraction</li>
+<li>Min: 0.001</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="filter_range">filter_range</h3>
+<ul class="incremental">
+<li>Description: Range(s) to pass through filter.</li>
+<li>Default: ((0, 127),)</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h2 id="oscillatingrangefilter">OscillatingRangeFilter</h2>
+<p>Oscillating range filter. Oscillating range filter removes notes whose pitches lie outside of a range whose bounds oscillate according to parameters that you control..</p>
+<h3 id="prob_curve-2">prob_curve</h3>
+<ul class="incremental">
+<li>Description: Probability curve.</li>
+<li>Default: Static</li>
+<li>Type: str</li>
+<li>Possible values: ‘AlwaysOn’, ‘Static’, ‘Linear’, ‘Quadratic’, ‘LinearOsc’, ‘Saw’, ‘Sine’, ‘Accumulating’, ‘RandomToggle’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="marked_by-2">marked_by</h3>
+<ul class="incremental">
+<li>Description: Only apply to notes marked by.</li>
+<li>Default:</li>
+<li>Type: str</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="start_time-2">start_time</h3>
+<ul class="incremental">
+<li>Description: Start time.</li>
+<li>Default: [0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="end_time-2">end_time</h3>
+<ul class="incremental">
+<li>Description: End time.</li>
+<li>Default: [0.0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="by_voice-2">by_voice</h3>
+<ul class="incremental">
+<li>Description: By voice.</li>
+<li>Default: True</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="voices-2">voices</h3>
+<ul class="incremental">
+<li>Description: Voices.</li>
+<li>Only has effect if by_voice == ‘true’</li>
+<li>Default: []</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exemptions-2">exemptions</h3>
+<ul class="incremental">
+<li>Description: Exemptions.</li>
+<li>Default: off</li>
+<li>Type: str</li>
+<li>Possible values: ‘off’, ‘metric’, ‘counting’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt-2">exempt</h3>
+<ul class="incremental">
+<li>Description: Exempt beats.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: ()</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_modulo-2">exempt_modulo</h3>
+<ul class="incremental">
+<li>Description: Exempt beats modulo.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 4</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt_n-2">exempt_n</h3>
+<ul class="incremental">
+<li>Description: Exempt num notes.</li>
+<li>Only has effect if exemptions == ‘counting’</li>
+<li>Default: [0]</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_comma-2">exempt_comma</h3>
+<ul class="incremental">
+<li>Description: Exempt comma.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 1/128</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="invert_exempt-2">invert_exempt</h3>
+<ul class="incremental">
+<li>Description: Invert exempt beats.</li>
+<li>Only has effect if exemptions in (‘metric’, ‘counting’)</li>
+<li>Default: False</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="adjust_dur-2">adjust_dur</h3>
+<ul class="incremental">
+<li>Description: Adjust durations.</li>
+<li>Default: None</li>
+<li>Type: str</li>
+<li>Possible values: ‘None’, ‘Extend_previous_notes’, ‘Subtract_duration’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="adjust_dur_comma-2">adjust_dur_comma</h3>
+<ul class="incremental">
+<li>Description: Adjust durations comma.</li>
+<li>Only has effect if adjust_dur == ‘Extend_previous_notes’</li>
+<li>Default: 0.25</li>
+<li>Type: float</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="subtract_dur_modulo-2">subtract_dur_modulo</h3>
+<ul class="incremental">
+<li>Description: Subtract durations within length.</li>
+<li>Only has effect if adjust_dur == ‘Subtract_duration’</li>
+<li>Default: 0</li>
+<li>Type: Fraction</li>
+<li>Min: 0.001</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="bottom_range">bottom_range</h3>
+<ul class="incremental">
+<li>Description: Range at bottom of oscillation.</li>
+<li>Default: (0, 127)</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="range_size">range_size</h3>
+<ul class="incremental">
+<li>Description: Size in pitches of oscillation.</li>
+<li>Default: 36</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="osc_period">osc_period</h3>
+<ul class="incremental">
+<li>Description: Oscillation period.</li>
+<li>Default: 8</li>
+<li>Type: int</li>
+<li>Min: 0.01</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="osc_offset">osc_offset</h3>
+<ul class="incremental">
+<li>Description: Oscillation period offset.</li>
+<li>Default: 0</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h2 id="oddpitchfilter">OddPitchFilter</h2>
+<p>Odd pitch filter. Odd pitch filter removes notes of odd pitch.</p>
+<h3 id="prob_curve-3">prob_curve</h3>
+<ul class="incremental">
+<li>Description: Probability curve.</li>
+<li>Default: Static</li>
+<li>Type: str</li>
+<li>Possible values: ‘AlwaysOn’, ‘Static’, ‘Linear’, ‘Quadratic’, ‘LinearOsc’, ‘Saw’, ‘Sine’, ‘Accumulating’, ‘RandomToggle’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="marked_by-3">marked_by</h3>
+<ul class="incremental">
+<li>Description: Only apply to notes marked by.</li>
+<li>Default:</li>
+<li>Type: str</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="start_time-3">start_time</h3>
+<ul class="incremental">
+<li>Description: Start time.</li>
+<li>Default: [0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="end_time-3">end_time</h3>
+<ul class="incremental">
+<li>Description: End time.</li>
+<li>Default: [0.0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="by_voice-3">by_voice</h3>
+<ul class="incremental">
+<li>Description: By voice.</li>
+<li>Default: True</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="voices-3">voices</h3>
+<ul class="incremental">
+<li>Description: Voices.</li>
+<li>Only has effect if by_voice == ‘true’</li>
+<li>Default: []</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exemptions-3">exemptions</h3>
+<ul class="incremental">
+<li>Description: Exemptions.</li>
+<li>Default: off</li>
+<li>Type: str</li>
+<li>Possible values: ‘off’, ‘metric’, ‘counting’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt-3">exempt</h3>
+<ul class="incremental">
+<li>Description: Exempt beats.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: ()</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_modulo-3">exempt_modulo</h3>
+<ul class="incremental">
+<li>Description: Exempt beats modulo.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 4</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt_n-3">exempt_n</h3>
+<ul class="incremental">
+<li>Description: Exempt num notes.</li>
+<li>Only has effect if exemptions == ‘counting’</li>
+<li>Default: [0]</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_comma-3">exempt_comma</h3>
+<ul class="incremental">
+<li>Description: Exempt comma.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 1/128</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="invert_exempt-3">invert_exempt</h3>
+<ul class="incremental">
+<li>Description: Invert exempt beats.</li>
+<li>Only has effect if exemptions in (‘metric’, ‘counting’)</li>
+<li>Default: False</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="adjust_dur-3">adjust_dur</h3>
+<ul class="incremental">
+<li>Description: Adjust durations.</li>
+<li>Default: None</li>
+<li>Type: str</li>
+<li>Possible values: ‘None’, ‘Extend_previous_notes’, ‘Subtract_duration’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="adjust_dur_comma-3">adjust_dur_comma</h3>
+<ul class="incremental">
+<li>Description: Adjust durations comma.</li>
+<li>Only has effect if adjust_dur == ‘Extend_previous_notes’</li>
+<li>Default: 0.25</li>
+<li>Type: float</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="subtract_dur_modulo-3">subtract_dur_modulo</h3>
+<ul class="incremental">
+<li>Description: Subtract durations within length.</li>
+<li>Only has effect if adjust_dur == ‘Subtract_duration’</li>
+<li>Default: 0</li>
+<li>Type: Fraction</li>
+<li>Min: 0.001</li>
+<li>Unique: yes</li>
+</ul>
+<h2 id="evenpitchfilter">EvenPitchFilter</h2>
+<p>Even pitch filter. Even pitch filter removes notes of even pitch.</p>
+<h3 id="prob_curve-4">prob_curve</h3>
+<ul class="incremental">
+<li>Description: Probability curve.</li>
+<li>Default: Static</li>
+<li>Type: str</li>
+<li>Possible values: ‘AlwaysOn’, ‘Static’, ‘Linear’, ‘Quadratic’, ‘LinearOsc’, ‘Saw’, ‘Sine’, ‘Accumulating’, ‘RandomToggle’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="marked_by-4">marked_by</h3>
+<ul class="incremental">
+<li>Description: Only apply to notes marked by.</li>
+<li>Default:</li>
+<li>Type: str</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="start_time-4">start_time</h3>
+<ul class="incremental">
+<li>Description: Start time.</li>
+<li>Default: [0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="end_time-4">end_time</h3>
+<ul class="incremental">
+<li>Description: End time.</li>
+<li>Default: [0.0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="by_voice-4">by_voice</h3>
+<ul class="incremental">
+<li>Description: By voice.</li>
+<li>Default: True</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="voices-4">voices</h3>
+<ul class="incremental">
+<li>Description: Voices.</li>
+<li>Only has effect if by_voice == ‘true’</li>
+<li>Default: []</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exemptions-4">exemptions</h3>
+<ul class="incremental">
+<li>Description: Exemptions.</li>
+<li>Default: off</li>
+<li>Type: str</li>
+<li>Possible values: ‘off’, ‘metric’, ‘counting’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt-4">exempt</h3>
+<ul class="incremental">
+<li>Description: Exempt beats.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: ()</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_modulo-4">exempt_modulo</h3>
+<ul class="incremental">
+<li>Description: Exempt beats modulo.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 4</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt_n-4">exempt_n</h3>
+<ul class="incremental">
+<li>Description: Exempt num notes.</li>
+<li>Only has effect if exemptions == ‘counting’</li>
+<li>Default: [0]</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_comma-4">exempt_comma</h3>
+<ul class="incremental">
+<li>Description: Exempt comma.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 1/128</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="invert_exempt-4">invert_exempt</h3>
+<ul class="incremental">
+<li>Description: Invert exempt beats.</li>
+<li>Only has effect if exemptions in (‘metric’, ‘counting’)</li>
+<li>Default: False</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="adjust_dur-4">adjust_dur</h3>
+<ul class="incremental">
+<li>Description: Adjust durations.</li>
+<li>Default: None</li>
+<li>Type: str</li>
+<li>Possible values: ‘None’, ‘Extend_previous_notes’, ‘Subtract_duration’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="adjust_dur_comma-4">adjust_dur_comma</h3>
+<ul class="incremental">
+<li>Description: Adjust durations comma.</li>
+<li>Only has effect if adjust_dur == ‘Extend_previous_notes’</li>
+<li>Default: 0.25</li>
+<li>Type: float</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="subtract_dur_modulo-4">subtract_dur_modulo</h3>
+<ul class="incremental">
+<li>Description: Subtract durations within length.</li>
+<li>Only has effect if adjust_dur == ‘Subtract_duration’</li>
+<li>Default: 0</li>
+<li>Type: Fraction</li>
+<li>Min: 0.001</li>
+<li>Unique: yes</li>
+</ul>
+<h2 id="filterselectedpcs">FilterSelectedPCs</h2>
+<p>Selected pitch-class filter. Selected pitch-class filter removes notes of the selected pitch-classes.</p>
+<h3 id="prob_curve-5">prob_curve</h3>
+<ul class="incremental">
+<li>Description: Probability curve.</li>
+<li>Default: Static</li>
+<li>Type: str</li>
+<li>Possible values: ‘AlwaysOn’, ‘Static’, ‘Linear’, ‘Quadratic’, ‘LinearOsc’, ‘Saw’, ‘Sine’, ‘Accumulating’, ‘RandomToggle’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="marked_by-5">marked_by</h3>
+<ul class="incremental">
+<li>Description: Only apply to notes marked by.</li>
+<li>Default:</li>
+<li>Type: str</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="start_time-5">start_time</h3>
+<ul class="incremental">
+<li>Description: Start time.</li>
+<li>Default: [0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="end_time-5">end_time</h3>
+<ul class="incremental">
+<li>Description: End time.</li>
+<li>Default: [0.0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="by_voice-5">by_voice</h3>
+<ul class="incremental">
+<li>Description: By voice.</li>
+<li>Default: True</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="voices-5">voices</h3>
+<ul class="incremental">
+<li>Description: Voices.</li>
+<li>Only has effect if by_voice == ‘true’</li>
+<li>Default: []</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exemptions-5">exemptions</h3>
+<ul class="incremental">
+<li>Description: Exemptions.</li>
+<li>Default: off</li>
+<li>Type: str</li>
+<li>Possible values: ‘off’, ‘metric’, ‘counting’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt-5">exempt</h3>
+<ul class="incremental">
+<li>Description: Exempt beats.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: ()</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_modulo-5">exempt_modulo</h3>
+<ul class="incremental">
+<li>Description: Exempt beats modulo.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 4</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt_n-5">exempt_n</h3>
+<ul class="incremental">
+<li>Description: Exempt num notes.</li>
+<li>Only has effect if exemptions == ‘counting’</li>
+<li>Default: [0]</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_comma-5">exempt_comma</h3>
+<ul class="incremental">
+<li>Description: Exempt comma.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 1/128</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="invert_exempt-5">invert_exempt</h3>
+<ul class="incremental">
+<li>Description: Invert exempt beats.</li>
+<li>Only has effect if exemptions in (‘metric’, ‘counting’)</li>
+<li>Default: False</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="adjust_dur-5">adjust_dur</h3>
+<ul class="incremental">
+<li>Description: Adjust durations.</li>
+<li>Default: None</li>
+<li>Type: str</li>
+<li>Possible values: ‘None’, ‘Extend_previous_notes’, ‘Subtract_duration’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="adjust_dur_comma-5">adjust_dur_comma</h3>
+<ul class="incremental">
+<li>Description: Adjust durations comma.</li>
+<li>Only has effect if adjust_dur == ‘Extend_previous_notes’</li>
+<li>Default: 0.25</li>
+<li>Type: float</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="subtract_dur_modulo-5">subtract_dur_modulo</h3>
+<ul class="incremental">
+<li>Description: Subtract durations within length.</li>
+<li>Only has effect if adjust_dur == ‘Subtract_duration’</li>
+<li>Default: 0</li>
+<li>Type: Fraction</li>
+<li>Min: 0.001</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="selected_pcs">selected_pcs</h3>
+<ul class="incremental">
+<li>Description: Pitch-classes to filter.</li>
+<li>Default: ()</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Max: 11</li>
+<li>Unique: no</li>
+</ul>
+<h2 id="filterunselectedpcs">FilterUnselectedPCs</h2>
+<p>Unselected pitch-class filter. Unselected pitch-class filter removes notes that do <em>not</em> belong to the selected pitch-classes.</p>
+<h3 id="prob_curve-6">prob_curve</h3>
+<ul class="incremental">
+<li>Description: Probability curve.</li>
+<li>Default: Static</li>
+<li>Type: str</li>
+<li>Possible values: ‘AlwaysOn’, ‘Static’, ‘Linear’, ‘Quadratic’, ‘LinearOsc’, ‘Saw’, ‘Sine’, ‘Accumulating’, ‘RandomToggle’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="marked_by-6">marked_by</h3>
+<ul class="incremental">
+<li>Description: Only apply to notes marked by.</li>
+<li>Default:</li>
+<li>Type: str</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="start_time-6">start_time</h3>
+<ul class="incremental">
+<li>Description: Start time.</li>
+<li>Default: [0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="end_time-6">end_time</h3>
+<ul class="incremental">
+<li>Description: End time.</li>
+<li>Default: [0.0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="by_voice-6">by_voice</h3>
+<ul class="incremental">
+<li>Description: By voice.</li>
+<li>Default: True</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="voices-6">voices</h3>
+<ul class="incremental">
+<li>Description: Voices.</li>
+<li>Only has effect if by_voice == ‘true’</li>
+<li>Default: []</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exemptions-6">exemptions</h3>
+<ul class="incremental">
+<li>Description: Exemptions.</li>
+<li>Default: off</li>
+<li>Type: str</li>
+<li>Possible values: ‘off’, ‘metric’, ‘counting’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt-6">exempt</h3>
+<ul class="incremental">
+<li>Description: Exempt beats.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: ()</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_modulo-6">exempt_modulo</h3>
+<ul class="incremental">
+<li>Description: Exempt beats modulo.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 4</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt_n-6">exempt_n</h3>
+<ul class="incremental">
+<li>Description: Exempt num notes.</li>
+<li>Only has effect if exemptions == ‘counting’</li>
+<li>Default: [0]</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_comma-6">exempt_comma</h3>
+<ul class="incremental">
+<li>Description: Exempt comma.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 1/128</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="invert_exempt-6">invert_exempt</h3>
+<ul class="incremental">
+<li>Description: Invert exempt beats.</li>
+<li>Only has effect if exemptions in (‘metric’, ‘counting’)</li>
+<li>Default: False</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="adjust_dur-6">adjust_dur</h3>
+<ul class="incremental">
+<li>Description: Adjust durations.</li>
+<li>Default: None</li>
+<li>Type: str</li>
+<li>Possible values: ‘None’, ‘Extend_previous_notes’, ‘Subtract_duration’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="adjust_dur_comma-6">adjust_dur_comma</h3>
+<ul class="incremental">
+<li>Description: Adjust durations comma.</li>
+<li>Only has effect if adjust_dur == ‘Extend_previous_notes’</li>
+<li>Default: 0.25</li>
+<li>Type: float</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="subtract_dur_modulo-6">subtract_dur_modulo</h3>
+<ul class="incremental">
+<li>Description: Subtract durations within length.</li>
+<li>Only has effect if adjust_dur == ‘Subtract_duration’</li>
+<li>Default: 0</li>
+<li>Type: Fraction</li>
+<li>Min: 0.001</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="selected_pcs-1">selected_pcs</h3>
+<ul class="incremental">
+<li>Description: Pitch-classes not to filter.</li>
+<li>Default: ()</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Max: 11</li>
+<li>Unique: no</li>
+</ul>
+<h1 id="transformers">Transformers</h1>
+<h2 id="forcepitchtransformer">ForcePitchTransformer</h2>
+<p>Force pitch transformer.</p>
+<h3 id="prob_curve-7">prob_curve</h3>
+<ul class="incremental">
+<li>Description: Probability curve.</li>
+<li>Default: Static</li>
+<li>Type: str</li>
+<li>Possible values: ‘AlwaysOn’, ‘Static’, ‘Linear’, ‘Quadratic’, ‘LinearOsc’, ‘Saw’, ‘Sine’, ‘Accumulating’, ‘RandomToggle’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="marked_by-7">marked_by</h3>
+<ul class="incremental">
+<li>Description: Only apply to notes marked by.</li>
+<li>Default:</li>
+<li>Type: str</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="start_time-7">start_time</h3>
+<ul class="incremental">
+<li>Description: Start time.</li>
+<li>Default: [0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="end_time-7">end_time</h3>
+<ul class="incremental">
+<li>Description: End time.</li>
+<li>Default: [0.0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="by_voice-7">by_voice</h3>
+<ul class="incremental">
+<li>Description: By voice.</li>
+<li>Default: True</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="voices-7">voices</h3>
+<ul class="incremental">
+<li>Description: Voices.</li>
+<li>Only has effect if by_voice == ‘true’</li>
+<li>Default: []</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exemptions-7">exemptions</h3>
+<ul class="incremental">
+<li>Description: Exemptions.</li>
+<li>Default: off</li>
+<li>Type: str</li>
+<li>Possible values: ‘off’, ‘metric’, ‘counting’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt-7">exempt</h3>
+<ul class="incremental">
+<li>Description: Exempt beats.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: ()</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_modulo-7">exempt_modulo</h3>
+<ul class="incremental">
+<li>Description: Exempt beats modulo.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 4</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt_n-7">exempt_n</h3>
+<ul class="incremental">
+<li>Description: Exempt num notes.</li>
+<li>Only has effect if exemptions == ‘counting’</li>
+<li>Default: [0]</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_comma-7">exempt_comma</h3>
+<ul class="incremental">
+<li>Description: Exempt comma.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 1/128</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="invert_exempt-7">invert_exempt</h3>
+<ul class="incremental">
+<li>Description: Invert exempt beats.</li>
+<li>Only has effect if exemptions in (‘metric’, ‘counting’)</li>
+<li>Default: False</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="force_pitches">force_pitches</h3>
+<ul class="incremental">
+<li>Description: Pitches to force.</li>
+<li>Default: ()</li>
+<li>Type: int</li>
+<li>Min: 1</li>
+<li>Unique: no</li>
+</ul>
+<h2 id="forcepitchclassestransformer">ForcePitchClassesTransformer</h2>
+<p>Force pitch-classes transformer.</p>
+<h3 id="prob_curve-8">prob_curve</h3>
+<ul class="incremental">
+<li>Description: Probability curve.</li>
+<li>Default: Static</li>
+<li>Type: str</li>
+<li>Possible values: ‘AlwaysOn’, ‘Static’, ‘Linear’, ‘Quadratic’, ‘LinearOsc’, ‘Saw’, ‘Sine’, ‘Accumulating’, ‘RandomToggle’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="marked_by-8">marked_by</h3>
+<ul class="incremental">
+<li>Description: Only apply to notes marked by.</li>
+<li>Default:</li>
+<li>Type: str</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="start_time-8">start_time</h3>
+<ul class="incremental">
+<li>Description: Start time.</li>
+<li>Default: [0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="end_time-8">end_time</h3>
+<ul class="incremental">
+<li>Description: End time.</li>
+<li>Default: [0.0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="by_voice-8">by_voice</h3>
+<ul class="incremental">
+<li>Description: By voice.</li>
+<li>Default: True</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="voices-8">voices</h3>
+<ul class="incremental">
+<li>Description: Voices.</li>
+<li>Only has effect if by_voice == ‘true’</li>
+<li>Default: []</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exemptions-8">exemptions</h3>
+<ul class="incremental">
+<li>Description: Exemptions.</li>
+<li>Default: off</li>
+<li>Type: str</li>
+<li>Possible values: ‘off’, ‘metric’, ‘counting’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt-8">exempt</h3>
+<ul class="incremental">
+<li>Description: Exempt beats.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: ()</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_modulo-8">exempt_modulo</h3>
+<ul class="incremental">
+<li>Description: Exempt beats modulo.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 4</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt_n-8">exempt_n</h3>
+<ul class="incremental">
+<li>Description: Exempt num notes.</li>
+<li>Only has effect if exemptions == ‘counting’</li>
+<li>Default: [0]</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_comma-8">exempt_comma</h3>
+<ul class="incremental">
+<li>Description: Exempt comma.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 1/128</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="invert_exempt-8">invert_exempt</h3>
+<ul class="incremental">
+<li>Description: Invert exempt beats.</li>
+<li>Only has effect if exemptions in (‘metric’, ‘counting’)</li>
+<li>Default: False</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="force_pcs">force_pcs</h3>
+<ul class="incremental">
+<li>Description: Pitch-classes to force.</li>
+<li>Default: ()</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Max: 11</li>
+<li>Unique: no</li>
+</ul>
+<h2 id="velocitytransformer">VelocityTransformer</h2>
+<p>Velocity transformer.</p>
+<h3 id="func_str">func_str</h3>
+<ul class="incremental">
+<li>Description: Mediating function.</li>
+<li>Default: thru</li>
+<li>Type: str</li>
+<li>Possible values: ‘thru’, ‘linear’, ‘quadratic’, ‘linear_osc’, ‘saw’, ‘cosine’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="med_start_time">med_start_time</h3>
+<ul class="incremental">
+<li>Description: Mediator start time.</li>
+<li>Only has effect if func_str in [‘linear’, ‘quadratic’]</li>
+<li>Default: [0]</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="med_end_time">med_end_time</h3>
+<ul class="incremental">
+<li>Description: Mediator end time.</li>
+<li>Only has effect if func_str in [‘linear’, ‘quadratic’]</li>
+<li>Default: [0.0]</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="med_period">med_period</h3>
+<ul class="incremental">
+<li>Description: Mediator period.</li>
+<li>Only has effect if func_str in [‘linear_osc’, ‘saw’, ‘cosine’]</li>
+<li>Default: [4]</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="med_offset">med_offset</h3>
+<ul class="incremental">
+<li>Description: Mediator offset.</li>
+<li>Only has effect if func_str in [‘linear_osc’, ‘saw’, ‘cosine’]</li>
+<li>Default: [0]</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="med_decreasing">med_decreasing</h3>
+<ul class="incremental">
+<li>Description: Mediator decreasing.</li>
+<li>Only has effect if func_str in [‘linear_osc’, ‘saw’, ‘cosine’, ‘linear’, ‘quadratic’]</li>
+<li>Default: False</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="prob_curve-9">prob_curve</h3>
+<ul class="incremental">
+<li>Description: Probability curve.</li>
+<li>Default: Static</li>
+<li>Type: str</li>
+<li>Possible values: ‘AlwaysOn’, ‘Static’, ‘Linear’, ‘Quadratic’, ‘LinearOsc’, ‘Saw’, ‘Sine’, ‘Accumulating’, ‘RandomToggle’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="marked_by-9">marked_by</h3>
+<ul class="incremental">
+<li>Description: Only apply to notes marked by.</li>
+<li>Default:</li>
+<li>Type: str</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="start_time-9">start_time</h3>
+<ul class="incremental">
+<li>Description: Start time.</li>
+<li>Default: [0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="end_time-9">end_time</h3>
+<ul class="incremental">
+<li>Description: End time.</li>
+<li>Default: [0.0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="by_voice-9">by_voice</h3>
+<ul class="incremental">
+<li>Description: By voice.</li>
+<li>Default: True</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="voices-9">voices</h3>
+<ul class="incremental">
+<li>Description: Voices.</li>
+<li>Only has effect if by_voice == ‘true’</li>
+<li>Default: []</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exemptions-9">exemptions</h3>
+<ul class="incremental">
+<li>Description: Exemptions.</li>
+<li>Default: off</li>
+<li>Type: str</li>
+<li>Possible values: ‘off’, ‘metric’, ‘counting’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt-9">exempt</h3>
+<ul class="incremental">
+<li>Description: Exempt beats.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: ()</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_modulo-9">exempt_modulo</h3>
+<ul class="incremental">
+<li>Description: Exempt beats modulo.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 4</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt_n-9">exempt_n</h3>
+<ul class="incremental">
+<li>Description: Exempt num notes.</li>
+<li>Only has effect if exemptions == ‘counting’</li>
+<li>Default: [0]</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_comma-9">exempt_comma</h3>
+<ul class="incremental">
+<li>Description: Exempt comma.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 1/128</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="invert_exempt-9">invert_exempt</h3>
+<ul class="incremental">
+<li>Description: Invert exempt beats.</li>
+<li>Only has effect if exemptions in (‘metric’, ‘counting’)</li>
+<li>Default: False</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="trans_type">trans_type</h3>
+<ul class="incremental">
+<li>Description: Velocity transform type.</li>
+<li>Default: Scale</li>
+<li>Type: str</li>
+<li>Possible values: ‘Scale’, ‘Fix’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="scale_by">scale_by</h3>
+<ul class="incremental">
+<li>Description: Scale factor.</li>
+<li>Only has effect if trans_type == ‘Scale’</li>
+<li>Default: [1]</li>
+<li>Type: float</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="fix_to">fix_to</h3>
+<ul class="incremental">
+<li>Description: Fix velocity to.</li>
+<li>Only has effect if trans_type == ‘Fix’</li>
+<li>Default: [64]</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Max: 127</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="humanize">humanize</h3>
+<ul class="incremental">
+<li>Description: Humanize +/-.</li>
+<li>Default: [6]</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Max: 127</li>
+<li>Unique: no</li>
+</ul>
+<h2 id="changedurationstransformer">ChangeDurationsTransformer</h2>
+<p>Change durations transformer.</p>
+<h3 id="func_str-1">func_str</h3>
+<ul class="incremental">
+<li>Description: Mediating function.</li>
+<li>Default: thru</li>
+<li>Type: str</li>
+<li>Possible values: ‘thru’, ‘linear’, ‘quadratic’, ‘linear_osc’, ‘saw’, ‘cosine’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="med_start_time-1">med_start_time</h3>
+<ul class="incremental">
+<li>Description: Mediator start time.</li>
+<li>Only has effect if func_str in [‘linear’, ‘quadratic’]</li>
+<li>Default: [0]</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="med_end_time-1">med_end_time</h3>
+<ul class="incremental">
+<li>Description: Mediator end time.</li>
+<li>Only has effect if func_str in [‘linear’, ‘quadratic’]</li>
+<li>Default: [0.0]</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="med_period-1">med_period</h3>
+<ul class="incremental">
+<li>Description: Mediator period.</li>
+<li>Only has effect if func_str in [‘linear_osc’, ‘saw’, ‘cosine’]</li>
+<li>Default: [4]</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="med_offset-1">med_offset</h3>
+<ul class="incremental">
+<li>Description: Mediator offset.</li>
+<li>Only has effect if func_str in [‘linear_osc’, ‘saw’, ‘cosine’]</li>
+<li>Default: [0]</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="med_decreasing-1">med_decreasing</h3>
+<ul class="incremental">
+<li>Description: Mediator decreasing.</li>
+<li>Only has effect if func_str in [‘linear_osc’, ‘saw’, ‘cosine’, ‘linear’, ‘quadratic’]</li>
+<li>Default: False</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="prob_curve-10">prob_curve</h3>
+<ul class="incremental">
+<li>Description: Probability curve.</li>
+<li>Default: Static</li>
+<li>Type: str</li>
+<li>Possible values: ‘AlwaysOn’, ‘Static’, ‘Linear’, ‘Quadratic’, ‘LinearOsc’, ‘Saw’, ‘Sine’, ‘Accumulating’, ‘RandomToggle’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="marked_by-10">marked_by</h3>
+<ul class="incremental">
+<li>Description: Only apply to notes marked by.</li>
+<li>Default:</li>
+<li>Type: str</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="start_time-10">start_time</h3>
+<ul class="incremental">
+<li>Description: Start time.</li>
+<li>Default: [0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="end_time-10">end_time</h3>
+<ul class="incremental">
+<li>Description: End time.</li>
+<li>Default: [0.0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="by_voice-10">by_voice</h3>
+<ul class="incremental">
+<li>Description: By voice.</li>
+<li>Default: True</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="voices-10">voices</h3>
+<ul class="incremental">
+<li>Description: Voices.</li>
+<li>Only has effect if by_voice == ‘true’</li>
+<li>Default: []</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exemptions-10">exemptions</h3>
+<ul class="incremental">
+<li>Description: Exemptions.</li>
+<li>Default: off</li>
+<li>Type: str</li>
+<li>Possible values: ‘off’, ‘metric’, ‘counting’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt-10">exempt</h3>
+<ul class="incremental">
+<li>Description: Exempt beats.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: ()</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_modulo-10">exempt_modulo</h3>
+<ul class="incremental">
+<li>Description: Exempt beats modulo.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 4</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt_n-10">exempt_n</h3>
+<ul class="incremental">
+<li>Description: Exempt num notes.</li>
+<li>Only has effect if exemptions == ‘counting’</li>
+<li>Default: [0]</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_comma-10">exempt_comma</h3>
+<ul class="incremental">
+<li>Description: Exempt comma.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 1/128</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="invert_exempt-10">invert_exempt</h3>
+<ul class="incremental">
+<li>Description: Invert exempt beats.</li>
+<li>Only has effect if exemptions in (‘metric’, ‘counting’)</li>
+<li>Default: False</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="trans_type-1">trans_type</h3>
+<ul class="incremental">
+<li>Description: Change durations type.</li>
+<li>Default: Scale</li>
+<li>Type: str</li>
+<li>Possible values: ‘Scale’, ‘By_fixed_amount’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="scale_by-1">scale_by</h3>
+<ul class="incremental">
+<li>Description: Scale factor.</li>
+<li>Only has effect if trans_type == ‘Scale’</li>
+<li>Default: [1]</li>
+<li>Type: float</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="fix_amount">fix_amount</h3>
+<ul class="incremental">
+<li>Description: Fixed amount.</li>
+<li>Only has effect if trans_type == ‘By_fixed_amount’</li>
+<li>Default: [1]</li>
+<li>Type: Fraction</li>
+<li>Min: -4192</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="min_dur">min_dur</h3>
+<ul class="incremental">
+<li>Description: Minimum dur.</li>
+<li>Default: [0]</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="min_dur_treatment">min_dur_treatment</h3>
+<ul class="incremental">
+<li>Description: Treatment of notes below minumum dur.</li>
+<li>Default: Enforce_min_dur</li>
+<li>Type: str</li>
+<li>Possible values: ‘Enforce_min_dur’, ‘Delete’</li>
+<li>Unique: yes</li>
+</ul>
+<h2 id="randomoctavetransformer">RandomOctaveTransformer</h2>
+<p>Random octave transformer.</p>
+<h3 id="prob_curve-11">prob_curve</h3>
+<ul class="incremental">
+<li>Description: Probability curve.</li>
+<li>Default: Static</li>
+<li>Type: str</li>
+<li>Possible values: ‘AlwaysOn’, ‘Static’, ‘Linear’, ‘Quadratic’, ‘LinearOsc’, ‘Saw’, ‘Sine’, ‘Accumulating’, ‘RandomToggle’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="marked_by-11">marked_by</h3>
+<ul class="incremental">
+<li>Description: Only apply to notes marked by.</li>
+<li>Default:</li>
+<li>Type: str</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="start_time-11">start_time</h3>
+<ul class="incremental">
+<li>Description: Start time.</li>
+<li>Default: [0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="end_time-11">end_time</h3>
+<ul class="incremental">
+<li>Description: End time.</li>
+<li>Default: [0.0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="by_voice-11">by_voice</h3>
+<ul class="incremental">
+<li>Description: By voice.</li>
+<li>Default: True</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="voices-11">voices</h3>
+<ul class="incremental">
+<li>Description: Voices.</li>
+<li>Only has effect if by_voice == ‘true’</li>
+<li>Default: []</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exemptions-11">exemptions</h3>
+<ul class="incremental">
+<li>Description: Exemptions.</li>
+<li>Default: off</li>
+<li>Type: str</li>
+<li>Possible values: ‘off’, ‘metric’, ‘counting’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt-11">exempt</h3>
+<ul class="incremental">
+<li>Description: Exempt beats.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: ()</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_modulo-11">exempt_modulo</h3>
+<ul class="incremental">
+<li>Description: Exempt beats modulo.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 4</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt_n-11">exempt_n</h3>
+<ul class="incremental">
+<li>Description: Exempt num notes.</li>
+<li>Only has effect if exemptions == ‘counting’</li>
+<li>Default: [0]</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_comma-11">exempt_comma</h3>
+<ul class="incremental">
+<li>Description: Exempt comma.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 1/128</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="invert_exempt-11">invert_exempt</h3>
+<ul class="incremental">
+<li>Description: Invert exempt beats.</li>
+<li>Only has effect if exemptions in (‘metric’, ‘counting’)</li>
+<li>Default: False</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="ranges">ranges</h3>
+<ul class="incremental">
+<li>Description: Voice ranges. If voice ranges are 0, they are taken from Voice objects if possible</li>
+<li>Default: [0]</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="avoid_orig_oct">avoid_orig_oct</h3>
+<ul class="incremental">
+<li>Description: Avoid original octave if possible.</li>
+<li>Default: False</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h2 id="transposetransformer">TransposeTransformer</h2>
+<p>Transpose transformer.</p>
+<h3 id="prob_curve-12">prob_curve</h3>
+<ul class="incremental">
+<li>Description: Probability curve.</li>
+<li>Default: Static</li>
+<li>Type: str</li>
+<li>Possible values: ‘AlwaysOn’, ‘Static’, ‘Linear’, ‘Quadratic’, ‘LinearOsc’, ‘Saw’, ‘Sine’, ‘Accumulating’, ‘RandomToggle’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="marked_by-12">marked_by</h3>
+<ul class="incremental">
+<li>Description: Only apply to notes marked by.</li>
+<li>Default:</li>
+<li>Type: str</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="start_time-12">start_time</h3>
+<ul class="incremental">
+<li>Description: Start time.</li>
+<li>Default: [0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="end_time-12">end_time</h3>
+<ul class="incremental">
+<li>Description: End time.</li>
+<li>Default: [0.0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="by_voice-12">by_voice</h3>
+<ul class="incremental">
+<li>Description: By voice.</li>
+<li>Default: True</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="voices-12">voices</h3>
+<ul class="incremental">
+<li>Description: Voices.</li>
+<li>Only has effect if by_voice == ‘true’</li>
+<li>Default: []</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exemptions-12">exemptions</h3>
+<ul class="incremental">
+<li>Description: Exemptions.</li>
+<li>Default: off</li>
+<li>Type: str</li>
+<li>Possible values: ‘off’, ‘metric’, ‘counting’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt-12">exempt</h3>
+<ul class="incremental">
+<li>Description: Exempt beats.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: ()</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_modulo-12">exempt_modulo</h3>
+<ul class="incremental">
+<li>Description: Exempt beats modulo.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 4</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt_n-12">exempt_n</h3>
+<ul class="incremental">
+<li>Description: Exempt num notes.</li>
+<li>Only has effect if exemptions == ‘counting’</li>
+<li>Default: [0]</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_comma-12">exempt_comma</h3>
+<ul class="incremental">
+<li>Description: Exempt comma.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 1/128</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="invert_exempt-12">invert_exempt</h3>
+<ul class="incremental">
+<li>Description: Invert exempt beats.</li>
+<li>Only has effect if exemptions in (‘metric’, ‘counting’)</li>
+<li>Default: False</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="transpose">transpose</h3>
+<ul class="incremental">
+<li>Description: Interval of transposition.</li>
+<li>Default: [0]</li>
+<li>Type: int</li>
+<li>Min: -72</li>
+<li>Max: 72</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="preserve">preserve</h3>
+<ul class="incremental">
+<li>Description: Preserve original note.</li>
+<li>Default: [False]</li>
+<li>Type: bool</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="trans_type-2">trans_type</h3>
+<ul class="incremental">
+<li>Description: Transposition type.</li>
+<li>Default: Standard</li>
+<li>Type: str</li>
+<li>Possible values: ‘Standard’, ‘Cumulative’, ‘Random’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="bound">bound</h3>
+<ul class="incremental">
+<li>Description: Cumulative bound. After the cumulative transposition reaches the bound (inclusive; either up or down), it will be shifted an octave up/down</li>
+<li>Only has effect if trans_type == ‘Cumulative’</li>
+<li>Default: [0]</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Max: 72</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="seg_dur">seg_dur</h3>
+<ul class="incremental">
+<li>Description: Transposition segment duration. If non-zero, then transposition segment number of notes is ignored</li>
+<li>Only has effect if trans_type in (‘Cumulative’, ‘Random’)</li>
+<li>Default: [4]</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="seg_card">seg_card</h3>
+<ul class="incremental">
+<li>Description: Transposition segment number of notes.</li>
+<li>Only has effect if trans_type in (‘Cumulative’, ‘Random’)</li>
+<li>Default: [0]</li>
+<li>Type: int</li>
+<li>Min: 1</li>
+<li>Unique: no</li>
+</ul>
+<h2 id="channeltransformer">ChannelTransformer</h2>
+<p>Channel transformer.</p>
+<h3 id="prob_curve-13">prob_curve</h3>
+<ul class="incremental">
+<li>Description: Probability curve.</li>
+<li>Default: Static</li>
+<li>Type: str</li>
+<li>Possible values: ‘AlwaysOn’, ‘Static’, ‘Linear’, ‘Quadratic’, ‘LinearOsc’, ‘Saw’, ‘Sine’, ‘Accumulating’, ‘RandomToggle’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="marked_by-13">marked_by</h3>
+<ul class="incremental">
+<li>Description: Only apply to notes marked by.</li>
+<li>Default:</li>
+<li>Type: str</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="start_time-13">start_time</h3>
+<ul class="incremental">
+<li>Description: Start time.</li>
+<li>Default: [0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="end_time-13">end_time</h3>
+<ul class="incremental">
+<li>Description: End time.</li>
+<li>Default: [0.0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="by_voice-13">by_voice</h3>
+<ul class="incremental">
+<li>Description: By voice.</li>
+<li>Default: True</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="voices-13">voices</h3>
+<ul class="incremental">
+<li>Description: Voices.</li>
+<li>Only has effect if by_voice == ‘true’</li>
+<li>Default: []</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exemptions-13">exemptions</h3>
+<ul class="incremental">
+<li>Description: Exemptions.</li>
+<li>Default: off</li>
+<li>Type: str</li>
+<li>Possible values: ‘off’, ‘metric’, ‘counting’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt-13">exempt</h3>
+<ul class="incremental">
+<li>Description: Exempt beats.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: ()</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_modulo-13">exempt_modulo</h3>
+<ul class="incremental">
+<li>Description: Exempt beats modulo.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 4</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt_n-13">exempt_n</h3>
+<ul class="incremental">
+<li>Description: Exempt num notes.</li>
+<li>Only has effect if exemptions == ‘counting’</li>
+<li>Default: [0]</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_comma-13">exempt_comma</h3>
+<ul class="incremental">
+<li>Description: Exempt comma.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 1/128</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="invert_exempt-13">invert_exempt</h3>
+<ul class="incremental">
+<li>Description: Invert exempt beats.</li>
+<li>Only has effect if exemptions in (‘metric’, ‘counting’)</li>
+<li>Default: False</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="dest_channels">dest_channels</h3>
+<ul class="incremental">
+<li>Description: Destination channels.</li>
+<li>Default: ()</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Max: 15</li>
+<li>Unique: no</li>
+</ul>
+<h2 id="channelexchangertransformer">ChannelExchangerTransformer</h2>
+<p>Channel exchanger transformer.</p>
+<h3 id="prob_curve-14">prob_curve</h3>
+<ul class="incremental">
+<li>Description: Probability curve.</li>
+<li>Default: Static</li>
+<li>Type: str</li>
+<li>Possible values: ‘AlwaysOn’, ‘Static’, ‘Linear’, ‘Quadratic’, ‘LinearOsc’, ‘Saw’, ‘Sine’, ‘Accumulating’, ‘RandomToggle’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="marked_by-14">marked_by</h3>
+<ul class="incremental">
+<li>Description: Only apply to notes marked by.</li>
+<li>Default:</li>
+<li>Type: str</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="start_time-14">start_time</h3>
+<ul class="incremental">
+<li>Description: Start time.</li>
+<li>Default: [0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="end_time-14">end_time</h3>
+<ul class="incremental">
+<li>Description: End time.</li>
+<li>Default: [0.0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="by_voice-14">by_voice</h3>
+<ul class="incremental">
+<li>Description: By voice.</li>
+<li>Default: True</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="voices-14">voices</h3>
+<ul class="incremental">
+<li>Description: Voices.</li>
+<li>Only has effect if by_voice == ‘true’</li>
+<li>Default: []</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exemptions-14">exemptions</h3>
+<ul class="incremental">
+<li>Description: Exemptions.</li>
+<li>Default: off</li>
+<li>Type: str</li>
+<li>Possible values: ‘off’, ‘metric’, ‘counting’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt-14">exempt</h3>
+<ul class="incremental">
+<li>Description: Exempt beats.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: ()</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_modulo-14">exempt_modulo</h3>
+<ul class="incremental">
+<li>Description: Exempt beats modulo.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 4</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt_n-14">exempt_n</h3>
+<ul class="incremental">
+<li>Description: Exempt num notes.</li>
+<li>Only has effect if exemptions == ‘counting’</li>
+<li>Default: [0]</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_comma-14">exempt_comma</h3>
+<ul class="incremental">
+<li>Description: Exempt comma.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 1/128</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="invert_exempt-14">invert_exempt</h3>
+<ul class="incremental">
+<li>Description: Invert exempt beats.</li>
+<li>Only has effect if exemptions in (‘metric’, ‘counting’)</li>
+<li>Default: False</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="channel_pairs">channel_pairs</h3>
+<ul class="incremental">
+<li>Description: Channel source/destination pairs.</li>
+<li>Default: ()</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Max: 15</li>
+<li>Unique: no</li>
+</ul>
+<h2 id="trackexchangertransformer">TrackExchangerTransformer</h2>
+<p>Track exchanger transformer.</p>
+<h3 id="prob_curve-15">prob_curve</h3>
+<ul class="incremental">
+<li>Description: Probability curve.</li>
+<li>Default: Static</li>
+<li>Type: str</li>
+<li>Possible values: ‘AlwaysOn’, ‘Static’, ‘Linear’, ‘Quadratic’, ‘LinearOsc’, ‘Saw’, ‘Sine’, ‘Accumulating’, ‘RandomToggle’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="marked_by-15">marked_by</h3>
+<ul class="incremental">
+<li>Description: Only apply to notes marked by.</li>
+<li>Default:</li>
+<li>Type: str</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="start_time-15">start_time</h3>
+<ul class="incremental">
+<li>Description: Start time.</li>
+<li>Default: [0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="end_time-15">end_time</h3>
+<ul class="incremental">
+<li>Description: End time.</li>
+<li>Default: [0.0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="by_voice-15">by_voice</h3>
+<ul class="incremental">
+<li>Description: By voice.</li>
+<li>Default: True</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="voices-15">voices</h3>
+<ul class="incremental">
+<li>Description: Voices.</li>
+<li>Only has effect if by_voice == ‘true’</li>
+<li>Default: []</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exemptions-15">exemptions</h3>
+<ul class="incremental">
+<li>Description: Exemptions.</li>
+<li>Default: off</li>
+<li>Type: str</li>
+<li>Possible values: ‘off’, ‘metric’, ‘counting’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt-15">exempt</h3>
+<ul class="incremental">
+<li>Description: Exempt beats.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: ()</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_modulo-15">exempt_modulo</h3>
+<ul class="incremental">
+<li>Description: Exempt beats modulo.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 4</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt_n-15">exempt_n</h3>
+<ul class="incremental">
+<li>Description: Exempt num notes.</li>
+<li>Only has effect if exemptions == ‘counting’</li>
+<li>Default: [0]</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_comma-15">exempt_comma</h3>
+<ul class="incremental">
+<li>Description: Exempt comma.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 1/128</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="invert_exempt-15">invert_exempt</h3>
+<ul class="incremental">
+<li>Description: Invert exempt beats.</li>
+<li>Only has effect if exemptions in (‘metric’, ‘counting’)</li>
+<li>Default: False</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="track_pairs">track_pairs</h3>
+<ul class="incremental">
+<li>Description: Track source/destination pairs.</li>
+<li>Default: ()</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h2 id="inverttransformer">InvertTransformer</h2>
+<p>Melodic inversion transformer.</p>
+<h3 id="prob_curve-16">prob_curve</h3>
+<ul class="incremental">
+<li>Description: Probability curve.</li>
+<li>Default: Static</li>
+<li>Type: str</li>
+<li>Possible values: ‘AlwaysOn’, ‘Static’, ‘Linear’, ‘Quadratic’, ‘LinearOsc’, ‘Saw’, ‘Sine’, ‘Accumulating’, ‘RandomToggle’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="marked_by-16">marked_by</h3>
+<ul class="incremental">
+<li>Description: Only apply to notes marked by.</li>
+<li>Default:</li>
+<li>Type: str</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="start_time-16">start_time</h3>
+<ul class="incremental">
+<li>Description: Start time.</li>
+<li>Default: [0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="end_time-16">end_time</h3>
+<ul class="incremental">
+<li>Description: End time.</li>
+<li>Default: [0.0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="by_voice-16">by_voice</h3>
+<ul class="incremental">
+<li>Description: By voice.</li>
+<li>Default: True</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="voices-16">voices</h3>
+<ul class="incremental">
+<li>Description: Voices.</li>
+<li>Only has effect if by_voice == ‘true’</li>
+<li>Default: []</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exemptions-16">exemptions</h3>
+<ul class="incremental">
+<li>Description: Exemptions.</li>
+<li>Default: off</li>
+<li>Type: str</li>
+<li>Possible values: ‘off’, ‘metric’, ‘counting’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt-16">exempt</h3>
+<ul class="incremental">
+<li>Description: Exempt beats.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: ()</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_modulo-16">exempt_modulo</h3>
+<ul class="incremental">
+<li>Description: Exempt beats modulo.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 4</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt_n-16">exempt_n</h3>
+<ul class="incremental">
+<li>Description: Exempt num notes.</li>
+<li>Only has effect if exemptions == ‘counting’</li>
+<li>Default: [0]</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_comma-16">exempt_comma</h3>
+<ul class="incremental">
+<li>Description: Exempt comma.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 1/128</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="invert_exempt-16">invert_exempt</h3>
+<ul class="incremental">
+<li>Description: Invert exempt beats.</li>
+<li>Only has effect if exemptions in (‘metric’, ‘counting’)</li>
+<li>Default: False</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="axis">axis</h3>
+<ul class="incremental">
+<li>Description: Axis of inversion.</li>
+<li>Default: [60]</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h2 id="trackrandomizertransformer">TrackRandomizerTransformer</h2>
+<p>Track randomizer transformer.</p>
+<h3 id="prob_curve-17">prob_curve</h3>
+<ul class="incremental">
+<li>Description: Probability curve.</li>
+<li>Default: Static</li>
+<li>Type: str</li>
+<li>Possible values: ‘AlwaysOn’, ‘Static’, ‘Linear’, ‘Quadratic’, ‘LinearOsc’, ‘Saw’, ‘Sine’, ‘Accumulating’, ‘RandomToggle’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="marked_by-17">marked_by</h3>
+<ul class="incremental">
+<li>Description: Only apply to notes marked by.</li>
+<li>Default:</li>
+<li>Type: str</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="start_time-17">start_time</h3>
+<ul class="incremental">
+<li>Description: Start time.</li>
+<li>Default: [0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="end_time-17">end_time</h3>
+<ul class="incremental">
+<li>Description: End time.</li>
+<li>Default: [0.0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="by_voice-17">by_voice</h3>
+<ul class="incremental">
+<li>Description: By voice.</li>
+<li>Default: True</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="voices-17">voices</h3>
+<ul class="incremental">
+<li>Description: Voices.</li>
+<li>Only has effect if by_voice == ‘true’</li>
+<li>Default: []</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exemptions-17">exemptions</h3>
+<ul class="incremental">
+<li>Description: Exemptions.</li>
+<li>Default: off</li>
+<li>Type: str</li>
+<li>Possible values: ‘off’, ‘metric’, ‘counting’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt-17">exempt</h3>
+<ul class="incremental">
+<li>Description: Exempt beats.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: ()</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_modulo-17">exempt_modulo</h3>
+<ul class="incremental">
+<li>Description: Exempt beats modulo.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 4</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt_n-17">exempt_n</h3>
+<ul class="incremental">
+<li>Description: Exempt num notes.</li>
+<li>Only has effect if exemptions == ‘counting’</li>
+<li>Default: [0]</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_comma-17">exempt_comma</h3>
+<ul class="incremental">
+<li>Description: Exempt comma.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 1/128</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="invert_exempt-17">invert_exempt</h3>
+<ul class="incremental">
+<li>Description: Invert exempt beats.</li>
+<li>Only has effect if exemptions in (‘metric’, ‘counting’)</li>
+<li>Default: False</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="dest_voices">dest_voices</h3>
+<ul class="incremental">
+<li>Description: Destination voices.</li>
+<li>Default: []</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h2 id="trackdoublertransformer">TrackDoublerTransformer</h2>
+<p>Track doubler transformer.</p>
+<h3 id="prob_curve-18">prob_curve</h3>
+<ul class="incremental">
+<li>Description: Probability curve.</li>
+<li>Default: Static</li>
+<li>Type: str</li>
+<li>Possible values: ‘AlwaysOn’, ‘Static’, ‘Linear’, ‘Quadratic’, ‘LinearOsc’, ‘Saw’, ‘Sine’, ‘Accumulating’, ‘RandomToggle’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="marked_by-18">marked_by</h3>
+<ul class="incremental">
+<li>Description: Only apply to notes marked by.</li>
+<li>Default:</li>
+<li>Type: str</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="start_time-18">start_time</h3>
+<ul class="incremental">
+<li>Description: Start time.</li>
+<li>Default: [0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="end_time-18">end_time</h3>
+<ul class="incremental">
+<li>Description: End time.</li>
+<li>Default: [0.0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="by_voice-18">by_voice</h3>
+<ul class="incremental">
+<li>Description: By voice.</li>
+<li>Default: True</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="voices-18">voices</h3>
+<ul class="incremental">
+<li>Description: Voices.</li>
+<li>Only has effect if by_voice == ‘true’</li>
+<li>Default: []</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exemptions-18">exemptions</h3>
+<ul class="incremental">
+<li>Description: Exemptions.</li>
+<li>Default: off</li>
+<li>Type: str</li>
+<li>Possible values: ‘off’, ‘metric’, ‘counting’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt-18">exempt</h3>
+<ul class="incremental">
+<li>Description: Exempt beats.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: ()</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_modulo-18">exempt_modulo</h3>
+<ul class="incremental">
+<li>Description: Exempt beats modulo.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 4</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt_n-18">exempt_n</h3>
+<ul class="incremental">
+<li>Description: Exempt num notes.</li>
+<li>Only has effect if exemptions == ‘counting’</li>
+<li>Default: [0]</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_comma-18">exempt_comma</h3>
+<ul class="incremental">
+<li>Description: Exempt comma.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 1/128</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="invert_exempt-18">invert_exempt</h3>
+<ul class="incremental">
+<li>Description: Invert exempt beats.</li>
+<li>Only has effect if exemptions in (‘metric’, ‘counting’)</li>
+<li>Default: False</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="doubling_intervals">doubling_intervals</h3>
+<ul class="incremental">
+<li>Description: Doubled voices transpositions.</li>
+<li>Default: [0]</li>
+<li>Type: int</li>
+<li>Min: -128</li>
+<li>Max: 128</li>
+<li>Unique: no</li>
+</ul>
+<h2 id="subdividetransformer">SubdivideTransformer</h2>
+<p>Subdivide transformer. Subdivide transformer subdivides pitches into notes of specified value.</p>
+<h3 id="prob_curve-19">prob_curve</h3>
+<ul class="incremental">
+<li>Description: Probability curve.</li>
+<li>Default: Static</li>
+<li>Type: str</li>
+<li>Possible values: ‘AlwaysOn’, ‘Static’, ‘Linear’, ‘Quadratic’, ‘LinearOsc’, ‘Saw’, ‘Sine’, ‘Accumulating’, ‘RandomToggle’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="marked_by-19">marked_by</h3>
+<ul class="incremental">
+<li>Description: Only apply to notes marked by.</li>
+<li>Default:</li>
+<li>Type: str</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="start_time-19">start_time</h3>
+<ul class="incremental">
+<li>Description: Start time.</li>
+<li>Default: [0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="end_time-19">end_time</h3>
+<ul class="incremental">
+<li>Description: End time.</li>
+<li>Default: [0.0]</li>
+<li>Type: float</li>
+<li>Min: 0.0</li>
+<li>Max: 0.0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="by_voice-19">by_voice</h3>
+<ul class="incremental">
+<li>Description: By voice.</li>
+<li>Default: True</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="voices-19">voices</h3>
+<ul class="incremental">
+<li>Description: Voices.</li>
+<li>Only has effect if by_voice == ‘true’</li>
+<li>Default: []</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exemptions-19">exemptions</h3>
+<ul class="incremental">
+<li>Description: Exemptions.</li>
+<li>Default: off</li>
+<li>Type: str</li>
+<li>Possible values: ‘off’, ‘metric’, ‘counting’</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt-19">exempt</h3>
+<ul class="incremental">
+<li>Description: Exempt beats.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: ()</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_modulo-19">exempt_modulo</h3>
+<ul class="incremental">
+<li>Description: Exempt beats modulo.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 4</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="exempt_n-19">exempt_n</h3>
+<ul class="incremental">
+<li>Description: Exempt num notes.</li>
+<li>Only has effect if exemptions == ‘counting’</li>
+<li>Default: [0]</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="exempt_comma-19">exempt_comma</h3>
+<ul class="incremental">
+<li>Description: Exempt comma.</li>
+<li>Only has effect if exemptions == ‘metric’</li>
+<li>Default: 1/128</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="invert_exempt-19">invert_exempt</h3>
+<ul class="incremental">
+<li>Description: Invert exempt beats.</li>
+<li>Only has effect if exemptions in (‘metric’, ‘counting’)</li>
+<li>Default: False</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h3 id="subdivision">subdivision</h3>
+<ul class="incremental">
+<li>Description: Subdivision value.</li>
+<li>Default: [0.25]</li>
+<li>Type: Fraction</li>
+<li>Min: 0.0078125</li>
+<li>Max: 4</li>
+<li>Unique: no</li>
+</ul>
+<h1 id="probability-curves">Probability curves</h1>
+<h2 id="alwayson">AlwaysOn</h2>
+<p>Always on.</p>
+<h2 id="static">Static</h2>
+<p>Static.</p>
+<h3 id="seg_len_range">seg_len_range</h3>
+<ul class="incremental">
+<li>Description: Segment length range.</li>
+<li>Default: [(1, 1)]</li>
+<li>Type: int</li>
+<li>Min: 1</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="granularity">granularity</h3>
+<ul class="incremental">
+<li>Description: Rhythmic granularity.</li>
+<li>Default: [0]</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="grain_offset">grain_offset</h3>
+<ul class="incremental">
+<li>Description: Granularity offset.</li>
+<li>Only has effect if granularity == ‘true’</li>
+<li>Default: [0]</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="prob">prob</h3>
+<ul class="incremental">
+<li>Description: Static probability.</li>
+<li>Default: [0.5]</li>
+<li>Type: float</li>
+<li>Min: 0</li>
+<li>Max: 1</li>
+<li>Unique: no</li>
+</ul>
+<h2 id="linear">Linear</h2>
+<p>Linear.</p>
+<h3 id="seg_len_range-1">seg_len_range</h3>
+<ul class="incremental">
+<li>Description: Segment length range.</li>
+<li>Default: [(1, 1)]</li>
+<li>Type: int</li>
+<li>Min: 1</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="granularity-1">granularity</h3>
+<ul class="incremental">
+<li>Description: Rhythmic granularity.</li>
+<li>Default: [0]</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="grain_offset-1">grain_offset</h3>
+<ul class="incremental">
+<li>Description: Granularity offset.</li>
+<li>Only has effect if granularity == ‘true’</li>
+<li>Default: [0]</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="min_prob">min_prob</h3>
+<ul class="incremental">
+<li>Description: Minimum probability.</li>
+<li>Default: [0]</li>
+<li>Type: float</li>
+<li>Min: 0</li>
+<li>Max: 1</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="max_prob">max_prob</h3>
+<ul class="incremental">
+<li>Description: Maximum probability.</li>
+<li>Default: [1]</li>
+<li>Type: float</li>
+<li>Min: 0</li>
+<li>Max: 1</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="decreasing">decreasing</h3>
+<ul class="incremental">
+<li>Description: Decreasing.</li>
+<li>Default: [False]</li>
+<li>Type: bool</li>
+<li>Unique: no</li>
+</ul>
+<h2 id="quadratic">Quadratic</h2>
+<p>Quadratic.</p>
+<h3 id="seg_len_range-2">seg_len_range</h3>
+<ul class="incremental">
+<li>Description: Segment length range.</li>
+<li>Default: [(1, 1)]</li>
+<li>Type: int</li>
+<li>Min: 1</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="granularity-2">granularity</h3>
+<ul class="incremental">
+<li>Description: Rhythmic granularity.</li>
+<li>Default: [0]</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="grain_offset-2">grain_offset</h3>
+<ul class="incremental">
+<li>Description: Granularity offset.</li>
+<li>Only has effect if granularity == ‘true’</li>
+<li>Default: [0]</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="min_prob-1">min_prob</h3>
+<ul class="incremental">
+<li>Description: Minimum probability.</li>
+<li>Default: [0]</li>
+<li>Type: float</li>
+<li>Min: 0</li>
+<li>Max: 1</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="max_prob-1">max_prob</h3>
+<ul class="incremental">
+<li>Description: Maximum probability.</li>
+<li>Default: [1]</li>
+<li>Type: float</li>
+<li>Min: 0</li>
+<li>Max: 1</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="decreasing-1">decreasing</h3>
+<ul class="incremental">
+<li>Description: Decreasing.</li>
+<li>Default: [False]</li>
+<li>Type: bool</li>
+<li>Unique: no</li>
+</ul>
+<h2 id="linearosc">LinearOsc</h2>
+<p>Linear oscillating.</p>
+<h3 id="seg_len_range-3">seg_len_range</h3>
+<ul class="incremental">
+<li>Description: Segment length range.</li>
+<li>Default: [(1, 1)]</li>
+<li>Type: int</li>
+<li>Min: 1</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="granularity-3">granularity</h3>
+<ul class="incremental">
+<li>Description: Rhythmic granularity.</li>
+<li>Default: [0]</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="grain_offset-3">grain_offset</h3>
+<ul class="incremental">
+<li>Description: Granularity offset.</li>
+<li>Only has effect if granularity == ‘true’</li>
+<li>Default: [0]</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="min_prob-2">min_prob</h3>
+<ul class="incremental">
+<li>Description: Minimum probability.</li>
+<li>Default: [0]</li>
+<li>Type: float</li>
+<li>Min: 0</li>
+<li>Max: 1</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="max_prob-2">max_prob</h3>
+<ul class="incremental">
+<li>Description: Maximum probability.</li>
+<li>Default: [1]</li>
+<li>Type: float</li>
+<li>Min: 0</li>
+<li>Max: 1</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="decreasing-2">decreasing</h3>
+<ul class="incremental">
+<li>Description: Decreasing.</li>
+<li>Default: [False]</li>
+<li>Type: bool</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="period">period</h3>
+<ul class="incremental">
+<li>Description: Oscillation period.</li>
+<li>Default: [4]</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="offset">offset</h3>
+<ul class="incremental">
+<li>Description: Oscillation offset.</li>
+<li>Default: [0]</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h2 id="saw">Saw</h2>
+<p>Saw wave.</p>
+<h3 id="seg_len_range-4">seg_len_range</h3>
+<ul class="incremental">
+<li>Description: Segment length range.</li>
+<li>Default: [(1, 1)]</li>
+<li>Type: int</li>
+<li>Min: 1</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="granularity-4">granularity</h3>
+<ul class="incremental">
+<li>Description: Rhythmic granularity.</li>
+<li>Default: [0]</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="grain_offset-4">grain_offset</h3>
+<ul class="incremental">
+<li>Description: Granularity offset.</li>
+<li>Only has effect if granularity == ‘true’</li>
+<li>Default: [0]</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="min_prob-3">min_prob</h3>
+<ul class="incremental">
+<li>Description: Minimum probability.</li>
+<li>Default: [0]</li>
+<li>Type: float</li>
+<li>Min: 0</li>
+<li>Max: 1</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="max_prob-3">max_prob</h3>
+<ul class="incremental">
+<li>Description: Maximum probability.</li>
+<li>Default: [1]</li>
+<li>Type: float</li>
+<li>Min: 0</li>
+<li>Max: 1</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="decreasing-3">decreasing</h3>
+<ul class="incremental">
+<li>Description: Decreasing.</li>
+<li>Default: [False]</li>
+<li>Type: bool</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="period-1">period</h3>
+<ul class="incremental">
+<li>Description: Oscillation period.</li>
+<li>Default: [4]</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="offset-1">offset</h3>
+<ul class="incremental">
+<li>Description: Oscillation offset.</li>
+<li>Default: [0]</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h2 id="sine">Sine</h2>
+<p>Sine wave.</p>
+<h3 id="seg_len_range-5">seg_len_range</h3>
+<ul class="incremental">
+<li>Description: Segment length range.</li>
+<li>Default: [(1, 1)]</li>
+<li>Type: int</li>
+<li>Min: 1</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="granularity-5">granularity</h3>
+<ul class="incremental">
+<li>Description: Rhythmic granularity.</li>
+<li>Default: [0]</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="grain_offset-5">grain_offset</h3>
+<ul class="incremental">
+<li>Description: Granularity offset.</li>
+<li>Only has effect if granularity == ‘true’</li>
+<li>Default: [0]</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="min_prob-4">min_prob</h3>
+<ul class="incremental">
+<li>Description: Minimum probability.</li>
+<li>Default: [0]</li>
+<li>Type: float</li>
+<li>Min: 0</li>
+<li>Max: 1</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="max_prob-4">max_prob</h3>
+<ul class="incremental">
+<li>Description: Maximum probability.</li>
+<li>Default: [1]</li>
+<li>Type: float</li>
+<li>Min: 0</li>
+<li>Max: 1</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="decreasing-4">decreasing</h3>
+<ul class="incremental">
+<li>Description: Decreasing.</li>
+<li>Default: [False]</li>
+<li>Type: bool</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="period-2">period</h3>
+<ul class="incremental">
+<li>Description: Oscillation period.</li>
+<li>Default: [4]</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="offset-2">offset</h3>
+<ul class="incremental">
+<li>Description: Oscillation offset.</li>
+<li>Default: [0]</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h2 id="accumulating">Accumulating</h2>
+<p>Accumulating.</p>
+<h3 id="seg_len_range-6">seg_len_range</h3>
+<ul class="incremental">
+<li>Description: Segment length range.</li>
+<li>Default: [(1, 1)]</li>
+<li>Type: int</li>
+<li>Min: 1</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="granularity-6">granularity</h3>
+<ul class="incremental">
+<li>Description: Rhythmic granularity.</li>
+<li>Default: [0]</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="grain_offset-6">grain_offset</h3>
+<ul class="incremental">
+<li>Description: Granularity offset.</li>
+<li>Only has effect if granularity == ‘true’</li>
+<li>Default: [0]</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="prob-1">prob</h3>
+<ul class="incremental">
+<li>Description: Static probability.</li>
+<li>Default: [0.05]</li>
+<li>Type: float</li>
+<li>Min: 0</li>
+<li>Max: 1</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="acc_modulo">acc_modulo</h3>
+<ul class="incremental">
+<li>Description: Accumulation modulo.</li>
+<li>Default: [8]</li>
+<li>Type: int</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="decreasing-5">decreasing</h3>
+<ul class="incremental">
+<li>Description: Decreasing.</li>
+<li>Default: True</li>
+<li>Type: bool</li>
+<li>Unique: yes</li>
+</ul>
+<h2 id="randomtoggle">RandomToggle</h2>
+<p>Random toggle.</p>
+<h3 id="seg_len_range-7">seg_len_range</h3>
+<ul class="incremental">
+<li>Description: Segment length range.</li>
+<li>Default: [(1, 1)]</li>
+<li>Type: int</li>
+<li>Min: 1</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="granularity-7">granularity</h3>
+<ul class="incremental">
+<li>Description: Rhythmic granularity.</li>
+<li>Default: [0]</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="grain_offset-7">grain_offset</h3>
+<ul class="incremental">
+<li>Description: Granularity offset.</li>
+<li>Only has effect if granularity == ‘true’</li>
+<li>Default: [0]</li>
+<li>Type: Fraction</li>
+<li>Min: 0</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="on_prob">on_prob</h3>
+<ul class="incremental">
+<li>Description: On probability.</li>
+<li>Default: [0.25]</li>
+<li>Type: float</li>
+<li>Min: 0</li>
+<li>Max: 1</li>
+<li>Unique: no</li>
+</ul>
+<h3 id="off_prob">off_prob</h3>
+<ul class="incremental">
+<li>Description: Off probability.</li>
+<li>Default: [0.25]</li>
+<li>Type: float</li>
+<li>Min: 0</li>
+<li>Max: 1</li>
+<li>Unique: no</li>
+</ul>
+</body>
+</html>

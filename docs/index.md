@@ -102,8 +102,9 @@ fit the next harmony.\[2\]
 
 <div id="example1-div" class="example-div">
 
-<span id="example1">**Example:**
-`docs/examples/example1.py`</span>\[&#1;
+<span id="example1">**Example:** `docs/examples/example1.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/example1.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1;
 notation\](docs/resources/svgs/example1.svg){class=“notation”} \[&#1;
 piano
 roll\](docs/resources/pngs/example1\_00001.png){class=“piano\_roll”
@@ -131,8 +132,9 @@ harmony.\[3\]
 
 <div id="example2-div" class="example-div">
 
-<span id="example2">**Example:**
-`docs/examples/example2.py`</span>\[&#1;
+<span id="example2">**Example:** `docs/examples/example2.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/example2.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1;
 notation\](docs/resources/svgs/example2.svg){class=“notation”} \[&#1;
 piano
 roll\](docs/resources/pngs/example2\_00001.png){class=“piano\_roll”
@@ -153,8 +155,9 @@ truncated (a bit like a 3–3–2 *tresillo* pattern).
 
 <div id="example3-div" class="example-div">
 
-<span id="example3">**Example:**
-`docs/examples/example3.py`</span>\[&#1;
+<span id="example3">**Example:** `docs/examples/example3.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/example3.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1;
 notation\](docs/resources/svgs/example3.svg){class=“notation”} \[&#1;
 piano
 roll\](docs/resources/pngs/example3\_00001.png){class=“piano\_roll”
@@ -173,8 +176,9 @@ again has `rhythm_len = 1.5`, but the top voice now has `rhythm_len
 
 <div id="example4-div" class="example-div">
 
-<span id="example4">**Example:**
-`docs/examples/example4.py`</span>\[&#1;
+<span id="example4">**Example:** `docs/examples/example4.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/example4.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1;
 notation\](docs/resources/svgs/example4.svg){class=“notation”} \[&#1;
 piano
 roll\](docs/resources/pngs/example4\_00001.png){class=“piano\_roll”
@@ -198,8 +202,9 @@ dissonances like 7ths and 9ths.
 
 <div id="example5-div" class="example-div">
 
-<span id="example5">**Example:**
-`docs/examples/example5.py`</span>\[&#1;
+<span id="example5">**Example:** `docs/examples/example5.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/example5.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1;
 notation\](docs/resources/svgs/example5.svg){class=“notation”} \[&#1;
 piano
 roll\](docs/resources/pngs/example5\_00001.png){class=“piano\_roll”
@@ -223,8 +228,9 @@ least-common-multiple of 1.5 and 4.)
 
 <div id="example6-div" class="example-div">
 
-<span id="example6">**Example:**
-`docs/examples/example6.py`</span>\[&#1;
+<span id="example6">**Example:** `docs/examples/example6.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/example6.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1;
 notation\](docs/resources/svgs/example6.svg){class=“notation”} \[&#1;
 piano
 roll\](docs/resources/pngs/example6\_00001.png){class=“piano\_roll”
@@ -245,8 +251,9 @@ harmonies.
 
 <div id="example7-div" class="example-div">
 
-<span id="example7">**Example:**
-`docs/examples/example7.py`</span>\[&#1;
+<span id="example7">**Example:** `docs/examples/example7.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/example7.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1;
 notation\](docs/resources/svgs/example7.svg){class=“notation”} \[&#1;
 piano
 roll\](docs/resources/pngs/example7\_00001.png){class=“piano\_roll”
@@ -277,7 +284,9 @@ relevant lines in `harmony_example1.py` are
 <div id="harmony_example1-div" class="example-div">
 
 <span id="harmony_example1">**Example:**
-`docs/examples/harmony_example1.py`</span>\[&#1;
+`docs/examples/harmony_example1.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/harmony_example1.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1;
 notation\](docs/resources/svgs/harmony\_example1.svg){class=“notation”}
 \[&#1; piano
 roll\](docs/resources/pngs/harmony\_example1\_00001.png){class=“piano\_roll”
@@ -328,7 +337,9 @@ progression:
 <div id="harmony_example2-div" class="example-div">
 
 <span id="harmony_example2">**Example:**
-`docs/examples/harmony_example2.py`</span>\[&#1;
+`docs/examples/harmony_example2.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/harmony_example2.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1;
 notation\](docs/resources/svgs/harmony\_example2.svg){class=“notation”}
 \[&#1; piano
 roll\](docs/resources/pngs/harmony\_example2\_00001.png){class=“piano\_roll”
@@ -374,7 +385,9 @@ illustrates with the following short loop:
 <div id="harmony_example3-div" class="example-div">
 
 <span id="harmony_example3">**Example:**
-`docs/examples/harmony_example3.py`</span>\[&#1;
+`docs/examples/harmony_example3.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/harmony_example3.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1;
 notation\](docs/resources/svgs/harmony\_example3.svg){class=“notation”}
 \[&#1; piano
 roll\](docs/resources/pngs/harmony\_example3\_00001.png){class=“piano\_roll”
@@ -400,7 +413,9 @@ demonstrates:
 <div id="harmony_example4-div" class="example-div">
 
 <span id="harmony_example4">**Example:**
-`docs/examples/harmony_example4.py`</span>\[&#1;
+`docs/examples/harmony_example4.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/harmony_example4.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1;
 notation\](docs/resources/svgs/harmony\_example4.svg){class=“notation”}
 \[&#1; piano
 roll\](docs/resources/pngs/harmony\_example4\_00001.png){class=“piano\_roll”
@@ -430,7 +445,9 @@ Doing so allows us to create “pedal points” on a repeated bass note:
 <div id="harmony_example5-div" class="example-div">
 
 <span id="harmony_example5">**Example:**
-`docs/examples/harmony_example5.py`</span>\[&#1;
+`docs/examples/harmony_example5.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/harmony_example5.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1;
 notation\](docs/resources/svgs/harmony\_example5.svg){class=“notation”}
 \[&#1; piano
 roll\](docs/resources/pngs/harmony\_example5\_00001.png){class=“piano\_roll”
@@ -464,7 +481,9 @@ progressing upwards by
 <div id="harmony_example6-div" class="example-div">
 
 <span id="harmony_example6">**Example:**
-`docs/examples/harmony_example6.py`</span>\[&#1;
+`docs/examples/harmony_example6.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/harmony_example6.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1;
 notation\](docs/resources/svgs/harmony\_example6.svg){class=“notation”}
 \[&#1; piano
 roll\](docs/resources/pngs/harmony\_example6\_00001.png){class=“piano\_roll”
@@ -496,7 +515,9 @@ descending major third.)
 <div id="harmony_example7-div" class="example-div">
 
 <span id="harmony_example7">**Example:**
-`docs/examples/harmony_example7.py`</span>\[&#1;
+`docs/examples/harmony_example7.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/harmony_example7.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1;
 notation\](docs/resources/svgs/harmony\_example7.svg){class=“notation”}
 \[&#1; piano
 roll\](docs/resources/pngs/harmony\_example7\_00001.png){class=“piano\_roll”
@@ -548,7 +569,9 @@ scale/chord to sound on beat one of each harmony.)
 <div id="harmony_example8-div" class="example-div">
 
 <span id="harmony_example8">**Example:**
-`docs/examples/harmony_example8.py`</span>\[&#1;
+`docs/examples/harmony_example8.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/harmony_example8.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1;
 notation\](docs/resources/svgs/harmony\_example8.svg){class=“notation”}
 \[&#1; piano
 roll\](docs/resources/pngs/harmony\_example8\_00001.png){class=“piano\_roll”
@@ -565,7 +588,9 @@ similar, but with `chord_tone_selection = False` as well.
 <div id="harmony_example9-div" class="example-div">
 
 <span id="harmony_example9">**Example:**
-`docs/examples/harmony_example9.py`</span>\[&#1;
+`docs/examples/harmony_example9.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/harmony_example9.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1;
 notation\](docs/resources/svgs/harmony\_example9.svg){class=“notation”}
 \[&#1; piano
 roll\](docs/resources/pngs/harmony\_example9\_00001.png){class=“piano\_roll”
@@ -608,7 +633,9 @@ this example has only one voice.)
 <div id="rhythm_example1-div" class="example-div">
 
 <span id="rhythm_example1">**Example:**
-`docs/examples/rhythm_example1.py`</span>\[&#1;
+`docs/examples/rhythm_example1.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/rhythm_example1.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1;
 notation\](docs/resources/svgs/rhythm\_example1.svg){class=“notation”}
 \[&#1; piano
 roll\](docs/resources/pngs/rhythm\_example1\_00001.png){class=“piano\_roll”
@@ -633,7 +660,9 @@ correspondingly reduced.
 <div id="rhythm_example2-div" class="example-div">
 
 <span id="rhythm_example2">**Example:**
-`docs/examples/rhythm_example2.py`</span>\[&#1;
+`docs/examples/rhythm_example2.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/rhythm_example2.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1;
 notation\](docs/resources/svgs/rhythm\_example2.svg){class=“notation”}
 \[&#1; piano
 roll\](docs/resources/pngs/rhythm\_example2\_00001.png){class=“piano\_roll”
@@ -666,7 +695,9 @@ rhythm is filled by sounding notes.
 <div id="rhythm_example3-div" class="example-div">
 
 <span id="rhythm_example3">**Example:**
-`docs/examples/rhythm_example3.py`</span>\[&#1;
+`docs/examples/rhythm_example3.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/rhythm_example3.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1;
 notation\](docs/resources/svgs/rhythm\_example3.svg){class=“notation”}
 \[&#1; piano
 roll\](docs/resources/pngs/rhythm\_example3\_00001.png){class=“piano\_roll”
@@ -694,7 +725,9 @@ minimum duration of each pitch as well.
 <div id="rhythm_example4-div" class="example-div">
 
 <span id="rhythm_example4">**Example:**
-`docs/examples/rhythm_example4.py`</span>\[&#1;
+`docs/examples/rhythm_example4.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/rhythm_example4.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1;
 notation\](docs/resources/svgs/rhythm\_example4.svg){class=“notation”}
 \[&#1; piano
 roll\](docs/resources/pngs/rhythm\_example4\_00001.png){class=“piano\_roll”
@@ -721,7 +754,9 @@ also set it to unusual values like `5/13` or `math.pi / 12`.\[7\]
 <div id="rhythm_example5-div" class="example-div">
 
 <span id="rhythm_example5">**Example:**
-`docs/examples/rhythm_example5.py`</span>\[&#1; piano
+`docs/examples/rhythm_example5.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/rhythm_example5.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1; piano
 roll\](docs/resources/pngs/rhythm\_example5\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/rhythm\_example5.m4a) [Click to open this
@@ -750,7 +785,9 @@ creating a brief rhythmic loop.)
 <div id="rhythm_example6-div" class="example-div">
 
 <span id="rhythm_example6">**Example:**
-`docs/examples/rhythm_example6.py`</span>\[&#1; piano
+`docs/examples/rhythm_example6.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/rhythm_example6.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1; piano
 roll\](docs/resources/pngs/rhythm\_example6\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/rhythm\_example6.m4a) [Click to open this
@@ -778,7 +815,9 @@ another.)
 <div id="rhythm_example7-div" class="example-div">
 
 <span id="rhythm_example7">**Example:**
-`docs/examples/rhythm_example7.py`</span>\[&#1;
+`docs/examples/rhythm_example7.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/rhythm_example7.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1;
 notation\](docs/resources/svgs/rhythm\_example7.svg){class=“notation”}
 \[&#1; piano
 roll\](docs/resources/pngs/rhythm\_example7\_00001.png){class=“piano\_roll”
@@ -808,7 +847,9 @@ for more details.)
 <div id="rhythm_example8-div" class="example-div">
 
 <span id="rhythm_example8">**Example:**
-`docs/examples/rhythm_example8.py`</span>\[&#1;
+`docs/examples/rhythm_example8.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/rhythm_example8.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1;
 notation\](docs/resources/svgs/rhythm\_example8.svg){class=“notation”}
 \[&#1; piano
 roll\](docs/resources/pngs/rhythm\_example8\_00001.png){class=“piano\_roll”
@@ -852,7 +893,9 @@ piano) has a *lower*
 <div id="rhythm_example9-div" class="example-div">
 
 <span id="rhythm_example9">**Example:**
-`docs/examples/rhythm_example9.py`</span>\[&#1;
+`docs/examples/rhythm_example9.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/rhythm_example9.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1;
 notation\](docs/resources/svgs/rhythm\_example9.svg){class=“notation”}
 \[&#1; piano
 roll\](docs/resources/pngs/rhythm\_example9\_00001.png){class=“piano\_roll”
@@ -895,7 +938,9 @@ underlying scaffold supplied by the values in
 <div id="rhythm_example10-div" class="example-div">
 
 <span id="rhythm_example10">**Example:**
-`docs/examples/rhythm_example10.py`</span>\[&#1;
+`docs/examples/rhythm_example10.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/rhythm_example10.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1;
 notation\](docs/resources/svgs/rhythm\_example10.svg){class=“notation”}
 \[&#1; piano
 roll\](docs/resources/pngs/rhythm\_example10\_00001.png){class=“piano\_roll”
@@ -936,7 +981,9 @@ except for the uneven rhythms.
 <div id="rhythm_example11-div" class="example-div">
 
 <span id="rhythm_example11">**Example:**
-`docs/examples/rhythm_example11.py`</span>\[&#1; piano
+`docs/examples/rhythm_example11.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/rhythm_example11.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1; piano
 roll\](docs/resources/pngs/rhythm\_example11\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/rhythm\_example11.m4a) [Click to open this
@@ -964,7 +1011,9 @@ do in
 <div id="rhythm_example12-div" class="example-div">
 
 <span id="rhythm_example12">**Example:**
-`docs/examples/rhythm_example12.py`</span>\[&#1; piano
+`docs/examples/rhythm_example12.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/rhythm_example12.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1; piano
 roll\](docs/resources/pngs/rhythm\_example12\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/rhythm\_example12.m4a) [Click to open this
@@ -992,7 +1041,9 @@ I’ve set `rhythmic_unison = True`.
 <div id="cont_rhythm_example1-div" class="example-div">
 
 <span id="cont_rhythm_example1">**Example:**
-`docs/examples/cont_rhythm_example1.py`</span>\[&#1; piano
+`docs/examples/cont_rhythm_example1.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/cont_rhythm_example1.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1; piano
 roll\](docs/resources/pngs/cont\_rhythm\_example1\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/cont\_rhythm\_example1.m4a) [Click to open
@@ -1010,7 +1061,9 @@ incomprehensible, like some sort of alien time signature.
 <div id="cont_rhythm_example2-div" class="example-div">
 
 <span id="cont_rhythm_example2">**Example:**
-`docs/examples/cont_rhythm_example2.py`</span>\[&#1; piano
+`docs/examples/cont_rhythm_example2.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/cont_rhythm_example2.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1; piano
 roll\](docs/resources/pngs/cont\_rhythm\_example2\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/cont\_rhythm\_example2.m4a) [Click to open
@@ -1032,7 +1085,9 @@ effect of continuous rhythms is fairly subtle.
 <div id="cont_rhythm_example3-div" class="example-div">
 
 <span id="cont_rhythm_example3">**Example:**
-`docs/examples/cont_rhythm_example3.py`</span>\[&#1; piano
+`docs/examples/cont_rhythm_example3.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/cont_rhythm_example3.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1; piano
 roll\](docs/resources/pngs/cont\_rhythm\_example3\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/cont\_rhythm\_example3.m4a) [Click to open
@@ -1048,7 +1103,9 @@ the strangeness is increased, and the pattern made less obvious.
 <div id="cont_rhythm_example4-div" class="example-div">
 
 <span id="cont_rhythm_example4">**Example:**
-`docs/examples/cont_rhythm_example4.py`</span>\[&#1; piano
+`docs/examples/cont_rhythm_example4.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/cont_rhythm_example4.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1; piano
 roll\](docs/resources/pngs/cont\_rhythm\_example4\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/cont\_rhythm\_example4.m4a) [Click to open
@@ -1083,7 +1140,9 @@ effect.\[9\]
 <div id="cont_rhythm_example5-div" class="example-div">
 
 <span id="cont_rhythm_example5">**Example:**
-`docs/examples/cont_rhythm_example5.py`</span>\[&#1; piano
+`docs/examples/cont_rhythm_example5.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/cont_rhythm_example5.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1; piano
 roll\](docs/resources/pngs/cont\_rhythm\_example5\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/cont\_rhythm\_example5.m4a) [Click to open
@@ -1103,7 +1162,9 @@ value in the preceding examples, to `0.01`.
 <div id="cont_rhythm_example6-div" class="example-div">
 
 <span id="cont_rhythm_example6">**Example:**
-`docs/examples/cont_rhythm_example6.py`</span>\[&#1; piano
+`docs/examples/cont_rhythm_example6.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/cont_rhythm_example6.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1; piano
 roll\](docs/resources/pngs/cont\_rhythm\_example6\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/cont\_rhythm\_example6.m4a) [Click to open
@@ -1124,7 +1185,9 @@ you can hear, the effect becomes quite chaotic.
 <div id="cont_rhythm_example7-div" class="example-div">
 
 <span id="cont_rhythm_example7">**Example:**
-`docs/examples/cont_rhythm_example7.py`</span>\[&#1; piano
+`docs/examples/cont_rhythm_example7.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/cont_rhythm_example7.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1; piano
 roll\](docs/resources/pngs/cont\_rhythm\_example7\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/cont\_rhythm\_example7.m4a) [Click to open
@@ -1149,7 +1212,9 @@ selecting onsets from this grid. You can hear the effect in
 <div id="cont_rhythm_example8-div" class="example-div">
 
 <span id="cont_rhythm_example8">**Example:**
-`docs/examples/cont_rhythm_example8.py`</span>\[&#1; piano
+`docs/examples/cont_rhythm_example8.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/cont_rhythm_example8.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1; piano
 roll\](docs/resources/pngs/cont\_rhythm\_example8\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/cont\_rhythm\_example8.m4a) [Click to open
@@ -1165,7 +1230,9 @@ in <a href="#cont_rhythm_example9">`docs/examples/cont_rhythm_example9.py`</a>.
 <div id="cont_rhythm_example9-div" class="example-div">
 
 <span id="cont_rhythm_example9">**Example:**
-`docs/examples/cont_rhythm_example9.py`</span>\[&#1; piano
+`docs/examples/cont_rhythm_example9.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/cont_rhythm_example9.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1; piano
 roll\](docs/resources/pngs/cont\_rhythm\_example9\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/cont\_rhythm\_example9.m4a) [Click to open
@@ -1180,14 +1247,25 @@ To make our loops more dynamic and unpredictable, we can use “changers”,
 functions that take the music produced by the script and filter or
 transform it in some way.
 
-To illustrate, we will re-use
+There are two ways to apply changers:
+
+  - The shell script provides an interactive prompt through which
+    changers can be applied and adjusted.
+  - Changer settings stored in a Python source file can be provided with
+    the `--changers\-c` command-line argument (see the bottom of this
+    section for details).
+
+(Changers are not yet implemented in the web version of Efficient
+Rhythms.) To illustrate, I will re-use
 <a href="#harmony_example5">`docs/examples/harmony_example5.py`</a>,
 already seen above, but repeated just below for your convenience.
 
 <div id="harmony_example5-div" class="example-div">
 
 <span id="harmony_example5">**Example:**
-`docs/examples/harmony_example5.py`</span>\[&#1;
+`docs/examples/harmony_example5.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/harmony_example5.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1;
 notation\](docs/resources/svgs/harmony\_example5.svg){class=“notation”}
 \[&#1; piano
 roll\](docs/resources/pngs/harmony\_example5\_00001.png){class=“piano\_roll”
@@ -1199,8 +1277,8 @@ app](http://malcolmsailor.pythonanywhere.com/?num_reps_super_pattern=4&seed=2&pa
 </div>
 
 There are two types of changers, “filters,” and “transformers”. Filters
-remove notes from the score, whereas transformers apply some
-transformation to the notes of the score.
+remove notes from the score, whereas transformers apply some change to
+the notes of the score.
 
 The simplest filter is `PitchFilter`, which filters *all* notes from the
 score. Of course, we probably don’t want to remove all the notes from
@@ -1211,12 +1289,14 @@ notes are filtered with a probability of 0.5. Thus, (approximately) half
 of the notes have been removed, and half remain. To my ears, the effect
 is quite dynamic; the harmonic gist of
 <a href="#harmony_example5">`docs/examples/harmony_example5.py`</a>
-remains in effect, and yet in an unpredictable, ever-shifting guise.
+remains present, yet in an unpredictable, ever-shifting guise.
 
 <div id="changer_example1-div" class="example-div">
 
 <span id="changer_example1">**Example:**
-`docs/examples/changer_example1.py`</span>\[&#1;
+`docs/examples/changer_example1.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/changer_example1.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1;
 notation\](docs/resources/svgs/changer\_example1.svg){class=“notation”}
 \[&#1; piano
 roll\](docs/resources/pngs/changer\_example1\_00001.png){class=“piano\_roll”
@@ -1225,18 +1305,46 @@ audio\](docs/resources/m4as/changer\_example1.m4a)
 
 </div>
 
+This is how the interactive prompt that applies the settings from
+<a href="#changer_example1">`docs/examples/changer_example1.py`</a>
+looks. To save space in subsequent examples, I will show only those
+settings that have been changed from their default values.
+
+    ## Pitch filter ################################################################
+    Description: Pitch filter removes notes of any pitch
+    
+         (1) Probability curve: Static
+         (2) Segment length range: (1, 1)
+         (3) Rhythmic granularity: 0
+         (4) Static probability: 0.5
+         (5) Only apply to notes marked by:
+         (6) Start time: 0
+         (7) End time: 64.0                                 Total length: 64.0
+         (8) By voice: True
+         (9) Voices: [0, 1, 2]                          Number of voices: 3
+        (10) Exemptions: off
+        (11) Adjust durations: None
+
 We can also apply the filter according to “probability curves”; i.e.,
-functions that take the onset time of a note and return the probability
-that the filter will apply. In
+functions that take the onset time of a note as argument, and return a
+probability. In
 <a href="#changer_example2">`docs/examples/changer_example2.py`</a>, I
 apply the filter according to a linear probability curve that decreases
-steadily from 1.0 to 0.0. (Thus, at the start of the score, the
-probability that a note will be filtered is 1; at the end, it is 0.)
+steadily from 1.0 to 0.0. Thus, at the start of the score, *all* of the
+notes are filtered; by the end, none of them are.
+
+    ## Pitch filter ################################################################
+         (1) Probability curve: Linear
+         ...
+         (6) Decreasing: True
+         ...
 
 <div id="changer_example2-div" class="example-div">
 
 <span id="changer_example2">**Example:**
-`docs/examples/changer_example2.py`</span>\[&#1;
+`docs/examples/changer_example2.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/changer_example2.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1;
 notation\](docs/resources/svgs/changer\_example2.svg){class=“notation”}
 \[&#1; piano
 roll\](docs/resources/pngs/changer\_example2\_00001.png){class=“piano\_roll”
@@ -1245,8 +1353,8 @@ audio\](docs/resources/m4as/changer\_example2.m4a)
 
 </div>
 
-Although each filter can only take a single probability curve, we can
-include multiple filters, each with its own start and end times, in
+Although each changer can only take a single probability curve, we can
+include multiple changers, each with its own start and end times, in
 order to achieve the effect of multiple probability curves. In
 <a href="#changer_example3">`docs/examples/changer_example3.py`</a>, I
 have combined a *decreasing* curve from the beginning of the score to
@@ -1254,10 +1362,30 @@ its middle with an *increasing* curve from the middle to the end. The
 effect is that the score begins in silence, emerges in full half way
 through, and then retreats to silence again.
 
+    ## Pitch filter ################################################################
+         (1) Probability curve: Linear
+         ...
+         (6) Decreasing: True
+         ...
+         (8) Start time: 0.0
+         (9) End time: 32.0                                 Total length: 64.0
+         ...
+
+    ## Pitch filter ################################################################
+         (1) Probability curve: Linear
+         ...
+         (6) Decreasing: False
+         ...
+         (8) Start time: 32.0
+         (9) End time: 64.0                                 Total length: 64.0
+         ...
+
 <div id="changer_example3-div" class="example-div">
 
 <span id="changer_example3">**Example:**
-`docs/examples/changer_example3.py`</span>\[&#1;
+`docs/examples/changer_example3.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/changer_example3.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1;
 notation\](docs/resources/svgs/changer\_example3.svg){class=“notation”}
 \[&#1; piano
 roll\](docs/resources/pngs/changer\_example3\_00001.png){class=“piano\_roll”
@@ -1266,18 +1394,29 @@ audio\](docs/resources/m4as/changer\_example3.m4a)
 
 </div>
 
-If we set `by_voice` to True, the filter will only apply to those voices
-that we specify using `voices`.
-<a href="#changer_example4">`docs/examples/changer_example4.py`</a>
-features the same decreasing pitch filter as
-<a href="#changer_example1">`docs/examples/changer_example1.py`</a>,
-except that the filter applies only to voices 1 and 2. The bass voice
-(voice 0) is unfiltered and so sounds below the other parts throughout.
+If `by_voice` is `True` (its default value), we can apply the filter
+only to specific voices. We do this by setting `voices` to a list of
+voice indices.
+<a href="#changer_example4">`docs/examples/changer_example4.py`</a> uses
+the same decreasing pitch filter as
+<a href="#changer_example1">`docs/examples/changer_example1.py`</a>, but
+now the filter applies only to voices 1 and 2. The bass voice (voice 0)
+is unfiltered and so sounds below the other parts throughout.
+
+    ## Pitch filter ################################################################
+         (1) Probability curve: Linear
+         ...
+         (6) Decreasing: True
+         ...
+        (11) Voices: [1, 2]                             Number of voices: 3
+         ...
 
 <div id="changer_example4-div" class="example-div">
 
 <span id="changer_example4">**Example:**
-`docs/examples/changer_example4.py`</span>\[&#1;
+`docs/examples/changer_example4.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/changer_example4.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1;
 notation\](docs/resources/svgs/changer\_example4.svg){class=“notation”}
 \[&#1; piano
 roll\](docs/resources/pngs/changer\_example4\_00001.png){class=“piano\_roll”
@@ -1285,6 +1424,136 @@ style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/changer\_example4.m4a)
 
 </div>
+
+On the other hand, if `by_voice` is `False`, then at each onset, all
+notes in the score sounding at that onset will be filtered as a group.
+Ref:changer\_example5 illustrates by repeating the settings from
+<a href="#changer_example1">`docs/examples/changer_example1.py`</a>, but
+with `by_voice = False`.
+
+    ## Pitch filter ################################################################
+         (1) Probability curve: Linear
+         ...
+         (6) Decreasing: True
+         ...
+        (10) By voice: False
+         ...
+
+<div id="changer_example5-div" class="example-div">
+
+<span id="changer_example5">**Example:**
+`docs/examples/changer_example5.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/changer_example5.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1;
+notation\](docs/resources/svgs/changer\_example5.svg){class=“notation”}
+\[&#1; piano
+roll\](docs/resources/pngs/changer\_example5\_00001.png){class=“piano\_roll”
+style=“max-height: 300px”} \[&#1;
+audio\](docs/resources/m4as/changer\_example5.m4a)
+
+</div>
+
+Other filters will filter pitches based on some specific condition. For
+example, `FilterUnselectedPCs` takes a list `selected_pcs` of
+pitch-classes. The pitch-classes in this list will always pass through
+the filter, while the remaining pitch-classes will be filtered as
+normal. This is illustrated in
+<a href="#changer_example6">`docs/examples/changer_example6.py`</a>.
+Since the original music is in the key of D, I have selected pitch
+classes D and A (= 2 and 9). The effect is that these pitch classes
+solidly establish the key at the outset, while the other pitches enter
+gradually like increasingly elaborate embellishments.
+
+    ## Unselected pitch-class filter ###############################################
+         (1) Probability curve: Linear
+         ...
+         (6) Decreasing: True
+         ...
+        (14) Pitch-classes not to filter: [2, 9]                     TET: 12
+
+<div id="changer_example6-div" class="example-div">
+
+<span id="changer_example6">**Example:**
+`docs/examples/changer_example6.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/changer_example6.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1;
+notation\](docs/resources/svgs/changer\_example6.svg){class=“notation”}
+\[&#1; piano
+roll\](docs/resources/pngs/changer\_example6\_00001.png){class=“piano\_roll”
+style=“max-height: 300px”} \[&#1;
+audio\](docs/resources/m4as/changer\_example6.m4a)
+
+</div>
+
+A simple example of a transformer is `ForcePitchTransformer`. This
+transformer takes the argument `force_pitches`, consisting of one or
+more pitches. It then takes each note and, with probability determined
+by its probability curve, assigns that note a pitch from
+`force_pitches`. (If `force_pitches` has more than one element, the
+choice of pitch is made randomly.) In
+<a href="#changer_example7">`docs/examples/changer_example7.py`</a>, I
+illustrate using pitches 50 (=D3) and 62 (=D4)
+
+    ## Force pitch transformer #####################################################
+         (1) Probability curve: Linear
+         ...
+         (6) Decreasing: True
+         ...
+        (13) Pitches to force: [50, 62]
+
+<div id="changer_example7-div" class="example-div">
+
+<span id="changer_example7">**Example:**
+`docs/examples/changer_example7.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/changer_example7.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1;
+notation\](docs/resources/svgs/changer\_example7.svg){class=“notation”}
+\[&#1; piano
+roll\](docs/resources/pngs/changer\_example7\_00001.png){class=“piano\_roll”
+style=“max-height: 300px”} \[&#1;
+audio\](docs/resources/m4as/changer\_example7.m4a)
+
+</div>
+
+Because the music being transformed is in D major, the transformed
+pitches in the preceding example sound highly consonant. But there’s no
+requirement that we choose such consonant pitches. As a contrasting
+example,
+<a href="#changer_example8">`docs/examples/changer_example8.py`</a>
+assigns `force_pitches = [56, 57, 65]` (i.e., G\#3, A3, F4). The result
+is that D major emerges gradually from the ambiguous opening.
+
+    ## Force pitch transformer #####################################################
+         (1) Probability curve: Linear
+        ...
+         (6) Decreasing: True
+        ...
+        (13) Pitches to force: [56, 57, 65]
+
+<div id="changer_example8-div" class="example-div">
+
+<span id="changer_example8">**Example:**
+`docs/examples/changer_example8.py`</span>
+<a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/changer_example8.py"target="_blank" rel="noopener noreferrer">View
+source</a>\[&#1;
+notation\](docs/resources/svgs/changer\_example8.svg){class=“notation”}
+\[&#1; piano
+roll\](docs/resources/pngs/changer\_example8\_00001.png){class=“piano\_roll”
+style=“max-height: 300px”} \[&#1;
+audio\](docs/resources/m4as/changer\_example8.m4a)
+
+</div>
+
+There are many other filters and transformers that I have not
+illustrated here. Preliminary documentation of these changers can be
+found in \[changers.html\](docs/changers.md).
+
+If you wish to save your changers using a Python dictionary, the file
+should consist of a list of 2-tuples. The first item of each tuple is
+the name of the changer class (e.g., `"PitchFilter"`); the second item
+is a (possibly empty) dictionary containing the settings for that
+changer.\[10\] For concrete illustration, see the source files for the
+above examples.
 
 1.  This command needs to be run from the root directory of the
     repository.
@@ -1340,3 +1609,7 @@ audio\](docs/resources/m4as/changer\_example4.m4a)
     special effect, one can have the notes evenly spaced in one voice,
     while \[`cont_rhythms`\](docs/settings.md\#cont\_rhythms) is allowed
     to wreak havoc in the other voices.
+
+10. If you’re wondering why a list of 2-tuples, rather than a
+    dictionary, it is to allow for more than one changer of the same
+    class.

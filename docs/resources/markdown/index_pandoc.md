@@ -7,11 +7,13 @@ title: Efficient rhythms documentation
 
 `efficient_rhythms` is a tool for musical composition. You can find it on Github at [`https://github.com/malcolmsailor/efficient_rhythms`](https://github.com/malcolmsailor/efficient_rhythms). There is also an [alpha web app version of this script](http://malcolmsailor.pythonanywhere.com) you are welcome to try.
 
-Here are a few examples of things I have made using it:
+Here's a couple examples of things it helped me make:
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/YgAUskvRWPM" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-`TODO add more videos here`
+<iframe width="560" height="315" src="https://www.youtube.com/embed/owvfdymO9Aw" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+<!-- `TODO add more videos here` -->
 
 The gist of how the script works goes as follows:
 
@@ -480,9 +482,154 @@ EXAMPLE:cont_rhythm_example9
 
 
 
-## Filters and transformers
+## Changers: filters and transformers
 
-`TODO`
+To make our loops more dynamic and unpredictable, we can use "changers", functions that take the music produced by the script and filter or transform it in some way. 
+
+There are two ways to apply changers: 
+
+- The shell script provides an interactive prompt through which changers can be applied and adjusted. 
+- Changer settings stored in a Python source file can be provided with the `--changers\-c` command-line argument (see the bottom of this section for details).
+
+(Changers are not yet implemented in the web version of Efficient Rhythms.) To illustrate, I will re-use REF:harmony_example5, already seen above, but repeated just below for your convenience.
+
+EXAMPLE:harmony_example5
+
+There are two types of changers, "filters," and "transformers". Filters remove notes from the score, whereas transformers apply some change to the notes of the score.
+
+The simplest filter is `PitchFilter`, which filters *all* notes from the score. Of course, we probably don't want to remove all the notes from the score---we'll be left with silence. Thus we apply the filter *probabilistically*. In REF:changer_example1, the notes are filtered with a probability of 0.5. Thus, (approximately) half of the notes have been removed, and half remain. To my ears, the effect is quite dynamic; the harmonic gist of REF:harmony_example5 remains present, yet in an unpredictable, ever-shifting guise.
+
+
+EXAMPLE:changer_example1
+
+This is how the interactive prompt that applies the settings from REF:changer_example1 looks. To save space in subsequent examples, I will show only those settings that have been changed from their default values.
+
+```
+## Pitch filter ################################################################
+Description: Pitch filter removes notes of any pitch
+
+     (1) Probability curve: Static
+     (2) Segment length range: (1, 1)
+     (3) Rhythmic granularity: 0
+     (4) Static probability: 0.5
+     (5) Only apply to notes marked by:
+     (6) Start time: 0
+     (7) End time: 64.0                                 Total length: 64.0
+     (8) By voice: True
+     (9) Voices: [0, 1, 2]                          Number of voices: 3
+    (10) Exemptions: off
+    (11) Adjust durations: None
+```
+
+We can also apply the filter according to "probability curves"; i.e., functions that take the onset time of a note as argument, and return a probability. In REF:changer_example2, I apply the filter according to a linear probability curve that decreases steadily from 1.0 to 0.0. Thus, at the start of the score, *all* of the notes are filtered; by the end, none of them are.
+
+```
+## Pitch filter ################################################################
+     (1) Probability curve: Linear
+     ...
+     (6) Decreasing: True
+     ...
+```
+
+EXAMPLE:changer_example2
+
+Although each changer can only take a single probability curve, we can include multiple changers, each with its own start and end times, in order to achieve the effect of multiple probability curves. In REF:changer_example3, I have combined a *decreasing* curve from the beginning of the score to its middle with an *increasing* curve from the middle to the end. The effect is that the score begins in silence, emerges in full half way through, and then retreats to silence again.
+
+```
+## Pitch filter ################################################################
+     (1) Probability curve: Linear
+     ...
+     (6) Decreasing: True
+     ...
+     (8) Start time: 0.0
+     (9) End time: 32.0                                 Total length: 64.0
+     ...
+```
+
+```
+## Pitch filter ################################################################
+     (1) Probability curve: Linear
+     ...
+     (6) Decreasing: False
+     ...
+     (8) Start time: 32.0
+     (9) End time: 64.0                                 Total length: 64.0
+     ...
+```
+
+
+EXAMPLE:changer_example3
+
+If `by_voice` is `True` (its default value), we can apply the filter only to specific voices. We do this by setting `voices` to a list of voice indices. REF:changer_example4 uses the same decreasing pitch filter as REF:changer_example1, but now the filter applies only to voices 1 and 2. The bass voice (voice 0) is unfiltered and so sounds below the other parts throughout.
+
+```
+## Pitch filter ################################################################
+     (1) Probability curve: Linear
+     ...
+     (6) Decreasing: True
+     ...
+    (11) Voices: [1, 2]                             Number of voices: 3
+     ...
+```
+
+EXAMPLE:changer_example4
+
+On the other hand, if `by_voice` is `False`, then at each onset, all notes in the score sounding at that onset will be filtered as a group. Ref:changer_example5 illustrates by repeating the settings from REF:changer_example1, but with `by_voice = False`.
+
+```
+## Pitch filter ################################################################
+     (1) Probability curve: Linear
+     ...
+     (6) Decreasing: True
+     ...
+    (10) By voice: False
+     ...
+```
+EXAMPLE:changer_example5
+
+Other filters will filter pitches based on some specific condition. For example, `FilterUnselectedPCs` takes a list `selected_pcs` of pitch-classes. The pitch-classes in this list will always pass through the filter, while the remaining pitch-classes will be filtered as normal. This is illustrated in REF:changer_example6. Since the original music is in the key of D, I have selected pitch classes D and A (= 2 and 9). The effect is that these pitch classes solidly establish the key at the outset, while the other pitches enter gradually like increasingly elaborate embellishments.
+
+```
+## Unselected pitch-class filter ###############################################
+     (1) Probability curve: Linear
+     ...
+     (6) Decreasing: True
+     ...
+    (14) Pitch-classes not to filter: [2, 9]                     TET: 12
+```
+
+EXAMPLE:changer_example6
+
+A simple example of a transformer is `ForcePitchTransformer`. This transformer takes the argument `force_pitches`, consisting of one or more pitches. It then takes each note and, with probability determined by its probability curve, assigns that note a pitch from `force_pitches`. (If `force_pitches` has more than one element, the choice of pitch is made randomly.) In REF:changer_example7, I illustrate using pitches 50 (=D3) and 62 (=D4)
+
+```
+## Force pitch transformer #####################################################
+     (1) Probability curve: Linear
+     ...
+     (6) Decreasing: True
+     ...
+    (13) Pitches to force: [50, 62]
+```
+
+EXAMPLE:changer_example7
+
+Because the music being transformed is in D major, the transformed pitches in the preceding example sound highly consonant. But there's no requirement that we choose such consonant pitches. As a contrasting example, REF:changer_example8 assigns `force_pitches = [56, 57, 65]` (i.e., G#3, A3, F4). The result is that D major emerges gradually from the ambiguous opening.
+
+```
+## Force pitch transformer #####################################################
+     (1) Probability curve: Linear
+    ...
+     (6) Decreasing: True
+    ...
+    (13) Pitches to force: [56, 57, 65]
+```
+
+EXAMPLE:changer_example8
+
+There are many other filters and transformers that I have not illustrated here. Preliminary documentation of these changers can be found in [changers.html](changers.html).
+
+If you wish to save your changers using a Python dictionary, the file should consist of a list of 2-tuples. The first item of each tuple is the name of the changer class (e.g., `"PitchFilter"`); the second item is a (possibly empty) dictionary containing the settings for that changer.^[If you're wondering why a list of 2-tuples, rather than a dictionary, it is to allow for more than one changer of the same class.] For concrete illustration, see the source files for the above examples.
+
 
 <!--
 ## Randomization
@@ -571,7 +718,7 @@ allow_flexible_voice_leading
 vl_maintain_consonance
 vl_maintain_limit_intervals
 vl_maintain_forbidden_intervals
-chord_tone_prob_func
+chord_tone_prob_curve
 max_n_between_chord_tones
 min_prob_chord_tone
 try_to_force_non_chord_tones

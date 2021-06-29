@@ -198,13 +198,13 @@
 <li>Note that not all chord tone behavior is controlled by this setting, however. Some settings (such as those that begin “force_chord_tone”) apply regardless. To disable all chord tone behavior entirely, use <a href="#chord_tone_and_foot_disable"><code>chord_tone_and_foot_disable</code></a>.</li>
 </ul>
 <p><em>Default</em>: <code>True</code></p></li>
-<li><p><span id="chord_tone_prob_func"><strong><code>chord_tone_prob_func</code></strong></span>: string. If <a href="#chord_tone_selection"><code>chord_tone_selection</code></a> is True, then the probability of the next note being a nonchord tone falls following each nonchord tone. This parameter controls how it falls. It can take the following values:</p>
+<li><p><span id="chord_tone_prob_curve"><strong><code>chord_tone_prob_curve</code></strong></span>: string. If <a href="#chord_tone_selection"><code>chord_tone_selection</code></a> is True, then the probability of the next note being a nonchord tone falls following each nonchord tone. This parameter controls how it falls. It can take the following values:</p>
 <ul class="incremental">
 <li><code>"quadratic"</code></li>
 <li><code>"linear"</code></li>
 </ul>
 <p><em>Default</em>: <code>"linear"</code></p></li>
-<li><p><span id="max_n_between_chord_tones"><strong><code>max_n_between_chord_tones</code></strong></span>: int. Controls after how many non-chord tones the probability of the following note being a chord tone rises to 1. For example, if <a href="#chord_tone_prob_func"><code>chord_tone_prob_func</code></a> is <code>"linear"</code>, <a href="#min_prob_chord_tone"><code>min_prob_chord_tone</code></a> is 0.5, and <a href="#max_n_between_chord_tones"><code>max_n_between_chord_tones</code></a> is 2,</p>
+<li><p><span id="max_n_between_chord_tones"><strong><code>max_n_between_chord_tones</code></strong></span>: int. Controls after how many non-chord tones the probability of the following note being a chord tone rises to 1. For example, if <a href="#chord_tone_prob_curve"><code>chord_tone_prob_curve</code></a> is <code>"linear"</code>, <a href="#min_prob_chord_tone"><code>min_prob_chord_tone</code></a> is 0.5, and <a href="#max_n_between_chord_tones"><code>max_n_between_chord_tones</code></a> is 2,</p>
 <ul class="incremental">
 <li><p>after a chord tone, the probability of a chord tone will be 0.5</p></li>
 <li><p>after one non-chord tone, the probability of a chord tone will be 0.75</p></li>
