@@ -52,7 +52,9 @@ def get_repeated_pitch(poss_note, min_onset=0):
     # prev_pitch = poss_note.voice.get_prev_pitch(
     #     poss_note.onset, min_onset=min_onset
     # )
-    if poss_note.onset < min_onset or poss_note.prev_pitch < 0:
+    prev_note = poss_note.prev_note
+    # if poss_note.onset < min_onset or poss_note.prev_pitch < 0:
+    if prev_note is None or prev_note.onset < min_onset:
         return None
     return poss_note.prev_pitch
 

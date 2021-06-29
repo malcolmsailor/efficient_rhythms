@@ -71,4 +71,5 @@ def validate_settings(er):
     _choir_errors(er, validation_errors)
     _misc_errors(er, validation_errors)
     if validation_errors:
+        breakpoint()
         raise er_exceptions.ErSettingsError("\n".join(validation_errors))

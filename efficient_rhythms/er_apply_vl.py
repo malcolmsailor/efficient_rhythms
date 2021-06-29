@@ -67,7 +67,10 @@ def apply_voice_leading(
     )
 
     prev_pitch = prev_note.pitch
-    prev_pitch_index = prev_pc_scale.index(prev_pitch % er.tet)
+    try:
+        prev_pitch_index = prev_pc_scale.index(prev_pitch % er.tet)
+    except:
+        breakpoint()
     voice_leading_interval = voice_leading[prev_pitch_index]
 
     new_pitch = prev_pitch + voice_leading_interval

@@ -281,7 +281,7 @@ def choose_whether_chord_tone(er, super_pattern, poss_note):
                 return True
             if force_chord_tone == "first_note":
                 prev_note = poss_note.prev_note
-                if (
+                if prev_note is None or (
                     prev_note.pitch <= 0
                     and prev_note.onset >= harmony_start_time
                 ):

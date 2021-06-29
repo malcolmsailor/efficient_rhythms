@@ -32,10 +32,20 @@ class RhythmBase:
     def __len__(self):
         return self._data.__len__()
 
-    # TODO review uses of this
     def __getitem__(self, key):
-        # TODO will this fail via rounding error sometimes?
-        return self._data.__getitem__(key % self.rhythm_len)
+        try:
+            return self._data.__getitem__(key % self.rhythm_len)
+        except KeyError:
+            # The above sometimes fails due to rounding error
+            # Longterm I should figure out a more robust solution
+            i_at_or_after = self.get_i_at_or_after(key)
+            onset, dur = self._data.peekitem(i_at_or_after)
+            if onset - key < 1e-8:
+                return dur
+            onset, dur = self._data.peekitem(i_at_or_after - 1)
+            if key - onset < 1e-8:
+                return dur
+            raise
 
     def __repr__(self):
         return (

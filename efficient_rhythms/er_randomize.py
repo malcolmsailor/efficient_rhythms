@@ -8,6 +8,7 @@ from fractions import Fraction
 import numpy as np
 
 from . import er_constants
+from . import er_interface
 
 # LONGTERM Warnings to address:
 # Notice: 'parallel_voice_leading' is not compatible with checking voice-leadings
@@ -345,6 +346,11 @@ class ERRandomize:
                 return "False"
             if isinstance(item, Fraction):
                 return f"{float(item)}"
+            # Next condition is to ensure that np floats don't print like ints,
+            # because when copying the settings for reuse floats and ints have
+            # different meaning as pitches
+            if isinstance(item, np.float) and item % 1 == 0:
+                return f"{item}"
             if isinstance(item, numbers.Number):
                 return f"{item:g}"
             if isinstance(item, str):
@@ -367,7 +373,7 @@ class ERRandomize:
         print(f'"{attr}": {_format_item(val)},')
 
     def apply(self, er):
-        width = os.get_terminal_size().columns
+        width = er_interface.cli.line_width()
         print("#" * width)
         print("Randomized settings:")
         exclude = (
