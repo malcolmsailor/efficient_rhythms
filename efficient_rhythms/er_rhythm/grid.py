@@ -30,10 +30,7 @@ class Grid(ContRhythm):
     def onset_indices(self, onsets):
         onset_indices = np.nonzero(np.isin(self._onsets_2d[0], onsets))[0]
         # We assert that onsets are all in the grid
-        try:
-            assert len(onset_indices) == len(onsets)
-        except:
-            breakpoint()
+        assert len(onset_indices) == len(onsets)
         return onset_indices
 
     def vary(self, onsets, durs):
@@ -86,7 +83,7 @@ class Grid(ContRhythm):
         for i in range(len(onset_indices) - 1):
             next_onset_i = onset_indices[i + 1]
             next_onset = self.onsets[next_onset_i].round(8)
-            while (next_release := next(releases_iter)) <= next_onset:
+            while (next_release := next(releases_iter)) - next_onset < 1e-7:
                 release = next_release
             max_releases[i] = release
             release = next_release
@@ -122,19 +119,15 @@ class Grid(ContRhythm):
         for i, k in release_indices.items():
             if releases[k] == max_releases[i]:
                 available_indices.remove(i)
-
         while total_remaining > 0 and available_indices:
             i = random.choice(available_indices)
             k = release_indices[i] = release_indices[i] + 1
             release = releases[k]
             increment = release - releases[k - 1]
-            durs[i] += increment
-            # release = (durs[i] + onsets[i]).round(decimals=8)
+            durs[i] = (durs[i] + increment).round(decimals=8)
             total_remaining -= increment
             if release == max_releases[i]:
                 available_indices.remove(i)
-            elif abs(release - max_releases[i]) < 1e-7:
-                breakpoint()
             assert release <= max_releases[i]
         return durs
 

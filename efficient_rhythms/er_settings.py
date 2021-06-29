@@ -524,7 +524,7 @@ class ERSettings:
                     all chord tone behavior entirely, use
                     `chord_tone_and_foot_disable`.
             Default: True
-        chord_tone_prob_func: string. If `chord_tone_selection` is True, then
+        chord_tone_prob_curve: string. If `chord_tone_selection` is True, then
             the probability of the next note being a nonchord tone falls
             following each nonchord tone. This parameter controls how it falls.
             It can take the following values:
@@ -533,7 +533,7 @@ class ERSettings:
             Default: "linear"
         max_n_between_chord_tones: int. Controls after how many non-chord tones
             the probability of the following note being a chord tone rises to 1.
-            For example, if `chord_tone_prob_func` is `"linear"`,
+            For example, if `chord_tone_prob_curve` is `"linear"`,
             `min_prob_chord_tone` is 0.5, and
             `max_n_between_chord_tones` is 2,
                 - after a chord tone, the probability of a chord tone will be
@@ -1947,7 +1947,7 @@ class ERSettings:
             "priority": 1,
         },
     )
-    chord_tone_prob_func: str = fld(
+    chord_tone_prob_curve: str = fld(
         default="linear",
         metadata={
             "mutable_attrs": {},

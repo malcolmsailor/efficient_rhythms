@@ -859,12 +859,18 @@ def merge_settings(settings_paths, silent=True):
     return merged_dict
 
 
-def read_in_settings(settings_input, settings_class, silent=False):
+def read_in_settings(
+    settings_input, settings_class, silent=False, output_path=None
+):
     if settings_input is None:
         settings_input = {}
     if isinstance(settings_input, dict):
-        return settings_class(**settings_input)
-    return settings_class(**merge_settings(settings_input, silent=silent))
+        settings_dict = settings_input
+    else:
+        settings_dict = merge_settings(settings_input, silent=silent)
+    if output_path is not None:
+        settings_dict["output_path"] = output_path
+    return settings_class(**settings_dict)
 
 
 class SettingsProcesser(er_settings.ERSettings):
@@ -937,7 +943,11 @@ class SettingsProcesser(er_settings.ERSettings):
 
 
 def preprocess_settings(
-    user_settings, random_settings=False, seed=None, silent=False
+    user_settings,
+    random_settings=False,
+    seed=None,
+    silent=False,
+    output_path=None,
 ):
     """Preprocesses settings and returns settings object.
 
@@ -956,7 +966,9 @@ def preprocess_settings(
         ERSettings object
     """
 
-    er = read_in_settings(user_settings, SettingsProcesser, silent=silent)
+    er = read_in_settings(
+        user_settings, SettingsProcesser, silent=silent, output_path=output_path
+    )
     if seed is not None:
         er.seed = seed
     er.seed = er_misc_funcs.set_seed(er.seed, print_out=not silent)

@@ -21,7 +21,7 @@ os.environ["EFFICIENT_RHYTHMS_DEBUG"] = "true"
 
 SETTINGS = os.path.join(SCRIPT_DIR, "test_settings/test_interface_settings.py")
 
-N_PROB_FUNCS = 9
+N_PROB_CURVES = 9
 
 
 class ProcError(Exception):
@@ -48,20 +48,20 @@ def run(user_input):
 # assay_changers() rather than test_changers() because we don't want pytest
 #   to run
 def assay_changers():
-    # does every filter and transformer have the same number of prob_funcs?
-    prob_funcs = range(1, N_PROB_FUNCS + 1)
-    prob_func_input = [
+    # does every filter and transformer have the same number of prob_curves?
+    prob_curves = range(1, N_PROB_CURVES + 1)
+    prob_curve_input = [
         "a",  # add filter
         "2",  # pitch filter
-        "1",  # prob_func
-        None,  # select prob_func at index 3
+        "1",  # prob_curve
+        None,  # select prob_curve at index 3
         "",  # return to changer prompt
         "",  # return to playback prompt
         "q\n",  # quit
     ]
-    for prob_func in prob_funcs:
-        prob_func_input[3] = str(prob_func)
-        run("\n".join(prob_func_input))
+    for prob_curve in prob_curves:
+        prob_curve_input[3] = str(prob_curve)
+        run("\n".join(prob_curve_input))
     # CHANGER_TODO write more tests
     filters = range(1, len(er_changers.FILTERS))
     input_loop = "\n".join(

@@ -5,6 +5,14 @@ from . import er_voice_leadings
 from . import er_apply_vl
 
 
+def _get_htimes_end_i(rhythm, htimes, vl_item_end_i):
+    # vl_item_end_i is needed as a backup in case htimes.end_time is None
+    if htimes.end_time is not None:
+        return rhythm.get_i_at_or_after(htimes.end_time)
+    else:
+        return vl_item_end_i
+
+
 def flex_vl_loop(er, score, voice_lead_error, voice, vl_item):
     er.check_time()
     rhythm = er.rhythms[vl_item.voice_i]
@@ -28,13 +36,17 @@ def flex_vl_loop(er, score, voice_lead_error, voice, vl_item):
         # update new harmony if necessary
         if new_note_i == new_htimes_end_i:
             new_htimes = score.get_harmony_times_from_onset(new_onset)
-            new_htimes_end_i = rhythm.get_i_at_or_after(new_htimes.end_time)
+            new_htimes_end_i = _get_htimes_end_i(
+                rhythm, new_htimes, vl_item.end_i
+            )
             update_voice_leadings = True
 
         # update prev harmony if necessary
         if prev_note_i == prev_htimes_end_i:
             prev_htimes = score.get_harmony_times_from_onset(prev_note.onset)
-            prev_htimes_end_i = rhythm.get_i_at_or_after(prev_htimes.end_time)
+            prev_htimes_end_i = _get_htimes_end_i(
+                rhythm, prev_htimes, vl_item.prev_end_i
+            )
             update_voice_leadings = True
 
         if update_voice_leadings:
@@ -132,9 +144,11 @@ def strict_voice_leading_loop(er, score, voice_lead_error, voice, vl_item):
     prev_note_i = vl_item.prev_start_i
 
     new_htimes = score.get_harmony_times_from_onset(new_onset)
-    new_htimes_end_i = rhythm.get_i_at_or_after(new_htimes.end_time)
+    new_htimes_end_i = _get_htimes_end_i(rhythm, new_htimes, vl_item.end_i)
     prev_htimes = score.get_harmony_times_from_onset(prev_onset)
-    prev_htimes_end_i = voice.get_i_at_or_after(prev_htimes.end_time)
+    prev_htimes_end_i = _get_htimes_end_i(
+        rhythm, prev_htimes, vl_item.prev_end_i
+    )
 
     voice_leader = er_voice_leadings.VoiceLeader(
         er, prev_htimes.i, new_htimes.i
@@ -202,13 +216,15 @@ def strict_voice_leading_loop(er, score, voice_lead_error, voice, vl_item):
             # update new harmony if necessary
             if new_note_i == new_htimes_end_i:
                 new_htimes = score.get_harmony_times_from_onset(new_onset)
-                new_htimes_end_i = rhythm.get_i_at_or_after(new_htimes.end_time)
+                new_htimes_end_i = _get_htimes_end_i(
+                    rhythm, new_htimes, vl_item.end_i
+                )
 
             # update prev harmony if necessary
             if prev_note_i == prev_htimes_end_i:
                 prev_htimes = score.get_harmony_times_from_onset(prev_onset)
-                prev_htimes_end_i = rhythm.get_i_at_or_after(
-                    prev_htimes.end_time
+                prev_htimes_end_i = _get_htimes_end_i(
+                    rhythm, prev_htimes, vl_item.prev_end_i
                 )
 
             voice_leader = er_voice_leadings.VoiceLeader(

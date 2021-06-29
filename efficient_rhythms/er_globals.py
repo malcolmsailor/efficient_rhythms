@@ -2,6 +2,8 @@ import os
 
 import numpy as np
 
+GITHUB_URL = "https://github.com/malcolmsailor/efficient_rhythms"
+
 # TODO document DEBUG
 try:
     DEBUG = os.environ["EFFICIENT_RHYTHMS_DEBUG"]

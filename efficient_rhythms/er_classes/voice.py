@@ -194,10 +194,7 @@ class Voice:
         return self._releases.peekitem()
 
     def get_notes_by_i(self, i):
-        try:
-            return self._data.peekitem(i)[1]
-        except:
-            breakpoint()
+        return self._data.peekitem(i)[1]
 
     def add_note(
         self,
@@ -289,15 +286,15 @@ class Voice:
         # end_time = onset + dur
         if end_time is None:
             end_time = onset
-        # # Unfortunately, we seem to need to iterate over all onsets that occur
-        # # before
-        # # the end of the interval (starting from 0), because there is no
+        # Unfortunately, we seem to need to iterate over all onsets that occur
+        # before
+        # the end of the interval (starting from 0), because there is no
         # constraint on how long
-        # # a note can be. So even if we are now at time 10000, there is no
-        # # guarantee that a note was not struck at time 0 with length 10001.
-        # # This inefficiency can be reduced somewhat by use of min_onset.
-        # # If this proves to be a bottleneck there is probably a more clever
-        # # way of performing the search that would be worth looking into.
+        # a note can be. So even if we are now at time 10000, there is no
+        # guarantee that a note was not struck at time 0 with length 10001.
+        # This inefficiency can be reduced somewhat by use of min_onset.
+        # If this proves to be a bottleneck there is probably a more clever
+        # way of performing the search that would be worth looking into.
 
         ## TODO Maybe this can be refactored using _releases?
         onsets_during_interval = self._data.irange(
@@ -313,14 +310,18 @@ class Voice:
             return list(sorted(sounding_pitches))
         return list(sounding_pitches)
 
-    # def get_all_ps_onset_in_dur(self, onset, dur):
-    #     return self.get_sounding_pitches(
-    #         onset, dur=dur, min_onset=onset
-    #     )
-
-    def get_all_ps_onset_in_dur(self, onset, end_time):
+    def get_all_ps_onset_in_dur(self, onset, dur):
         return self.get_sounding_pitches(
-            onset, end_time=end_time, min_onset=onset
+            onset, end_time=onset + dur, min_onset=onset
+        )
+
+    def get_all_ps_onset_between(self, start_time, end_time):
+        if start_time is None:
+            start_time = 0
+        if end_time is None:
+            end_time = self._releases.peekitem(-1)[0]
+        return self.get_sounding_pitches(
+            start_time, end_time, min_onset=start_time
         )
 
     def get_prev_n_pitches(
@@ -377,6 +378,20 @@ class Voice:
 
     def get_i_at_or_after(self, time):
         return self._data.bisect_left(time)
+
+    def between(self, start_time=None, end_time=None):
+        start_i = (
+            self.get_i_at_or_after(start_time) if start_time is not None else 0
+        )
+        end_i = (
+            self.get_i_at_or_after(end_time)
+            if end_time is not None
+            else len(self)
+        )
+        for i in range(start_i, end_i):
+            notes = self.get_notes_by_i(i)
+            for note in notes:
+                yield note
 
     # I am not using this method
     # def increment_onset(self, prev_onset_time):

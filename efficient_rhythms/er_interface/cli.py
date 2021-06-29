@@ -15,15 +15,15 @@ from .. import er_midi
 from .. import er_misc_funcs
 from .. import er_output_notation
 from .. import er_playback
-from .. import er_prob_funcs
 from .. import er_settings
 from .. import er_shell_constants
+
+from .objects import CHANGER_DICT
 
 
 SELECT_HEADER = "Active filters and transformers"
 FILTERS_HEADER = "Filters"
 TRANSFORMERS_HEADER = "Transformers"
-GITHUB_URL = "https://github.com/malcolmsailor/efficient_rhythms"
 
 
 def clear():  # from https://stackoverflow.com/a/684344/10155119
@@ -45,7 +45,7 @@ def print_hello():
             [
                 er_shell_constants.BOLD_TEXT + title,
                 underline + er_shell_constants.RESET_TEXT,
-                GITHUB_URL,
+                er_globals.GITHUB_URL,
             ]
         ),
         end="\n\n",
@@ -113,13 +113,13 @@ def add_to_changer_attribute_dict(
     for attribute, value in attributes.items():
         if (
             attribute not in obj.interface_dict
-            or attribute == "prob_func"
+            or attribute == "prob_curve"
             or not obj.display(attribute)
         ):
             continue
         if isinstance(value, list) and len(value) == 1:
             value = value[0]
-        if isinstance(value, er_prob_funcs.ProbFunc):
+        if isinstance(value, er_changers.NullProbCurve):
             value = value.pretty_name
         attr_name = obj.interface_dict[attribute]
         if attribute in obj.hint_dict:
@@ -190,15 +190,15 @@ def update_changer_attribute(changer, attribute):
         "Enter new value (or values, separated by commas), "
         "'h' for possible values, or leave blank to cancel: "
     )
-    if attribute.startswith("prob_func."):
-        obj = changer.prob_func
-        attribute = attribute[10:]
+    if attribute.startswith("prob_curve."):
+        obj = changer.prob_curve
+        attribute = attribute.split(".", maxsplit=1)[1]
     else:
         obj = changer
     header_text = obj.pretty_name + ": " + obj.interface_dict[attribute]
     validator = obj.validation_dict[attribute]
-    if validator.type_ == bool and validator.unique:  # review
-        setattr(obj, attribute, bool(getattr(obj, attribute)))
+    if validator.type_ == bool and validator.unique:
+        setattr(obj, attribute, not bool(getattr(obj, attribute)))
         return
     if attribute in obj.desc_dict:
         description = obj.desc_dict[attribute]
@@ -225,8 +225,8 @@ def update_changer_attribute(changer, attribute):
                 pass
         validated = validator.validate(answer)
         if validated is not None:
-            if attribute == "prob_func":
-                update_prob_func(obj, validated)
+            if attribute == "prob_curve":
+                update_prob_curve(obj, validated)
             else:
                 setattr(obj, attribute, validated)
             return
@@ -251,20 +251,20 @@ def update_adjust_changer_prompt(changer):
     ]
     attribute_i = 1
     attribute_dict = {}
-    prob_func_name = changer.interface_dict["prob_func"]
+    prob_curve_name = changer.interface_dict["prob_curve"]
     lines.append(
         make_changer_prompt_line(
-            attribute_i, prob_func_name, changer.prob_func.pretty_name
+            attribute_i, prob_curve_name, changer.prob_curve.pretty_name
         )
     )
-    attribute_dict[attribute_i] = "prob_func"
+    attribute_dict[attribute_i] = "prob_curve"
     attribute_i += 1
     attribute_i = add_to_changer_attribute_dict(
-        changer.prob_func,
+        changer.prob_curve,
         lines,
         attribute_dict,
         attribute_i,
-        prefix="prob_func.",
+        prefix="prob_curve.",
     )
     attribute_i = add_to_changer_attribute_dict(
         changer, lines, attribute_dict, attribute_i
@@ -312,10 +312,10 @@ def adjust_changer_prompt(active_changers, changer_i):
                 continue
         elif answer == "r":
             del active_changers[changer_i]
-            for i in active_changers:
+            for i in list(active_changers.keys()):
                 if i > 0 and i - 1 not in active_changers:
                     j = i - 1
-                    while j >= 0 and j - 1 not in active_changers:
+                    while j > 0 and j - 1 not in active_changers:
                         j -= 1
                     active_changers[j] = active_changers[i]
                     del active_changers[i]
@@ -326,7 +326,7 @@ def adjust_changer_prompt(active_changers, changer_i):
         prompt, attribute_dict = update_adjust_changer_prompt(changer)
 
 
-def add_changer_prompt(changer_dict):
+def add_changer_prompt():
     def _get_table(changer_lines):
         # LONGTERM determine how wide terminal is and adjust n_cols accordingly
         n_cols = 2
@@ -357,7 +357,7 @@ def add_changer_prompt(changer_dict):
     filter_lines = []
     transformer_lines = []
     add_lines_to = filter_lines
-    for i, changer in changer_dict.items():
+    for i, changer in CHANGER_DICT.items():
         if i == -1:
             add_lines_to = transformer_lines
         else:
@@ -372,25 +372,26 @@ def add_changer_prompt(changer_dict):
     return "\n".join(lines)
 
 
-def update_prob_func(changer, prob_func_name):
-    new_prob_func = vars(er_prob_funcs)[prob_func_name]()
-    old_prob_func = changer.prob_func
-    for attr, value in vars(old_prob_func).items():
-        if attr in new_prob_func.interface_dict:
-            setattr(new_prob_func, attr, value)
-        # if attr in vars(new_prob_func)["interface_dict"]:
-        # vars(new_prob_func)[attr] = value
+def update_prob_curve(changer, prob_curve_name):
+    # new_prob_curve = vars(er_prob_curves)[prob_curve_name]()
+    new_prob_curve = getattr(er_changers, prob_curve_name)()
+    old_prob_curve = changer.prob_curve
+    for attr, value in vars(old_prob_curve).items():
+        if attr in new_prob_curve.interface_dict:
+            setattr(new_prob_curve, attr, value)
+        # if attr in vars(new_prob_curve)["interface_dict"]:
+        # vars(new_prob_curve)[attr] = value
 
-    changer.prob_func = new_prob_func
+    changer.prob_curve = new_prob_curve
 
 
-def add_changer_loop(changer_dict, active_changers, score, changer_counter):
+def add_changer_loop(active_changers, score, changer_counter):
 
-    answer = input(add_changer_prompt(changer_dict)).lower()
+    answer = input(add_changer_prompt()).lower()
 
     while True:
         if answer.isdigit():
-            if int(answer) in changer_dict:
+            if int(answer) in CHANGER_DICT:
                 break
         elif answer in ("x", ""):
             return
@@ -401,7 +402,7 @@ def add_changer_loop(changer_dict, active_changers, score, changer_counter):
             )
         ).lower()
 
-    changer = changer_dict[int(answer)](score, changer_counter=changer_counter)
+    changer = CHANGER_DICT[int(answer)](score, changer_counter=changer_counter)
 
     changer_i = len(active_changers)
     active_changers[changer_i] = changer
@@ -543,9 +544,7 @@ def update_prompt_for_adjusting_changers(active_changers):
     return "\n".join(lines)
 
 
-def select_changer_prompt(
-    changer_dict, active_changers, score, changer_counter
-):
+def select_changer_prompt(active_changers, score, changer_counter):
     clear()
     prompt = update_prompt_for_adjusting_changers(active_changers)
     answer = input(prompt).lower()
@@ -553,9 +552,7 @@ def select_changer_prompt(
         if answer == "":
             return False
         if answer == "a":
-            add_changer_loop(
-                changer_dict, active_changers, score, changer_counter
-            )
+            add_changer_loop(active_changers, score, changer_counter)
             return True
         if answer == "c":
             copy_changer_loop(active_changers)
@@ -575,93 +572,47 @@ def select_changer_prompt(
         return True
 
 
-def changer_interface(super_pattern, active_changers, changer_counter):
-    def _get_changers():
-        i = 1
-        changer_dict = {}
-        for filter_ in er_changers.FILTERS:
-            changer_dict[i] = getattr(er_changers, filter_)
-            i += 1
-        # The next dictionary entry is added to mark the boundary
-        #   between filters and transformers.
-        changer_dict[-1] = None
-        for transformer in er_changers.TRANSFORMERS:
-            changer_dict[i] = getattr(er_changers, transformer)
-            i += 1
-
-        return changer_dict
-
-    changer_dict = _get_changers()
+def changer_interface(score, active_changers, changer_counter):
 
     first_loop = True
 
     # select changer loop:
     while True:
         if first_loop and not active_changers:
-            add_changer_loop(
-                changer_dict, active_changers, super_pattern, changer_counter
-            )
+            add_changer_loop(active_changers, score, changer_counter)
         first_loop = False
-        if not select_changer_prompt(
-            changer_dict, active_changers, super_pattern, changer_counter
-        ):
+        if not select_changer_prompt(active_changers, score, changer_counter):
             print("")
             break
+    try:
+        changed_pattern = er_changers.apply(score, active_changers)
+    except Exception:  # pylint: disable=broad-except
+        if er_globals.DEBUG:
+            raise
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        traceback.print_exception(
+            exc_type, exc_value, exc_traceback, limit=5, file=sys.stdout
+        )
+        print(
+            er_shell_constants.BOLD_TEXT
+            + "There was an exception applying a changer.\n"
+            "This is a bug in `efficient_rhythms`. I would be "
+            "grateful if you would file an "
+            f"issue at {er_globals.GITHUB_URL}" + er_shell_constants.RESET_TEXT
+        )
+        input("press <enter> to continue")
+        changed_pattern = None
 
-    copied_pattern = copy.deepcopy(super_pattern)
-    success = False
-    if active_changers:
-        print("Applying:")
-
-    for active_changer in active_changers.values():
-        print(f"    {active_changer.pretty_name}... ", end="")
-        try:
-            active_changer.apply(copied_pattern)
-            print("done.")
-            success = True
-        except er_changers.ChangeFuncError as err:
-            # CHANGER_TODO are ChangeFuncErrors also bugs? Should they be caught below?
-            print("ERROR!")
-            print(
-                er_misc_funcs.add_line_breaks(
-                    err.args[0], indent_width=8, indent_type="all"
-                )
-            )
-            input(
-                er_misc_funcs.add_line_breaks(
-                    "Press enter to continue",
-                    indent_width=12,
-                    indent_type="all",
-                )
-            )
-        except Exception:  # pylint: disable=broad-except
-            if er_globals.DEBUG:
-                raise
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            traceback.print_exception(
-                exc_type, exc_value, exc_traceback, limit=5, file=sys.stdout
-            )
-            print(
-                er_shell_constants.BOLD_TEXT
-                + "There was an exception applying "
-                f"{active_changer.pretty_name}\n"
-                "This is a bug in `efficient_rhythms`. I would be "
-                "grateful if you would file an "
-                f"issue at {GITHUB_URL}" + er_shell_constants.RESET_TEXT
-            )
-            input("press <enter> to continue")
     print("")
 
-    if not success:
-        return None, active_changers
-    return copied_pattern, active_changers
+    return changed_pattern, active_changers
 
 
 def mac_open(midi_path):
     subprocess.run(["open", midi_path], check=False)
 
 
-def verovio_interface(super_pattern, midi_path, verovio_arguments):
+def verovio_interface(score, midi_path, verovio_arguments):
     verovio_prompt = "Enter output file type, or leave blank to cancel: "
     lines = ["", er_misc_funcs.make_header("Output notation"), ""]
     file_types = [".svg", ".png", ".pdf"]
@@ -687,7 +638,7 @@ def verovio_interface(super_pattern, midi_path, verovio_arguments):
         print("Invalid input.")
     try:
         er_output_notation.run_verovio(
-            super_pattern, midi_path, verovio_arguments, file_types[answer]
+            score, midi_path, verovio_arguments, file_types[answer]
         )
     except er_misc_funcs.ProcError as exc:
         er_output_notation.clean_up_temporary_notation_files()
@@ -775,7 +726,7 @@ def fail_and_exit(exc, random_failures=None):
     sys.exit(1)
 
 
-def input_loop(er, super_pattern, args):
+def input_loop(er, score, args, active_changers):
     """Run the user input loop for efficient_rhythms"""
 
     def get_input_prompt():
@@ -821,10 +772,8 @@ def input_loop(er, super_pattern, args):
         midi_path = er.original_path
 
     answer = ""
-
-    active_changers = {}
     changer_counter = collections.Counter()
-    current_pattern = super_pattern
+    current_pattern = score
     changer_midi_i = 0
     current_midi_path = midi_path
     breaker = er_midi.Breaker()
@@ -850,11 +799,9 @@ def input_loop(er, super_pattern, args):
 
         elif answer == "a":
             changed_pattern, active_changers = changer_interface(
-                super_pattern, active_changers, changer_counter
+                score, active_changers, changer_counter
             )
             if changed_pattern is not None and active_changers:
-                # LONGTERM allow specification of transformers from external
-                #    settings files
                 changer_midi_i += 1
                 if isinstance(er, er_settings.ERSettings):
                     current_midi_path = er_misc_funcs.get_changed_midi_path(
@@ -869,7 +816,7 @@ def input_loop(er, super_pattern, args):
                 current_pattern = changed_pattern
             else:
                 current_midi_path = midi_path
-                current_pattern = super_pattern
+                current_pattern = score
             answer = ""
 
         if answer == "c" and isinstance(er, er_settings.ERSettings):

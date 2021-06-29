@@ -3,7 +3,7 @@ import os
 import random
 import sys
 
-
+from . import er_changers
 from . import er_exceptions
 from . import er_globals
 from . import er_interface
@@ -19,14 +19,30 @@ MAX_RANDOM_TRIES = 10
 
 def get_settings(args, seed, settings_dict=None):
     if args.input_midi:
-        return er_preprocess.read_in_settings(
-            args.settings, er_midi_settings.MidiSettings
+        settings = er_preprocess.read_in_settings(
+            args.settings,
+            er_midi_settings.MidiSettings,
+            output_path=args.output,
         )
-    return er_preprocess.preprocess_settings(
-        args.settings if settings_dict is None else settings_dict,
-        random_settings=args.random,
-        seed=seed,
-    )
+    else:
+        settings = er_preprocess.preprocess_settings(
+            args.settings if settings_dict is None else settings_dict,
+            random_settings=args.random,
+            seed=seed,
+            output_path=args.output,
+        )
+    return settings
+
+
+def get_changer_settings(args):
+    if args.changers is None:
+        return []
+    changer_settings = []
+    for path in args.changers:
+        print(f"Reading changers from {path}")
+        with open(path, "r", encoding="utf-8") as inf:
+            changer_settings.extend(eval(inf.read()))
+    return changer_settings
 
 
 def save(args, settings, pattern):
@@ -45,6 +61,13 @@ def save(args, settings, pattern):
             sys.exit(1)
 
 
+def get_changers(changer_settings, pattern):
+    return {
+        i: getattr(er_changers, name)(pattern, **kwargs)
+        for i, (name, kwargs) in enumerate(changer_settings)
+    }
+
+
 def make_pattern(args, settings):
     if args.input_midi:
         abs_path = os.path.abspath(args.input_midi)
@@ -58,7 +81,6 @@ def make_pattern(args, settings):
         settings.original_path = abs_path
         return pattern
     pattern = er_make_handler.make_super_pattern(settings)
-    save(args, settings, pattern)
     return pattern
 
 
@@ -73,7 +95,8 @@ def build(args, seed=None, settings_dict=None):
         # have to return it from this function.
         settings = get_settings(args, seed, settings_dict=settings_dict)
         try:
-            return settings, make_pattern(args, settings)
+            pattern = make_pattern(args, settings)
+            break
         except er_exceptions.ErMakeError as exc:
             if not args.random:
                 er_interface.fail_and_exit(exc)
@@ -84,6 +107,17 @@ def build(args, seed=None, settings_dict=None):
         # we should only get here if args.random is True and er_make failed
         print("Random settings failed, trying again with another seed")
         seed = random.randint(0, 2 ** 32)
+
+    changer_settings = get_changer_settings(args)
+    changers = get_changers(changer_settings, pattern)
+    changed_pattern = er_changers.apply(pattern, changers)
+
+    save(
+        args,
+        settings,
+        changed_pattern if changed_pattern is not None else pattern,
+    )
+    return settings, changers, pattern, changed_pattern
 
 
 def output_notation(settings, pattern, args):
@@ -113,13 +147,18 @@ def output_notation(settings, pattern, args):
 def main():
     er_interface.print_hello()
     args = er_interface.parse_cmd_line_args()
-    settings, pattern = build(args)
+    settings, changers, pattern, changed_pattern = build(args)
+
     if args.no_interface:
         print(f"Output written to {settings.output_path}")
         if args.output_notation:
-            output_notation(settings, pattern, args)
+            output_notation(
+                settings,
+                changed_pattern if changed_pattern is not None else pattern,
+                args,
+            )
     else:
-        er_interface.input_loop(settings, pattern, args)
+        er_interface.input_loop(settings, pattern, args, changers)
 
 
 if __name__ == "__main__":

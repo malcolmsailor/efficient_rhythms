@@ -1,4 +1,5 @@
 {
+    "seed": 986879441,
     "cont_rhythms": "grid",
     "rhythm_len": 2,
     "pattern_len": 2,

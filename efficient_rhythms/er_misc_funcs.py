@@ -116,6 +116,7 @@ def add_line_breaks(
         return line
 
     if preserve_trailing_ws:
+        i = 0  # for the case where in_str = ""
         for i in range(len(in_str) - 1, -1, -1):
             if not in_str[i].isspace():
                 break

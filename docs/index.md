@@ -5,13 +5,15 @@ on Github at <https://github.com/malcolmsailor/efficient_rhythms>. There
 is also an [alpha web app version of this
 script](http://malcolmsailor.pythonanywhere.com) you are welcome to try.
 
-Here are a few examples of things I have made using it:
+Here’s a couple examples of things it helped me make:
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/YgAUskvRWPM" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
 
 </iframe>
 
-`TODO add more videos here`
+<iframe width="560" height="315" src="https://www.youtube.com/embed/owvfdymO9Aw" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
+
+</iframe>
 
 The gist of how the script works goes as follows:
 
@@ -282,7 +284,7 @@ roll\](docs/resources/pngs/harmony\_example1\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/harmony\_example1.m4a) [Click to open this
 example in the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=True&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=y&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=False&max_consec_seg_from_same_choir=0&preserve_foot_in_bass=none&scales=MAJOR_SCALE%2C+MIXOLYDIAN%2C+AEOLIAN%2C+LYDIAN&chords=MAJOR_TRIAD%2C+MAJOR_TRIAD%2C+MINOR_TRIAD%2C+MAJOR_TRIAD&foot_pcs=C%2C+G%2C+A%2C+F)
+app](http://malcolmsailor.pythonanywhere.com/?num_reps_super_pattern=4&seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=True&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=y&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=False&max_consec_seg_from_same_choir=0&preserve_foot_in_bass=none&scales=MAJOR_SCALE%2C+MIXOLYDIAN%2C+AEOLIAN%2C+LYDIAN&chords=MAJOR_TRIAD%2C+MAJOR_TRIAD%2C+MINOR_TRIAD%2C+MAJOR_TRIAD&foot_pcs=C%2C+G%2C+A%2C+F)
 
 </div>
 
@@ -333,7 +335,7 @@ roll\](docs/resources/pngs/harmony\_example2\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/harmony\_example2.m4a) [Click to open this
 example in the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=True&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=y&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=False&max_consec_seg_from_same_choir=0&preserve_foot_in_bass=none&scales=MAJOR_SCALE%2C+MIXOLYDIAN%2C+AEOLIAN%2C+LYDIAN&chords=MAJOR_TRIAD%2C+MAJOR_TRIAD%2C+MINOR_TRIAD%2C+MAJOR_TRIAD&foot_pcs=E%2C+G%2C+D%2C+A)
+app](http://malcolmsailor.pythonanywhere.com/?num_reps_super_pattern=4&seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=True&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=y&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=False&max_consec_seg_from_same_choir=0&preserve_foot_in_bass=none&scales=MAJOR_SCALE%2C+MIXOLYDIAN%2C+AEOLIAN%2C+LYDIAN&chords=MAJOR_TRIAD%2C+MAJOR_TRIAD%2C+MINOR_TRIAD%2C+MAJOR_TRIAD&foot_pcs=E%2C+G%2C+D%2C+A)
 
 </div>
 
@@ -379,7 +381,7 @@ roll\](docs/resources/pngs/harmony\_example3\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/harmony\_example3.m4a) [Click to open this
 example in the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=True&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=y&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=False&max_consec_seg_from_same_choir=0&preserve_foot_in_bass=none&scales=MIXOLYDIAN%2C&chords=MAJOR_TRIAD%2C&foot_pcs=E%2C+G&num_reps_super_pattern=4)
+app](http://malcolmsailor.pythonanywhere.com/?num_reps_super_pattern=4&seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=True&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=y&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=False&max_consec_seg_from_same_choir=0&preserve_foot_in_bass=none&scales=MIXOLYDIAN%2C&chords=MAJOR_TRIAD%2C&foot_pcs=E%2C+G)
 
 </div>
 
@@ -405,7 +407,7 @@ roll\](docs/resources/pngs/harmony\_example4\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/harmony\_example4.m4a) [Click to open this
 example in the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=True&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=y&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=False&max_consec_seg_from_same_choir=0&preserve_foot_in_bass=none&scales=MIXOLYDIAN%2C+LYDIAN&chords=MAJOR_TRIAD%2C&foot_pcs=E%2C+G%2C+E%2C+C)
+app](http://malcolmsailor.pythonanywhere.com/?num_reps_super_pattern=4&seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=True&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=y&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=False&max_consec_seg_from_same_choir=0&preserve_foot_in_bass=none&scales=MIXOLYDIAN%2C+LYDIAN&chords=MAJOR_TRIAD%2C&foot_pcs=E%2C+G%2C+E%2C+C)
 
 </div>
 
@@ -435,7 +437,7 @@ roll\](docs/resources/pngs/harmony\_example5\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/harmony\_example5.m4a) [Click to open this
 example in the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=True&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=y&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=False&max_consec_seg_from_same_choir=0&preserve_foot_in_bass=none&scales=MAJOR_SCALE%2C+MIXOLYDIAN%2C+MIXOLYDIAN%2C+AEOLIAN&chords=MAJOR_7TH_NO5%2C+DOMINANT_7TH_NO3%2C+MAJOR_64%2C+MAJOR_63&num_harmonies=4&foot_pcs=D%2C)
+app](http://malcolmsailor.pythonanywhere.com/?num_reps_super_pattern=4&seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=True&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=y&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=False&max_consec_seg_from_same_choir=0&preserve_foot_in_bass=none&scales=MAJOR_SCALE%2C+MIXOLYDIAN%2C+MIXOLYDIAN%2C+AEOLIAN&chords=MAJOR_7TH_NO5%2C+DOMINANT_7TH_NO3%2C+MAJOR_64%2C+MAJOR_63&num_harmonies=4&foot_pcs=D%2C)
 
 </div>
 
@@ -469,7 +471,7 @@ roll\](docs/resources/pngs/harmony\_example6\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/harmony\_example6.m4a) [Click to open this
 example in the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=True&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=y&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=False&max_consec_seg_from_same_choir=0&preserve_foot_in_bass=none&scales=MAJOR_SCALE%2C&chords=MAJOR_TRIAD%2C&num_harmonies=4&interval_cycle=PERFECT_4TH&foot_pcs=Eb%2C)
+app](http://malcolmsailor.pythonanywhere.com/?num_reps_super_pattern=4&seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=True&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=y&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=False&max_consec_seg_from_same_choir=0&preserve_foot_in_bass=none&scales=MAJOR_SCALE%2C&chords=MAJOR_TRIAD%2C&num_harmonies=4&interval_cycle=PERFECT_4TH&foot_pcs=Eb%2C)
 
 </div>
 
@@ -501,7 +503,7 @@ roll\](docs/resources/pngs/harmony\_example7\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/harmony\_example7.m4a) [Click to open this
 example in the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=True&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=y&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=False&max_consec_seg_from_same_choir=0&preserve_foot_in_bass=none&scales=MAJOR_SCALE%2C&chords=MAJOR_TRIAD%2C&num_harmonies=4&interval_cycle=PERFECT_4TH%2C+MINOR_6TH&foot_pcs=Eb%2C)
+app](http://malcolmsailor.pythonanywhere.com/?num_reps_super_pattern=4&seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=True&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=y&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=False&max_consec_seg_from_same_choir=0&preserve_foot_in_bass=none&scales=MAJOR_SCALE%2C&chords=MAJOR_TRIAD%2C&num_harmonies=4&interval_cycle=PERFECT_4TH%2C+MINOR_6TH&foot_pcs=Eb%2C)
 
 </div>
 
@@ -553,7 +555,7 @@ roll\](docs/resources/pngs/harmony\_example8\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/harmony\_example8.m4a) [Click to open this
 example in the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=True&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=n&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=False&max_consec_seg_from_same_choir=0&preserve_foot_in_bass=none&scales=MAJOR_SCALE%2C&chords=MAJOR_TRIAD%2C&num_harmonies=4&interval_cycle=PERFECT_4TH&foot_pcs=Eb%2C)
+app](http://malcolmsailor.pythonanywhere.com/?num_reps_super_pattern=4&seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=True&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=n&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=False&max_consec_seg_from_same_choir=0&preserve_foot_in_bass=none&scales=MAJOR_SCALE%2C&chords=MAJOR_TRIAD%2C&num_harmonies=4&interval_cycle=PERFECT_4TH&foot_pcs=Eb%2C)
 
 </div>
 
@@ -570,7 +572,7 @@ roll\](docs/resources/pngs/harmony\_example9\_00001.png){class=“piano\_roll”
 style=“max-height: 300px”} \[&#1;
 audio\](docs/resources/m4as/harmony\_example9.m4a) [Click to open this
 example in the web
-app](http://malcolmsailor.pythonanywhere.com/?seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=True&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=n&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=False&max_consec_seg_from_same_choir=0&preserve_foot_in_bass=none&scales=MAJOR_SCALE%2C&chords=MAJOR_TRIAD%2C&num_harmonies=4&interval_cycle=PERFECT_4TH&foot_pcs=Eb%2C&chord_tone_selection=n)
+app](http://malcolmsailor.pythonanywhere.com/?num_reps_super_pattern=4&seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=True&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=n&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=False&max_consec_seg_from_same_choir=0&preserve_foot_in_bass=none&scales=MAJOR_SCALE%2C&chords=MAJOR_TRIAD%2C&num_harmonies=4&interval_cycle=PERFECT_4TH&foot_pcs=Eb%2C&chord_tone_selection=n)
 
 </div>
 
@@ -1172,9 +1174,117 @@ app](http://malcolmsailor.pythonanywhere.com/?seed=2&foot_pcs=2%2C+2%2C+2%2C+1&c
 
 </div>
 
-## Filters and transformers
+## Changers: filters and transformers
 
-`TODO`
+To make our loops more dynamic and unpredictable, we can use “changers”,
+functions that take the music produced by the script and filter or
+transform it in some way.
+
+To illustrate, we will re-use
+<a href="#harmony_example5">`docs/examples/harmony_example5.py`</a>,
+already seen above, but repeated just below for your convenience.
+
+<div id="harmony_example5-div" class="example-div">
+
+<span id="harmony_example5">**Example:**
+`docs/examples/harmony_example5.py`</span>\[&#1;
+notation\](docs/resources/svgs/harmony\_example5.svg){class=“notation”}
+\[&#1; piano
+roll\](docs/resources/pngs/harmony\_example5\_00001.png){class=“piano\_roll”
+style=“max-height: 300px”} \[&#1;
+audio\](docs/resources/m4as/harmony\_example5.m4a) [Click to open this
+example in the web
+app](http://malcolmsailor.pythonanywhere.com/?num_reps_super_pattern=4&seed=2&pattern_len=4&consonance_treatment=none&harmony_len=4&output_path=EFFRHY%2Fdocs%2Fexamples%2Fmidi%2F&overwrite=True&force_foot_in_bass=first_beat&extend_bass_range_for_foots=7&voice_lead_chord_tones=y&onset_density=0.7&dur_density=0.7&unison_weighted_as=SECOND&randomly_distribute_between_choirs=y&length_choir_segments=0.25&tempo=132&choirs_separate_tracks=False&max_consec_seg_from_same_choir=0&preserve_foot_in_bass=none&scales=MAJOR_SCALE%2C+MIXOLYDIAN%2C+MIXOLYDIAN%2C+AEOLIAN&chords=MAJOR_7TH_NO5%2C+DOMINANT_7TH_NO3%2C+MAJOR_64%2C+MAJOR_63&num_harmonies=4&foot_pcs=D%2C)
+
+</div>
+
+There are two types of changers, “filters,” and “transformers”. Filters
+remove notes from the score, whereas transformers apply some
+transformation to the notes of the score.
+
+The simplest filter is `PitchFilter`, which filters *all* notes from the
+score. Of course, we probably don’t want to remove all the notes from
+the score—we’ll be left with silence. Thus we apply the filter
+*probabilistically*. In
+<a href="#changer_example1">`docs/examples/changer_example1.py`</a>, the
+notes are filtered with a probability of 0.5. Thus, (approximately) half
+of the notes have been removed, and half remain. To my ears, the effect
+is quite dynamic; the harmonic gist of
+<a href="#harmony_example5">`docs/examples/harmony_example5.py`</a>
+remains in effect, and yet in an unpredictable, ever-shifting guise.
+
+<div id="changer_example1-div" class="example-div">
+
+<span id="changer_example1">**Example:**
+`docs/examples/changer_example1.py`</span>\[&#1;
+notation\](docs/resources/svgs/changer\_example1.svg){class=“notation”}
+\[&#1; piano
+roll\](docs/resources/pngs/changer\_example1\_00001.png){class=“piano\_roll”
+style=“max-height: 300px”} \[&#1;
+audio\](docs/resources/m4as/changer\_example1.m4a)
+
+</div>
+
+We can also apply the filter according to “probability curves”; i.e.,
+functions that take the onset time of a note and return the probability
+that the filter will apply. In
+<a href="#changer_example2">`docs/examples/changer_example2.py`</a>, I
+apply the filter according to a linear probability curve that decreases
+steadily from 1.0 to 0.0. (Thus, at the start of the score, the
+probability that a note will be filtered is 1; at the end, it is 0.)
+
+<div id="changer_example2-div" class="example-div">
+
+<span id="changer_example2">**Example:**
+`docs/examples/changer_example2.py`</span>\[&#1;
+notation\](docs/resources/svgs/changer\_example2.svg){class=“notation”}
+\[&#1; piano
+roll\](docs/resources/pngs/changer\_example2\_00001.png){class=“piano\_roll”
+style=“max-height: 300px”} \[&#1;
+audio\](docs/resources/m4as/changer\_example2.m4a)
+
+</div>
+
+Although each filter can only take a single probability curve, we can
+include multiple filters, each with its own start and end times, in
+order to achieve the effect of multiple probability curves. In
+<a href="#changer_example3">`docs/examples/changer_example3.py`</a>, I
+have combined a *decreasing* curve from the beginning of the score to
+its middle with an *increasing* curve from the middle to the end. The
+effect is that the score begins in silence, emerges in full half way
+through, and then retreats to silence again.
+
+<div id="changer_example3-div" class="example-div">
+
+<span id="changer_example3">**Example:**
+`docs/examples/changer_example3.py`</span>\[&#1;
+notation\](docs/resources/svgs/changer\_example3.svg){class=“notation”}
+\[&#1; piano
+roll\](docs/resources/pngs/changer\_example3\_00001.png){class=“piano\_roll”
+style=“max-height: 300px”} \[&#1;
+audio\](docs/resources/m4as/changer\_example3.m4a)
+
+</div>
+
+If we set `by_voice` to True, the filter will only apply to those voices
+that we specify using `voices`.
+<a href="#changer_example4">`docs/examples/changer_example4.py`</a>
+features the same decreasing pitch filter as
+<a href="#changer_example1">`docs/examples/changer_example1.py`</a>,
+except that the filter applies only to voices 1 and 2. The bass voice
+(voice 0) is unfiltered and so sounds below the other parts throughout.
+
+<div id="changer_example4-div" class="example-div">
+
+<span id="changer_example4">**Example:**
+`docs/examples/changer_example4.py`</span>\[&#1;
+notation\](docs/resources/svgs/changer\_example4.svg){class=“notation”}
+\[&#1; piano
+roll\](docs/resources/pngs/changer\_example4\_00001.png){class=“piano\_roll”
+style=“max-height: 300px”} \[&#1;
+audio\](docs/resources/m4as/changer\_example4.m4a)
+
+</div>
 
 1.  This command needs to be run from the root directory of the
     repository.

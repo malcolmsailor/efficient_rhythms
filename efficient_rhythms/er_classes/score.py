@@ -148,6 +148,70 @@ class Score:
         for voice_i in self.all_voice_idxs:
             yield self.voices[voice_i]
 
+    def between(self, start_time=None, end_time=None):
+        # voice.between() should be preferred to score.between() wherever
+        # possible.
+        def _sort_next_notes():
+            next_notes.sort(key=lambda t: t[1].onset, reverse=True)
+
+        voice_gens = [
+            voice.between(start_time, end_time) for voice in self.voices
+        ]
+        next_notes = []
+        for voice_i, voice_gen in enumerate(voice_gens):
+            try:
+                next_notes.append((voice_i, next(voice_gen)))
+            except StopIteration:
+                pass
+
+        _sort_next_notes()
+        while next_notes:
+            voice_i, next_note = next_notes[-1]
+            yield next_note
+            try:
+                next_notes[-1] = (voice_i, next(voice_gens[voice_i]))
+            except StopIteration:
+                next_notes.pop()
+            else:
+                _sort_next_notes()
+
+    def notes_by_onset_between(self, start_time=None, end_time=None):
+        def _sort_next_notes():
+            next_notes.sort(key=lambda t: t[1].onset)
+
+        voice_gens = [
+            voice.between(start_time, end_time) for voice in self.voices
+        ]
+        next_notes = []
+        for voice_i, voice_gen in enumerate(voice_gens):
+            try:
+                next_notes.append((voice_i, next(voice_gen)))
+            except StopIteration:
+                pass
+        _sort_next_notes()
+
+        while next_notes:
+            out = []
+            to_pop = []
+            onset = next_notes[0][1].onset
+            for i in range(len(next_notes)):
+                voice_i, next_note = next_notes[i]
+                if next_note.onset != onset:
+                    break
+                while next_note.onset == onset:
+                    out.append(next_note)
+                    try:
+                        next_note = next(voice_gens[voice_i])
+                    except StopIteration:
+                        to_pop.append(i)
+                        break
+                next_notes[i] = (voice_i, next_note)
+            yield out
+            to_pop.sort(reverse=True)
+            for i in to_pop:
+                next_notes.pop(i)
+            _sort_next_notes()
+
     @property
     def total_dur(self):
         """Returns the length of the super pattern from 0 to the final note

@@ -12,8 +12,7 @@ TEMP_OUT=.temp_test_settings
 
 for item in tests/test_settings/*.py
 do
-    # TODO remove skip for cont_rhythms tests after implementing
-    if [[ $item =~ .*test_fail.* ]] || [[ $item =~ .*cont_rhythms.* ]]
+    if [[ $item =~ .*test_fail.* ]]
     then
         echo Skipping "${item}"
     else

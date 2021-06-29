@@ -97,11 +97,12 @@ def insert_examples(md_content, er_url):
         svg_path = f"resources/svgs/{example}.svg"
         png_path = f"resources/pngs/{example}_00001.png"
         m4a_path = f"resources/m4as/{example}.m4a"
-        web_url = er_web_query(example, er_url)
         repl = [
             f'<div id="{example}-div" class="example-div">'
             f'<span id="{example}">**Example:**'
             f" `docs/examples/{example}.py`</span>"  # "<br>"
+            f' <a href="https://github.com/malcolmsailor/efficient_rhythms/blob/master/docs/examples/{example}.py"'
+            'target="_blank" rel="noopener noreferrer">View source</a>'
         ]
         if os.path.exists(os.path.join(SCRIPT_DIR, "../..", svg_path)):
             repl.append(f'![\1 notation]({svg_path}){{class="notation"}}\n')
@@ -113,10 +114,13 @@ def insert_examples(md_content, er_url):
             )
         if os.path.exists(os.path.join(SCRIPT_DIR, "../..", m4a_path)):
             repl.append(f"![\1 audio]({m4a_path})\n")
-        repl.append(
-            f"[Click to open this example in the web app]({web_url})"
-            '{target="_blank" rel="noopener noreferrer"}\n</div>'
-        )
+        if "changer" not in example:
+            web_url = er_web_query(example, er_url)
+            repl.append(
+                f"[Click to open this example in the web app]({web_url})"
+                '{target="_blank" rel="noopener noreferrer"}'
+            )
+        repl.append("\n</div>")
         md_content = re.sub(
             fr"\bEXAMPLE:{example}\b", "".join(repl), md_content
         )

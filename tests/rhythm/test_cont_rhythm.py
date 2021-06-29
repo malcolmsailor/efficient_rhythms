@@ -232,13 +232,13 @@ def test_grid(set_seed):
     def test_get_max_releases(gd, onset_indices, overlap):
         onsets = gd.onset_positions[indices]
         max_releases = gd._get_max_releases(onset_indices)
-        assert np.all(max_releases[:-1] <= onsets[1:])
+        assert np.all(max_releases[:-1] - onsets[1:] < 1e-7)
         releases = gd.releases
         for i in range(len(onsets) - 1):
             next_onset = onsets[i + 1]
-            earlier_releases = releases <= next_onset
+            earlier_releases = releases - next_onset < 1e-7
             max_r = np.max(releases[earlier_releases])
-            assert abs(max_releases[i] - max_r) < 1e-10
+            assert abs(max_releases[i] - max_r) < 1e-7
 
         # test last release separately:
         if not er.overlap:

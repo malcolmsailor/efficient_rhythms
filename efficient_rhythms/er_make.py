@@ -236,10 +236,10 @@ def choose_whether_chord_tone(er, super_pattern, poss_note):
         x = er.max_n_between_chord_tones
         if x == 0:
             return 1
-        if er.chord_tone_prob_func == "quadratic":
+        if er.chord_tone_prob_curve == "quadratic":
             result = (n_since_chord_tone / x) ** (1 / 2)
 
-        elif er.chord_tone_prob_func == "linear":
+        elif er.chord_tone_prob_curve == "linear":
             result = n_since_chord_tone / x
 
         if result < 1 and er.scale_chord_tone_prob_by_dur:
@@ -867,12 +867,14 @@ def _get_bass_foot_times(er, super_pattern):
     harmony_times = er_classes.HarmonyTimes(0, 0, BASS)
     for note in bass:
         onset = note.onset
-        if onset >= harmony_times.end_time:
+        if (
+            harmony_times.end_time is not None
+            and onset >= harmony_times.end_time
+        ):
             harmony_i = super_pattern.get_harmony_i(onset)
             harmony_times = super_pattern.get_harmony_times(harmony_i)
-            # harmony_dur = harmony_times.end_time - harmony_times.start_time
-            all_pitches_in_harmony = bass.get_all_ps_onset_in_dur(
-                harmony_times.start_time, end_time=harmony_times.end_time
+            all_pitches_in_harmony = bass.get_all_ps_onset_between(
+                harmony_times.start_time, harmony_times.end_time
             )
             foot_pc = er.get(harmony_i, "pc_chords")[FOOT]
             lowest_of_each_pc = er_misc_funcs.get_lowest_of_each_pc_in_set(
@@ -963,9 +965,8 @@ def transpose_foots(er, super_pattern):
             harmony_i = super_pattern.get_harmony_i(note.onset)
             harmony_times = super_pattern.get_harmony_times(harmony_i)
             # harmony_dur = harmony_times.end_time - harmony_times.start_time
-            all_pitches_in_harmony = bass.get_all_ps_onset_in_dur(
-                harmony_times.start_time,
-                end_time=harmony_times.end_time,
+            all_pitches_in_harmony = bass.get_all_ps_onset_between(
+                harmony_times.start_time, harmony_times.end_time
             )
 
             foot_pc = er.get(harmony_i, "pc_chords")[FOOT]

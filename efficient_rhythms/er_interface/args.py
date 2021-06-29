@@ -48,6 +48,12 @@ def parse_cmd_line_args():
         help="path to settings files, each containing a Python dictionary",
     )
     parser.add_argument(
+        "-c",
+        "--changers",
+        nargs="*",
+        help="path to changers files, each containing a Python dictionary",
+    )
+    parser.add_argument(
         "-n",
         "--no-interface",
         help="build midi file, but don't play it back or enter user interface",
@@ -68,6 +74,14 @@ def parse_cmd_line_args():
         help=(
             "if passed with '--no-interface', notation in the specified file "
             "format will be generated as well as a midi file"
+        ),
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        help=(
+            "path to output midi file, overriding any value specified in "
+            "settings"
         ),
     )
     # parser.add_argument(

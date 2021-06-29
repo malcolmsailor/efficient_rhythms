@@ -78,6 +78,12 @@ class LoopSeq:
             )
         return reps * self._loop_len + self._sequence[i]
 
+    def __repr__(self):
+        return (
+            f"{self.__class__.__name__}(loop_len={self._loop_len}, "
+            f"decimals={self._decimals}, {self._sequence})"
+        )
+
 
 def get_indices_from_sorted(
     elements, sorted_seq, loop_len=None, tolerance=1e-8
