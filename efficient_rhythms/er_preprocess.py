@@ -3,8 +3,6 @@ use.
 """
 
 import collections
-from efficient_rhythms import er_rhythm
-import fractions
 import math
 import os
 import random
