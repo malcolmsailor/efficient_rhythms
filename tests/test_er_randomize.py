@@ -11,6 +11,8 @@ import efficient_rhythms.er_exceptions as er_exceptions  # pylint: disable=wrong
 import efficient_rhythms.er_make as er_make  # pylint: disable=wrong-import-position
 import efficient_rhythms.er_preprocess as er_preprocess  # pylint: disable=wrong-import-position
 
+# TODO see how this interacts with pytest...
+
 
 def test_many_seeds():
     num_seeds = 100
