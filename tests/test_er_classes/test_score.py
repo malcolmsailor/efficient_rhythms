@@ -1,10 +1,10 @@
 import efficient_rhythms.er_classes as er_classes
-import efficient_rhythms.er_preprocess as er_preprocess
+import efficient_rhythms.er_settings as er_settings
 
 
 def test_get_prev_and_last_notes():
     settingsdict = {"num_voices": 2, "tet": 12}
-    er = er_preprocess.preprocess_settings(settingsdict, silent=True)
+    er = er_settings.get_settings(settingsdict, silent=True)
     # voice, pitch, onset, dur, evaluates_to
     notes = [
         (0, 57, 0, 0.75, None),
@@ -58,7 +58,7 @@ def test_get_prev_and_last_notes():
 
 def test_get_sounding_pitches():
     settingsdict = {"num_voices": 2, "tet": 12}
-    er = er_preprocess.preprocess_settings(settingsdict, silent=True)
+    er = er_settings.get_settings(settingsdict, silent=True)
     score = er_classes.Score(num_voices=er.num_voices, tet=er.tet)
     # voice, pitch, onset, dur
     notes = [
@@ -87,7 +87,7 @@ def test_get_sounding_pitches():
 
 def test_get_harmony_i():
     settingsdict = {"harmony_len": 4, "tet": 12}
-    er = er_preprocess.preprocess_settings(settingsdict, silent=True)
+    er = er_settings.get_settings(settingsdict, silent=True)
     score = er_classes.Score(
         num_voices=er.num_voices,
         tet=er.tet,
@@ -109,7 +109,7 @@ def test_get_harmony_i():
 
 def test_score_misc_attrs():
     settingsdict = {"num_voices": 2, "tet": 12}
-    er = er_preprocess.preprocess_settings(settingsdict, silent=True)
+    er = er_settings.get_settings(settingsdict, silent=True)
     score = er_classes.Score(num_voices=er.num_voices, tet=er.tet)
     # voice, pitch, onset, dur
     notes = [
@@ -138,7 +138,7 @@ def test_generic_transpose():
         "interval_cycle": 3,
         "num_harmonies": 4,
     }
-    er = er_preprocess.preprocess_settings(settingsdict, silent=True)
+    er = er_settings.get_settings(settingsdict, silent=True)
     score = er_classes.Score(
         num_voices=er.num_voices,
         tet=er.tet,
@@ -179,7 +179,7 @@ def test_generic_transpose():
 
 def test_between():
     settingsdict = {"num_voices": 2, "tet": 12}
-    er = er_preprocess.preprocess_settings(settingsdict, silent=True)
+    er = er_settings.get_settings(settingsdict, silent=True)
     score = er_classes.Score(num_voices=er.num_voices, tet=er.tet)
     # voice, pitch, onset, dur
     notes = [

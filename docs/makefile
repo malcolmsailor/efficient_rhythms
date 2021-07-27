@@ -235,7 +235,7 @@ clean: clean_pngs clean_svgs clean_midi # clean_m4as
 html: settings.html index.html constants.html changers.html
 
 settings.html : resources/scripts/get_settings_md_and_html.py \
-		../efficient_rhythms/er_settings.py $(CSS_FILES)
+		../efficient_rhythms/er_settings/settings.py $(CSS_FILES)
 	python3 $<
 
 constants.html : resources/scripts/get_constants.py ../efficient_rhythms/er_constants.py \

@@ -1,18 +1,11 @@
 import itertools
-import os
-import sys
-import traceback
 
 import hypothesis
 import hypothesis.strategies as st
 
-sys.path.insert(
-    0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-)
-
-import efficient_rhythms.er_misc_funcs as er_misc_funcs  # pylint: disable=wrong-import-position
-import efficient_rhythms.er_classes as er_classes  # pylint: disable=wrong-import-position
-import efficient_rhythms.er_preprocess as er_preprocess  # pylint: disable=wrong-import-position
+import efficient_rhythms.er_misc_funcs as er_misc_funcs
+import efficient_rhythms.er_classes as er_classes
+import efficient_rhythms.er_settings as er_settings
 
 
 def test_check_modulo():
@@ -47,7 +40,7 @@ def test_check_interval_class():
 
 def test_get_prev_voice_indices():
     settingsdict = {"num_voices": 2, "tet": 12}
-    er = er_preprocess.preprocess_settings(settingsdict)
+    er = er_settings.get_settings(settingsdict)
 
     # voice, pitch, onset, dur, evaluates_to
     notes1 = [
@@ -65,16 +58,9 @@ def test_get_prev_voice_indices():
     for notes in (notes1, notes2):
         score = er_classes.Score(num_voices=er.num_voices, tet=er.tet)
         for (v, p, a, d, l) in notes:  # pylint: disable=invalid-name
-            try:
-                assert (
-                    er_misc_funcs.get_prev_voice_indices(score, a, d) == l
-                ), "er_misc_funcs.get_prev_voice_indices(score, a, d) != l"
-            except:  # pylint: disable=bare-except
-                exc_type, exc_value, exc_traceback = sys.exc_info()
-                traceback.print_exception(
-                    exc_type, exc_value, exc_traceback, file=sys.stdout
-                )
-                breakpoint()
+            assert (
+                er_misc_funcs.get_prev_voice_indices(score, a, d) == l
+            ), "er_misc_funcs.get_prev_voice_indices(score, a, d) != l"
 
             score.add_note(v, p, a, d)
 
@@ -91,16 +77,9 @@ def test_empty_nested():
         ([], True),
     ]
     for seq, result in tests:
-        try:
-            assert (
-                er_misc_funcs.empty_nested(seq) == result
-            ), "er_misc_funcs.empty_nested(seq) != result"
-        except:  # pylint: disable=bare-except
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            traceback.print_exception(
-                exc_type, exc_value, exc_traceback, file=sys.stdout
-            )
-            breakpoint()
+        assert (
+            er_misc_funcs.empty_nested(seq) == result
+        ), "er_misc_funcs.empty_nested(seq) != result"
 
 
 def test_chord_in_list():
@@ -133,33 +112,26 @@ def test_chord_in_list():
         for r in range(1, 4):
             for combination in itertools.combinations(item, r):
                 try:
-                    try:
-                        assert er_misc_funcs.chord_in_list(
-                            combination,
-                            chords,
-                            octave_equi="all",
-                            permit_doublings="complete",
-                        ), (
-                            "er_misc_funcs.chord_in_list(combination, chords, "
-                            "octave_equi='all', permit_doublings='complete')"
-                        )
-                    except AssertionError:
-                        assert item_i >= 10, "item_i < 10"
-                        assert er_misc_funcs.chord_in_list(
-                            combination,
-                            chords,
-                            octave_equi="all",
-                            permit_doublings="all",
-                        ), (
-                            "er_misc_funcs.chord_in_list(combination, "
-                            "chords, octave_equi='all', permit_doublings='all')"
-                        )
-                except:  # pylint: disable=bare-except
-                    exc_type, exc_value, exc_traceback = sys.exc_info()
-                    traceback.print_exception(
-                        exc_type, exc_value, exc_traceback, file=sys.stdout
+                    assert er_misc_funcs.chord_in_list(
+                        combination,
+                        chords,
+                        octave_equi="all",
+                        permit_doublings="complete",
+                    ), (
+                        "er_misc_funcs.chord_in_list(combination, chords, "
+                        "octave_equi='all', permit_doublings='complete')"
                     )
-                    breakpoint()
+                except AssertionError:
+                    assert item_i >= 10, "item_i < 10"
+                    assert er_misc_funcs.chord_in_list(
+                        combination,
+                        chords,
+                        octave_equi="all",
+                        permit_doublings="all",
+                    ), (
+                        "er_misc_funcs.chord_in_list(combination, "
+                        "chords, octave_equi='all', permit_doublings='all')"
+                    )
     not_in_list = [
         # Intervals not present
         [60, 61],
@@ -171,16 +143,9 @@ def test_chord_in_list():
         [63, 66, 69],
     ]
     for item in not_in_list:
-        try:
-            assert not er_misc_funcs.chord_in_list(
-                item, chords
-            ), "er_misc_funcs.chord_in_list(item, chords) != False"
-        except:  # pylint: disable=bare-except
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            traceback.print_exception(
-                exc_type, exc_value, exc_traceback, file=sys.stdout
-            )
-            breakpoint()
+        assert not er_misc_funcs.chord_in_list(
+            item, chords
+        ), "er_misc_funcs.chord_in_list(item, chords) != False"
     doublings = [
         [60, 64, 67, 72],
         [61, 64, 68, 76],
@@ -192,31 +157,24 @@ def test_chord_in_list():
         [62, 65, 70],
     ]
     for doubling, no_doubling in zip(doublings, no_doublings):
-        try:
-            assert not er_misc_funcs.chord_in_list(
-                doubling,
-                chords,
-                octave_equi="all",
-                permit_doublings="none",
-            ), (
-                "not er_misc_funcs.chord_in_list(doubling, chords, "
-                "octave_equi='all', permit_doublings='none')"
-            )
-            assert er_misc_funcs.chord_in_list(
-                no_doubling,
-                chords,
-                octave_equi="all",
-                permit_doublings="none",
-            ), (
-                "er_misc_funcs.chord_in_list(no_doubling, chords, "
-                "octave_equi='all', permit_doublings='none')"
-            )
-        except:  # pylint: disable=bare-except
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            traceback.print_exception(
-                exc_type, exc_value, exc_traceback, file=sys.stdout
-            )
-            breakpoint()
+        assert not er_misc_funcs.chord_in_list(
+            doubling,
+            chords,
+            octave_equi="all",
+            permit_doublings="none",
+        ), (
+            "not er_misc_funcs.chord_in_list(doubling, chords, "
+            "octave_equi='all', permit_doublings='none')"
+        )
+        assert er_misc_funcs.chord_in_list(
+            no_doubling,
+            chords,
+            octave_equi="all",
+            permit_doublings="none",
+        ), (
+            "er_misc_funcs.chord_in_list(no_doubling, chords, "
+            "octave_equi='all', permit_doublings='none')"
+        )
     #########################
     # octave_equi = "bass", #
     #########################
@@ -239,50 +197,42 @@ def test_chord_in_list():
     for item_i, item in enumerate(in_list):
         for r in range(2, 4):
             for combination in itertools.combinations(item, r):
-                try:
-                    if combination[0] == item[0]:
-                        try:
-                            assert er_misc_funcs.chord_in_list(
-                                combination,
-                                chords,
-                                octave_equi="bass",
-                                permit_doublings="complete",
-                            ), (
-                                "er_misc_funcs.chord_in_list(combination, "
-                                "chords, octave_equi='bass', "
-                                "permit_doublings='complete')"
-                            )
-                        except AssertionError:
-                            # should only fail with doublings after index 5
-                            assert item_i >= 6, "item_i < 6"
-                            assert er_misc_funcs.chord_in_list(
-                                combination,
-                                chords,
-                                octave_equi="bass",
-                                permit_doublings="all",
-                            ), (
-                                "er_misc_funcs.chord_in_list(combination, "
-                                "chords, octave_equi='bass', "
-                                "permit_doublings='all')"
-                            )
-                    else:
-                        assert not er_misc_funcs.chord_in_list(
+                if combination[0] == item[0]:
+                    try:
+                        assert er_misc_funcs.chord_in_list(
                             combination,
                             chords,
                             octave_equi="bass",
                             permit_doublings="complete",
                         ), (
-                            "not er_misc_funcs.chord_in_list(combination, "
+                            "er_misc_funcs.chord_in_list(combination, "
                             "chords, octave_equi='bass', "
                             "permit_doublings='complete')"
                         )
-
-                except:  # pylint: disable=bare-except
-                    exc_type, exc_value, exc_traceback = sys.exc_info()
-                    traceback.print_exception(
-                        exc_type, exc_value, exc_traceback, file=sys.stdout
+                    except AssertionError:
+                        # should only fail with doublings after index 5
+                        assert item_i >= 6, "item_i < 6"
+                        assert er_misc_funcs.chord_in_list(
+                            combination,
+                            chords,
+                            octave_equi="bass",
+                            permit_doublings="all",
+                        ), (
+                            "er_misc_funcs.chord_in_list(combination, "
+                            "chords, octave_equi='bass', "
+                            "permit_doublings='all')"
+                        )
+                else:
+                    assert not er_misc_funcs.chord_in_list(
+                        combination,
+                        chords,
+                        octave_equi="bass",
+                        permit_doublings="complete",
+                    ), (
+                        "not er_misc_funcs.chord_in_list(combination, "
+                        "chords, octave_equi='bass', "
+                        "permit_doublings='complete')"
                     )
-                    breakpoint()
 
     #########################
     # octave_equi = "order" #
@@ -298,84 +248,70 @@ def test_chord_in_list():
     for item in in_list:
         for r in range(2, 4):
             for combination in itertools.combinations(item, r):
-                try:
-                    if list(combination) == item[:r]:
-                        assert er_misc_funcs.chord_in_list(
-                            combination,
-                            chords,
-                            octave_equi="order",
-                            permit_doublings="complete",
-                        ), (
-                            "er_misc_funcs.chord_in_list(combination, "
-                            "chords, octave_equi='order', "
-                            "permit_doublings='complete')"
-                        )
-                    else:
-                        assert not er_misc_funcs.chord_in_list(
-                            combination,
-                            chords,
-                            octave_equi="order",
-                            permit_doublings="complete",
-                        ), (
-                            "not er_misc_funcs.chord_in_list(combination, "
-                            "chords, octave_equi='order', "
-                            "permit_doublings='complete')"
-                        )
-                except:  # pylint: disable=bare-except
-                    exc_type, exc_value, exc_traceback = sys.exc_info()
-                    traceback.print_exception(
-                        exc_type, exc_value, exc_traceback, file=sys.stdout
+                if list(combination) == item[:r]:
+                    assert er_misc_funcs.chord_in_list(
+                        combination,
+                        chords,
+                        octave_equi="order",
+                        permit_doublings="complete",
+                    ), (
+                        "er_misc_funcs.chord_in_list(combination, "
+                        "chords, octave_equi='order', "
+                        "permit_doublings='complete')"
                     )
-                    breakpoint()
+                else:
+                    assert not er_misc_funcs.chord_in_list(
+                        combination,
+                        chords,
+                        octave_equi="order",
+                        permit_doublings="complete",
+                    ), (
+                        "not er_misc_funcs.chord_in_list(combination, "
+                        "chords, octave_equi='order', "
+                        "permit_doublings='complete')"
+                    )
 
     def _sub_test(octave_equi, tests):
         for test_chord, all_val, comp_val, none_val in tests:
-            try:
-                assert (
-                    er_misc_funcs.chord_in_list(
-                        test_chord,
-                        chords,
-                        octave_equi=octave_equi,
-                        permit_doublings="all",
-                    )
-                    == all_val
-                ), (
-                    "er_misc_funcs.chord_in_list(test_chord, chords, "
-                    f'octave_equi="{octave_equi}", '
-                    'permit_doublings="all") != all_val'
+            assert (
+                er_misc_funcs.chord_in_list(
+                    test_chord,
+                    chords,
+                    octave_equi=octave_equi,
+                    permit_doublings="all",
                 )
-                assert (
-                    er_misc_funcs.chord_in_list(
-                        test_chord,
-                        chords,
-                        octave_equi=octave_equi,
-                        permit_doublings="complete",
-                    )
-                    == comp_val
-                ), (
-                    "er_misc_funcs.chord_in_list(test_chord, chords, "
-                    f'octave_equi="{octave_equi}", '
-                    'permit_doublings="complete") != comp_val'
+                == all_val
+            ), (
+                "er_misc_funcs.chord_in_list(test_chord, chords, "
+                f'octave_equi="{octave_equi}", '
+                'permit_doublings="all") != all_val'
+            )
+            assert (
+                er_misc_funcs.chord_in_list(
+                    test_chord,
+                    chords,
+                    octave_equi=octave_equi,
+                    permit_doublings="complete",
                 )
-                assert (
-                    er_misc_funcs.chord_in_list(
-                        test_chord,
-                        chords,
-                        octave_equi=octave_equi,
-                        permit_doublings="none",
-                    )
-                    == none_val
-                ), (
-                    "er_misc_funcs.chord_in_list(test_chord, chords, "
-                    f'octave_equi="{octave_equi}", '
-                    'permit_doublings="none") != none_val'
+                == comp_val
+            ), (
+                "er_misc_funcs.chord_in_list(test_chord, chords, "
+                f'octave_equi="{octave_equi}", '
+                'permit_doublings="complete") != comp_val'
+            )
+            assert (
+                er_misc_funcs.chord_in_list(
+                    test_chord,
+                    chords,
+                    octave_equi=octave_equi,
+                    permit_doublings="none",
                 )
-            except:  # pylint: disable=bare-except
-                exc_type, exc_value, exc_traceback = sys.exc_info()
-                traceback.print_exception(
-                    exc_type, exc_value, exc_traceback, file=sys.stdout
-                )
-                breakpoint()
+                == none_val
+            ), (
+                "er_misc_funcs.chord_in_list(test_chord, chords, "
+                f'octave_equi="{octave_equi}", '
+                'permit_doublings="none") != none_val'
+            )
 
     # permit_doublings with octave_equi = "order"
     chords = [
@@ -503,23 +439,15 @@ def test_binary_search_not_found(tup):
 
 
 def test_get_lowest_of_each_pc_in_set():
-    try:
-        pitch_set = {23, 35, 47, 26, 14, 50}
-        lowests = er_misc_funcs.get_lowest_of_each_pc_in_set(pitch_set, tet=12)
-        assert lowests[11] == 23
-        assert lowests[35 % 12] == 23
-        assert lowests[2] == 14
-        pitch_set = [i for i in range(8)]
-        lowests = er_misc_funcs.get_lowest_of_each_pc_in_set(pitch_set, tet=5)
-        assert lowests[1] == 1
-        assert lowests[7 % 5] == 2
-    except:  # pylint: disable=bare-except
-
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        traceback.print_exception(
-            exc_type, exc_value, exc_traceback, file=sys.stdout
-        )
-        breakpoint()
+    pitch_set = {23, 35, 47, 26, 14, 50}
+    lowests = er_misc_funcs.get_lowest_of_each_pc_in_set(pitch_set, tet=12)
+    assert lowests[11] == 23
+    assert lowests[35 % 12] == 23
+    assert lowests[2] == 14
+    pitch_set = [i for i in range(8)]
+    lowests = er_misc_funcs.get_lowest_of_each_pc_in_set(pitch_set, tet=5)
+    assert lowests[1] == 1
+    assert lowests[7 % 5] == 2
 
 
 if __name__ == "__main__":

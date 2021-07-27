@@ -142,6 +142,9 @@ def approximate_12_tet_pitch(pitch, tet):
 
 
 def temper_pitch_materials(item, tet, integers_in_12_tet=False):
+    # None values are passed through as is
+    if item is None:
+        return None
     try:
         iter(item)
         iterable = True

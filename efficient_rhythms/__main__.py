@@ -1,6 +1,7 @@
 import itertools
 import os
 import random
+import subprocess
 import sys
 
 from . import er_changers
@@ -12,20 +13,20 @@ from . import er_misc_funcs
 from . import er_midi
 from . import er_midi_settings
 from . import er_output_notation
-from . import er_preprocess
+from . import er_settings
 
 MAX_RANDOM_TRIES = 10
 
 
 def get_settings(args, seed, settings_dict=None):
     if args.input_midi:
-        settings = er_preprocess.read_in_settings(
+        settings = er_settings.read_in_settings(
             args.settings,
             er_midi_settings.MidiSettings,
             output_path=args.output,
         )
     else:
-        settings = er_preprocess.preprocess_settings(
+        settings = er_settings.get_settings(
             args.settings if settings_dict is None else settings_dict,
             random_settings=args.random,
             seed=seed,
@@ -134,8 +135,7 @@ def output_notation(settings, pattern, args):
             args.verovio_arguments,
             "." + args.output_notation,
         )
-    # TODO remove ProcError
-    except er_misc_funcs.ProcError as exc:
+    except subprocess.CalledProcessError as exc:
         if not er_globals.DEBUG:
             er_output_notation.clean_up_temporary_notation_files()
         print(exc)

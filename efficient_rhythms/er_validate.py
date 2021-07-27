@@ -2,6 +2,8 @@ from . import er_exceptions
 
 
 def _same_cardinality(pitch_seqs):
+    if not pitch_seqs:
+        return
     n = len(pitch_seqs[0])
     for pitch_seq in pitch_seqs[1:]:
         assert len(pitch_seq) == n
@@ -55,8 +57,14 @@ def _choir_errors(er, errors):
         errors.append(
             "`choir_assignments` assigns a voice to choir "
             f"{max(er.choir_assignments)}, but this voice does not exist. "
-            f"The maximum index for `choirs` is {len(er.choirs) - 1}."
+            f"There are {len(er.choirs)} choirs, so the "
+            f"maximum index for `choirs` is {len(er.choirs) - 1}."
         )
+
+
+def _check_foot_pcs_or_num_harmonies(er, errors):
+    if not er.num_harmonies and not er.foot_pcs:
+        errors.append("`foot_pcs` is empty and `num_harmonies` not passed")
 
 
 def validate_settings(er):
@@ -66,10 +74,11 @@ def validate_settings(er):
     #
     # See er_web for a way of making the validation more complete.
     validation_errors = []
+    _check_foot_pcs_or_num_harmonies(er, validation_errors)
     _check_chords_and_scale_card(er, validation_errors)
     _check_chords_and_scales_consistent(er, validation_errors)
     _choir_errors(er, validation_errors)
     _misc_errors(er, validation_errors)
     if validation_errors:
-        breakpoint()
+        # breakpoint()
         raise er_exceptions.ErSettingsError("\n".join(validation_errors))

@@ -5,6 +5,16 @@ import numpy as np
 from . import er_exceptions
 
 
+class ParallelMotionInfo:
+    def __init__(self, leader_i, motion_type):
+        self.leader_i = leader_i
+        # LONGTERM implement "global" parallel motion
+        # (that's why this translation to a string is here, so eventually
+        # force_parallel_motion in ERSettings can be specified by a
+        # string with minimum fuss)
+        self.motion_type = "within_harmonies" if motion_type else "false"
+
+
 class VLOrderItem:
     def __init__(self, voice_i, start_time, end_time, prev):
         self.voice_i = voice_i

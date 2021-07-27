@@ -16,7 +16,7 @@ INT_MAX = np.int64(2 ** 62 - 1)
 DUR_TRANCHE_SIZE = INT_MAX // 2 ** 9
 
 
-class ContRhythmBase2(RhythmBase):
+class ContRhythmBase(RhythmBase):
     def __repr__(self):
         return (
             f"{self.__class__.__name__}(rhythm_len={self.rhythm_len}, "
@@ -231,7 +231,7 @@ class ContRhythmBase2(RhythmBase):
         self._onsets_2d[dst_i] = self._onsets_2d[src_i]
 
 
-class ContRhythm(ContRhythmBase2):
+class ContRhythm(ContRhythmBase):
     def __init__(self, dur_density, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.dur_density = dur_density

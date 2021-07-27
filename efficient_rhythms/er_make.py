@@ -49,7 +49,6 @@ class PossibleNote:
 
         Returns -1 at start of score.
         """
-        # TODO update code to use this more.
         return self.score.get_prev_pitch(self.onset, self.voice_i)
 
     @functools.cached_property
@@ -58,12 +57,10 @@ class PossibleNote:
 
         Returns None at start of score.
         """
-        # TODO update code to use this more.
         return self.score.voices[self.voice_i].get_prev_note(self.onset)
 
     @functools.cached_property
     def other_voice_indices(self):
-        # TODO update code to use this more.
         return er_misc_funcs.get_prev_voice_indices(
             self.score, self.onset, self.dur
         )
@@ -74,7 +71,9 @@ def get_repeated_pitch(super_pattern, poss_note):
     harmony_start_time = super_pattern.get_harmony_times(
         poss_note.harmony_i
     ).start_time
-    return er_make2.get_repeated_pitch(poss_note, min_onset=harmony_start_time)
+    return er_make2.get_repeated_pitch(
+        poss_note=poss_note, min_onset=harmony_start_time
+    )
 
 
 def get_looped_pitch(er, poss_note):
@@ -87,7 +86,7 @@ def get_looped_pitch(er, poss_note):
 
     if pitch_to_loop <= 0:
         return 0
-    scale = er.get(poss_note.harmony_i, "scales")
+    scale = er.get(poss_note.harmony_i, "gamut_scales")
     if pitch_to_loop not in scale:
         look_first = random.choice([1, -1])
         look_second = -1 * look_first
@@ -259,15 +258,12 @@ def choose_whether_chord_tone(er, super_pattern, poss_note):
     if 0 < er.len_to_force_chord_tone <= poss_note.dur:
         return True
 
-    force_chord_tone = er.get(poss_note.voice_i, "force_chord_tone")
+    force_chord_tone = er.force_chord_tone
 
     if force_chord_tone != "none":
         if poss_note.onset == 0:
             return True
         if force_chord_tone == "global_first_note":
-            # prev_pitch = super_pattern.get_prev_pitch(
-            #     poss_note.onset, poss_note.voice_i
-            # )
             if poss_note.prev_pitch <= 0:
                 return True
         else:
@@ -286,13 +282,6 @@ def choose_whether_chord_tone(er, super_pattern, poss_note):
                     and prev_note.onset >= harmony_start_time
                 ):
                     return True
-                # prev_pitch = super_pattern.get_prev_pitch(
-                #     poss_note.onset,
-                #     poss_note.voice_i,
-                #     min_onset=harmony_start_time,
-                # )
-                # if prev_pitch <= 0:
-                #     return True
 
     # Next, if er.chord_tone_selection is false, return false.
     if not er.chord_tone_selection:
@@ -315,17 +304,12 @@ def choose_whether_chord_tone(er, super_pattern, poss_note):
         #     return True
 
     if er.chord_tones_sync_onset_in_all_voices:
-        prev_voices = er_misc_funcs.get_prev_voice_indices(
-            super_pattern,
-            poss_note.onset,
-            poss_note.dur,
-        )
-        if prev_voices:
+        if poss_note.other_voice_indices:
             if check_other_voices_for_chord_tones(
                 er,
                 super_pattern,
                 poss_note.onset,
-                prev_voices,
+                poss_note.other_voice_indices,
                 poss_note.harmony_i,
             ):
                 return True
@@ -395,9 +379,9 @@ def _get_available_pcs(er, super_pattern, poss_note, include_if_possible=None):
         # Take a copy of pc_chord because we don't want to alter the original
         #   in er. (It is potentially altered in the `if include_in_possible`
         #   loop below)
-        out = [pc_chord[:], pc_non_chord]
+        out = [pc_chord[:], pc_non_chord[:]]
     elif er.chord_tone_selection and er.try_to_force_non_chord_tones:
-        out = [pc_non_chord, pc_chord[:]]
+        out = [pc_non_chord[:], pc_chord[:]]
     else:
         # We don't copy pc_scale because it is never altered (but it might be
         # smart to enforce this somehow, e.g., by having it be a tuple?)
@@ -547,6 +531,7 @@ def weight_intervals_and_choose(intervals, log_base=1.01, unison_weighted_as=3):
             probability of larger intervals. 1.5 seems to be a decent value.
         unison_weighted_as: Unisons will be weighted the same as this interval.
     """
+    # TODO cache weighted_choices
     weighted_choices = []
     # if unison_weighted_as == 0:
     #     for interval in intervals:
@@ -554,9 +539,6 @@ def weight_intervals_and_choose(intervals, log_base=1.01, unison_weighted_as=3):
     #         weighted_choices.append((interval, 100 / weight))
     # else:
     for interval in intervals:
-        # if interval == 0:
-        #     weight = math.log(unison_weighted_as + log_base - 1, log_base)
-        # else:
         weight = math.log(
             (unison_weighted_as if interval == 0 else abs(interval))
             + log_base

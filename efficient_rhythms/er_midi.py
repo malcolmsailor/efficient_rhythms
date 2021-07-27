@@ -438,6 +438,7 @@ def write_tempi(er, mf, total_len):
         if er.tempo:
             tempo = er.get(tempo_i, "tempo")
         else:
+            # TODO adapt to preprocessing
             tempo = random.randrange(*er.tempo_bounds)
         mf.tracks[META_TRACK].append(
             mido.MetaMessage(

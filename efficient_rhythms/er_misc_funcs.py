@@ -17,15 +17,15 @@ from . import er_shell_constants
 MAX_DENOMINATOR = 8192
 
 
-class ProcError(Exception):
-    pass
+# class ProcError(Exception):
+#     pass
 
 
 def silently_run_process(commands, stdin=None):
     """Runs a process silently.
 
     If the process returns non-zero exit code,
-    raises a ProcError.
+    raises subprocess.CalledProcessError.
     """
     if isinstance(stdin, str):
         stdin = stdin.encode(encoding="utf-8")
@@ -34,31 +34,29 @@ def silently_run_process(commands, stdin=None):
         input=stdin,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
-        check=False,
+        check=True,
     )
-    # LONGTERM replace my besoke ProcError with the standard library exception
-    if proc.returncode != 0:
-        raise ProcError(
-            f"{commands[0]} returned error code {proc.returncode}\n"
-            + proc.stdout.decode()
-        )
     return proc
 
 
 def check_modulo(n, mod):
     """arguments:
-    mod: an int, or a list. If an int just returns n % mod.
+    mod: a number, or a list. If a number just returns n % mod.
         If a list, needs to be in 'cumulative' format.
     """
     try:
         return n % mod
     except TypeError:
         pass
-    total_mod = max(mod)
+    # total_mod = max(mod)
+    # TODO ensure sorted
+    total_mod = mod[-1]
 
     x_vals = []
     for m in mod:
         x = (n - m) % total_mod
+        if x == 0:
+            return 0
         if x > total_mod / 2:
             x = abs(x - total_mod)
         x_vals.append(x)
@@ -909,7 +907,7 @@ def get_scale_index(scale, pitch, up_or_down=0, return_adjustment_sign=False):
 
 
 def get_generic_interval(er, harmony_i, pitch, prev_pitch):
-    scale = er.get(harmony_i, "scales")
+    scale = er.get(harmony_i, "gamut_scales")
     # TODO consider restoring random behavior of get_scale_index
     prev_scale_index = get_scale_index(scale, prev_pitch, up_or_down=1)
     scale_index = scale.index(pitch)
@@ -918,7 +916,7 @@ def get_generic_interval(er, harmony_i, pitch, prev_pitch):
 
 
 def apply_generic_interval(er, harmony_i, generic_interval, prev_pitch):
-    scale = er.get(harmony_i, "scales")
+    scale = er.get(harmony_i, "gamut_scales")
     # TODO consider restoring random behavior of get_scale_index
     prev_scale_index = get_scale_index(scale, prev_pitch, up_or_down=-1)
     new_pitch = scale[prev_scale_index + generic_interval]

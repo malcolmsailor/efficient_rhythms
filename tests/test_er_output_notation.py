@@ -1,15 +1,10 @@
 import os
-import sys
+import subprocess
 import tempfile
-import traceback
 
-sys.path.insert(
-    0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-)
-
-import efficient_rhythms.er_output_notation as er_output_notation  # pylint: disable=wrong-import-position
-import efficient_rhythms.er_misc_funcs as er_misc_funcs  # pylint: disable=wrong-import-position
-import efficient_rhythms.er_classes as er_classes  # pylint: disable=wrong-import-position
+import efficient_rhythms.er_output_notation as er_output_notation
+import efficient_rhythms.er_misc_funcs as er_misc_funcs
+import efficient_rhythms.er_classes as er_classes
 
 
 def test_get_kern():
@@ -35,7 +30,7 @@ def test_get_kern():
         er_misc_funcs.silently_run_process(
             ["verovio", "-o", temp_path, "-"], stdin=kern
         )
-    except er_misc_funcs.ProcError:
+    except subprocess.CalledProcessError:
         os.remove(temp_path)
         raise
     os.remove(temp_path)
@@ -57,16 +52,9 @@ def test_dur_to_kern():
             rval = er_output_notation.dur_to_kern(
                 dur, offset=offset, time_sig_dur=time_sig_dur
             )
-            try:
-                assert (
-                    tuple(x[0] for x in rval) == vals
-                ), "tuple(x[0] for x in rval) != vals"
-            except:  # pylint: disable=bare-except
-                exc_type, exc_value, exc_traceback = sys.exc_info()
-                traceback.print_exception(
-                    exc_type, exc_value, exc_traceback, file=sys.stdout
-                )
-                breakpoint()
+            assert (
+                tuple(x[0] for x in rval) == vals
+            ), "tuple(x[0] for x in rval) != vals"
 
 
 if __name__ == "__main__":

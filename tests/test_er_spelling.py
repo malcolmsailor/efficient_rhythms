@@ -1,12 +1,4 @@
-import os
-import sys
-import traceback
-
-sys.path.insert(
-    0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-)
-
-import efficient_rhythms.er_spelling as er_spelling  # pylint: disable=wrong-import-position
+import efficient_rhythms.er_spelling as er_spelling
 
 
 def test_build_spelling_dict():
@@ -36,42 +28,28 @@ def test_build_fifth_class_spelling_dict():
     kern_dict = er_spelling.build_fifth_class_spelling_dict(
         letter_format="kern"
     )
-    try:
-        for pc, spelled in spell_dict.items():
-            assert spell_dict2[spelled] == pc, "spell_dict2[spelled] != pc"
-        tests = [
-            (0, "D", "d"),
-            (7, "D#", "d#"),
-            (-7, "Db", "d-"),
-            (3, "B", "b"),
-            (17, "B##", "b##"),
-            (-11, "Bbb", "b--"),
-        ]
-        for pc, shell_spelled, kern_spelled in tests:
-            assert (
-                spell_dict[pc] == shell_spelled
-            ), "spell_dict[pc] != shell_spelled"
-            assert (
-                kern_dict[pc] == kern_spelled
-            ), "kern_dict[pc] != kern_spelled"
-    except:  # pylint: disable=bare-except
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        traceback.print_exception(
-            exc_type, exc_value, exc_traceback, file=sys.stdout
-        )
-        breakpoint()
+    for pc, spelled in spell_dict.items():
+        assert spell_dict2[spelled] == pc, "spell_dict2[spelled] != pc"
+    tests = [
+        (0, "D", "d"),
+        (7, "D#", "d#"),
+        (-7, "Db", "d-"),
+        (3, "B", "b"),
+        (17, "B##", "b##"),
+        (-11, "Bbb", "b--"),
+    ]
+    for pc, shell_spelled, kern_spelled in tests:
+        assert (
+            spell_dict[pc] == shell_spelled
+        ), "spell_dict[pc] != shell_spelled"
+        assert (
+            kern_dict[pc] == kern_spelled
+        ), "kern_dict[pc] != kern_spelled"
 
 
 def test_speller():
-    try:
-        speller = er_spelling.Speller(pitches=True)
-        assert speller(60) == "C4", "speller(60) " '!= "C4"'
-    except:  # pylint: disable=bare-except
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        traceback.print_exception(
-            exc_type, exc_value, exc_traceback, limit=5, file=sys.stdout
-        )
-        breakpoint()
+    speller = er_spelling.Speller(pitches=True)
+    assert speller(60) == "C4", "speller(60) " '!= "C4"'
 
 
 def test_group_speller():

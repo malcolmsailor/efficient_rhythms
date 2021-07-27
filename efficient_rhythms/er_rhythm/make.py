@@ -191,13 +191,6 @@ def _add_comma(er, voice_i, onset_positions, comma):
     onset_positions[comma_i:] += comma
 
 
-# def _sub_subdivision_proportions(sub_subdivisions):
-#     # TODO datatype
-#     return np.cumsum(sub_subdivisions, dtype=np.float32) / np.sum(
-#         sub_subdivisions, dtype=np.float32
-#     )
-
-
 def _onset_positions(er, voice_i):
     """Returns an np array of possible onset times."""
 
@@ -282,7 +275,7 @@ def get_onsets(er, voice_i, prev_rhythms):
         er, voice_i, prev_rhythms, onset_positions
     )
 
-    num_notes = er.get(voice_i, "num_notes")
+    num_notes = er.num_notes[voice_i]
     # can num_notes ever be greater than len(onset_positions)? I should
     # enforce no and then remove the call to min()
 

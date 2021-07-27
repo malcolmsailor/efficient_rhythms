@@ -2,7 +2,7 @@ import warnings
 
 import numpy as np
 
-import efficient_rhythms.er_preprocess as er_preprocess
+import efficient_rhythms.er_settings as er_settings
 import efficient_rhythms.er_rhythm as er_rhythm
 
 from tests.fixtures import set_seed
@@ -18,7 +18,7 @@ def _get_cont_base(
     vary_consistently=True,
     var_palindrome=True,
     dtype=np.float64,
-    cls=er_rhythm.cont_rhythm.ContRhythmBase2,
+    cls=er_rhythm.cont_rhythm.ContRhythmBase,
 ):
     return cls(
         rhythm_len,
@@ -65,7 +65,7 @@ def _get_grid(*args, **kwargs):
 
 
 def _get_er(settingsdict):
-    return er_preprocess.preprocess_settings(settingsdict, silent=True)
+    return er_settings.get_settings(settingsdict, silent=True)
 
 
 def _get_grid_from_er(settingsdict):
@@ -262,7 +262,7 @@ def test_grid(set_seed):
     non_defaults = (
         ("cont_var_increment", 0.0),
         ("overlap", False),
-        ("cont_var_increment", 1.0),
+        ("cont_var_increment", 0.1),
         ("cont_var_increment", 100.0),
         ("num_cont_rhythm_vars", 1),
         ("vary_rhythm_consistently", False),
@@ -271,6 +271,7 @@ def test_grid(set_seed):
     for kw, val in non_defaults:
         settingsdict = basesettings.copy()
         settingsdict[kw] = val
+        print(settingsdict)
         er, gd = _get_grid_from_er(settingsdict)
         gd.generate()
         div3 = gd.num_notes // 3
@@ -287,12 +288,15 @@ def test_grid(set_seed):
                 assert np.all(
                     np.equal(varied_onsets[i], gd._onsets_2d[i][indices])
                 )
-                assert np.all(
-                    np.isin(
-                        (onsets[i] + durs[i]).round(decimals=8),
-                        gd.releases,
-                    )
+                varied_releases = (varied_onsets[i] + varied_durs[i]).round(
+                    decimals=8
                 )
+                varied_releases = np.where(
+                    varied_releases > gd.total_dur,
+                    (varied_releases % gd.total_dur).round(decimals=8),
+                    varied_releases,
+                )
+                assert np.all(np.isin(varied_releases, gd.releases))
                 _verify_onsets(
                     varied_onsets[i],
                     3,

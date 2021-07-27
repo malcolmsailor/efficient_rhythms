@@ -549,7 +549,7 @@ class Voice:
             else:
                 harmony_i += 1
             harmony_times = score.get_harmony_times(harmony_i)
-            scale = er.get(harmony_i, "scales")
+            scale = er.get(harmony_i, "gamut_scales")
             adjusted_interval = interval
             while adjusted_interval > abs(max_interval):
                 adjusted_interval -= len(er.get(harmony_i, "pc_scales"))

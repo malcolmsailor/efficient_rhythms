@@ -1,14 +1,9 @@
 import itertools
-import os
 import sys
 import traceback
 
-sys.path.insert(
-    0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-)
-
-import efficient_rhythms.er_voice_leadings as er_vls  # pylint: disable=wrong-import-position
-import efficient_rhythms.er_exceptions as er_exceptions  # pylint: disable=wrong-import-position
+import efficient_rhythms.er_voice_leadings as er_vls
+import efficient_rhythms.er_exceptions as er_exceptions
 
 
 def test_efficient_voice_leading():

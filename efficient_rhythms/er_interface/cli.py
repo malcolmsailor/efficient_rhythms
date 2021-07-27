@@ -640,7 +640,7 @@ def verovio_interface(score, midi_path, verovio_arguments):
         er_output_notation.run_verovio(
             score, midi_path, verovio_arguments, file_types[answer]
         )
-    except er_misc_funcs.ProcError as exc:
+    except subprocess.CalledProcessError as exc:
         er_output_notation.clean_up_temporary_notation_files()
         print(exc)
         input("press <enter> to continue")

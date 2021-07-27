@@ -38,29 +38,22 @@ def get_foot_to_force(er, voice_i, harmony_i):
         foot_pc, er.voice_ranges[voice_i], er.tet
     )
     if not foot_pitches:
-        if er.already_warned["force_foot"][harmony_i] == 0:
+        if harmony_i in er.already_warned["force_foot"]:
             warnings.warn(
                 f"Unable to force foot in bass on harmony {harmony_i}.\n"
                 "Try increasing voice range."
             )
-            er.already_warned["force_foot"][harmony_i] += 1
+            er.already_warned["force_foot"].add(harmony_i)
         return None
     return min(foot_pitches)
 
 
-def get_repeated_pitch(poss_note, min_onset=0):
-    # prev_pitch = poss_note.voice.get_prev_pitch(
-    #     poss_note.onset, min_onset=min_onset
-    # )
-    prev_note = poss_note.prev_note
-    # if poss_note.onset < min_onset or poss_note.prev_pitch < 0:
-    if prev_note is None or prev_note.onset < min_onset:
-        return None
-    return poss_note.prev_pitch
-
-
-# LONGTERM consolidate this and previous function!
-def get_repeated_pitch2(voice, onset, min_onset=0):
+def get_repeated_pitch(poss_note=None, voice=None, onset=None, min_onset=0):
+    if poss_note is not None:
+        prev_note = poss_note.prev_note
+        if prev_note is None or prev_note.onset < min_onset:
+            return None
+        return poss_note.prev_pitch
     prev_pitch = voice.get_prev_pitch(onset, min_onset=min_onset)
     if prev_pitch < 0:
         return None

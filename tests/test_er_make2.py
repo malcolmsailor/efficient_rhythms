@@ -1,14 +1,6 @@
-import os
-import sys
-import traceback
-
-sys.path.insert(
-    0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-)
-
-import efficient_rhythms.er_make2 as er_make2  # pylint: disable=wrong-import-position
-import efficient_rhythms.er_classes as er_classes  # pylint: disable=wrong-import-position
-import efficient_rhythms.er_preprocess as er_preprocess  # pylint: disable=wrong-import-position
+import efficient_rhythms.er_make2 as er_make2
+import efficient_rhythms.er_classes as er_classes
+import efficient_rhythms.er_settings as er_settings
 
 
 def test_check_harmonic_intervals():
@@ -19,7 +11,7 @@ def test_check_harmonic_intervals():
             0,
         ],
     }
-    er = er_preprocess.preprocess_settings(settingsdict)
+    er = er_settings.get_settings(settingsdict)
 
     # voice, pitch, onset, dur, evaluates_to
     notes1 = [
@@ -37,20 +29,13 @@ def test_check_harmonic_intervals():
     for notes in (notes1, notes2):
         score = er_classes.Score(num_voices=er.num_voices, tet=er.tet)
         for (v, p, a, d, b) in notes:  # pylint: disable=invalid-name
-            try:
-                assert (
-                    er_make2.check_harmonic_intervals(er, score, p, a, d, v)
-                    is b
-                ), (
-                    "er_make2.check_harmonic_intervals"
-                    f"(er, score, {p}, {a}, {d}, {v}) is not {b}"
-                )
-            except:  # pylint: disable=bare-except
-                exc_type, exc_value, exc_traceback = sys.exc_info()
-                traceback.print_exception(
-                    exc_type, exc_value, exc_traceback, file=sys.stdout
-                )
-                breakpoint()
+            assert (
+                er_make2.check_harmonic_intervals(er, score, p, a, d, v)
+                is b
+            ), (
+                "er_make2.check_harmonic_intervals"
+                f"(er, score, {p}, {a}, {d}, {v}) is not {b}"
+            )
             score.add_note(v, p, a, d)
     settingsdict = {
         "num_voices": 3,
@@ -60,7 +45,7 @@ def test_check_harmonic_intervals():
         ],
         "forbidden_interval_classes": [],
     }
-    er = er_preprocess.preprocess_settings(settingsdict)
+    er = er_settings.get_settings(settingsdict)
     notes1 = [
         (0, 60, 0, 1.0, True),
         (1, 72, 0, 1.0, True),
@@ -70,20 +55,13 @@ def test_check_harmonic_intervals():
     for notes in (notes1,):
         score = er_classes.Score(num_voices=er.num_voices, tet=er.tet)
         for (v, p, a, d, b) in notes:  # pylint: disable=invalid-name
-            try:
-                assert (
-                    er_make2.check_harmonic_intervals(er, score, p, a, d, v)
-                    is b
-                ), (
-                    "er_make2.check_harmonic_intervals"
-                    f"(er, score, {p}, {a}, {d}, {v}) is not {b}"
-                )
-            except:  # pylint: disable=bare-except
-                exc_type, exc_value, exc_traceback = sys.exc_info()
-                traceback.print_exception(
-                    exc_type, exc_value, exc_traceback, file=sys.stdout
-                )
-                breakpoint()
+            assert (
+                er_make2.check_harmonic_intervals(er, score, p, a, d, v)
+                is b
+            ), (
+                "er_make2.check_harmonic_intervals"
+                f"(er, score, {p}, {a}, {d}, {v}) is not {b}"
+            )
             score.add_note(v, p, a, d)
 
 
@@ -104,24 +82,18 @@ def test_check_melodic_intervals():
             "max_interval": max_interval,
             "min_interval": min_interval,
         }
-        er = er_preprocess.preprocess_settings(settingsdict)
+        er = er_settings.get_settings(settingsdict)
         for (test_ps, prev_p, result_ps) in notes:
-            try:
-                assert (
-                    er_make2.check_melodic_intervals(
-                        er, test_ps, prev_p, max_interval, min_interval, 0
-                    )
-                    == result_ps
-                ), (
-                    "er_make2.check_melodic_intervals"
-                    f"(er, test_ps, prev_p, max_interval, min_interval, 0) != {result_ps}"
+            assert (
+                er_make2.check_melodic_intervals(
+                    er, test_ps, prev_p, max_interval, min_interval, 0
                 )
-            except:  # pylint: disable=bare-except
-                exc_type, exc_value, exc_traceback = sys.exc_info()
-                traceback.print_exception(
-                    exc_type, exc_value, exc_traceback, file=sys.stdout
-                )
-                breakpoint()
+                == result_ps
+            ), (
+                "er_make2.check_melodic_intervals"
+                f"(er, test_ps, prev_p, max_interval, min_interval, 0) != {result_ps}"
+            )
+
 
     # SPECIFIC INTERVALS
     # MAX INTERVAL

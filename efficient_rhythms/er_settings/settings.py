@@ -1,20 +1,49 @@
 import dataclasses
-from dataclasses import field as fld
 import re
-import numbers
-import typing
 
-import numpy as np
+from dataclasses import field as fld
+from numbers import Number
+from typing import Dict, Optional, Sequence, Tuple, Union
 
-# from . import er_type_check
+from .settings_base import SettingsBase
+from .preprocess_helpers import (
+    counting_order,
+    get_max_super_pattern_len,
+    get_num_harmonies,
+    guess_time_sig,
+    len_all_harmonies,
+    random_foot_pcs,
+    random_tempi,
+)
+from .postprocess_helpers import (
+    check_force_parallel_motion,
+    check_invert_consonances,
+    check_min_dur,
+    check_num_vars,
+    check_rhythm_len,
+    get_augmented_triad,
+    get_output_path,
+    generate_interval_cycle,
+    process_voice_relations,
+    scale_by_neutral_dur,
+    set_to_num_harmonies,
+    truncate_to_num_harmonies,
+)
 
-DEFAULT_NUM_HARMONIES = 4
+from ..er_types import (
+    Density,
+    GenericInterval,
+    ItemOrSequence,
+    Metron,
+    PerVoiceSequence,
+    PerVoiceSuperSequence,
+    Pitch,
+    PitchClass,
+    SuperSequence,
+    Tempo,
+    VoiceRanges,
+)
 
-# The user can override MAX_SUPER_PATTERN_LEN
-# We use a lower default when script is invoked with --random to make success
-# somewhat more likely
-MAX_SUPER_PATTERN_LEN = 128
-MAX_SUPER_PATTERN_LEN_RANDOM = 64
 
 CATEGORIES = (
     "global",
@@ -34,16 +63,12 @@ CATEGORIES = (
 )
 
 
-# TODO use this type annotation for sequences that can be ndarrays as well
-# Note that Seq_or_arr will match strings
-# Seq_or_arr = typing.Union[typing.Sequence, np.ndarray]
-
 # TODO setting to give notes different velocities depending on their
 #   subdivision
 
-# @er_type_check.enforce_types
+
 @dataclasses.dataclass
-class ERSettings:
+class SettingsDataclass(SettingsBase):
     """Stores the settings that control the script's behavior.
 
     Hyperlinked, formatted markdown and HTML versions automatically generated
@@ -168,13 +193,14 @@ class ERSettings:
         pattern_len: a number, or a per-voice sequence of numbers. Indicates the
             length of the "basic pattern" in beats. If a single number, all
             voices have the same length; if a sequence, sets the length for each
-            voice individually.  If `pattern_len` is 0 or negative, it will be
+            voice individually.  If `pattern_len` is None, it will be
             assigned the length of the complete harmonic progression (determined
             by `harmony_len` and `num_harmonies`).
 
             If `cont_rhythms != "none"`, then this argument must consist of
             a single number.
-            Default: 0
+
+            Default: 2
         truncate_patterns: bool. If True, then repetitions of any values in
             `pattern_len` which are not factors of the maximum value in
             `pattern_len` will be truncated at the maximum value. For example,
@@ -699,11 +725,12 @@ class ERSettings:
             set to two, then the sequence "A, B, A, B, A" is allowed, just not
             "A, B, A, B, A, B" (or longer).  To disable, set to 0.
             Default: 2
-        pitch_loop: int, or a sequence of ints. If passed, in each voice,
-            pitches will be repeated in a loop of the specified length.
+        pitch_loop: int, or per-voice sequence of ints. If passed, in each
+            voice, pitches will be repeated in a loop of the specified length.
             (However, at each harmony change, the loop will be adjusted to fit
             the new harmony.)
-        hard_pitch_loop: boolean. If True, then after the initial loop of each
+        hard_pitch_loop: boolean, or per-voice sequence of booleans. If True,
+            then after the initial loop of each
             voice is constructed, pitch constraint parameters such as
             `consonances` and `max_interval` will be ignored and the pitches
             will continue to be looped "no matter what." If False, then a "soft"
@@ -786,9 +813,10 @@ class ERSettings:
             If a sequence of sequences of numbers, each sub-sequence works as
             defined above, and they are applied to individual voices in a
             looping per-voice manner as described above.
-        min_dur_for_cons_treatment: number. Notes with durations shorter than
-            this value will not be evaluated for consonance.
-            Default: 0
+        min_dur_for_cons_treatment: number, or a per-voice sequence of numbers.
+            Notes with durations shorter than this value will not be evaluated
+            for consonance.
+            Default: 0.25
         forbidden_intervals: a sequence of numbers. The harmonic intervals
             specified by this sequence will be  avoided. Octave-equivalent
             intervals are NOT avoided. The main expected use is to avoid
@@ -914,16 +942,12 @@ class ERSettings:
             Integers represent a literal number of onsets. E.g., if
             `onset_density == 3`, there will be 3 onsets.
 
-            Any negative values will be replaced by a random float between
-            0.0 and 1.0.
-
             Note that there will always be at least one onset in each rhythm,
             regardless of how low `onset_density` is set.
             Default: 0.5
         dur_density: a float from 0.0 to 1.0, or a per-voice sequence of floats.
             Indicates a proportion of the duration of `rhythm_len` that should
-            be filled. Any negative values will be replaced by a random float
-            between 0.0 and 1.0.
+            be filled.
             Default: 1.0
         onset_subdivision: a number, or a per-voice sequence of numbers.
             Indicates the basic "grid" on which onsets can take place, measured
@@ -975,7 +999,7 @@ class ERSettings:
             implied by `onset_density`, the onsets will be selected from the
             obligatory onsets until `onset_density` is reached, but precisely
             which onsets are selected is undefined.
-        obligatory_onsets_modulo: a number, or a sequence of numbers.
+        obligatory_onsets_modulo: a number, or a per-voice sequence of numbers.
             Specifies which times (if any) should be understood as equivalent
             to the values in `obligatory_onsets`. Thus, if `obligatory_onsets`
             is `(0,)`, and `obligatory_onsets_modulo` is passed a value of
@@ -1103,7 +1127,7 @@ class ERSettings:
             If `cont_rhythms` is not `None`, then `rhythm_len` must equal
             `pattern_len` and both must have only a single value.
             Default: "none"
-        num_cont_rhythm_vars: int, or sequence of ints. If
+        num_cont_rhythm_vars: int, or per-voice sequence of ints. If
             `cont_rhythms != "none"`, then, optionally, the rhythms can be
             varied when they recur by perturbing them randomly. This parameter
             determines the number of such variations.  Setting it to `1` has the
@@ -1118,7 +1142,8 @@ class ERSettings:
             from one variation until the next---at least until `min_dur` is
             reached in one or more of the notes of the rhythm.
             Default: True
-        cont_var_increment: number. If `num_cont_rhythm_vars != 1`, determines
+        cont_var_increment: number, or a per-voice sequence of numbers. If
+            `num_cont_rhythm_vars != 1`, determines
             how much rhythmic perturbation is applied to each variation. Larger
             values lead to larger perturbations.
             # TODO document this further: what exactly does this number
@@ -1216,7 +1241,6 @@ class ERSettings:
             looped through as necessary. Has no effect if `tempo` is a single
             number.  If not passed, then the first tempo in `tempo` applies
             to the whole file.
-            Default: 0
         tempo_bounds: a tuple of form (number, number). If `tempo` is an empty
             sequence, then tempi are randomly generated within the (inclusive)
             bounds set by this tuple.
@@ -1384,7 +1408,7 @@ class ERSettings:
     # of programmatically retrieving the correct docstring fragment (i.e.,
     # the fragment that describes "seed" when assigning the field for `seed`)
     # and I don't want to have to hard-code all of these.
-    seed: typing.Union[int, None] = fld(
+    seed: Union[int, None] = fld(
         default=None,
         metadata={
             "mutable_attrs": {},
@@ -1399,6 +1423,7 @@ class ERSettings:
             "category": "global",
             "shell_only": True,
             "priority": 0,
+            "postprocess": get_output_path,
         },
     )
     overwrite: bool = fld(
@@ -1469,7 +1494,7 @@ class ERSettings:
             "priority": 0,
         },
     )
-    existing_voices_offset: numbers.Number = fld(
+    existing_voices_offset: Metron = fld(
         default=0,
         metadata={
             "mutable_attrs": {},
@@ -1523,55 +1548,58 @@ class ERSettings:
             "priority": 0,
         },
     )
-
+    # TODO I don't think the docs are accurate concerning behavior when None
+    num_harmonies: Union[int, None] = fld(
+        default=None,
+        metadata={
+            "mutable_attrs": {},
+            "category": "global",
+            "priority": 1,
+            "if_none": get_num_harmonies,
+        },
+    )
     # LONGTERM make continuous rhythms work with non-identical pattern_len/rhythm_len
     # TODO Document conditions specific to continuous rhythms
-    pattern_len: typing.Union[
-        numbers.Number, typing.Sequence[numbers.Number]
-    ] = fld(
-        default=0,
+    pattern_len: Optional[PerVoiceSequence[Metron]] = fld(
+        default=2,
         metadata={
             "mutable_attrs": {},
             "category": "global",
             "priority": 1,
+            # TODO document: "if_none" is a callable that takes er as argument
+            "if_none": len_all_harmonies,
         },
     )
-    rhythm_len: typing.Union[
-        numbers.Number, typing.Sequence[numbers.Number], None
-    ] = fld(
+    rhythm_len: Optional[PerVoiceSequence[Metron]] = fld(
         default=None,
         metadata={
             "mutable_attrs": {},
             "category": "global",
             "priority": 1,
+            "from_if_none": "pattern_len",
+            "postprocess": check_rhythm_len,
         },
     )
-    # TODO I don't think the docs are accurate concerning behavior when None
-    num_harmonies: typing.Union[int, None] = fld(
-        default=None,
+
+    # harmony_len: Union[
+    #     Number, Sequence[Number]
+    # ] = fld(
+    harmony_len: ItemOrSequence[Metron] = fld(
+        default=4,
         metadata={
             "mutable_attrs": {},
             "category": "global",
             "priority": 1,
         },
     )
-    time_sig: typing.Union[None, typing.Tuple[int, int]] = fld(
+    time_sig: Union[None, Tuple[int, int]] = fld(
         default=None,
         metadata={
             "mutable_attrs": {},
             "category": "global",
             "priority": 3,
             "shell_only": True,
-        },
-    )
-    harmony_len: typing.Union[
-        numbers.Number, typing.Sequence[numbers.Number]
-    ] = fld(
-        default=4,
-        metadata={
-            "mutable_attrs": {},
-            "category": "global",
-            "priority": 1,
+            "if_none": guess_time_sig,
         },
     )
     truncate_patterns: bool = fld(
@@ -1582,18 +1610,20 @@ class ERSettings:
             "priority": 2,
         },
     )
-    max_super_pattern_len: typing.Union[None, numbers.Number] = fld(
+    max_super_pattern_len: Union[None, Metron] = fld(
         default=None,
         metadata={
             "mutable_attrs": {},
             "category": "global",
             "priority": 3,
+            "if_none": get_max_super_pattern_len,
         },
     )
-    voice_ranges: typing.Union[
-        typing.Sequence[typing.Tuple[numbers.Number, numbers.Number]],
-        np.ndarray,
-    ] = fld(
+    # voice_ranges: Union[
+    #     Sequence[Tuple[Number, Number]],
+    #     np.ndarray,
+    # ] = fld(
+    voice_ranges: VoiceRanges = fld(
         default="CONTIGUOUS_OCTAVES * OCTAVE3 * C",
         metadata={
             "mutable_attrs": {},
@@ -1602,12 +1632,10 @@ class ERSettings:
             "expected_constants": ("pitch_class", "octave", "voice_range"),
         },
     )
-    hard_bounds: typing.Sequence[
-        # typing.Tuple[
-        #     typing.Union[str, numbers.Number], typing.Union[str, numbers.Number]
-        # ]
-        typing.Tuple[numbers.Number, numbers.Number]
-    ] = fld(
+    # hard_bounds: Sequence[
+    #     Tuple[Number, Number]
+    # ] = fld(
+    hard_bounds: VoiceRanges = fld(
         default=(
             (
                 "OCTAVE0 * A",
@@ -1631,7 +1659,8 @@ class ERSettings:
             "possible_values": ("usual", "reverse"),
         },
     )
-    allow_voice_crossings: typing.Union[bool, typing.Sequence[bool]] = fld(
+    # allow_voice_crossings: Union[bool, Sequence[bool]] = fld(
+    allow_voice_crossings: Optional[PerVoiceSequence[bool]] = fld(
         default=True,
         metadata={
             "mutable_attrs": {},
@@ -1651,18 +1680,21 @@ class ERSettings:
             "priority": 0,
         },
     )
-    foot_pcs: typing.Union[None, typing.Sequence[numbers.Number]] = fld(
+    foot_pcs: Optional[ItemOrSequence[PitchClass]] = fld(
         default=None,
         metadata={
             "mutable_attrs": {},
             "category": "scale_and_chord",
             "priority": 1,
             "expected_constants": ("pitch_class",),
+            "if_falsy": random_foot_pcs,
+            "postprocess": (generate_interval_cycle, set_to_num_harmonies),
         },
     )
-    interval_cycle: typing.Union[
-        None, numbers.Number, typing.Sequence[numbers.Number]
-    ] = fld(
+    # interval_cycle: Union[
+    #     None, Number, Sequence[Number]
+    # ] = fld(
+    interval_cycle: Optional[ItemOrSequence[Pitch]] = fld(
         default=None,
         metadata={
             "mutable_attrs": {},
@@ -1672,9 +1704,10 @@ class ERSettings:
             "expected_constants": ("specific_interval",),
         },
     )
-    scales: typing.Sequence[
-        typing.Union[np.ndarray, typing.Sequence[numbers.Number]]
-    ] = fld(
+    # scales: Sequence[
+    #     Union[np.ndarray, Sequence[Number]]
+    # ] = fld(
+    scales: SuperSequence[Pitch] = fld(
         default_factory=lambda: ["DIATONIC_SCALE"],
         metadata={
             "mutable_attrs": {},
@@ -1682,13 +1715,15 @@ class ERSettings:
             "priority": 1,
             "val_dict": {"equal_subseq_lens": ()},
             "expected_constants": ("scale",),
+            "postprocess": truncate_to_num_harmonies,
         },
     )
     # QUESTION is there a way to implement octave equivalence settings for
     #   chords here as well as for consonant_chords?
-    chords: typing.Sequence[
-        typing.Union[np.ndarray, typing.Sequence[numbers.Number]]
-    ] = fld(
+    # chords: Sequence[
+    #     Union[np.ndarray, Sequence[Number]]
+    # ] = fld(
+    chords: SuperSequence[Pitch] = fld(
         default_factory=lambda: ["MAJOR_TRIAD"],
         metadata={
             "mutable_attrs": {},
@@ -1696,6 +1731,7 @@ class ERSettings:
             "priority": 1,
             "val_dict": {"equal_subseq_lens": ()},
             "expected_constants": ("chord",),
+            "postprocess": truncate_to_num_harmonies,
         },
     )
 
@@ -1792,7 +1828,7 @@ class ERSettings:
             "shell_only": True,
         },
     )
-    pitch_bend_time_prop: numbers.Number = fld(
+    pitch_bend_time_prop: Number = fld(
         default=0.75,
         metadata={
             "mutable_attrs": {},
@@ -1868,7 +1904,7 @@ class ERSettings:
 
     # LONGTERM allow transposition by multiple octaves if necessary.
 
-    extend_bass_range_for_foots: numbers.Number = fld(
+    extend_bass_range_for_foots: Number = fld(
         default=0,
         metadata={
             "mutable_attrs": {},
@@ -1989,6 +2025,7 @@ class ERSettings:
             "category": "chord_tones",
             "priority": 3,
             "val_dict": {"min_": (0,)},
+            "postprocess": scale_by_neutral_dur,
         },
     )
     scale_chord_tone_prob_by_dur: bool = fld(
@@ -1999,7 +2036,7 @@ class ERSettings:
             "priority": 2,
         },
     )
-    scale_chord_tone_neutral_dur: numbers.Number = fld(
+    scale_chord_tone_neutral_dur: Metron = fld(
         default=0.5,
         metadata={
             "mutable_attrs": {},
@@ -2017,9 +2054,7 @@ class ERSettings:
         },
     )
     # LONGTERM what about chord tone *after* rests?
-    chord_tone_before_rests: typing.Union[
-        numbers.Number, typing.Sequence[numbers.Number]
-    ] = fld(
+    chord_tone_before_rests: PerVoiceSequence[Metron] = fld(
         default=0.26,
         metadata={
             "mutable_attrs": {},
@@ -2028,9 +2063,7 @@ class ERSettings:
             "val_dict": {"min_": (0,)},
         },
     )
-    chord_tones_no_diss_treatment: typing.Union[
-        bool, typing.Sequence[bool]
-    ] = fld(
+    chord_tones_no_diss_treatment: PerVoiceSequence[bool] = fld(
         default=False,
         metadata={
             "mutable_attrs": {},
@@ -2088,7 +2121,7 @@ class ERSettings:
             "priority": 1,
         },
     )
-    prefer_small_melodic_intervals_coefficient: numbers.Number = fld(
+    prefer_small_melodic_intervals_coefficient: Number = fld(
         default=1,
         metadata={
             "mutable_attrs": {},
@@ -2097,7 +2130,7 @@ class ERSettings:
             "val_dict": {"open_min": (0,)},
         },
     )
-    unison_weighted_as: int = fld(
+    unison_weighted_as: GenericInterval = fld(
         default="FIFTH",
         metadata={
             "mutable_attrs": {},
@@ -2111,9 +2144,7 @@ class ERSettings:
     # LONGTERM min rest value across which limit intervals do not apply
     # LONGTERM avoid enforcing limit intervals with voice-led foot
 
-    max_interval: typing.Union[
-        numbers.Number, typing.Sequence[numbers.Number]
-    ] = fld(
+    max_interval: PerVoiceSequence[Pitch] = fld(
         default="-OCTAVE",
         metadata={
             "mutable_attrs": {},
@@ -2124,9 +2155,7 @@ class ERSettings:
             "expected_constants": ("generic_interval",),
         },
     )
-    max_interval_for_non_chord_tones: typing.Union[
-        None, numbers.Number, typing.Sequence[numbers.Number]
-    ] = fld(
+    max_interval_for_non_chord_tones: Optional[PerVoiceSequence[Pitch]] = fld(
         default=None,
         metadata={
             "mutable_attrs": {},
@@ -2134,12 +2163,10 @@ class ERSettings:
             "priority": 2,
             "val_dict": {"open_min": (0,)},
             "expected_constants": ("generic_interval",),
+            "from_if_none": "max_interval",
         },
     )
-    min_interval: typing.Union[
-        numbers.Number,
-        typing.Sequence[numbers.Number],
-    ] = fld(
+    min_interval: PerVoiceSequence[Pitch] = fld(
         default=0,
         metadata={
             "mutable_attrs": {},
@@ -2148,15 +2175,14 @@ class ERSettings:
             "expected_constants": ("generic_interval",),
         },
     )
-    min_interval_for_non_chord_tones: typing.Union[
-        None, numbers.Number, typing.Sequence[numbers.Number]
-    ] = fld(
+    min_interval_for_non_chord_tones: Optional[PerVoiceSequence[Pitch]] = fld(
         default=None,
         metadata={
             "mutable_attrs": {},
             "category": "melody",
             "priority": 2,
             "expected_constants": ("generic_interval",),
+            "from_if_none": "min_interval",
         },
     )
 
@@ -2179,7 +2205,7 @@ class ERSettings:
             "priority": 2,
         },
     )
-    max_alternations: typing.Union[int, typing.Sequence[int]] = fld(
+    max_alternations: PerVoiceSequence[int] = fld(
         default=2,
         metadata={
             "mutable_attrs": {},
@@ -2190,7 +2216,7 @@ class ERSettings:
             },
         },
     )
-    pitch_loop: typing.Union[None, int, typing.Sequence[int]] = fld(
+    pitch_loop: Optional[PerVoiceSequence[int]] = fld(
         default=None,
         metadata={
             "mutable_attrs": {},
@@ -2202,7 +2228,7 @@ class ERSettings:
             },
         },
     )
-    hard_pitch_loop: bool = fld(
+    hard_pitch_loop: Optional[PerVoiceSequence[bool]] = fld(
         default=False,
         metadata={
             "mutable_attrs": {},
@@ -2211,7 +2237,7 @@ class ERSettings:
         },
     )
     # LONGTERM: prefer_alternations bool
-    prohibit_parallels: typing.Sequence[numbers.Number] = fld(
+    prohibit_parallels: Sequence[PitchClass] = fld(
         default=("OCTAVE",),
         metadata={
             "mutable_attrs": {},
@@ -2232,14 +2258,13 @@ class ERSettings:
     # MAYBE think about other types of parallel motion (e.g.,
     #   choosing a generic harmonic interval and maintaining it)
     # MAYBE make force_parallel_motion interact with consonance settings better
-    force_parallel_motion: typing.Union[
-        bool, typing.Dict[typing.Sequence[int], bool]
-    ] = fld(
+    force_parallel_motion: Union[bool, Dict[Sequence[int], bool]] = fld(
         default=False,
         metadata={
             "mutable_attrs": {},
             "category": "melody",
             "priority": 2,
+            "postprocess": check_force_parallel_motion,
         },
     )
 
@@ -2268,21 +2293,23 @@ class ERSettings:
         },
     )
     # MAYBE all modulos have boolean to be truncated by initial_pattern_len?
-    consonance_modulo: typing.Union[
-        None,
-        numbers.Number,
-        typing.Sequence[
-            typing.Union[numbers.Number, typing.Sequence[numbers.Number]]
-        ],
-    ] = fld(
+    # consonance_modulo: Union[
+    #     None,
+    #     Number,
+    #     Sequence[
+    #         Union[Number, Sequence[Number]]
+    #     ],
+    # ] = fld(
+    consonance_modulo: Optional[PerVoiceSuperSequence[Metron]] = fld(
         default=None,
         metadata={
             "mutable_attrs": {},
             "category": "consonance",
             "priority": 3,
+            "sort": {},
         },
     )
-    min_dur_for_cons_treatment: numbers.Number = fld(
+    min_dur_for_cons_treatment: PerVoiceSequence[Metron] = fld(
         default=0.25,
         metadata={
             "mutable_attrs": {},
@@ -2290,9 +2317,8 @@ class ERSettings:
             "priority": 2,
         },
     )
-    forbidden_intervals: typing.Union[
-        None, typing.Sequence[numbers.Number]
-    ] = fld(
+    # forbidden_intervals: Optional[ItemOrSequence[Pitch]] = fld(
+    forbidden_intervals: Optional[ItemOrSequence[Pitch]] = fld(
         default=None,
         metadata={
             "mutable_attrs": {},
@@ -2301,9 +2327,8 @@ class ERSettings:
             "expected_constants": ("specific_interval",),
         },
     )
-    forbidden_interval_classes: typing.Union[
-        None, typing.Sequence[numbers.Number]
-    ] = fld(
+    # forbidden_interval_classes: Optional[ItemOrSequence[Pitch]] = fld(
+    forbidden_interval_classes: Optional[ItemOrSequence[Pitch]] = fld(
         default=None,
         metadata={
             "mutable_attrs": {},
@@ -2312,18 +2337,20 @@ class ERSettings:
             "expected_constants": ("specific_interval",),
         },
     )
-    forbidden_interval_modulo: typing.Union[
-        None,
-        numbers.Number,
-        typing.Sequence[
-            typing.Union[numbers.Number, typing.Sequence[numbers.Number]]
-        ],
-    ] = fld(
+    # forbidden_interval_modulo: Union[
+    #     None,
+    #     Number,
+    #     Sequence[
+    #         Union[Number, Sequence[Number]]
+    #     ],
+    # ] = fld(
+    forbidden_interval_modulo: Optional[PerVoiceSuperSequence[Metron]] = fld(
         default=None,
         metadata={
             "mutable_attrs": {},
             "category": "consonance",
             "priority": 3,
+            "sort": {},
         },
     )
     exclude_augmented_triad: bool = fld(
@@ -2332,9 +2359,10 @@ class ERSettings:
             "mutable_attrs": {},
             "category": "consonance",
             "priority": 2,
+            "postprocess": get_augmented_triad,
         },
     )
-    consonances: typing.Sequence[numbers.Number] = fld(
+    consonances: Sequence[Pitch] = fld(
         default="CONSONANCES",
         metadata={
             "mutable_attrs": {},
@@ -2342,6 +2370,7 @@ class ERSettings:
             "priority": 1,
             # TODO
             "expected_constants": ("interval",),
+            "postprocess": check_invert_consonances,
         },
     )
     invert_consonances: bool = fld(
@@ -2352,9 +2381,10 @@ class ERSettings:
             "priority": 4,
         },
     )
-    consonant_chords: typing.Sequence[
-        typing.Union[np.ndarray, typing.Sequence[numbers.Number]]
-    ] = fld(
+    # consonant_chords: Sequence[
+    #     Union[np.ndarray, Sequence[Number]]
+    # ] = fld(
+    consonant_chords: SuperSequence[Pitch] = fld(
         default=(
             "MAJOR_TRIAD",
             "MINOR_TRIAD",
@@ -2390,32 +2420,31 @@ class ERSettings:
     ###################################################################
     # Rhythm settings.
 
-    rhythmic_unison: typing.Union[
-        bool, typing.Sequence[typing.Sequence[int]]
-    ] = fld(
+    rhythmic_unison: Union[bool, Sequence[Sequence[int]]] = fld(
         default=False,
         metadata={
             "mutable_attrs": {},
             "category": "rhythm",
             "priority": 2,
+            "postprocess": process_voice_relations,
         },
     )
-    rhythmic_quasi_unison: typing.Union[
-        bool, typing.Sequence[typing.Sequence[int]]
-    ] = fld(
+    rhythmic_quasi_unison: Union[bool, Sequence[Sequence[int]]] = fld(
         default=False,
         metadata={
             "mutable_attrs": {},
             "category": "rhythm",
             "priority": 2,
+            "postprocess": process_voice_relations,
         },
     )  # not implemented for cont_rhythms
-    hocketing: typing.Union[bool, typing.Sequence[typing.Sequence[int]]] = fld(
+    hocketing: Union[bool, Sequence[Sequence[int]]] = fld(
         default=False,
         metadata={
             "mutable_attrs": {},
             "category": "rhythm",
             "priority": 2,
+            "postprocess": process_voice_relations,
         },
     )
     rhythmic_quasi_unison_constrain: bool = fld(
@@ -2436,13 +2465,14 @@ class ERSettings:
         },
     )
     # LONGTERM add obligatory_onsets to grid
-    num_cont_rhythm_vars: typing.Union[int, typing.Sequence[int]] = fld(
+    num_cont_rhythm_vars: PerVoiceSequence[int] = fld(
         default=1,
         metadata={
             "mutable_attrs": {},
             "category": "rhythm",
             "priority": 3,
             "val_dict": {"min_": (1,)},
+            "postprocess": check_num_vars,
         },
     )
     vary_rhythm_consistently: bool = fld(
@@ -2453,7 +2483,7 @@ class ERSettings:
             "priority": 3,
         },
     )
-    cont_var_increment: numbers.Number = fld(
+    cont_var_increment: PerVoiceSequence[Metron] = fld(
         default=1.0,
         metadata={
             "mutable_attrs": {},
@@ -2495,9 +2525,9 @@ class ERSettings:
             "priority": 0,
         },
     )
-    onset_density: typing.Union[
-        typing.Union[float, int], typing.Sequence[typing.Union[float, int]]
-    ] = fld(
+    # TODO either change back to DensityOrQuantity or document
+    # onset_density: PerVoiceSequence[DensityOrQuantity] = fld(
+    onset_density: PerVoiceSequence[Density] = fld(
         default=0.5,
         metadata={
             "mutable_attrs": {},
@@ -2508,20 +2538,22 @@ class ERSettings:
                 "float_min": (0.0,),
                 "float_max": (1.0,),
             },
+            "more": "More notes",
+            "less": "Fewer notes",
         },
     )
-    dur_density: typing.Union[float, typing.Sequence[float]] = fld(
+    dur_density: PerVoiceSequence[Density] = fld(
         default=1.0,
         metadata={
             "mutable_attrs": {},
             "category": "rhythm",
             "priority": 1,
             "val_dict": {"min_": (0.0,), "max_": (1.0,)},
+            "more": "Longer notes",
+            "less": "Shorter notes",
         },
     )
-    onset_subdivision: typing.Union[
-        numbers.Number, typing.Sequence[numbers.Number]
-    ] = fld(
+    onset_subdivision: PerVoiceSequence[Metron] = fld(
         default=0.25,
         metadata={
             "mutable_attrs": {},
@@ -2530,11 +2562,11 @@ class ERSettings:
             "val_dict": {"min_": (1 / 64,)},
         },
     )
-    sub_subdivisions: typing.Union[
-        None,
-        int,
-        typing.Sequence[typing.Union[int, typing.Sequence[int]]],
-    ] = fld(
+    # sub_subdivisions: Union[
+    #     None,
+    #     Sequence[Union[int, Sequence[int]]],
+    # ] = fld(
+    sub_subdivisions: Optional[PerVoiceSuperSequence[int]] = fld(
         default=None,
         metadata={
             "mutable_attrs": {},
@@ -2542,19 +2574,32 @@ class ERSettings:
             "priority": 3,
         },
     )
-    dur_subdivision: typing.Union[
-        None, numbers.Number, typing.Sequence[numbers.Number]
-    ] = fld(
+    dur_subdivision: Optional[PerVoiceSequence[Metron]] = fld(
         default=None,
         metadata={
             "mutable_attrs": {},
             "category": "rhythm",
             "priority": 1,
+            "from_if_none": "onset_subdivision",
         },
     )
-    min_dur: typing.Union[
-        None, numbers.Number, typing.Sequence[numbers.Number]
-    ] = fld(
+    min_dur: Optional[PerVoiceSequence[Metron]] = fld(
+        default=None,
+        metadata={
+            "mutable_attrs": {},
+            "category": "rhythm",
+            "priority": 2,
+            "from_if_none": "onset_subdivision",
+            "postprocess": check_min_dur,
+        },
+    )
+    # obligatory_onsets: Union[
+    #     None,
+    #     Sequence[
+    #         Union[Number, Sequence[Number]],
+    #     ],
+    # ] = fld(
+    obligatory_onsets: Optional[PerVoiceSuperSequence[Metron]] = fld(
         default=None,
         metadata={
             "mutable_attrs": {},
@@ -2562,22 +2607,7 @@ class ERSettings:
             "priority": 2,
         },
     )
-    obligatory_onsets: typing.Union[
-        None,
-        typing.Sequence[
-            typing.Union[numbers.Number, typing.Sequence[numbers.Number]],
-        ],
-    ] = fld(
-        default=None,
-        metadata={
-            "mutable_attrs": {},
-            "category": "rhythm",
-            "priority": 2,
-        },
-    )
-    obligatory_onsets_modulo: typing.Union[
-        numbers.Number, typing.Sequence[numbers.Number]
-    ] = fld(
+    obligatory_onsets_modulo: PerVoiceSequence[Metron] = fld(
         default=4,
         metadata={
             "mutable_attrs": {},
@@ -2585,9 +2615,10 @@ class ERSettings:
             "priority": 2,
         },
     )
-    comma_position: typing.Union[
-        str, int, typing.Sequence[typing.Union[str, int]]
-    ] = fld(
+    # comma_position: Union[
+    #     str, int, Sequence[Union[str, int]]
+    # ] = fld(
+    comma_position: PerVoiceSequence[Union[str, int]] = fld(
         default="end",
         metadata={
             "mutable_attrs": {},
@@ -2607,12 +2638,15 @@ class ERSettings:
     ###################################################################
     # Choir settings
 
-    choirs: typing.Sequence[int] = fld(
+    choirs: Sequence[int] = fld(
         default=(
             "GUITAR",
             "ELECTRIC_PIANO",
             "PIANO",
             "XYLOPHONE",
+            "HARPSICHORD",
+            "PIZZ_STRINGS",
+            "HARP",
         ),
         metadata={
             "mutable_attrs": {},
@@ -2620,12 +2654,14 @@ class ERSettings:
             "priority": 1,
         },
     )
-    choir_assignments: typing.Union[None, typing.Sequence[int]] = fld(
+    # choir_assignments: Union[None, Sequence[int]] = fld(
+    choir_assignments: Optional[PerVoiceSequence[int]] = fld(
         default=None,
         metadata={
             "mutable_attrs": {},
             "category": "choir",
             "priority": 1,
+            "if_none": counting_order,
         },
     )
     randomly_distribute_between_choirs: bool = fld(
@@ -2636,7 +2672,7 @@ class ERSettings:
             "priority": 1,
         },
     )
-    length_choir_segments: numbers.Number = fld(
+    length_choir_segments: Metron = fld(
         default=1,
         metadata={
             "mutable_attrs": {},
@@ -2644,7 +2680,7 @@ class ERSettings:
             "priority": 1,
         },
     )
-    length_choir_loop: typing.Union[None, numbers.Number] = fld(
+    length_choir_loop: Union[None, Metron] = fld(
         default=None,
         metadata={
             "mutable_attrs": {},
@@ -2660,7 +2696,7 @@ class ERSettings:
             "priority": 4,
         },
     )
-    max_consec_seg_from_same_choir: typing.Union[None, int] = fld(
+    max_consec_seg_from_same_choir: Union[None, int] = fld(
         default=None,
         metadata={
             "mutable_attrs": {},
@@ -2705,9 +2741,7 @@ class ERSettings:
             "possible_values": ("generic", "specific"),
         },
     )
-    transpose_len: typing.Union[
-        numbers.Number, typing.Sequence[numbers.Number]
-    ] = fld(
+    transpose_len: ItemOrSequence[Metron] = fld(
         default=4,
         metadata={
             "mutable_attrs": {},
@@ -2715,9 +2749,10 @@ class ERSettings:
             "priority": 2,
         },
     )
-    transpose_intervals: typing.Union[
-        None, numbers.Number, typing.Sequence[numbers.Number]
-    ] = fld(
+    # transpose_intervals: Union[
+    #     None, Number, Sequence[Number]
+    # ] = fld(
+    transpose_intervals: Optional[ItemOrSequence[Pitch]] = fld(
         default=None,
         metadata={
             "mutable_attrs": {},
@@ -2726,7 +2761,8 @@ class ERSettings:
             "expected_constants": ("specific_interval",),
         },
     )
-    cumulative_max_transpose_interval: numbers.Number = fld(
+    # TODO interval type
+    cumulative_max_transpose_interval: Pitch = fld(
         default=5,
         metadata={
             "mutable_attrs": {},
@@ -2747,20 +2783,10 @@ class ERSettings:
     ###################################################################
     # Tempo settings
 
-    # LONGTERM debug tempos
-    tempo: typing.Union[
-        None, numbers.Number, typing.Sequence[numbers.Number]
-    ] = fld(
-        default=120,
-        metadata={
-            "mutable_attrs": {},
-            "category": "tempo",
-            "priority": 1,
-        },
-    )
-    tempo_len: typing.Union[
-        None, numbers.Number, typing.Sequence[numbers.Number]
-    ] = fld(
+    # tempo_len: Union[
+    #     None, Number, Sequence[Number]
+    # ] = fld(
+    tempo_len: Optional[ItemOrSequence[Metron]] = fld(
         default=None,
         metadata={
             "mutable_attrs": {},
@@ -2768,7 +2794,7 @@ class ERSettings:
             "priority": 2,
         },
     )
-    tempo_bounds: typing.Tuple[numbers.Number, numbers.Number] = fld(
+    tempo_bounds: Tuple[Tempo, Tempo] = fld(
         default=(
             80,
             144,
@@ -2779,13 +2805,26 @@ class ERSettings:
             "priority": 3,
         },
     )
+    # tempo: Union[
+    #     None, Number, Sequence[Number]
+    # ] = fld(
+    tempo: Optional[ItemOrSequence[Tempo]] = fld(
+        default=120,
+        metadata={
+            "mutable_attrs": {},
+            "category": "tempo",
+            "priority": 1,
+            "fill_none": random_tempi,
+        },
+    )
+    # TODO num_tempi
 
     # LONGTERM implement, also update to effect a voice leading from
     # harmony_n of the harmonies
     # in the first pattern (which isn't necessarily 0))
     #       (use a dict)
 
-    # reset_to_original_voicing: typing.Sequence[int] = ()
+    # reset_to_original_voicing: Sequence[int] = ()
 
     initial_pattern_attempts: int = fld(
         default=50,
@@ -2823,7 +2862,7 @@ class ERSettings:
             "priority": 0,
         },
     )
-    timeout: typing.Union[None, numbers.Number] = fld(
+    timeout: Union[None, Number] = fld(
         default=None,
         metadata={
             "mutable_attrs": {},
@@ -2837,7 +2876,7 @@ class ERSettings:
     # Randomization settings
 
     # TODO debug None
-    exclude_from_randomization: typing.Union[None, typing.Sequence[str]] = fld(
+    exclude_from_randomization: Union[None, Sequence[str]] = fld(
         default=None,
         metadata={
             "mutable_attrs": {},
@@ -2846,6 +2885,13 @@ class ERSettings:
             "priority": 4,
         },
     )
+
+    ###################################################################
+    # Private settings
+
+    _randomized: bool = False
+    _silent: bool = False
+    _user_settings: Optional[list[str]] = None
 
 
 heading_pattern = re.compile(r"\n {8}[^\n]+\n {8}=+\n", re.MULTILINE)
@@ -2865,11 +2911,11 @@ def _reformat_setting_doc(setting_doc):
 # I don't use __post_init__ for this function because I want to add the docs
 # to the class rather than to its instances
 def add_metadata_docs():
-    ds = ERSettings.__doc__
+    ds = SettingsDataclass.__doc__
     bits = re.split(r"\n {8}(\w+): ", ds)[1:]
     for setting_name, setting_doc in zip(*([iter(bits)] * 2)):
         reformatted = _reformat_setting_doc(setting_doc)
-        dataclass_field = ERSettings.__dataclass_fields__[setting_name]
+        dataclass_field = SettingsDataclass.__dataclass_fields__[setting_name]
         mutable_attrs = dataclass_field.metadata["mutable_attrs"]
         mutable_attrs["doc"] = reformatted
 

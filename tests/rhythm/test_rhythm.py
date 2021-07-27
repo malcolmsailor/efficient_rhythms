@@ -1,17 +1,10 @@
 from fractions import Fraction
-import os
-import sys
-import traceback
 import warnings
 
 import numpy as np
 
-sys.path.insert(
-    0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-)
-
-import efficient_rhythms.er_preprocess as er_preprocess  # pylint: disable=wrong-import-position
-import efficient_rhythms.er_rhythm as er_rhythm  # pylint: disable=wrong-import-position
+import efficient_rhythms.er_settings as er_settings
+import efficient_rhythms.er_rhythm as er_rhythm
 
 
 def test_pad_truncations():
@@ -31,22 +24,15 @@ def test_pad_truncations():
         [0, 1, 1.5, 2.5],
         [0, 1, 2],
     ]
-    er = er_preprocess.preprocess_settings(settingsdict, silent=True)
+    er = er_settings.get_settings(settingsdict, silent=True)
     for k, onsets in enumerate(onsets_):
 
         rhythm = er_rhythm.rhythm.Rhythm.from_er_settings(
             er, k, initial_onsets, initial_durs
         )
-        try:
-            assert len(onsets) == len(rhythm._data)
-            for i, j in zip(onsets, rhythm._data):
-                assert i == j
-        except:  # pylint: disable=bare-except
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            traceback.print_exception(
-                exc_type, exc_value, exc_traceback, file=sys.stdout
-            )
-            breakpoint()
+        assert len(onsets) == len(rhythm._data)
+        for i, j in zip(onsets, rhythm._data):
+            assert i == j
 
     # data = {
     #     0: 0.25,
@@ -110,22 +96,15 @@ def test_pad_truncations():
             6.5,
         ],
     ]
-    er = er_preprocess.preprocess_settings(settingsdict, silent=True)
+    er = er_settings.get_settings(settingsdict, silent=True)
     for k, onsets in enumerate(onsets_):
 
         rhythm = er_rhythm.rhythm.Rhythm.from_er_settings(
             er, k, initial_onsets, initial_durs
         )
-        try:
-            assert len(onsets) == len(rhythm._data)
-            for i, j in zip(onsets, rhythm._data):
-                assert i == j
-        except:  # pylint: disable=bare-except
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            traceback.print_exception(
-                exc_type, exc_value, exc_traceback, file=sys.stdout
-            )
-            breakpoint()
+        assert len(onsets) == len(rhythm._data)
+        for i, j in zip(onsets, rhythm._data):
+            assert i == j
 
 
 def test_update_pattern_vl_order():
@@ -138,7 +117,7 @@ def test_update_pattern_vl_order():
                 "pattern_len": pattern_lens,
                 "truncate_patterns": truncate,
             }
-            er = er_preprocess.preprocess_settings(settingsdict, silent=True)
+            er = er_settings.get_settings(settingsdict, silent=True)
             er_rhythm.init_rhythms(er)
             er_rhythm.rhythms_handler(er)
             voice_is = {}
@@ -168,7 +147,6 @@ def test_update_pattern_vl_order():
                 # except AssertionError:
                 #     # we should only get an AssertionError if truncate_len is
                 #     # defined
-                #     try:
                 #         assert (
                 #             item.start_time >= truncate_len
                 #             or item.start_time % truncate_len == truncate_start
@@ -176,12 +154,6 @@ def test_update_pattern_vl_order():
                 #             "item.start_time < truncate_len and item.start_time % "
                 #             "truncate_len != truncate_start"
                 #         )
-                #     except:  # pylint: disable=bare-except
-                #         exc_type, exc_value, exc_traceback = sys.exc_info()
-                #         traceback.print_exception(
-                #             exc_type, exc_value, exc_traceback, file=sys.stdout
-                #         )
-                #         breakpoint()
 
                 voice_is[voice_i] = item.end_i
 
@@ -201,7 +173,7 @@ def test_update_pattern_vl_order():
 #                 "rhythm_len": rhythm_len,
 #                 "pattern_len": rhythm_len,  # ensure we don't truncate rhythm
 #             }
-#             er = er_preprocess.preprocess_settings(settingsdict, silent=True)
+#             er = er_settings.get_settings(settingsdict, silent=True)
 #             rhythm = er_rhythm.rhythms_handler(er)[0]
 #             try:
 #                 assert all(
@@ -226,7 +198,7 @@ def test_update_pattern_vl_order():
 #                 "pattern_len": pattern_lens,
 #                 "truncate_patterns": truncate,
 #             }
-#             er = er_preprocess.preprocess_settings(settingsdict, silent=True)
+#             er = er_settings.get_settings(settingsdict, silent=True)
 #             er.rhythms = er_rhythm.rhythms_handler(er)
 #             for rhythm in er.rhythms:
 #                 prev_onset = -10
@@ -251,7 +223,7 @@ def test_update_pattern_vl_order():
 #         "obligatory_onsets_modulo": obligatory_onsets_modulo,
 #         "onset_density": 1,
 #     }
-#     er = er_preprocess.preprocess_settings(settingsdict, silent=True)
+#     er = er_settings.get_settings(settingsdict, silent=True)
 #     rhythm = er_rhythm.rhythms_handler(er)[0]
 #     for i in range(100):
 #         try:
@@ -278,7 +250,7 @@ def test_get_i():
     #     "rhythm_len": [1.5, 7],
     #     "pattern_len": [4, 7],
     # }
-    # er = er_preprocess.preprocess_settings(settingsdict)
+    # er = er_settings.get_settings(settingsdict)
     # rhythm = er_rhythm.rhythms_handler(er)[0]
     # num_reps = 2
     # rhythm_onsets = []
@@ -332,36 +304,27 @@ def test_get_i():
     }
     initial_onsets = np.array(list(onsets_and_durs.keys()))
     initial_durs = np.array(list(onsets_and_durs.values()))
-    er = er_preprocess.preprocess_settings(settingsdict, silent=True)
+    er = er_settings.get_settings(settingsdict, silent=True)
     rhythm = er_rhythm.rhythm.Rhythm.from_er_settings(
         er, 0, initial_onsets, initial_durs
     )
     max_onset = max(rhythm.onsets)
-    try:
-        for i in range(50):
-            time = i / 8
-            before = rhythm.get_i_before(time)
-            at_or_after = rhythm.get_i_at_or_after(time)
-            at_or_before = rhythm.get_i_at_or_before(time)
-            after = rhythm.get_i_after(time)
-            assert before + 1 == at_or_after
-            assert at_or_before + 1 == after
-            # if there is a note at time, then both comparisons should be false;
-            # otherwise, they should both be true
-            assert (before == at_or_before) == (at_or_after == after)
-            assert (before == at_or_before) or (at_or_before == at_or_after)
-            assert (after == at_or_after) or (at_or_before == at_or_after)
-            assert rhythm.get_onset_and_dur(at_or_after) == rhythm.at_or_after(
-                time
-            )
-
-    except:  # pylint: disable=bare-except
-
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        traceback.print_exception(
-            exc_type, exc_value, exc_traceback, file=sys.stdout
+    for i in range(50):
+        time = i / 8
+        before = rhythm.get_i_before(time)
+        at_or_after = rhythm.get_i_at_or_after(time)
+        at_or_before = rhythm.get_i_at_or_before(time)
+        after = rhythm.get_i_after(time)
+        assert before + 1 == at_or_after
+        assert at_or_before + 1 == after
+        # if there is a note at time, then both comparisons should be false;
+        # otherwise, they should both be true
+        assert (before == at_or_before) == (at_or_after == after)
+        assert (before == at_or_before) or (at_or_before == at_or_after)
+        assert (after == at_or_after) or (at_or_before == at_or_after)
+        assert rhythm.get_onset_and_dur(at_or_after) == rhythm.at_or_after(
+            time
         )
-        breakpoint()
 
 
 def test_onset_positions():
@@ -371,11 +334,11 @@ def test_onset_positions():
         "onset_subdivision": 1,
         "sub_subdivisions": (4, 3),
     }
-    er = er_preprocess.preprocess_settings(basesettings, silent=True)
+    er = er_settings.get_settings(basesettings, silent=True)
     onset_positions = er_rhythm.make._onset_positions(er, 0)
     assert np.all(np.less(onset_positions[:4] - [0, 4 / 7, 1, 11 / 7], 1e-6))
     basesettings["onset_subdivision"] = 0.5
-    er = er_preprocess.preprocess_settings(basesettings, silent=True)
+    er = er_settings.get_settings(basesettings, silent=True)
     onset_positions = er_rhythm.make._onset_positions(er, 0)
     assert np.all(
         np.less(onset_positions[:4] - [0, 4 / 14, 0.5, 11 / 14], 1e-6)
@@ -421,18 +384,11 @@ def test_new_onsets():
     ]
     for settingsdict, test_func in tests:
         settingsdict.update(basesettings)
-        er = er_preprocess.preprocess_settings(settingsdict, silent=True)
+        er = er_settings.get_settings(settingsdict, silent=True)
         onsets = er_rhythm.make.get_onsets(er, 0, ())
-        try:
-            assert test_func(onsets)
-            assert all([t for t in onsets >= 0])
-            assert all([t for t in onsets < 2])
-        except:  # pylint: disable=bare-except
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            traceback.print_exception(
-                exc_type, exc_value, exc_traceback, file=sys.stdout
-            )
-            breakpoint()
+        assert test_func(onsets)
+        assert all([t for t in onsets >= 0])
+        assert all([t for t in onsets < 2])
 
     basesettings = {
         "num_voices": 4,
@@ -449,26 +405,20 @@ def test_new_onsets():
     oblig_settings.update(basesettings)
     prev_onsets = np.array([0.25, 1.0])
     prev_durs = np.array([0.5, 0.25])
-    try:
-        er = er_preprocess.preprocess_settings(basesettings, silent=True)
-        prev_rhythm = er_rhythm.rhythm.Rhythm.from_er_settings(
-            er, 0, prev_onsets, prev_durs
-        )
-        for _ in range(5):
-            onsets = er_rhythm.make.get_onsets(er, 1, (prev_rhythm,))
-            assert np.all(np.isin(prev_onsets, onsets))
-        for _ in range(5):
-            onsets = er_rhythm.make.get_onsets(er, 2, (prev_rhythm,))
-            assert np.all(np.isin(prev_onsets, onsets, invert=True))
-        for _ in range(5):
-            onsets = er_rhythm.make.get_onsets(er, 3, (prev_rhythm,))
-            assert np.all(np.isin(prev_onsets, onsets))
-    except:  # pylint: disable=bare-except
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        traceback.print_exception(
-            exc_type, exc_value, exc_traceback, file=sys.stdout
-        )
-        breakpoint()
+
+    er = er_settings.get_settings(basesettings, silent=True)
+    prev_rhythm = er_rhythm.rhythm.Rhythm.from_er_settings(
+        er, 0, prev_onsets, prev_durs
+    )
+    for _ in range(5):
+        onsets = er_rhythm.make.get_onsets(er, 1, (prev_rhythm,))
+        assert np.all(np.isin(prev_onsets, onsets))
+    for _ in range(5):
+        onsets = er_rhythm.make.get_onsets(er, 2, (prev_rhythm,))
+        assert np.all(np.isin(prev_onsets, onsets, invert=True))
+    for _ in range(5):
+        onsets = er_rhythm.make.get_onsets(er, 3, (prev_rhythm,))
+        assert np.all(np.isin(prev_onsets, onsets))
 
 
 def test_new_iois():
@@ -483,17 +433,9 @@ def test_new_iois():
     ]
     for overlap, iois in tests:
         basesettings["overlap"] = overlap
-        er = er_preprocess.preprocess_settings(basesettings, silent=True)
+        er = er_settings.get_settings(basesettings, silent=True)
         result = er_rhythm.make.get_iois_from_er(er, 0, onsets)
-        try:
-            assert np.all(np.equal(result, iois))
-        except:  # pylint: disable=bare-except
-
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            traceback.print_exception(
-                exc_type, exc_value, exc_traceback, file=sys.stdout
-            )
-            breakpoint()
+        assert np.all(np.equal(result, iois))
 
 
 def test_new_comma():
@@ -506,20 +448,13 @@ def test_new_comma():
     onsets = np.array([0.25, 1.0, 1.125, 1.875])
     for i in range(len(onsets) + 1):
         basesettings["comma_position"] = i
-        er = er_preprocess.preprocess_settings(basesettings, silent=True)
+        er = er_settings.get_settings(basesettings, silent=True)
         temp = onsets.copy()
         er_rhythm.make._add_comma(er, 0, temp, comma)
-        try:
-            comparison = onsets.copy()
-            comparison[i:] += 0.125
-            assert np.all(np.equal(temp, comparison))
-        except:  # pylint: disable=bare-except
 
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            traceback.print_exception(
-                exc_type, exc_value, exc_traceback, file=sys.stdout
-            )
-            breakpoint()
+        comparison = onsets.copy()
+        comparison[i:] += 0.125
+        assert np.all(np.equal(temp, comparison))
 
     tests = [
         ("end", lambda x: np.all(np.equal(x, [0.25, 1.0, 1.125, 1.875]))),
@@ -534,19 +469,11 @@ def test_new_comma():
     ]
     for setting, test_func in tests:
         basesettings["comma_position"] = setting
-        er = er_preprocess.preprocess_settings(basesettings, silent=True)
+        er = er_settings.get_settings(basesettings, silent=True)
         for _ in range(5):
             temp = onsets.copy()
             er_rhythm.make._add_comma(er, 0, temp, comma)
-            try:
-                assert test_func(temp)
-            except:  # pylint: disable=bare-except
-
-                exc_type, exc_value, exc_traceback = sys.exc_info()
-                traceback.print_exception(
-                    exc_type, exc_value, exc_traceback, file=sys.stdout
-                )
-                breakpoint()
+            assert test_func(temp)
 
 
 def test_new_durs():
@@ -560,24 +487,16 @@ def test_new_durs():
 
     for density in (0, 0.25, 0.5, 0.75, 1.0):
         basesettings["dur_density"] = density
-        er = er_preprocess.preprocess_settings(basesettings, silent=True)
+        er = er_settings.get_settings(basesettings, silent=True)
 
         # We do it a few times to get some randomnesss
         for _ in range(3):
             durs = er_rhythm.make.get_durs(er, 0, iois, onsets, ())
-            try:
-                assert (
-                    abs(density - (sum(durs) / er.rhythm_len[0]))
-                    <= er.dur_subdivision[0] / 2
-                ) or np.all(np.equal(durs, np.minimum(iois, er.min_dur[0])))
-                assert np.all(np.less_equal(durs, iois))
-            except:  # pylint: disable=bare-except
-
-                exc_type, exc_value, exc_traceback = sys.exc_info()
-                traceback.print_exception(
-                    exc_type, exc_value, exc_traceback, file=sys.stdout
-                )
-                breakpoint()
+            assert (
+                abs(density - (sum(durs) / er.rhythm_len[0]))
+                <= er.dur_subdivision[0] / 2
+            ) or np.all(np.equal(durs, np.minimum(iois, er.min_dur[0])))
+            assert np.all(np.less_equal(durs, iois))
 
     basesettings = {
         "num_voices": 2,
@@ -593,28 +512,21 @@ def test_new_durs():
     leader_density = 0.5
     for density in (0, 0.25, 0.5, 0.75, 1.0):
         basesettings["dur_density"] = density
-        er = er_preprocess.preprocess_settings(basesettings, silent=True)
+        er = er_settings.get_settings(basesettings, silent=True)
         l_rhythm = er_rhythm.rhythm.Rhythm.from_er_settings(
             er, 0, leader_onsets, leader_durs
         )
-        try:
-            onsets = er_rhythm.make.get_onsets(er, 1, (l_rhythm,))
-            iois = er_rhythm.make.get_iois_from_er(er, 1, onsets)
-            durs = er_rhythm.make.get_durs(er, 1, iois, onsets, (l_rhythm,))
-            actual_density = sum(durs) / er.rhythm_len[1]
-            # TODO write a function to test that:
-            #   - if actual_density is less than leader_density, all durations
-            #       lie within leader durations
-            #   - otherwise, leader_density is "full"
-            warnings.warn(
-                "test_new_durs() with rhythmic_quasi_unison_constrain is not complete"
-            )
-        except:  # pylint: disable=bare-except
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            traceback.print_exception(
-                exc_type, exc_value, exc_traceback, file=sys.stdout
-            )
-            breakpoint()
+        onsets = er_rhythm.make.get_onsets(er, 1, (l_rhythm,))
+        iois = er_rhythm.make.get_iois_from_er(er, 1, onsets)
+        durs = er_rhythm.make.get_durs(er, 1, iois, onsets, (l_rhythm,))
+        actual_density = sum(durs) / er.rhythm_len[1]
+        # TODO write a function to test that:
+        #   - if actual_density is less than leader_density, all durations
+        #       lie within leader durations
+        #   - otherwise, leader_density is "full"
+        warnings.warn(
+            "test_new_durs() with rhythmic_quasi_unison_constrain is not complete"
+        )
 
 
 # TODO remove
@@ -630,7 +542,7 @@ def test_new_durs():
 # for _ in range(10):
 #     pattern_len += 0.25
 #     basesettings["pattern_len"] = pattern_len
-#     er = er_preprocess.preprocess_settings(basesettings, silent=True)
+#     er = er_settings.get_settings(basesettings, silent=True)
 #     onsets, durs = er_rhythm.make.new_fit_rhythm_to_pattern(
 #         er, 0, in_onsets, in_durs
 #     )
@@ -658,7 +570,7 @@ def test_hocketing_indices():
         "rhythmic_quasi_unison": True,
         "rhythm_len": 2,
     }
-    er = er_preprocess.preprocess_settings(basesettings, silent=True)
+    er = er_settings.get_settings(basesettings, silent=True)
     empty_prev_rhythm1 = er_rhythm.rhythm.Rhythm.from_er_settings(er, 0, (), ())
     nonempty_prev_rhythm1 = er_rhythm.rhythm.Rhythm.from_er_settings(
         er,
@@ -669,76 +581,68 @@ def test_hocketing_indices():
     empty_prev_rhythm2 = er_rhythm.rhythm.Rhythm.from_er_settings(er, 1, (), ())
     onset_positions = er_rhythm.make._onset_positions(er, 2)
     oblig_indices = [0, 1, 5, 7]
-    try:
-        # w/ empty previous rhythms, no oblig onsets
-        hocket_indices = er_rhythm.make._hocketing_indices(
-            er, 2, onset_positions, (empty_prev_rhythm1, empty_prev_rhythm2), ()
-        )
-        qu_indices, constrain_indices = er_rhythm.make._quasi_unison_indices(
-            er, 2, onset_positions, (empty_prev_rhythm1, empty_prev_rhythm2), ()
-        )
-        assert set(hocket_indices) == {i for i in range(8)}
-        assert len(qu_indices) == 0
-        assert len(constrain_indices) == 0
-        # w/ empty previous rhythms, oblig onsets
-        hocket_indices = er_rhythm.make._hocketing_indices(
-            er,
-            2,
-            onset_positions,
-            (empty_prev_rhythm1, empty_prev_rhythm2),
-            (oblig_indices),
-        )
-        qu_indices, constrain_indices = er_rhythm.make._quasi_unison_indices(
-            er,
-            2,
-            onset_positions,
-            (empty_prev_rhythm1, empty_prev_rhythm2),
-            (oblig_indices),
-        )
-        assert set(hocket_indices) == {2, 3, 4, 6}
-        assert len(qu_indices) == 0
-        assert len(constrain_indices) == 0
-        # w/ one non-empty previous rhythms
-        hocket_indices = er_rhythm.make._hocketing_indices(
-            er,
-            2,
-            onset_positions,
-            (nonempty_prev_rhythm1, empty_prev_rhythm2),
-            (),
-        )
-        qu_indices, constrain_indices = er_rhythm.make._quasi_unison_indices(
-            er,
-            2,
-            onset_positions,
-            (nonempty_prev_rhythm1, empty_prev_rhythm2),
-            (),
-        )
-        assert set(hocket_indices) == {1, 2, 3, 5, 7}
-        assert set(qu_indices) == {0, 4, 6}
-        # w/ one non-empty previous rhythm, oblig onsets
-        hocket_indices = er_rhythm.make._hocketing_indices(
-            er,
-            2,
-            onset_positions,
-            (nonempty_prev_rhythm1, empty_prev_rhythm2),
-            (oblig_indices),
-        )
-        qu_indices, constrain_indices = er_rhythm.make._quasi_unison_indices(
-            er,
-            2,
-            onset_positions,
-            (nonempty_prev_rhythm1, empty_prev_rhythm2),
-            (oblig_indices),
-        )
-        assert set(hocket_indices), {2, 3}
-        assert set(qu_indices), {4, 6}
-    except:  # pylint: disable=bare-except
-
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        traceback.print_exception(
-            exc_type, exc_value, exc_traceback, file=sys.stdout
-        )
-        breakpoint()
+    # w/ empty previous rhythms, no oblig onsets
+    hocket_indices = er_rhythm.make._hocketing_indices(
+        er, 2, onset_positions, (empty_prev_rhythm1, empty_prev_rhythm2), ()
+    )
+    qu_indices, constrain_indices = er_rhythm.make._quasi_unison_indices(
+        er, 2, onset_positions, (empty_prev_rhythm1, empty_prev_rhythm2), ()
+    )
+    assert set(hocket_indices) == {i for i in range(8)}
+    assert len(qu_indices) == 0
+    assert len(constrain_indices) == 0
+    # w/ empty previous rhythms, oblig onsets
+    hocket_indices = er_rhythm.make._hocketing_indices(
+        er,
+        2,
+        onset_positions,
+        (empty_prev_rhythm1, empty_prev_rhythm2),
+        (oblig_indices),
+    )
+    qu_indices, constrain_indices = er_rhythm.make._quasi_unison_indices(
+        er,
+        2,
+        onset_positions,
+        (empty_prev_rhythm1, empty_prev_rhythm2),
+        (oblig_indices),
+    )
+    assert set(hocket_indices) == {2, 3, 4, 6}
+    assert len(qu_indices) == 0
+    assert len(constrain_indices) == 0
+    # w/ one non-empty previous rhythms
+    hocket_indices = er_rhythm.make._hocketing_indices(
+        er,
+        2,
+        onset_positions,
+        (nonempty_prev_rhythm1, empty_prev_rhythm2),
+        (),
+    )
+    qu_indices, constrain_indices = er_rhythm.make._quasi_unison_indices(
+        er,
+        2,
+        onset_positions,
+        (nonempty_prev_rhythm1, empty_prev_rhythm2),
+        (),
+    )
+    assert set(hocket_indices) == {1, 2, 3, 5, 7}
+    assert set(qu_indices) == {0, 4, 6}
+    # w/ one non-empty previous rhythm, oblig onsets
+    hocket_indices = er_rhythm.make._hocketing_indices(
+        er,
+        2,
+        onset_positions,
+        (nonempty_prev_rhythm1, empty_prev_rhythm2),
+        (oblig_indices),
+    )
+    qu_indices, constrain_indices = er_rhythm.make._quasi_unison_indices(
+        er,
+        2,
+        onset_positions,
+        (nonempty_prev_rhythm1, empty_prev_rhythm2),
+        (oblig_indices),
+    )
+    assert set(hocket_indices), {2, 3}
+    assert set(qu_indices), {4, 6}
 
 
 def test_quasi_unison_constrained_indices():
@@ -749,7 +653,7 @@ def test_quasi_unison_constrained_indices():
         "pattern_len": [2, 3, 1.5],
         "truncate_patterns": True,
     }
-    er = er_preprocess.preprocess_settings(basesettings, silent=True)
+    er = er_settings.get_settings(basesettings, silent=True)
     empty_prev_rhythm1 = er_rhythm.rhythm.Rhythm.from_er_settings(er, 0, (), ())
     nonempty_prev_rhythm1 = er_rhythm.rhythm.Rhythm.from_er_settings(
         er,
@@ -766,43 +670,36 @@ def test_quasi_unison_constrained_indices():
     onset_positions1 = er_rhythm.make._onset_positions(er, 1)
     onset_positions2 = er_rhythm.make._onset_positions(er, 2)
     oblig_indices = [0, 1, 5, 7]
-    try:
-        at, during = er_rhythm.make._quasi_unison_constrained_indices(
-            er, 1, onset_positions1, (empty_prev_rhythm1,), ()
-        )
-        assert len(at) == 0
-        assert len(during) == 0
-        at, during = er_rhythm.make._quasi_unison_constrained_indices(
-            er, 1, onset_positions1, (nonempty_prev_rhythm1,), ()
-        )
-        assert at == {1, 4, 6, 9}
-        assert during == {2, 7, 10}
-        at, during = er_rhythm.make._quasi_unison_constrained_indices(
-            er, 1, onset_positions1, (nonempty_prev_rhythm1,), oblig_indices
-        )
-        assert at == {4, 6, 9}
-        assert during == {2, 10}
-        at, during = er_rhythm.make._quasi_unison_constrained_indices(
-            er, 1, onset_positions1, (nonempty_prev_rhythm2,), ()
-        )
-        assert at == {0, 8}
-        assert during == {1, 2, 3, 4, 5, 6, 9, 10, 11}
-        at, during = er_rhythm.make._quasi_unison_constrained_indices(
-            er, 2, onset_positions2, (nonempty_prev_rhythm1,), ()
-        )
-        assert at == {1, 4}
-        assert during == {2}
-        at, during = er_rhythm.make._quasi_unison_constrained_indices(
-            er, 2, onset_positions2, (nonempty_prev_rhythm2,), ()
-        )
-        assert at == {0}
-        assert during == {1, 2, 3, 4, 5}
-    except:  # pylint: disable=bare-except
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        traceback.print_exception(
-            exc_type, exc_value, exc_traceback, file=sys.stdout
-        )
-        breakpoint()
+    at, during = er_rhythm.make._quasi_unison_constrained_indices(
+        er, 1, onset_positions1, (empty_prev_rhythm1,), ()
+    )
+    assert len(at) == 0
+    assert len(during) == 0
+    at, during = er_rhythm.make._quasi_unison_constrained_indices(
+        er, 1, onset_positions1, (nonempty_prev_rhythm1,), ()
+    )
+    assert at == {1, 4, 6, 9}
+    assert during == {2, 7, 10}
+    at, during = er_rhythm.make._quasi_unison_constrained_indices(
+        er, 1, onset_positions1, (nonempty_prev_rhythm1,), oblig_indices
+    )
+    assert at == {4, 6, 9}
+    assert during == {2, 10}
+    at, during = er_rhythm.make._quasi_unison_constrained_indices(
+        er, 1, onset_positions1, (nonempty_prev_rhythm2,), ()
+    )
+    assert at == {0, 8}
+    assert during == {1, 2, 3, 4, 5, 6, 9, 10, 11}
+    at, during = er_rhythm.make._quasi_unison_constrained_indices(
+        er, 2, onset_positions2, (nonempty_prev_rhythm1,), ()
+    )
+    assert at == {1, 4}
+    assert during == {2}
+    at, during = er_rhythm.make._quasi_unison_constrained_indices(
+        er, 2, onset_positions2, (nonempty_prev_rhythm2,), ()
+    )
+    assert at == {0}
+    assert during == {1, 2, 3, 4, 5}
 
 
 def test_indices_handler():
@@ -821,78 +718,67 @@ def test_indices_handler():
     prev_onsets = np.array([0.25, 1.0])
     prev_durs = np.array([0.5, 0.25])
 
-    try:
-        er = er_preprocess.preprocess_settings(basesettings, silent=True)
-        prev_rhythm = er_rhythm.rhythm.Rhythm.from_er_settings(
-            er, 0, prev_onsets, prev_durs
-        )
-        onset_positions0 = er_rhythm.make._onset_positions(er, 0)
-        indices, ends = er_rhythm.make._indices_handler(
-            er, 0, (), onset_positions0
-        )
-        assert np.all(np.equal(indices, np.arange(8)))
-        assert ends == [0, 0, 0, 0]
-        onset_positions1 = er_rhythm.make._onset_positions(er, 1)
-        indices, ends = er_rhythm.make._indices_handler(
-            er, 1, (prev_rhythm,), onset_positions1
-        )
-        assert np.all(np.equal(indices[:2], [1, 4]))
-        assert set(indices[2:]) == {0, 2, 3, 5, 6, 7}
-        assert ends == [0, 2, 2, 2]
-        onset_positions2 = er_rhythm.make._onset_positions(er, 2)
-        indices, ends = er_rhythm.make._indices_handler(
-            er, 2, (prev_rhythm,), onset_positions2
-        )
-        assert np.all(np.equal(indices[:6], [0, 2, 3, 5, 6, 7]))
-        assert set(indices[6:]) == {1, 4}
-        assert ends == [0, 0, 0, 6]
-        onset_positions3 = er_rhythm.make._onset_positions(er, 3)
-        indices, ends = er_rhythm.make._indices_handler(
-            er, 3, (prev_rhythm,), onset_positions3
-        )
-        assert np.all(np.equal(indices[:2], [1, 4]))
-        assert set(indices[2:]) == {0, 2, 3, 5, 6, 7}
-        assert ends == [0, 2, 2, 8]
-        # With obligatory onsets
-        er = er_preprocess.preprocess_settings(oblig_settings, silent=True)
-        onset_positions0 = er_rhythm.make._onset_positions(er, 0)
-        indices, ends = er_rhythm.make._indices_handler(
-            er, 0, (), onset_positions0
-        )
-        assert np.all(np.equal(indices[:3], [0, 3, 7]))
-        assert set(indices[3:]) == {1, 2, 4, 5, 6}
-        assert ends == [3, 3, 3, 3]
-        onset_positions1 = er_rhythm.make._onset_positions(er, 1)
-        indices, ends = er_rhythm.make._indices_handler(
-            er, 1, (prev_rhythm,), onset_positions1
-        )
-        assert np.all(np.equal(indices[:3], [0, 3, 7]))
-        assert np.all(np.equal(indices[3:5], [1, 4]))
-        assert set(indices[3:5]) == {1, 4}
-        assert set(indices[5:]) == {2, 5, 6}
-        assert ends == [3, 5, 5, 5]
-        onset_positions2 = er_rhythm.make._onset_positions(er, 2)
-        indices, ends = er_rhythm.make._indices_handler(
-            er, 2, (prev_rhythm,), onset_positions2
-        )
-        assert np.all(np.equal(indices[:3], [0, 3, 7]))
-        assert set(indices[3:6]) == {2, 5, 6}
-        assert set(indices[6:]) == {1, 4}
-        assert ends == [3, 3, 3, 6]
-        onset_positions3 = er_rhythm.make._onset_positions(er, 3)
-        indices, ends = er_rhythm.make._indices_handler(
-            er, 3, (prev_rhythm,), onset_positions3
-        )
-        assert np.all(np.equal(indices[:3], [0, 3, 7]))
-        assert set(indices[3:5]) == {1, 4}
-        assert set(indices[5:]) == {2, 5, 6}
-        assert ends == [3, 5, 5, 8]
-    except:  # pylint: disable=bare-except
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        traceback.print_exception(
-            exc_type, exc_value, exc_traceback, file=sys.stdout
-        )
-        breakpoint()
+    er = er_settings.get_settings(basesettings, silent=True)
+    prev_rhythm = er_rhythm.rhythm.Rhythm.from_er_settings(
+        er, 0, prev_onsets, prev_durs
+    )
+    onset_positions0 = er_rhythm.make._onset_positions(er, 0)
+    indices, ends = er_rhythm.make._indices_handler(er, 0, (), onset_positions0)
+    assert np.all(np.equal(indices, np.arange(8)))
+    assert ends == [0, 0, 0, 0]
+    onset_positions1 = er_rhythm.make._onset_positions(er, 1)
+    indices, ends = er_rhythm.make._indices_handler(
+        er, 1, (prev_rhythm,), onset_positions1
+    )
+    assert np.all(np.equal(indices[:2], [1, 4]))
+    assert set(indices[2:]) == {0, 2, 3, 5, 6, 7}
+    assert ends == [0, 2, 2, 2]
+    onset_positions2 = er_rhythm.make._onset_positions(er, 2)
+    indices, ends = er_rhythm.make._indices_handler(
+        er, 2, (prev_rhythm,), onset_positions2
+    )
+    assert np.all(np.equal(indices[:6], [0, 2, 3, 5, 6, 7]))
+    assert set(indices[6:]) == {1, 4}
+    assert ends == [0, 0, 0, 6]
+    onset_positions3 = er_rhythm.make._onset_positions(er, 3)
+    indices, ends = er_rhythm.make._indices_handler(
+        er, 3, (prev_rhythm,), onset_positions3
+    )
+    assert np.all(np.equal(indices[:2], [1, 4]))
+    assert set(indices[2:]) == {0, 2, 3, 5, 6, 7}
+    assert ends == [0, 2, 2, 8]
+    # With obligatory onsets
+    er = er_settings.get_settings(oblig_settings, silent=True)
+    onset_positions0 = er_rhythm.make._onset_positions(er, 0)
+    indices, ends = er_rhythm.make._indices_handler(er, 0, (), onset_positions0)
+    assert np.all(np.equal(indices[:3], [0, 3, 7]))
+    assert set(indices[3:]) == {1, 2, 4, 5, 6}
+    assert ends == [3, 3, 3, 3]
+    onset_positions1 = er_rhythm.make._onset_positions(er, 1)
+    indices, ends = er_rhythm.make._indices_handler(
+        er, 1, (prev_rhythm,), onset_positions1
+    )
+    assert np.all(np.equal(indices[:3], [0, 3, 7]))
+    assert np.all(np.equal(indices[3:5], [1, 4]))
+    assert set(indices[3:5]) == {1, 4}
+    assert set(indices[5:]) == {2, 5, 6}
+    assert ends == [3, 5, 5, 5]
+    onset_positions2 = er_rhythm.make._onset_positions(er, 2)
+    indices, ends = er_rhythm.make._indices_handler(
+        er, 2, (prev_rhythm,), onset_positions2
+    )
+    assert np.all(np.equal(indices[:3], [0, 3, 7]))
+    assert set(indices[3:6]) == {2, 5, 6}
+    assert set(indices[6:]) == {1, 4}
+    assert ends == [3, 3, 3, 6]
+    onset_positions3 = er_rhythm.make._onset_positions(er, 3)
+    indices, ends = er_rhythm.make._indices_handler(
+        er, 3, (prev_rhythm,), onset_positions3
+    )
+    assert np.all(np.equal(indices[:3], [0, 3, 7]))
+    assert set(indices[3:5]) == {1, 4}
+    assert set(indices[5:]) == {2, 5, 6}
+    assert ends == [3, 5, 5, 8]
 
 
 def test_within_leader_durs():
@@ -902,7 +788,7 @@ def test_within_leader_durs():
         "rhythmic_quasi_unison_constrain": True,
         "pattern_len": 2,
     }
-    er = er_preprocess.preprocess_settings(basesettings, silent=True)
+    er = er_settings.get_settings(basesettings, silent=True)
     leader1_onsets = np.array([0, 0.75])
     leader1_durs = np.array([0.5, 0.875])
     leader1 = er_rhythm.rhythm.Rhythm.from_er_settings(
@@ -915,21 +801,14 @@ def test_within_leader_durs():
     )
     follower_onsets = np.array([0, 0.25, 0.75, 1.125, 1.25, 1.375])
     follower_iois = er_rhythm.make.get_iois_from_er(er, 1, follower_onsets)
-    try:
-        out = er_rhythm.make._within_leader_durs(
-            er, 1, follower_iois, follower_onsets, leader1
-        )
-        assert np.all(np.equal(out, [0.25, 0.25, 0.375, 0.125, 0.125, 0.25]))
-        out = er_rhythm.make._within_leader_durs(
-            er, 1, follower_iois, follower_onsets, leader2
-        )
-        assert np.all(np.equal(out, [0.25, 0.5, 0.375, 0.125, 0.125, 0.625]))
-    except:  # pylint: disable=bare-except
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        traceback.print_exception(
-            exc_type, exc_value, exc_traceback, file=sys.stdout
-        )
-        breakpoint()
+    out = er_rhythm.make._within_leader_durs(
+        er, 1, follower_iois, follower_onsets, leader1
+    )
+    assert np.all(np.equal(out, [0.25, 0.25, 0.375, 0.125, 0.125, 0.25]))
+    out = er_rhythm.make._within_leader_durs(
+        er, 1, follower_iois, follower_onsets, leader2
+    )
+    assert np.all(np.equal(out, [0.25, 0.5, 0.375, 0.125, 0.125, 0.625]))
 
 
 def test_yield_onset_and_consecutive_release():
@@ -937,7 +816,7 @@ def test_yield_onset_and_consecutive_release():
         "num_voices": 1,
         "pattern_len": 2,
     }
-    er = er_preprocess.preprocess_settings(basesettings, silent=True)
+    er = er_settings.get_settings(basesettings, silent=True)
     onsets = np.array([0, 0.25, 0.75, 1.0, 1.5, 1.625])
     durs = np.array([0.25, 0.25, 0.125, 0.5, 0.125, 0.125])
     rhythm1 = er_rhythm.rhythm.Rhythm.from_er_settings(er, 0, onsets, durs)
@@ -947,19 +826,12 @@ def test_yield_onset_and_consecutive_release():
     onsets = np.arange(16) * 0.125
     durs = np.repeat(0.125, 16)
     rhythm3 = er_rhythm.rhythm.Rhythm.from_er_settings(er, 0, onsets, durs)
-    try:
-        out = list(er_rhythm.make._yield_onset_and_consecutive_release(rhythm1))
-        assert out == [(0, 0.5), (0.75, 0.875), (1.0, 1.75)]
-        out = list(er_rhythm.make._yield_onset_and_consecutive_release(rhythm2))
-        assert out == []
-        out = list(er_rhythm.make._yield_onset_and_consecutive_release(rhythm3))
-        assert out == [(0, 2)]
-    except:  # pylint: disable=bare-except
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        traceback.print_exception(
-            exc_type, exc_value, exc_traceback, file=sys.stdout
-        )
-        breakpoint()
+    out = list(er_rhythm.make._yield_onset_and_consecutive_release(rhythm1))
+    assert out == [(0, 0.5), (0.75, 0.875), (1.0, 1.75)]
+    out = list(er_rhythm.make._yield_onset_and_consecutive_release(rhythm2))
+    assert out == []
+    out = list(er_rhythm.make._yield_onset_and_consecutive_release(rhythm3))
+    assert out == [(0, 2)]
 
 
 def test_onsets_between():
@@ -967,7 +839,7 @@ def test_onsets_between():
         "num_voices": 1,
         "pattern_len": 2,
     }
-    er = er_preprocess.preprocess_settings(basesettings, silent=True)
+    er = er_settings.get_settings(basesettings, silent=True)
     onsets = np.array([0, 0.5, 1.0, 1.5])
     durs = np.repeat(0.25, 4)
     rm = er_rhythm.rhythm.Rhythm.from_er_settings(er, 0, onsets, durs)

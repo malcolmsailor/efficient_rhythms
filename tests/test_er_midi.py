@@ -1,16 +1,10 @@
 import itertools
-import os
-import sys
-import traceback
 
-sys.path.insert(
-    0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-)
-import efficient_rhythms.er_choirs as er_choirs  # pylint: disable=wrong-import-position
-import efficient_rhythms.er_make as er_make  # pylint: disable=wrong-import-position
-import efficient_rhythms.er_midi as er_midi  # pylint: disable=wrong-import-position
-import efficient_rhythms.er_preprocess as er_preprocess  # pylint: disable=wrong-import-position
-import efficient_rhythms.er_classes as er_classes  # pylint: disable=wrong-import-position
+import efficient_rhythms.er_choirs as er_choirs
+import efficient_rhythms.er_make as er_make
+import efficient_rhythms.er_midi as er_midi
+import efficient_rhythms.er_settings as er_settings
+import efficient_rhythms.er_classes as er_classes
 
 
 def assay_write_track_names(
@@ -20,15 +14,8 @@ def assay_write_track_names(
     # This test seems to be incomplete!
     mf = er_midi.init_midi(er, super_pattern)
     er_midi.write_track_names(er, mf)
-    try:
-        for track in mf.tracks:
-            assert track.name != "", 'track.name == ""'
-    except:  # pylint: disable=bare-except
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        traceback.print_exception(
-            exc_type, exc_value, exc_traceback, file=sys.stdout
-        )
-        breakpoint()
+    for track in mf.tracks:
+        assert track.name != "", 'track.name == ""'
 
 
 def test_voices_to_tracks():
@@ -36,7 +23,7 @@ def test_voices_to_tracks():
         "randomly_distribute_between_choirs": False,
         "num_voices": 3,
     }
-    er = er_preprocess.preprocess_settings(base_settings)
+    er = er_settings.get_settings(base_settings)
     # voice, pitch, onset, dur
     notes = [
         (0, 60, 0, 1),
@@ -54,19 +41,12 @@ def test_voices_to_tracks():
     mf = er_midi.write_er_midi(
         er, score, "test_voices_to_tracks", reverse_tracks=False, return_mf=True
     )
-    try:
-        for track_i, track in enumerate(mf.tracks):
-            for msg in track:
-                if msg.type in ("note_on", "note_off", "program_change"):
-                    # the meta track is track 0, so we need to subtract 1
-                    #   to get the right element from er.choir_assignments
-                    assert msg.channel == er.choir_assignments[track_i - 1]
-    except:  # pylint: disable=bare-except
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        traceback.print_exception(
-            exc_type, exc_value, exc_traceback, file=sys.stdout
-        )
-        breakpoint()
+    for track_i, track in enumerate(mf.tracks):
+        for msg in track:
+            if msg.type in ("note_on", "note_off", "program_change"):
+                # the meta track is track 0, so we need to subtract 1
+                #   to get the right element from er.choir_assignments
+                assert msg.channel == er.choir_assignments[track_i - 1]
 
 
 def test_er_midi():
@@ -88,7 +68,7 @@ def test_er_midi():
             "choirs_separate_tracks": choirs_separate_tracks,
         }
         print(more_settings)
-        er = er_preprocess.preprocess_settings(base_settings | more_settings)
+        er = er_settings.get_settings(base_settings | more_settings)
         super_pattern = er_make.make_super_pattern(er)
         er_make.complete_pattern(er, super_pattern)
         er_choirs.assign_choirs(er, super_pattern)

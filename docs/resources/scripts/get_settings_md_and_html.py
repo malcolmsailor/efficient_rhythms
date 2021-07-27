@@ -1,4 +1,4 @@
-"""Retrieve docstring from er_settings.py and convert to settings.md
+"""Retrieve docstring from settings.py and convert to settings.md
 
 Requires pandoc
 """
@@ -18,7 +18,7 @@ CSS_PATH2 = "resources/css/markdown-body.css"
 
 # Constants for processing settings.py
 SETTINGS_PY_PATH = os.path.join(
-    SCRIPT_DIR, "../../../efficient_rhythms/er_settings.py"
+    SCRIPT_DIR, "../../../efficient_rhythms/er_settings/settings.py"
 )
 SETTINGS_MD_PATH = os.path.join(SCRIPT_DIR, "../../settings.md")
 SETTINGS_HTML_PATH = os.path.join(SCRIPT_DIR, "../../settings.html")

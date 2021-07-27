@@ -43,9 +43,9 @@ def apply_voice_leading(
             return new_note, None
 
     if er.force_repeated_notes:
-        # TODO consolidate get_repeated_pitch2 with get_repeated_pitch
-        # or at least rename it?
-        repeated_pitch = er_make2.get_repeated_pitch2(new_notes, new_onset)
+        repeated_pitch = er_make2.get_repeated_pitch(
+            voice=new_notes, onset=new_onset
+        )
         if repeated_pitch is not None:
             new_pitch = repeated_pitch
             new_note = er_classes.Note(new_pitch, new_onset, new_dur)

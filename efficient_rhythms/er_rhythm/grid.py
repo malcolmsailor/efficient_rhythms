@@ -161,7 +161,7 @@ class Grid(ContRhythm):
             er.cont_var_increment[0],
             er.overlap,
             er.num_cont_rhythm_vars[0],
-            er.vary_rhythm_consistently[0],
+            er.vary_rhythm_consistently,
             er.cont_var_palindrome,
         )
 
@@ -206,7 +206,6 @@ class Grid(ContRhythm):
         er.rhythm_len = er.pattern_len
 
         _enforce_unique_value("num_cont_rhythm_vars")
-        _enforce_unique_value("vary_rhythm_consistently")
         _enforce_unique_value("cont_var_increment")
         _enforce_unique_value("min_dur", "smallest")
 

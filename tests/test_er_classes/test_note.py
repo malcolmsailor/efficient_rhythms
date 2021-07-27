@@ -1,12 +1,4 @@
-import os
-import sys
-import traceback
-
-sys.path.insert(
-    0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
-)
-
-import efficient_rhythms.er_classes as er_classes  # pylint: disable=wrong-import-position
+import efficient_rhythms.er_classes as er_classes
 
 
 def test_comparisons():
@@ -39,42 +31,35 @@ def test_comparisons():
         er_classes.Note(60, 10, 2, velocity=64, finetune=0, choir=17),
         er_classes.Note(60, 10, 2, velocity=64, finetune=0, voice=11),
     ]
-    try:
-        for note in greater:
-            assert note > main_note, "note <= main_note"
-            assert note >= main_note, "note < main_note"
-            assert main_note < note, "main_note >= note"
-            assert main_note <= note, "main_note > note"
-            assert note != main_note, "note == main_note"
-            assert not main_note > note
-            assert not main_note >= note
-            assert not note < main_note
-            assert not note <= main_note
-            assert not main_note == note
-        for note in less:
-            assert note < main_note, "note >= main_note"
-            assert note <= main_note, "note > main_note"
-            assert main_note > note, "main_note <= note"
-            assert main_note >= note, "main_note < note"
-            assert note != main_note, "note == main_note"
-            assert not main_note < note
-            assert not main_note <= note
-            assert not note > main_note
-            assert not note >= main_note
-            assert not main_note == note
-        for note in equal:
-            assert note <= main_note, "note > main_note"
-            assert main_note >= note, "main_note < note"
-            assert note == main_note, "note != main_note"
-            assert not main_note < note
-            assert not note > main_note
-            assert not main_note != note
-    except:  # pylint: disable=bare-except
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        traceback.print_exception(
-            exc_type, exc_value, exc_traceback, file=sys.stdout
-        )
-        breakpoint()
+    for note in greater:
+        assert note > main_note, "note <= main_note"
+        assert note >= main_note, "note < main_note"
+        assert main_note < note, "main_note >= note"
+        assert main_note <= note, "main_note > note"
+        assert note != main_note, "note == main_note"
+        assert not main_note > note
+        assert not main_note >= note
+        assert not note < main_note
+        assert not note <= main_note
+        assert not main_note == note
+    for note in less:
+        assert note < main_note, "note >= main_note"
+        assert note <= main_note, "note > main_note"
+        assert main_note > note, "main_note <= note"
+        assert main_note >= note, "main_note < note"
+        assert note != main_note, "note == main_note"
+        assert not main_note < note
+        assert not main_note <= note
+        assert not note > main_note
+        assert not note >= main_note
+        assert not main_note == note
+    for note in equal:
+        assert note <= main_note, "note > main_note"
+        assert main_note >= note, "main_note < note"
+        assert note == main_note, "note != main_note"
+        assert not main_note < note
+        assert not note > main_note
+        assert not main_note != note
 
 
 if __name__ == "__main__":

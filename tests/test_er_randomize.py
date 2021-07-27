@@ -2,14 +2,10 @@ import os
 import sys
 import traceback
 
-sys.path.insert(
-    0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-)
-
-import efficient_rhythms.er_choirs as er_choirs  # pylint: disable=wrong-import-position
-import efficient_rhythms.er_exceptions as er_exceptions  # pylint: disable=wrong-import-position
-import efficient_rhythms.er_make as er_make  # pylint: disable=wrong-import-position
-import efficient_rhythms.er_preprocess as er_preprocess  # pylint: disable=wrong-import-position
+import efficient_rhythms.er_choirs as er_choirs
+import efficient_rhythms.er_exceptions as er_exceptions
+import efficient_rhythms.er_make as er_make
+import efficient_rhythms.er_settings as er_settings
 
 # TODO see how this interacts with pytest...
 
@@ -27,9 +23,7 @@ def test_many_seeds():
             "max_available_pitch_materials_deadends": 50,
         }
         try:
-            er = er_preprocess.preprocess_settings(
-                user_settings, random_settings=True
-            )
+            er = er_settings.get_settings(user_settings, random_settings=True)
             super_pattern = er_make.make_super_pattern(er)
             er_make.complete_pattern(er, super_pattern)
             er_choirs.assign_choirs(er, super_pattern)
