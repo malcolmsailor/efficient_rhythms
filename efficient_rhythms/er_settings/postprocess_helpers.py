@@ -8,6 +8,13 @@ from .. import er_tuning
 from .. import PACKAGE_DIR
 
 
+def check_flexible_voice_leading(er, field_name):
+    assert field_name == "allow_flexible_voice_leading"
+    if not er.allow_strict_voice_leading:
+        return True
+    return er.allow_strict_voice_leading
+
+
 def generate_interval_cycle(er, field_name):
     assert field_name == "foot_pcs"
     if not er.interval_cycle or er.scales_and_chords_specified_in_midi:

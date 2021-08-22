@@ -99,8 +99,8 @@ class SettingsBase:
         for field_name, field_args in self._fields:
             field_type = get_base_type(field_args.type)
             self._fill_none_or_falsy(field_name, field_args, field_type)
-            self._sort(field_name, field_type, field_args)
             self._process_per_voice_seqs(field_name, field_type)
+            self._sort(field_name, field_type, field_args)
             self._process_pitch_materials(field_name, field_type)
             self._process_intervals(field_name, field_type)
             self._process_rhythm_materials(field_name, field_type)

@@ -185,7 +185,7 @@ class SettingsPostprocessor(SettingsDataclass):
         def _num_notes(voice_i):
             if voice_i in self.rhythmic_unison_followers:
                 leader_i = self.rhythmic_unison_followers[voice_i]
-                return self.num_notes[leader_i]
+                return out[leader_i]
             rhythm_len = self.rhythm_len[voice_i]
             density = self.onset_density[voice_i]
             onset_div = self.onset_subdivision[voice_i]

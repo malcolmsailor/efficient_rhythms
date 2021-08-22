@@ -144,7 +144,6 @@ class Score:
 
     # LONGTERM implement "score note iterator?"
     def __iter__(self):
-        # TODO use this more
         for voice_i in self.all_voice_idxs:
             yield self.voices[voice_i]
 
@@ -469,7 +468,6 @@ class Score:
         return self._harmony_idx_to_time[harmony_i]
 
     def get_harmony_times_from_onset(self, onset):
-        # TODO replace get_harmony_times with this method?
         return self._harmony_idx_to_time[self.get_harmony_i(onset)]
 
     @property
@@ -486,8 +484,6 @@ class Score:
         """Get voices sounding at onset (if dur==0) or between
         onset and onset + dur.
         """
-        # TODO refactor this and similar functions to take an end_time argument
-        # instead of dur?
         out = []
         for voice_i in self.all_voice_idxs:
             if self.voices[voice_i].get_sounding_pitches(

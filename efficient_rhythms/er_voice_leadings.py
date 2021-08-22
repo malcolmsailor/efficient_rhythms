@@ -247,12 +247,12 @@ class VoiceLeader:
         self.parallel_voice_leading = er.parallel_voice_leading
         if self.parallel_voice_leading:
             self.parallel_str = er.parallel_direction
-            # this implementation of "alternate" does not work because
+            # the commented-out attempted implementation of "alternate" below
+            # does not work because
             # the VoiceLeader only applies to two chords, then a new instance
             # is created.
-            # TODO
             if self.parallel_str == "alternate":
-                self.parallel_dir = None
+                raise NotImplementedError
             elif self.parallel_str == "up":
                 self.parallel_dir = 1
             elif self.parallel_str == "down":
@@ -318,17 +318,17 @@ class VoiceLeader:
         if all(i == 0 for i in vl_intervals):
             return [vl_intervals], 0
 
-        if self.parallel_str == "closest" or (
-            self.parallel_str == "alternate" and self.parallel_dir is None
-        ):
+        if self.parallel_str == "closest":
+            #      or (
+            #     self.parallel_str == "alternate" and self.parallel_dir is None
+            # ):
             avg_interval = sum(vl_intervals) / scale_len
             if avg_interval > 6:
                 self.parallel_dir = -1
             else:
                 self.parallel_dir = 1
-        elif self.parallel_str == "alternate":
-            # TODO
-            self.parallel_dir *= -1
+        # elif self.parallel_str == "alternate":
+        #     self.parallel_dir *= -1
 
         if self.parallel_dir < 0:
             vl_intervals = [interval - self.tet for interval in vl_intervals]

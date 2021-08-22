@@ -290,18 +290,11 @@ def choose_whether_chord_tone(er, super_pattern, poss_note):
     # Finally, apply remaining chord_tone settings.
     rest_dur = er.get(poss_note.voice_i, "chord_tone_before_rests")
 
-    # TODO if voice_i dur_density is 1.0, then set rest_dur to False
-    #   since there will never be a rest before a note
     if rest_dur:
         if er.rhythms[poss_note.voice_i].rest_before_onset(
             poss_note.onset, rest_dur
         ):
             return True
-        # mod_onset = poss_note.onset % er.rhythms[poss_note.voice_i].total_dur
-        # if er_rhythm.rest_before_next_note(
-        #     er.rhythms[poss_note.voice_i], mod_onset, rest_dur
-        # ):
-        #     return True
 
     if er.chord_tones_sync_onset_in_all_voices:
         if poss_note.other_voice_indices:
@@ -531,13 +524,8 @@ def weight_intervals_and_choose(intervals, log_base=1.01, unison_weighted_as=3):
             probability of larger intervals. 1.5 seems to be a decent value.
         unison_weighted_as: Unisons will be weighted the same as this interval.
     """
-    # TODO cache weighted_choices
+    # maybe cache weighted_choices
     weighted_choices = []
-    # if unison_weighted_as == 0:
-    #     for interval in intervals:
-    #         weight = math.log(abs(interval) + log_base, log_base)
-    #         weighted_choices.append((interval, 100 / weight))
-    # else:
     for interval in intervals:
         weight = math.log(
             (unison_weighted_as if interval == 0 else abs(interval))
@@ -559,8 +547,8 @@ def apply_melodic_control(er, available_pitches, poss_note):
     # applying melodic control is meaningless
     prev_pitch = poss_note.prev_pitch
     if prev_pitch < 0:
-        # TODO think whether we really want to choose the initial pitch
-        #   with a uniform distribution
+        # Not sure that we really want to choose the initial pitch
+        #   from a uniform distribution
         return random.choice(available_pitches)
     available_intervals = {}
     harmony_i = poss_note.harmony_i
@@ -943,7 +931,10 @@ def transpose_foots(er, super_pattern):
         if new_pitch < lowest_pitch:
             continue
 
-        if note.onset >= harmony_times.end_time:
+        if (
+            harmony_times.end_time is not None
+            and note.onset >= harmony_times.end_time
+        ):
             harmony_i = super_pattern.get_harmony_i(note.onset)
             harmony_times = super_pattern.get_harmony_times(harmony_i)
             # harmony_dur = harmony_times.end_time - harmony_times.start_time
@@ -976,8 +967,11 @@ def voice_lead_pattern(er, super_pattern, voice_lead_error):
 
     voice_lead_error.reset_inner_counts()
 
-    if er_vl_strict_and_flex.voice_lead_pattern_strictly(
-        er, super_pattern, voice_lead_error, pattern_vl_i=er.num_voices
+    if (
+        er.allow_strict_voice_leading
+        and er_vl_strict_and_flex.voice_lead_pattern_strictly(
+            er, super_pattern, voice_lead_error, pattern_vl_i=er.num_voices
+        )
     ):
         return True
 

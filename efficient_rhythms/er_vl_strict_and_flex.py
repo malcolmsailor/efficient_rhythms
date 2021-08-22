@@ -57,8 +57,6 @@ def flex_vl_loop(er, score, voice_lead_error, voice, vl_item):
             prev_pc_scale = er.get(prev_htimes.i, "pc_scales")
             update_voice_leadings = False
 
-        # TODO rather than a while loop, make this a for loop to set a maximum
-        # depth
         while True:
             new_note, vl_motion_tup = er_apply_vl.apply_voice_leading(
                 er,
@@ -117,7 +115,7 @@ def voice_lead_pattern_flexibly(er, score, vl_error, pattern_vl_i=0):
     #   voice-leading function at all. If it is True, then strict voice-leadings
     #   will be exhausted before moving on to flexible voice leadings. This
     #   may or may not be desired.
-    if voice_lead_pattern_strictly(
+    if er.allow_strict_voice_leading and voice_lead_pattern_strictly(
         er, score, vl_error, pattern_vl_i=pattern_vl_i + 1
     ):
         return True

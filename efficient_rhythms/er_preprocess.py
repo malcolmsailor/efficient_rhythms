@@ -154,7 +154,6 @@ use.
 #         setattr(er, prop, er_misc_funcs.convert_to_fractions(getattr(er, prop)))
 
 
-# TODO remove
 # def ensure_lists_or_tuples(er):
 #     def _ensure_list_of_iterables(in_iter):
 #         if in_iter is None:
@@ -274,7 +273,6 @@ use.
 #         i += 1
 
 
-# TODO remove
 # def process_np_arrays(er):
 #     def _np_array_to_list(item):
 #         if isinstance(item, np.ndarray):

@@ -16,6 +16,7 @@ from .preprocess_helpers import (
     random_tempi,
 )
 from .postprocess_helpers import (
+    check_flexible_voice_leading,
     check_force_parallel_motion,
     check_invert_consonances,
     check_min_dur,
@@ -491,6 +492,16 @@ class SettingsDataclass(SettingsBase):
             expand the script's ability to find voice-leading solutions;
             however, it may tend to destroy the audible sense of "pattern".
             Default: False
+        allow_strict_voice_leading: bool. If False, then the "strict" voice-
+            leading loop will never be entered, in favor of the "flexible"
+            voice-leading loop enabled by `allow_flexible_voice_leading`. If
+            both `allow_strict_voice_leading` and `allow_flexible_voice_leading`
+            are True, then strict voice-leading is favored, but flexible
+            voice-leading will be tried between harmonies where strict voice-
+            leading fails. (NB: if `allow_strict_voice_leading` is set to False,
+            `allow_flexible_voice_leading` will be set to True regardless of
+            its explicit setting.)
+            Default: True
         vl_maintain_consonance: bool. If False, then after the initial pattern
             is complete, voice-leadings will not be checked for consonance.
             (See the settings under "Consonance and dissonance settings" below.)
@@ -717,7 +728,7 @@ class SettingsDataclass(SettingsBase):
             Warning: for now, only applies to the initial pattern, not to
             the subsequent voice-leading
 
-            Default: -1
+            Default: 1
         max_alternations: integer, or a per-voice sequence of integers.
             Specifies the maximum allowed number of consecutive alternations of
             two pitches in a voice.  "One alternation" is two pitches (e.g., A,
@@ -1191,7 +1202,7 @@ class SettingsDataclass(SettingsBase):
             randomly assigned to items from `choirs`. The precise way in which
             this occurs is controlled by the settings below.
             Default: False
-        length_choir_segments: number. Only has an effect if
+        length_choir_segments: number > 0. Only has an effect if
             `randomly_distribute_between_choirs` is True. Sets the duration of
             each random choir assignment in quarter notes. If 0 or negative,
             each voice is permanently assigned to a choir at random.
@@ -1310,6 +1321,7 @@ class SettingsDataclass(SettingsBase):
         existing_voices_transpose: boolean. If True, then any existing voices
             will be transposed according to the "transposition settings" below.
             Default: True
+        existing_voices_erase_choirs: boolean. # TODO what does this do?
         existing_voices_max_denominator: integer. In order to avoid rounding
             errors and the like, the rhythms in `existing_voices` are converted
             to Python's Fraction type. This parameter sets the maximum
@@ -1468,23 +1480,6 @@ class SettingsDataclass(SettingsBase):
         },
     )
 
-    # existing_voices: string. The path to a midi file that contains
-    #   some pre-existing music to be added to. The chord/scale parameters
-    #   below must be set by the user to match (if desired).
-    #   To disable, set to an empty string.
-    # existing_voices_offset: numb Offset for existing voices.
-    # bass_in_existing_voice: boolean. If true, then bass-only parameters
-    #   will not apply to voice 0 of the new voices.
-    # existing_voices_repeat: boolean. If true, then the portion of
-    #   the existing voices that occurs during the new super_pattern
-    #   will be repeated together with the new voices.
-    # existing_voices_transpose: boolean. If true, then the
-    #   existing voices will be transposed along with the new voices,
-    #   according to the transposition settings below. Whether this happens
-    #   before or after repeat depends on transpose_before_repeat.
-    # existing_voices_erase_choirs: boolean.
-    # existing_voices_max_denominator: int. If 0 or false, set to 8192.
-
     existing_voices: str = fld(
         default="",
         metadata={
@@ -1580,10 +1575,6 @@ class SettingsDataclass(SettingsBase):
             "postprocess": check_rhythm_len,
         },
     )
-
-    # harmony_len: Union[
-    #     Number, Sequence[Number]
-    # ] = fld(
     harmony_len: ItemOrSequence[Metron] = fld(
         default=4,
         metadata={
@@ -1619,10 +1610,6 @@ class SettingsDataclass(SettingsBase):
             "if_none": get_max_super_pattern_len,
         },
     )
-    # voice_ranges: Union[
-    #     Sequence[Tuple[Number, Number]],
-    #     np.ndarray,
-    # ] = fld(
     voice_ranges: VoiceRanges = fld(
         default="CONTIGUOUS_OCTAVES * OCTAVE3 * C",
         metadata={
@@ -1632,9 +1619,6 @@ class SettingsDataclass(SettingsBase):
             "expected_constants": ("pitch_class", "octave", "voice_range"),
         },
     )
-    # hard_bounds: Sequence[
-    #     Tuple[Number, Number]
-    # ] = fld(
     hard_bounds: VoiceRanges = fld(
         default=(
             (
@@ -1649,7 +1633,6 @@ class SettingsDataclass(SettingsBase):
             "expected_constants": ("pitch_class", "octave"),
         },
     )
-    # MAYBE add other possible voice orders, e.g., (melody, bass, inner voices)
     voice_order_str: str = fld(
         default="usual",
         metadata={
@@ -1659,7 +1642,6 @@ class SettingsDataclass(SettingsBase):
             "possible_values": ("usual", "reverse"),
         },
     )
-    # allow_voice_crossings: Union[bool, Sequence[bool]] = fld(
     allow_voice_crossings: Optional[PerVoiceSequence[bool]] = fld(
         default=True,
         metadata={
@@ -1691,9 +1673,6 @@ class SettingsDataclass(SettingsBase):
             "postprocess": (generate_interval_cycle, set_to_num_harmonies),
         },
     )
-    # interval_cycle: Union[
-    #     None, Number, Sequence[Number]
-    # ] = fld(
     interval_cycle: Optional[ItemOrSequence[Pitch]] = fld(
         default=None,
         metadata={
@@ -1704,9 +1683,6 @@ class SettingsDataclass(SettingsBase):
             "expected_constants": ("specific_interval",),
         },
     )
-    # scales: Sequence[
-    #     Union[np.ndarray, Sequence[Number]]
-    # ] = fld(
     scales: SuperSequence[Pitch] = fld(
         default_factory=lambda: ["DIATONIC_SCALE"],
         metadata={
@@ -1718,11 +1694,6 @@ class SettingsDataclass(SettingsBase):
             "postprocess": truncate_to_num_harmonies,
         },
     )
-    # QUESTION is there a way to implement octave equivalence settings for
-    #   chords here as well as for consonant_chords?
-    # chords: Sequence[
-    #     Union[np.ndarray, Sequence[Number]]
-    # ] = fld(
     chords: SuperSequence[Pitch] = fld(
         default_factory=lambda: ["MAJOR_TRIAD"],
         metadata={
@@ -1771,7 +1742,7 @@ class SettingsDataclass(SettingsBase):
         },
     )
     humanize: bool = fld(
-        default=True,
+        default=False,
         metadata={
             "mutable_attrs": {},
             "category": "midi",
@@ -1901,9 +1872,7 @@ class SettingsDataclass(SettingsBase):
             "possible_values": ("lowest", "all", "none"),
         },
     )
-
     # LONGTERM allow transposition by multiple octaves if necessary.
-
     extend_bass_range_for_foots: Number = fld(
         default=0,
         metadata={
@@ -1921,12 +1890,21 @@ class SettingsDataclass(SettingsBase):
             "priority": 3,
         },
     )
+    allow_strict_voice_leading: bool = fld(
+        default=True,
+        metadata={
+            "mutable_attrs": {},
+            "category": "voice_leading",
+            "priority": 3,
+        },
+    )
     allow_flexible_voice_leading: bool = fld(
         default=False,
         metadata={
             "mutable_attrs": {},
             "category": "voice_leading",
             "priority": 3,
+            "postprocess": check_flexible_voice_leading,
         },
     )
     vl_maintain_consonance: bool = fld(
@@ -2042,7 +2020,7 @@ class SettingsDataclass(SettingsBase):
             "mutable_attrs": {},
             "category": "chord_tones",
             "priority": 4,
-            "val_dict": {"min_": (0,)},
+            "val_dict": {"open_min": (0,)},
         },
     )
     scale_short_chord_tones_down: bool = fld(
@@ -2293,13 +2271,6 @@ class SettingsDataclass(SettingsBase):
         },
     )
     # MAYBE all modulos have boolean to be truncated by initial_pattern_len?
-    # consonance_modulo: Union[
-    #     None,
-    #     Number,
-    #     Sequence[
-    #         Union[Number, Sequence[Number]]
-    #     ],
-    # ] = fld(
     consonance_modulo: Optional[PerVoiceSuperSequence[Metron]] = fld(
         default=None,
         metadata={
@@ -2317,7 +2288,6 @@ class SettingsDataclass(SettingsBase):
             "priority": 2,
         },
     )
-    # forbidden_intervals: Optional[ItemOrSequence[Pitch]] = fld(
     forbidden_intervals: Optional[ItemOrSequence[Pitch]] = fld(
         default=None,
         metadata={
@@ -2327,7 +2297,6 @@ class SettingsDataclass(SettingsBase):
             "expected_constants": ("specific_interval",),
         },
     )
-    # forbidden_interval_classes: Optional[ItemOrSequence[Pitch]] = fld(
     forbidden_interval_classes: Optional[ItemOrSequence[Pitch]] = fld(
         default=None,
         metadata={
@@ -2337,13 +2306,6 @@ class SettingsDataclass(SettingsBase):
             "expected_constants": ("specific_interval",),
         },
     )
-    # forbidden_interval_modulo: Union[
-    #     None,
-    #     Number,
-    #     Sequence[
-    #         Union[Number, Sequence[Number]]
-    #     ],
-    # ] = fld(
     forbidden_interval_modulo: Optional[PerVoiceSuperSequence[Metron]] = fld(
         default=None,
         metadata={
@@ -2381,9 +2343,6 @@ class SettingsDataclass(SettingsBase):
             "priority": 4,
         },
     )
-    # consonant_chords: Sequence[
-    #     Union[np.ndarray, Sequence[Number]]
-    # ] = fld(
     consonant_chords: SuperSequence[Pitch] = fld(
         default=(
             "MAJOR_TRIAD",
@@ -2562,10 +2521,6 @@ class SettingsDataclass(SettingsBase):
             "val_dict": {"min_": (1 / 64,)},
         },
     )
-    # sub_subdivisions: Union[
-    #     None,
-    #     Sequence[Union[int, Sequence[int]]],
-    # ] = fld(
     sub_subdivisions: Optional[PerVoiceSuperSequence[int]] = fld(
         default=None,
         metadata={
@@ -2593,12 +2548,6 @@ class SettingsDataclass(SettingsBase):
             "postprocess": check_min_dur,
         },
     )
-    # obligatory_onsets: Union[
-    #     None,
-    #     Sequence[
-    #         Union[Number, Sequence[Number]],
-    #     ],
-    # ] = fld(
     obligatory_onsets: Optional[PerVoiceSuperSequence[Metron]] = fld(
         default=None,
         metadata={
@@ -2615,9 +2564,6 @@ class SettingsDataclass(SettingsBase):
             "priority": 2,
         },
     )
-    # comma_position: Union[
-    #     str, int, Sequence[Union[str, int]]
-    # ] = fld(
     comma_position: PerVoiceSequence[Union[str, int]] = fld(
         default="end",
         metadata={
@@ -2654,7 +2600,6 @@ class SettingsDataclass(SettingsBase):
             "priority": 1,
         },
     )
-    # choir_assignments: Union[None, Sequence[int]] = fld(
     choir_assignments: Optional[PerVoiceSequence[int]] = fld(
         default=None,
         metadata={
@@ -2678,6 +2623,7 @@ class SettingsDataclass(SettingsBase):
             "mutable_attrs": {},
             "category": "choir",
             "priority": 1,
+            "val_dict": {"open_min": (0,)},
         },
     )
     length_choir_loop: Union[None, Metron] = fld(
@@ -2749,9 +2695,6 @@ class SettingsDataclass(SettingsBase):
             "priority": 2,
         },
     )
-    # transpose_intervals: Union[
-    #     None, Number, Sequence[Number]
-    # ] = fld(
     transpose_intervals: Optional[ItemOrSequence[Pitch]] = fld(
         default=None,
         metadata={
@@ -2783,9 +2726,6 @@ class SettingsDataclass(SettingsBase):
     ###################################################################
     # Tempo settings
 
-    # tempo_len: Union[
-    #     None, Number, Sequence[Number]
-    # ] = fld(
     tempo_len: Optional[ItemOrSequence[Metron]] = fld(
         default=None,
         metadata={
@@ -2805,9 +2745,6 @@ class SettingsDataclass(SettingsBase):
             "priority": 3,
         },
     )
-    # tempo: Union[
-    #     None, Number, Sequence[Number]
-    # ] = fld(
     tempo: Optional[ItemOrSequence[Tempo]] = fld(
         default=120,
         metadata={

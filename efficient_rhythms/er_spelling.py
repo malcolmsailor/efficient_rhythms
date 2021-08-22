@@ -220,6 +220,9 @@ def build_spelling_dict(tet, forward=True, letter_format="shell", fifth=None):
 
     flat_sign = "b" if letter_format == "shell" else "-"
     accidental_n = 0
+    # In very small temperaments (e.g., "1-tet") c_pitch_class won't get
+    # assigned within the loop below, so we initialize it here to 0.
+    c_pitch_class = 0
 
     while True:
         if len(unnormalized_dict.items()) >= tet and (

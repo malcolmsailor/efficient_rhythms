@@ -9,7 +9,6 @@ from . import er_exceptions
 from . import er_globals
 from . import er_interface
 from . import er_make_handler
-from . import er_misc_funcs
 from . import er_midi
 from . import er_midi_settings
 from . import er_output_notation
