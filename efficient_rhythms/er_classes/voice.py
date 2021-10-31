@@ -6,8 +6,9 @@ import copy
 #   standard library?
 import sortedcontainers
 
+import mspell
+
 from .. import er_classes
-from .. import er_spelling
 
 
 class DumbSortedList(list):
@@ -124,7 +125,7 @@ class Voice:
         self.voice_i = voice_i
         self.tet = tet
         try:
-            self.speller = er_spelling.Speller(tet, pitches=True)
+            self.speller = mspell.Speller(tet, pitches=True)
         except ValueError:
             self.speller = lambda x: x
         self.range = voice_range

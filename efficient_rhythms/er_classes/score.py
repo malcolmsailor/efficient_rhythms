@@ -2,8 +2,9 @@ import copy
 
 import sortedcontainers
 
+import mspell
+
 from .. import er_classes
-from .. import er_spelling
 
 
 class HarmonyTimes:
@@ -91,7 +92,7 @@ class Score:
             self.harmony_times_dict = None
         self.tet = tet
         try:
-            self.speller = er_spelling.Speller(tet, pitches=True)
+            self.speller = mspell.Speller(tet, pitches=True)
         except ValueError:
             self.speller = lambda x: x
         self.existing_voices = []

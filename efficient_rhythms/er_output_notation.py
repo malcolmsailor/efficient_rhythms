@@ -17,8 +17,13 @@ import re
 import shutil
 from fractions import Fraction
 
+# TODO document mspell requirements, make sure mspell is on
+#   pypi
+
+import mspell
+
+
 from . import er_misc_funcs
-from . import er_spelling
 from . import er_tuning
 
 
@@ -214,7 +219,7 @@ def get_kern(super_pattern):
     unbreakable_value = Fraction(1, 1)
 
     num_voices = len(super_pattern.voices)
-    speller = er_spelling.GroupSpeller(tet=super_pattern.tet)
+    speller = mspell.GroupSpeller(tet=super_pattern.tet, letter_format="kern")
 
     voice_ps = [[] for voice_i in range(num_voices)]
     ties = [{} for voice_i in range(num_voices)]
@@ -231,9 +236,7 @@ def get_kern(super_pattern):
             harmony_time.start_time, harmony_time.end_time, make_copy=False
         )
         for voice_i, voice in enumerate(harmony.voices):
-            spelled = speller.pitches(
-                [note.pitch for note in voice], rests="r", letter_format="kern"
-            )
+            spelled = speller.pitches([note.pitch for note in voice])
             voice_ps[voice_i].extend(
                 [note.pitch for note in voice if note.pitch]
             )
