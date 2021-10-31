@@ -1,10 +1,11 @@
 import math
-import typing
 
 import numpy as np
 
 from . import er_misc_funcs
 from . import er_tuning
+
+# TODO replace with library
 
 
 def get_accidental(n, flat_sign="b"):
@@ -280,7 +281,8 @@ class Speller:
         return_type: string. If "string", when instance is called, it will
             delegate to self.spelled_string(); if "list", it will delegate to
             self.spelled_list(). Other values will raise a ValueError.
-            Default: "string".
+            NB string no longer implemented
+            Default: "list".
         letter_format: string.
             Possible values:
                 "shell": e.g., "C4", "Ab2", "F#7"
@@ -303,7 +305,7 @@ class Speller:
         tet=12,
         pitches=False,
         rests=True,
-        return_type="string",
+        return_type="list",
         letter_format="shell",
     ):
         self._tet = tet
@@ -313,6 +315,8 @@ class Speller:
             raise ValueError(
                 f"return_type {return_type} not in ('string', 'list')"
             )
+        elif return_type == "string":
+            raise NotImplementedError
         self._return_type = return_type
         if letter_format == "shell":
             self._pitch = self._shell_pitch
@@ -400,30 +404,16 @@ class Speller:
 
         return self._pitch(pitch_class, item)
 
-    def spelled_string(self, item, pitches=None):
-        if isinstance(item, typing.Sequence) and not isinstance(item, str):
-            flat = flatten(item)
-            if any([isinstance(f, str) for f in flat]):
-                if not all([isinstance(f, str) for f in flat]):
-                    raise TypeError
-                return " ".join(flat)
-            return " ".join(self.spelled_list(flat, pitches=pitches))
 
-        if isinstance(item, str):
-            return item
-        return self.spelled_list(item, pitches=pitches)
+# This function is duplicated between er_misc_funcs and this file
+def flatten(item, iter_types=(list, tuple, np.ndarray)):
+    """Flattens an iterable of iterables.
 
-
-def flatten(item, iter_types=(list, tuple)):
-    """Flattens an iterable of iterables. Can contain irregularly nested
-    iterables. Returns a list.
+    Can contain irregularly nested iterables. Returns a generator.
 
     Keyword args:
         iter_types: a tuple of types that should be considered 'iterables'.
             Default: (list, tuple).
-
-    Returns:
-        list
 
     Raises:
         TypeError if outer item is not in iter_types.
@@ -432,17 +422,13 @@ def flatten(item, iter_types=(list, tuple)):
     def _sub(item):
         iterable = isinstance(item, iter_types)
         if iterable:
-            out = []
             for sub_item in item:
-                out += _sub(sub_item)
-            return out
-
-        return [
-            item,
-        ]
+                for atom in _sub(sub_item):
+                    yield atom
+        else:
+            yield item
 
     if not isinstance(item, iter_types):
         raise TypeError("Outer item must be an iterable in iter_types")
-    out = []
-    out += _sub(item)
-    return out
+    for atom in _sub(item):
+        yield atom

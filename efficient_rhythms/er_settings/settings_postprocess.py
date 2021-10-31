@@ -156,7 +156,8 @@ class SettingsPostprocessor(SettingsDataclass):
         return out
 
     @cached_property
-    def already_warned(self):
+    @staticmethod
+    def already_warned():
         """Certain warnings should only occur once, even though the situation
         that provokes them may occur many times. This dictionary helps keep
         track of that.
@@ -222,24 +223,25 @@ class SettingsPostprocessor(SettingsDataclass):
                 out[voice_i] = _num_notes(voice_i)
         return tuple(out)
 
-    @cached_property
-    def onset_subdivision_gcd(self):
-        # TODO what do I actually use these gcds for?
-        return er_misc_funcs.gcd_from_list(
-            self.onset_subdivision,
-            self.sub_subdiv_props,
-            self.pattern_len,
-            self.harmony_len,
-            self.rhythm_len,
-            self.obligatory_onsets,
-            self.obligatory_onsets_modulo,
-        )
+    # It appears the gcd properties below are unused
+    # TODO remove
+    # @cached_property
+    # def onset_subdivision_gcd(self):
+    #     return er_misc_funcs.gcd_from_list(
+    #         self.onset_subdivision,
+    #         self.sub_subdiv_props,
+    #         self.pattern_len,
+    #         self.harmony_len,
+    #         self.rhythm_len,
+    #         self.obligatory_onsets,
+    #         self.obligatory_onsets_modulo,
+    #     )
 
-    @cached_property
-    def er_dur_gcd(self):
-        return er_misc_funcs.gcd_from_list(
-            self.onset_subdivision_gcd, self.dur_subdivision, self.min_dur
-        )
+    # @cached_property
+    # def er_dur_gcd(self):
+    #     return er_misc_funcs.gcd_from_list(
+    #         self.onset_subdivision_gcd, self.dur_subdivision, self.min_dur
+    #     )
 
     @cached_property
     def rhythmic_unison_followers(self):

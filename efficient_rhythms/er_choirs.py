@@ -159,7 +159,6 @@ def assign_choirs(er, super_pattern):
             choir_assignments = er.choir_order[voice_i]
             for note in voice:
                 onset = note.onset
-                # TODO remove cast?
                 choir_i = int(onset // er.length_choir_segments)
                 if er.choir_segments_dovetail:
                     try:

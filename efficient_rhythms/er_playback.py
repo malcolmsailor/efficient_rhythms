@@ -24,26 +24,14 @@ def init_and_return_midi_player(shell=False):
 
     Returns name of midi player.
     """
-    # TODO document environment variable somewhere
     if shell:
+        # If EFFRHY_MIDI_PLAYER environment variable is defined, we understand
+        #   it to be an executable we will call to playback midi files
         if "EFFRHY_MIDI_PLAYER" in os.environ:
             print(
                 f"Using `{os.environ['EFFRHY_MIDI_PLAYER']}` for midi playback"
             )
             return "environment"
-        # TODO don't uncomment this (which is obsolete I think)
-        #   but document EFFRHY_MIDI_PLAYER elsewhere
-        #  if not sys.platform.startswith("darwin"):
-        #  print(
-        #  """For shell midi playback, you must put a midi
-        #  player executable (e.g., timidity) in the environment
-        #  variable EFFRHY_MIDI_PLAYER, e.g.
-        #
-        #  export EFFRHY_MIDI_PLAYER=timidity"""
-        #  )
-        #  sys.exit(1)
-        # if tet != 12:
-        #     return "fluidsynth"
         pygame.mixer.init()
         print("Using pygame for midi playback")
         return "pygame"

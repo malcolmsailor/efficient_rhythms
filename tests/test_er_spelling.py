@@ -42,9 +42,7 @@ def test_build_fifth_class_spelling_dict():
         assert (
             spell_dict[pc] == shell_spelled
         ), "spell_dict[pc] != shell_spelled"
-        assert (
-            kern_dict[pc] == kern_spelled
-        ), "kern_dict[pc] != kern_spelled"
+        assert kern_dict[pc] == kern_spelled, "kern_dict[pc] != kern_spelled"
 
 
 def test_speller():

@@ -439,29 +439,32 @@ def convert_to_fractions(item, max_denominator=MAX_DENOMINATOR):
     )
 
 
-def flatten(item):
-    """Flattens an iterable of iterables. Can contain irregularly nested
-    iterables. Returns a list."""
+def flatten(item, iter_types=(list, tuple, np.ndarray)):
+    """Flattens an iterable of iterables.
+
+    Can contain irregularly nested iterables. Returns a generator.
+
+    Keyword args:
+        iter_types: a tuple of types that should be considered 'iterables'.
+            Default: (list, tuple).
+
+    Raises:
+        TypeError if outer item is not in iter_types.
+    """
 
     def _sub(item):
-        try:
-            iter(item)
-            iterable = True
-        except TypeError:
-            iterable = False
+        iterable = isinstance(item, iter_types)
         if iterable:
-            out = []
             for sub_item in item:
-                out += _sub(sub_item)
-            return out
+                for atom in _sub(sub_item):
+                    yield atom
+        else:
+            yield item
 
-        return [
-            item,
-        ]
-
-    out = []
-    out += _sub(item)
-    return out
+    if not isinstance(item, iter_types):
+        raise TypeError("Outer item must be an iterable in iter_types")
+    for atom in _sub(item):
+        yield atom
 
 
 class LCMError(Exception):
@@ -476,6 +479,7 @@ def lcm(numbers, max_n=2 ** 15):
     Returns an error if there's no lcm smaller than max_n.
     """
 
+    # TODO There has got to be a more efficient way to find a LCM!
     def _lcm_sub(num1, num2):
         i = 1
         while True:
@@ -493,7 +497,7 @@ def lcm(numbers, max_n=2 ** 15):
             "Zero does not have common multiples with any other number."
         )
 
-    numbers = flatten(numbers)
+    numbers = list(flatten(numbers))
     original_numbers = numbers
     numbers = convert_to_fractions(numbers)
 
@@ -511,50 +515,52 @@ def lcm(numbers, max_n=2 ** 15):
         numbers = new_numbers
 
 
-def fraction_gcd(frac1, frac2, min_n=2 ** (-15)):
-    """Returns the fractional GCD of two numbers."""
+# TODO remove, not called
+# def fraction_gcd(frac1, frac2, min_n=2 ** (-15)):
+#     """Returns the fractional GCD of two numbers."""
 
-    class GCDError(Exception):
-        pass
+#     class GCDError(Exception):
+#         pass
 
-    result = fractions.Fraction(
-        math.gcd(frac1.numerator, frac2.numerator),
-        lcm([frac1.denominator, frac2.denominator]),
-    )
+#     result = fractions.Fraction(
+#         math.gcd(frac1.numerator, frac2.numerator),
+#         lcm([frac1.denominator, frac2.denominator]),
+#     )
 
-    if result < min_n:
-        raise GCDError(f"No GCD larger than {min_n}.")
+#     if result < min_n:
+#         raise GCDError(f"No GCD larger than {min_n}.")
 
-    return result
+#     return result
 
 
-def gcd_from_list(*numbers, min_n=2 ** (-15)):
-    """Can take any list, not necessarily a flat list. Converts all numbers
-    to fractions.
+# TODO remove, not called
+# def gcd_from_list(*numbers, min_n=2 ** (-15)):
+#     """Can take any list, not necessarily a flat list. Converts all numbers
+#     to fractions.
 
-    Any values of 0 or None in the input are ignored.
-    """
+#     Any values of 0 or None in the input are ignored.
+#     """
 
-    numbers = [
-        number
-        for number in flatten(numbers)
-        if (number != 0 and number is not None)
-    ]
-    numbers = convert_to_fractions(numbers)
+#     numbers = [
+#         number
+#         for number in flatten(numbers)
+#         if (number != 0 and number is not None)
+#     ]
+#     numbers = convert_to_fractions(numbers)
 
-    while True:
-        if len(numbers) == 1:
-            return numbers[0]
-        new_numbers = []
-        for j in range(0, len(numbers), 2):
-            num1 = numbers[j]
-            if j + 1 < len(numbers):
-                num2 = numbers[j + 1]
-                new_numbers.append(fraction_gcd(num1, num2, min_n=min_n))
-            else:
-                new_numbers.append(num1)
+#     while True:
+#         if len(numbers) == 1:
+#             return numbers[0]
+#         new_numbers = []
+#         for j in range(0, len(numbers), 2):
+#             num1 = numbers[j]
+#             if j + 1 < len(numbers):
+#                 num2 = numbers[j + 1]
+#                 new_numbers.append(fraction_gcd(num1, num2, min_n=min_n))
+#             else:
+#                 new_numbers.append(num1)
 
-        numbers = new_numbers
+#         numbers = new_numbers
 
 
 def set_seed(seed, print_out=True):
@@ -908,8 +914,10 @@ def get_scale_index(scale, pitch, up_or_down=0, return_adjustment_sign=False):
 
 def get_generic_interval(er, harmony_i, pitch, prev_pitch):
     scale = er.get(harmony_i, "gamut_scales")
-    # TODO consider restoring random behavior of get_scale_index
-    prev_scale_index = get_scale_index(scale, prev_pitch, up_or_down=1)
+    # I had set up_or_down to 1 at one point because I believe the randomness
+    #   was causing issues with testing or reproducibility. But it appears to be
+    #   ok now.
+    prev_scale_index = get_scale_index(scale, prev_pitch, up_or_down=0)
     scale_index = scale.index(pitch)
 
     return scale_index - prev_scale_index
@@ -917,8 +925,10 @@ def get_generic_interval(er, harmony_i, pitch, prev_pitch):
 
 def apply_generic_interval(er, harmony_i, generic_interval, prev_pitch):
     scale = er.get(harmony_i, "gamut_scales")
-    # TODO consider restoring random behavior of get_scale_index
-    prev_scale_index = get_scale_index(scale, prev_pitch, up_or_down=-1)
+    # I had set up_or_down to -1 at one point because I believe the randomness
+    #   was causing issues with testing or reproducibility. But it appears to be
+    #   ok now.
+    prev_scale_index = get_scale_index(scale, prev_pitch, up_or_down=0)
     new_pitch = scale[prev_scale_index + generic_interval]
     return new_pitch
 

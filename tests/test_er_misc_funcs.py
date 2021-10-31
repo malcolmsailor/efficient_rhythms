@@ -8,6 +8,18 @@ import efficient_rhythms.er_classes as er_classes
 import efficient_rhythms.er_settings as er_settings
 
 
+def test_flatten():
+    tests = [
+        ([[0, 1], [2], 3, [[4, 5], 6]], 7),
+        ([], 0),
+        ([0], 1),
+        ([0, 1, 2], 3),
+    ]
+    for l, n in tests:
+        out = er_misc_funcs.flatten(l)
+        assert all(x == y for (x, y) in zip(out, range(n)))
+
+
 def test_check_modulo():
     assert (
         er_misc_funcs.check_modulo(3, 2) == 1
@@ -444,7 +456,7 @@ def test_get_lowest_of_each_pc_in_set():
     assert lowests[11] == 23
     assert lowests[35 % 12] == 23
     assert lowests[2] == 14
-    pitch_set = [i for i in range(8)]
+    pitch_set = list(range(8))
     lowests = er_misc_funcs.get_lowest_of_each_pc_in_set(pitch_set, tet=5)
     assert lowests[1] == 1
     assert lowests[7 % 5] == 2
@@ -459,3 +471,4 @@ if __name__ == "__main__":
     test_binary_search()  # pylint: disable=no-value-for-parameter
     test_binary_search_not_found()  # pylint: disable=no-value-for-parameter
     test_get_lowest_of_each_pc_in_set()
+    test_flatten()

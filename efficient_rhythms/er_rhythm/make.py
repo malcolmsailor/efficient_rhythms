@@ -17,17 +17,17 @@ from .grid import Grid
 
 
 def _obligatory_onsets(er, voice_i):
-    oblig_onsets, oblig_mod, rhythm_len = er.get(
-        voice_i, "obligatory_onsets", "obligatory_onsets_modulo", "rhythm_len"
-    )
+    oblig_onsets = er.obligatory_onsets[voice_i]
     if not oblig_onsets:
         return ()
     out = []
     i = 0
     while True:
         rep_i, onset_i = divmod(i, len(oblig_onsets))
-        onset = rep_i * oblig_mod + oblig_onsets[onset_i]
-        if onset >= rhythm_len:
+        onset = (
+            rep_i * er.obligatory_onsets_modulo[voice_i] + oblig_onsets[onset_i]
+        )
+        if onset >= er.rhythm_len[voice_i]:
             break
         out.append(onset)
         i += 1
@@ -54,9 +54,7 @@ def _obligatory_onset_indices(er, voice_i, onset_positions):
     return tuple(out)
 
 
-def _filter_indices(
-    leaders, condition, conjunction, onset_positions, oblig_indices
-):
+def _filter_indices(leaders, condition, conjunction, oblig_indices):
     bool_mask = condition(leaders[0])
     for i in range(1, len(leaders)):
         bool_mask = conjunction(condition(leaders[i]), bool_mask)
@@ -77,9 +75,7 @@ def _hocketing_indices(
     leaders = [r.onsets for r in set(leaders)]
     condition = lambda x: np.isin(onset_positions, x, invert=True)
     conjunction = np.logical_and
-    return _filter_indices(
-        leaders, condition, conjunction, onset_positions, oblig_indices
-    )
+    return _filter_indices(leaders, condition, conjunction, oblig_indices)
 
 
 def _quasi_unison_constrained_indices(
@@ -154,15 +150,11 @@ def _quasi_unison_indices(
     condition = lambda x: np.isin(onset_positions, x)
     # conjunction = np.logical_or
     conjunction = None
-    out = _filter_indices(
-        leaders, condition, conjunction, onset_positions, oblig_indices
-    )
+    out = _filter_indices(leaders, condition, conjunction, oblig_indices)
     return out, {}
 
 
 def _add_comma(er, voice_i, onset_positions, comma):
-    # TODO add comma to *onset positions* rather than to *onsets*
-    # modifies onsets in-place
     if not comma or er.cont_rhythms != "none":
         return
     comma_position = er.comma_position[voice_i]
@@ -197,11 +189,11 @@ def _onset_positions(er, voice_i):
     if er.cont_rhythms == "grid":
         return er.grid.initial_onset_positions
 
-    # TODO I believe I can remove all calls to "er.get" in this module
-    rhythm_len, onset_subdivision, proportions = er.get(
-        voice_i, "rhythm_len", "onset_subdivision", "sub_subdiv_props"
-    )
-    n_onsets, comma = divmod(rhythm_len, onset_subdivision)
+    # I removed calls to "er.get" in this module because they should be
+    #   unnecessary because we pad these properties to len(num_voices)
+    onset_subdivision = er.onset_subdivision[voice_i]
+    proportions = er.sub_subdiv_props[voice_i]
+    n_onsets, comma = divmod(er.rhythm_len[voice_i], onset_subdivision)
     indices = np.arange(n_onsets)
     onset_positions = indices * onset_subdivision
     if proportions is not None:
