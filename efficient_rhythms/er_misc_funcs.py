@@ -42,14 +42,13 @@ def silently_run_process(commands, stdin=None):
 def check_modulo(n, mod):
     """arguments:
     mod: a number, or a list. If a number just returns n % mod.
-        If a list, needs to be in 'cumulative' format.
+        If a list, needs to be in 'cumulative' format. Behavior is undefined if
+        list is not sorted.
     """
     try:
         return n % mod
     except TypeError:
         pass
-    # total_mod = max(mod)
-    # TODO ensure sorted
     total_mod = mod[-1]
 
     x_vals = []
@@ -513,54 +512,6 @@ def lcm(numbers, max_n=2 ** 15):
             else:
                 new_numbers.append(num1)
         numbers = new_numbers
-
-
-# TODO remove, not called
-# def fraction_gcd(frac1, frac2, min_n=2 ** (-15)):
-#     """Returns the fractional GCD of two numbers."""
-
-#     class GCDError(Exception):
-#         pass
-
-#     result = fractions.Fraction(
-#         math.gcd(frac1.numerator, frac2.numerator),
-#         lcm([frac1.denominator, frac2.denominator]),
-#     )
-
-#     if result < min_n:
-#         raise GCDError(f"No GCD larger than {min_n}.")
-
-#     return result
-
-
-# TODO remove, not called
-# def gcd_from_list(*numbers, min_n=2 ** (-15)):
-#     """Can take any list, not necessarily a flat list. Converts all numbers
-#     to fractions.
-
-#     Any values of 0 or None in the input are ignored.
-#     """
-
-#     numbers = [
-#         number
-#         for number in flatten(numbers)
-#         if (number != 0 and number is not None)
-#     ]
-#     numbers = convert_to_fractions(numbers)
-
-#     while True:
-#         if len(numbers) == 1:
-#             return numbers[0]
-#         new_numbers = []
-#         for j in range(0, len(numbers), 2):
-#             num1 = numbers[j]
-#             if j + 1 < len(numbers):
-#                 num2 = numbers[j + 1]
-#                 new_numbers.append(fraction_gcd(num1, num2, min_n=min_n))
-#             else:
-#                 new_numbers.append(num1)
-
-#         numbers = new_numbers
 
 
 def set_seed(seed, print_out=True):

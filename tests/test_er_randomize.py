@@ -7,8 +7,6 @@ import efficient_rhythms.er_exceptions as er_exceptions
 import efficient_rhythms.er_make as er_make
 import efficient_rhythms.er_settings as er_settings
 
-# TODO see how this interacts with pytest...
-
 
 def test_many_seeds():
     num_seeds = 100

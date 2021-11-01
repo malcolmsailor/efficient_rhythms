@@ -125,7 +125,6 @@ def output_notation(settings, pattern, args):
     if not rhythms_ok:
         # check_rhythms already prints an error message so we don't print
         # another one here
-        # TODO document this error code
         sys.exit(1)
     try:
         result = er_output_notation.run_verovio(

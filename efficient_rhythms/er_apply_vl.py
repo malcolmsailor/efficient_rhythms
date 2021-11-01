@@ -67,10 +67,7 @@ def apply_voice_leading(
     )
 
     prev_pitch = prev_note.pitch
-    try:
-        prev_pitch_index = prev_pc_scale.index(prev_pitch % er.tet)
-    except:
-        breakpoint()
+    prev_pitch_index = prev_pc_scale.index(prev_pitch % er.tet)
     voice_leading_interval = voice_leading[prev_pitch_index]
 
     new_pitch = prev_pitch + voice_leading_interval
@@ -81,11 +78,10 @@ def apply_voice_leading(
             voice_lead_error.out_of_range()
             return _fail()
 
-    # TODO warn if hard_bounds less than an octave
-    hard_bounds = er.get(voice_i, "hard_bounds")
-    while new_pitch < hard_bounds[0]:
+    l_bound, u_bound = er.get(voice_i, "hard_bounds")
+    while new_pitch < l_bound:
         new_pitch += er.tet
-    while new_pitch > hard_bounds[1]:
+    while new_pitch > u_bound:
         new_pitch -= er.tet
 
     if er.parallel_voice_leading:

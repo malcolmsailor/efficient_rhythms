@@ -21,6 +21,8 @@ TemperedPitchClass = NewType("TemperedPitchClass", int)
 PitchClass = NewType("PitchClass", Union[JustPitchClass, TemperedPitchClass])
 
 GenericInterval = NewType("GenericInterval", int)
+SpecificInterval = NewType("SpecificInterval", int)
+Interval = NewType("Interval", Union[GenericInterval, SpecificInterval])
 
 # class PitchSeq(Sequence[Pitch]):
 #     pass

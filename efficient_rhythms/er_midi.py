@@ -294,11 +294,14 @@ def add_er_voice(er, voice_i, voice, mf, force_choir=None):
         if er.humanize:
             note = humanize(er, note=note)
         if er.tet == 12:
-            # TODO we should raise an error if pitch is not in range, or else
-            # remove this check
             if 0 <= note.pitch <= 127:
                 add_note(mf.tracks[track_i], note)
                 empty = False
+            else:
+                raise ValueError(
+                    f"Note pitch {note.pitch} is not in range "
+                    "[0-127]; this is probably a bug in this script"
+                )
             continue
 
         midi_num, pitch_bend = er.pitch_bend_tuple_dict[note.pitch]
@@ -438,7 +441,7 @@ def write_tempi(er, mf, total_len):
         if er.tempo:
             tempo = er.get(tempo_i, "tempo")
         else:
-            # TODO adapt to preprocessing
+            # ideally I should adapt this to preprocessing
             tempo = random.randrange(*er.tempo_bounds)
         mf.tracks[META_TRACK].append(
             mido.MetaMessage(

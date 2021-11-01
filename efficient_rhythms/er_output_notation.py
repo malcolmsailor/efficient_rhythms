@@ -48,13 +48,13 @@ def check_rhythms(er):
     # As a heuristic, we just check if the rhythms are divisible by 128.
     # LONGTERM check other rhythmic features besides onset_subdivision,
     #   sub_subdivisions?
-    if any([len(x) > 1 for x in er.sub_subdivisions]):
+    if any(len(x) > 1 for x in er.sub_subdivisions):
         print(
             "Sorry, exporting to notation is not compatible with non-empty "
             "values of er.sub_subdivisions"
         )
         return False
-    if all([n % (1 / 128) == 0 for n in er.onset_subdivision]):
+    if all(n % (1 / 128) == 0 for n in er.onset_subdivision):
         return True
     print("Can't export notation because not all rhythms are divisible by 128")
     return False

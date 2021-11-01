@@ -34,6 +34,7 @@ from .postprocess_helpers import (
 from ..er_types import (
     Density,
     GenericInterval,
+    Interval,
     ItemOrSequence,
     Metron,
     PerVoiceSequence,
@@ -64,7 +65,7 @@ CATEGORIES = (
 )
 
 
-# TODO setting to give notes different velocities depending on their
+# LONGTERM setting to give notes different velocities depending on their
 #   subdivision
 
 
@@ -1831,7 +1832,7 @@ class SettingsDataclass(SettingsBase):
     #       These settings govern how the initial pattern is voice-led
     #       through subsequent harmonies.
 
-    # TODO make compatible with constrain_voice_leading_to_ranges
+    # LONGTERM make compatible with constrain_voice_leading_to_ranges
     parallel_voice_leading: bool = fld(
         default=False,
         metadata={
@@ -1840,7 +1841,7 @@ class SettingsDataclass(SettingsBase):
             "priority": 2,
         },
     )
-    # TODO "alternate" option
+    # LONGTERM "alternate" option
     parallel_direction: str = fld(
         default="closest",
         metadata={
@@ -1862,7 +1863,7 @@ class SettingsDataclass(SettingsBase):
 
     # LONGTERM address fact that otherwise forbidden intervals can occur
     #   if this setting is not "none"
-    # TODO add "first", "first_lowest"
+    # LONGTERM add "first", "first_lowest"
     preserve_foot_in_bass: str = fld(
         default="none",
         metadata={
@@ -2114,8 +2115,7 @@ class SettingsDataclass(SettingsBase):
             "mutable_attrs": {},
             "category": "melody",
             "priority": 3,
-            # TODO limit to generic intervals
-            "expected_constants": ("interval",),
+            "expected_constants": ("generic_interval",),
         },
     )
 
@@ -2330,7 +2330,6 @@ class SettingsDataclass(SettingsBase):
             "mutable_attrs": {},
             "category": "consonance",
             "priority": 1,
-            # TODO
             "expected_constants": ("interval",),
             "postprocess": check_invert_consonances,
         },
@@ -2704,8 +2703,7 @@ class SettingsDataclass(SettingsBase):
             "expected_constants": ("specific_interval",),
         },
     )
-    # TODO interval type
-    cumulative_max_transpose_interval: Pitch = fld(
+    cumulative_max_transpose_interval: Interval = fld(
         default=5,
         metadata={
             "mutable_attrs": {},
@@ -2754,7 +2752,7 @@ class SettingsDataclass(SettingsBase):
             "fill_none": random_tempi,
         },
     )
-    # TODO num_tempi
+    # LONGTERM num_tempi
 
     # LONGTERM implement, also update to effect a voice leading from
     # harmony_n of the harmonies
@@ -2812,7 +2810,6 @@ class SettingsDataclass(SettingsBase):
     ###################################################################
     # Randomization settings
 
-    # TODO debug None
     exclude_from_randomization: Union[None, Sequence[str]] = fld(
         default=None,
         metadata={

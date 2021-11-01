@@ -85,7 +85,7 @@ class Filter(Changer):
 
         if (
             self.adjust_dur != "None"  # pylint: disable=no-member
-            and voice.is_polyphonic()
+            and voice.is_polyphonic
         ):
             print(
                 er_misc_funcs.add_line_breaks(

@@ -111,10 +111,6 @@ def voice_lead_pattern_flexibly(er, score, vl_error, pattern_vl_i=0):
     if new_notes is None:
         return False
 
-    # TODO I think there should be a flag for whether to enter the strict
-    #   voice-leading function at all. If it is True, then strict voice-leadings
-    #   will be exhausted before moving on to flexible voice leadings. This
-    #   may or may not be desired.
     if er.allow_strict_voice_leading and voice_lead_pattern_strictly(
         er, score, vl_error, pattern_vl_i=pattern_vl_i + 1
     ):
@@ -168,7 +164,8 @@ def strict_voice_leading_loop(er, score, voice_lead_error, voice, vl_item):
             # This loop will only work if the voice is monophonic (because
             # it expects indices of onsets to be in one-to-one
             # correspondance with notes). Which it
-            # should be. But this should probably be enforced somehow. TODO
+            # should be. We could enforce this with a check but it seems
+            # like that would create a lot of overhead.
             prev_note = voice.get_notes_by_i(prev_note_j)[0]
             new_onset, new_dur = rhythm.get_onset_and_dur(new_note_j)
             new_note, vl_motion_tup, = er_apply_vl.apply_voice_leading(

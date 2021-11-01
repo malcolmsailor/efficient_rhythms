@@ -194,7 +194,7 @@ def test_voice():
     voice.remove_passage(end_time=1.0)
     assert len(voice[1.5]) == 2, "len(voice[1.5]) != 2"
     voice.remove_passage()
-    assert voice.is_empty()
+    assert voice.is_empty
     for note_obj in note_objs:
         voice.add_note(note_obj)
     voice.displace_passage(1)

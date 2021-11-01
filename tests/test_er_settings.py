@@ -35,9 +35,8 @@ def test_field_process():
         ("transpose_intervals", 2),
         ("interval_cycle", None, ()),
         ("interval_cycle", 2),
-        # TODO test
-        # ("forbidden_interval_modulo", None),
-        # ("forbidden_interval_modulo", [0, 2]),
+        ("forbidden_interval_modulo", None, []),
+        ("forbidden_interval_modulo", [[0, 2]]),
     ]
     for test in tests:
         if len(test) == 3:

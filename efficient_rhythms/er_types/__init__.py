@@ -3,6 +3,8 @@ from .types_ import (
     Quantity,
     DensityOrQuantity,
     GenericInterval,
+    SpecificInterval,
+    Interval,
     ItemOrSequence,
     Metron,
     PerVoiceSequence,

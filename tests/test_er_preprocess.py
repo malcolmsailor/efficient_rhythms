@@ -1,5 +1,3 @@
-# TODO rename this file?
-
 import os
 
 import numpy as np

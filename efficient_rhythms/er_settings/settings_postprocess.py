@@ -164,6 +164,7 @@ class SettingsPostprocessor(SettingsDataclass):
         """
         return {
             "force_foot": set(),
+            "hard_bounds": set(),
         }
 
     @cached_property

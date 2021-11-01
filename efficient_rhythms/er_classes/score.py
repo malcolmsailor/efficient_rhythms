@@ -253,7 +253,7 @@ class Score:
 
         non_empty_voices = list(range(self.num_voices))
         for voice_i, voice in enumerate(self.voices):
-            if voice.is_empty():
+            if voice.is_empty:
                 non_empty_voices.remove(voice_i)
 
         new_voices = er_classes.VoiceList()

@@ -569,7 +569,7 @@ class ChannelExchangerTransformer(Transformer):
             self.mark_note(note)
 
 
-# # TODO implement
+# # LONGTERM implement
 # class ShepherdTransformer(Transformer):
 #     pretty_name = "Shepherd tone transformer"
 
@@ -900,7 +900,7 @@ class SubdivideTransformer(Transformer):
         # voice.update_sort()
 
 
-# TODO finish implementing or delete
+# LONGTERM finish implementing or delete
 # class LoopTransformer(Transformer):
 #     pretty_name = "Loop transformer"
 

@@ -134,3 +134,13 @@ def notify_user_of_unusual_settings(er, silent=False):
                 "This is likely to lead to excess repeated notes."
             )
         )
+
+    for i, (l_bound, u_bound) in enumerate(er.hard_bounds):
+        if u_bound - l_bound < er.tet:
+            warnings.warn(
+                er_misc_funcs.add_line_breaks(
+                    f"Hard bounds at index {i} are less than an octave "
+                    f"(tet={er.tet}); it is recommended they be at least an "
+                    "octave."
+                )
+            )

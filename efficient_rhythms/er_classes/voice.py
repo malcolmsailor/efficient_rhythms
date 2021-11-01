@@ -2,7 +2,7 @@ import collections
 import copy
 
 
-# TODO how does sortedcontainers compare to just using bisect from the
+# LONGTERM how does sortedcontainers compare to just using bisect from the
 #   standard library?
 import sortedcontainers
 
@@ -74,9 +74,6 @@ class Voice:
     durations.
 
     Attributes:
-    # TODO update this list
-        data: a dictionary. Keys are onsets (fractions), values are
-            lists of Note objects, sorted by duration.
         other_messages: a list in which other midi messages are stored
             when constructing the voice from a midi file.
         voice_i: int. The index number of the voice, if stored in a
@@ -84,9 +81,14 @@ class Voice:
         tet: int.
         range: Nonetype, or tuple of two ints. Used in certain
             transformers.
+        is_empty
+        is_polyphonic
+        first_onset_and_notes
+        last_onset_and_notes
+        last_release_and_notes
+
 
     Methods:
-        is_polyphonic # TODO convert this to a (cached?) property
         get_notes_by_i
         add_note
         move_note
@@ -172,9 +174,11 @@ class Voice:
     def __delitem__(self, onset):
         self.remove_onset(onset)
 
+    @property
     def is_empty(self):  # TODO convert to property, document
         return len(self._data) == 0
 
+    @property
     def is_polyphonic(self):
         for onset in self._data:
             if len(self._data[onset]) > 1:

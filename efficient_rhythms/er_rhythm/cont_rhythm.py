@@ -39,7 +39,8 @@ class ContRhythmBase(RhythmBase):
         self.rhythm_len = dtype(rhythm_len)
         self.min_dur = dtype(min_dur)
         self.num_notes = num_notes
-        # TODO reduce increment if necessary as a function of min_dur etc.
+        # would be nice to reduce increment if necessary as a function of
+        # min_dur etc.
         self.increment = min(increment, rhythm_len)
         self.overlap = overlap
         self.var_palindrome = var_palindrome
@@ -73,7 +74,6 @@ class ContRhythmBase(RhythmBase):
         self._rand_int_u_bound = INT_MAX - (self.num_notes - 1) * (
             self._min_int_dur - 1
         )
-        # TODO what is the max value of increment?
         self._int_increment = INT_MAX / self.rhythm_len * self.increment
 
     def _get_iois(self, i=0):
@@ -111,9 +111,11 @@ class ContRhythmBase(RhythmBase):
         self._unspaced = self._unspaced + self._deltas
         # stable sort = timsort
         self._unspaced.sort(kind="stable")
-        # TODO how do we prevent more than the first item from becoming negative?
+        # how do we prevent more than the first item from becoming
+        # negative? (Later: I no longer understand what this comment is
+        # referring to)
         if self.always_start_at_zero:
-            # I guess doing this biases the output a little. TODO think about
+            # I guess doing this biases the output a little. LONGTERM think about
             # a better way of always starting from zero.
             self._unspaced[0] = 0
         else:
@@ -423,7 +425,7 @@ class ContRhythm(ContRhythmBase):
             er.rhythm_len[voice_i],
             er.min_dur[voice_i],
             er.num_notes[voice_i],
-            er.cont_var_increment[voice_i],  # TODO make per-voice
+            er.cont_var_increment[voice_i],
             er.overlap,
             er.num_cont_rhythm_vars[voice_i],
             er.vary_rhythm_consistently,
@@ -454,7 +456,7 @@ class ContRhythm(ContRhythmBase):
         _enforce_unique_value("pattern_len")
         _enforce_unique_value("rhythm_len")
 
-        # TODO can I remove this constraint?
+        # LONGTERM can I remove this constraint?
         if er.pattern_len[0] != er.rhythm_len[0]:
             warn_(
                 "`cont_rhythms = 'all'` is only implemented when "
