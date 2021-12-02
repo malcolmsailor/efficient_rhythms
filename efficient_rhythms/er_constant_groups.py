@@ -29,7 +29,7 @@ def format_value(node_value):
     except AttributeError:
         # we're in Python <= 3.8, before ast.unparse was introduced
         # TODO document this, add to requirements
-        import astunparse
+        import astunparse  # pylint: disable=import-outside-toplevel
 
         val = astunparse.unparse(node_value)
     m = re.match(numpy_re, val)

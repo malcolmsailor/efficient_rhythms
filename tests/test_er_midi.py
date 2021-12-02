@@ -1,10 +1,10 @@
 import itertools
 
-import efficient_rhythms.er_choirs as er_choirs
-import efficient_rhythms.er_make as er_make
-import efficient_rhythms.er_midi as er_midi
-import efficient_rhythms.er_settings as er_settings
-import efficient_rhythms.er_classes as er_classes
+from efficient_rhythms import er_choirs
+from efficient_rhythms import er_make
+from efficient_rhythms import er_midi
+from efficient_rhythms import er_settings
+from efficient_rhythms import er_classes
 
 
 def assay_write_track_names(

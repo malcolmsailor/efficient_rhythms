@@ -1,8 +1,8 @@
 import os
 import subprocess
 
-import efficient_rhythms.er_changers as er_changers
-import efficient_rhythms.er_classes as er_classes
+from efficient_rhythms import er_changers
+from efficient_rhythms import er_classes
 
 
 SCRIPT_DIR = os.path.dirname((os.path.realpath(__file__)))

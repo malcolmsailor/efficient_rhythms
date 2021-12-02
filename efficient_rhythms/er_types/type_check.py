@@ -80,3 +80,4 @@ def _check_type(type_hint, val):
             sub_type_hint = sub_type_hint_tup[0]
             for sub_val in val:
                 _check_type(sub_type_hint, sub_val)
+    return None

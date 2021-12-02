@@ -597,7 +597,7 @@ def add_track(track_i, track, midi_settings, mf):
         else:
             print(f"Message of type {msg.type} not written to file.")
 
-    no_finetuning = all([note.finetune == 0 for note in track])
+    no_finetuning = all(note.finetune == 0 for note in track)
     # if not no_finetuning:
     #     try:
     #         midi_settings.pitch_bend_tuple_dict

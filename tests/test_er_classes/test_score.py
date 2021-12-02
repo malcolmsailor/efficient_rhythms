@@ -1,5 +1,5 @@
-import efficient_rhythms.er_classes as er_classes
-import efficient_rhythms.er_settings as er_settings
+from efficient_rhythms import er_classes
+from efficient_rhythms import er_settings
 
 
 def test_get_prev_and_last_notes():
@@ -198,20 +198,20 @@ def test_between():
     voice_is = [v for v, _, _, _ in notes]
     for v, n in zip(voice_is, note_objs):
         score.add_note(v, n)
-    more_notes = [n for n in score.between()]
+    more_notes = list(score.between())
     assert note_objs == more_notes
-    more_notes = [n for n in score.between(start_time=0.5)]
+    more_notes = list(score.between(start_time=0.5))
     assert note_objs[2:] == more_notes
-    more_notes = [n for n in score.between(start_time=0.4)]
+    more_notes = list(score.between(start_time=0.4))
     assert note_objs[2:] == more_notes
-    more_notes = [n for n in score.between(end_time=2.0)]
+    more_notes = list(score.between(end_time=2.0))
     assert note_objs[:7] == more_notes
-    more_notes = [n for n in score.between(end_time=1.75)]
+    more_notes = list(score.between(end_time=1.75))
     assert note_objs[:7] == more_notes
-    more_notes = [n for n in score.between(start_time=0.75, end_time=1.5)]
+    more_notes = list(score.between(start_time=0.75, end_time=1.5))
     assert note_objs[3:5] == more_notes
-    more_notes = [n for n in score.between(start_time=0.8, end_time=1.2)]
-    assert more_notes == []
+    more_notes = list(score.between(start_time=0.8, end_time=1.2))
+    assert not more_notes
 
     note_objs_by_onset = [
         [note_objs[0]],
@@ -221,24 +221,20 @@ def test_between():
         note_objs[5:7],
         [note_objs[7]],
     ]
-    more_onsets = [o for o in score.notes_by_onset_between()]
+    more_onsets = list(score.notes_by_onset_between())
     assert more_onsets == note_objs_by_onset
-    more_onsets = [n for n in score.notes_by_onset_between(start_time=0.5)]
+    more_onsets = list(score.notes_by_onset_between(start_time=0.5))
     assert note_objs_by_onset[2:] == more_onsets
-    more_onsets = [n for n in score.notes_by_onset_between(start_time=0.4)]
+    more_onsets = list(score.notes_by_onset_between(start_time=0.4))
     assert note_objs_by_onset[2:] == more_onsets
-    more_onsets = [n for n in score.notes_by_onset_between(end_time=2.0)]
+    more_onsets = list(score.notes_by_onset_between(end_time=2.0))
     assert note_objs_by_onset[:5] == more_onsets
-    more_onsets = [n for n in score.notes_by_onset_between(end_time=1.75)]
+    more_onsets = list(score.notes_by_onset_between(end_time=1.75))
     assert note_objs_by_onset[:5] == more_onsets
-    more_onsets = [
-        n for n in score.notes_by_onset_between(start_time=0.75, end_time=1.5)
-    ]
+    more_onsets = list(score.notes_by_onset_between(start_time=0.75, end_time=1.5))
     assert note_objs_by_onset[3:4] == more_onsets
-    more_onsets = [
-        n for n in score.notes_by_onset_between(start_time=0.8, end_time=1.2)
-    ]
-    assert more_onsets == []
+    more_onsets = list(score.notes_by_onset_between(start_time=0.8, end_time=1.2))
+    assert not more_onsets
 
 
 if __name__ == "__main__":

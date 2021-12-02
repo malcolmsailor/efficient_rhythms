@@ -44,9 +44,9 @@ class ForcePitchTransformer(Transformer):
             attr_val_kwargs={"min_value": 1, "max_value": -1},
         )
 
-    def change_func(  # pylint: disable=unused-argument
+    def change_func(
         self, voice, notes_to_change
-    ):
+    ):  # pylint: disable=unused-argument
         for note in notes_to_change:
             pitch_to_force = random.choice(
                 self.force_pitches  # pylint: disable=no-member
@@ -171,13 +171,10 @@ class VelocityTransformer(Transformer, Mediator):
                         voice_i, unmediated_vel, note.velocity, note.onset
                     )
                 )
-                try:
-                    note.velocity = random.randrange(
-                        max(mediated_vel - humanize, 0),
-                        min(mediated_vel + humanize + 1, 128),
-                    )
-                except ValueError:
-                    breakpoint()
+                note.velocity = random.randrange(
+                    max(mediated_vel - humanize, 0),
+                    min(mediated_vel + humanize + 1, 128),
+                )
                 self.mark_note(note)
 
 
@@ -547,9 +544,9 @@ class ChannelExchangerTransformer(Transformer):
             attr_val_kwargs={"min_value": 0, "max_value": 15, "tuple_of": -2},
         )
 
-    def change_func(  # pylint: disable=unused-argument
+    def change_func(
         self, voice, notes_to_change
-    ):
+    ):  # pylint: disable=unused-argument
         try:
             source_channels, dest_channels = zip(
                 *self.channel_pairs  # pylint: disable=no-member
@@ -812,19 +809,19 @@ class TrackRandomizerTransformer(Transformer):
     def validate(self, score, *args):  # pylint: disable=arguments-differ
         super().validate(*args)
         for i, dest_voice_i in enumerate(
-            self.dest_voices  # pylint: disable=no-member
-        ):
+            self.dest_voices
+        ):  # pylint: disable=no-member
             if dest_voice_i > score.num_voices - 1:
-                self.dest_voices[  # pylint: disable=no-member
+                self.dest_voices[
                     i
-                ] = score.num_voices
+                ] = score.num_voices  # pylint: disable=no-member
                 score.add_voice()
 
     def change_func(self, score, voice_i, notes_to_change):
         for note in notes_to_change:
             dest_voice_i = random.choice(
-                self.dest_voices  # pylint: disable=no-member
-            )
+                self.dest_voices
+            )  # pylint: disable=no-member
             score.voices[dest_voice_i].add_note(note)
             score.voices[voice_i].remove_note(note)
             self.mark_note(note)

@@ -1,11 +1,11 @@
-"""This module only tests whether various transformers/filters run without 
+"""This module only tests whether various transformers/filters run without
 crashing. It doesn't actually veryify that they behave as expected! (That is
 still a to-do.)
 """
 import os
 import subprocess
 
-import efficient_rhythms.er_changers as er_changers
+from efficient_rhythms import er_changers
 
 SCRIPT_DIR = os.path.dirname((os.path.realpath(__file__)))
 

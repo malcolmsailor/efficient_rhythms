@@ -84,8 +84,7 @@ def return_pitch_bend_tuple_dict(
 
 
 def approximate_just_interval(rational, tet):
-    """Approximates given rational in given equal temperament.
-    """
+    """Approximates given rational in given equal temperament."""
 
     if rational < 0:
         sign = -1
@@ -133,8 +132,7 @@ def approximate_just_interval(rational, tet):
 
 
 def approximate_12_tet_pitch(pitch, tet):
-    """Approximates a 12-tet pitch in the specified temperament.
-    """
+    """Approximates a 12-tet pitch in the specified temperament."""
     octave = pitch // 12
     pc = pitch % 12
     new_p = octave * tet + round((pc / 12) * tet)

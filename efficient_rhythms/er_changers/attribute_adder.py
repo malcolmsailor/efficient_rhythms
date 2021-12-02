@@ -1,5 +1,3 @@
-import inspect
-
 from .. import er_misc_funcs
 
 from .attribute_val import AttributeValidator

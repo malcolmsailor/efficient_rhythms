@@ -1,17 +1,27 @@
 {
-    "midi_fname": ["examples/midi/example2.mid",],
+    "midi_fname": [
+        "examples/midi/example2.mid",
+    ],
     "color_loop": 12,
     "voice_settings": {
         0: {
             "bracket_settings": {
-                "plen": {"y_offset": 4,},
-                "hlen": {"y_offset": 8,},
+                "plen": {
+                    "y_offset": 4,
+                },
+                "hlen": {
+                    "y_offset": 8,
+                },
             },
         },
         1: {
             "bracket_settings": {
-                "plen": {"y_offset": 4,},
-                "hlen": {"y_offset": 8,},
+                "plen": {
+                    "y_offset": 4,
+                },
+                "hlen": {
+                    "y_offset": 8,
+                },
             },
         },
     },

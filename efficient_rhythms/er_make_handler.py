@@ -6,17 +6,17 @@ from . import er_make
 from .er_globals import DEBUG
 
 
-def timer(timeout, duration):
+def timer(timeout_obj, duration):
     wait = 0.1
     for _ in range(int(duration // wait)):
-        if timeout.is_set():
+        if timeout_obj.is_set():
             return
         time.sleep(wait)
-    timeout.set()
+    timeout_obj.set()
 
 
-def stop_timer(timeout, timeout_thread):
-    timeout.set()
+def stop_timer(timeout_obj, timeout_thread):
+    timeout_obj.set()
     timeout_thread.join()
 
 
@@ -57,12 +57,13 @@ class ThreadWithResult(threading.Thread):
         def function():
             try:
                 self.result = target(*args, **kwargs)
-            except Exception as exc:
+            except Exception as exc:  # pylint: disable=broad-except
                 self.exc = exc
 
         if kwargs is None:
             kwargs = {}
         self.exc = None
+        self.result = None
         super().__init__(group=group, target=function, name=name, daemon=daemon)
 
 

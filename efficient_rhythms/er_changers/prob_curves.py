@@ -13,14 +13,14 @@ class NullProbCurve(AttributeAdder, InfoGetter):
     def __init__(self, **kwargs):  # pylint: disable=unused-argument
         super().__init__()
 
-    def _get_seg_len(  # pylint: disable=unused-argument,no-self-use
+    def _get_seg_len(
         self, *args
-    ):
+    ):  # pylint: disable=unused-argument,no-self-use
         return 1
 
-    def calculate(  # pylint: disable=unused-argument,no-self-use
+    def calculate(
         self, *args, **kwargs
-    ):
+    ):  # pylint: disable=unused-argument,no-self-use
         return True
 
 

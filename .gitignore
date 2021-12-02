@@ -8,3 +8,4 @@ docs/resources/deprecated/
 *.egg-info
 temp_tests/
 .temp_pylint_output
+temp*.py

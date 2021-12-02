@@ -2,8 +2,8 @@ import os
 
 import numpy as np
 
-import efficient_rhythms.er_constants as er_constants
-import efficient_rhythms.er_settings as er_settings
+from efficient_rhythms import er_constants
+from efficient_rhythms import er_settings
 
 SCRIPT_DIR = os.path.dirname((os.path.realpath(__file__)))
 
@@ -76,7 +76,7 @@ def test_pitch_constants():
 def test_replace_pitch_constants():
     return
     # attr_name, constants, translated value
-    tests = [
+    tests = [  # pylint: disable=unreachable
         (
             "foot_pcs",
             ("B", "B#", "Bb", "B##", "Bbb", "B_SHARP", "B_SHARP_SHARP"),

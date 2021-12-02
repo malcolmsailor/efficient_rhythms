@@ -1,6 +1,6 @@
-import efficient_rhythms.er_exceptions as er_exceptions
-import efficient_rhythms.er_make_handler as er_make_handler
-import efficient_rhythms.er_settings as er_settings
+from efficient_rhythms import er_exceptions
+from efficient_rhythms import er_make_handler
+from efficient_rhythms import er_settings
 
 
 def test_build():

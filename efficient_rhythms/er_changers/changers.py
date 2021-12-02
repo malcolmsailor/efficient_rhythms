@@ -86,6 +86,7 @@ class Changer(AttributeAdder, InfoGetter):
             length=end_time - start_time, **kwargs
         )
         self.require_score = False
+        self.mod_n = self.mediating_func = None
         self.add_attribute(
             "prob_curve",
             prob_curve,
@@ -463,14 +464,10 @@ class Mediator(AttributeAdder):
         if self.func_str == "thru":  # pylint: disable=no-member
             return True
         try:
-            self.mediating_func = (
-                getattr(  # pylint: disable=attribute-defined-outside-init
-                    prob_curves, self.func_str  # pylint: disable=no-member
-                )
+            # pylint: disable=attribute-defined-outside-init
+            self.mediating_func = getattr(
+                prob_curves, self.func_str  # pylint: disable=no-member
             )
-            # vars(prob_curves)[
-            #     self.func_str
-            # ]
             return True
         except KeyError:
             return False

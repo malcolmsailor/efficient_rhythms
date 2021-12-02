@@ -3,9 +3,9 @@ import itertools
 import hypothesis
 import hypothesis.strategies as st
 
-import efficient_rhythms.er_misc_funcs as er_misc_funcs
-import efficient_rhythms.er_classes as er_classes
-import efficient_rhythms.er_settings as er_settings
+from efficient_rhythms import er_misc_funcs
+from efficient_rhythms import er_classes
+from efficient_rhythms import er_settings
 
 
 def test_flatten():

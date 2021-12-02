@@ -2,13 +2,18 @@ import typing
 
 import numpy as np
 
-import efficient_rhythms.er_settings as er_settings
-import efficient_rhythms.er_constants as er_constants
+from efficient_rhythms import er_settings
+from efficient_rhythms import er_constants
 
 
 def test_categories():
     cats = er_settings.CATEGORIES
-    for field_name, a in er_settings.ERSettings.__dataclass_fields__.items():
+    for (
+        field_name,
+        a,
+    ) in (
+        er_settings.ERSettings.__dataclass_fields__.items()  # pylint: disable=no-member
+    ):
         try:
             c = a.metadata["category"]
         except KeyError:
@@ -50,7 +55,10 @@ def test_field_process():
         out = getattr(er, name)
         assert isinstance(out, (tuple, list))
         if not isinstance(val, typing.Sequence):
-            assert all(item == result for item in out)
+            assert all(
+                item == result
+                for item in out  # pylint: disable=not-an-iterable
+            )
         else:
             assert all(
                 item == result[i % len(result)] for i, item in enumerate(out)

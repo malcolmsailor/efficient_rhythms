@@ -1,6 +1,6 @@
 import pytest
 
-import efficient_rhythms.er_misc_funcs as er_misc_funcs
+from efficient_rhythms import er_misc_funcs
 
 
 @pytest.fixture

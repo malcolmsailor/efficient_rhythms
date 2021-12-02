@@ -1,9 +1,7 @@
 import itertools
-import sys
-import traceback
 
-import efficient_rhythms.er_voice_leadings as er_vls
-import efficient_rhythms.er_exceptions as er_exceptions
+from efficient_rhythms import er_voice_leadings as er_vls
+from efficient_rhythms import er_exceptions
 
 
 def test_efficient_voice_leading():
@@ -21,35 +19,28 @@ def test_efficient_voice_leading():
         # + list(itertools.product(heptads, repeat=2))
         + list(itertools.product(sextads, repeat=2))
     )
-    try:
-        for c1, c2 in chord_pairs:
-            for i in range(12):
-                c3 = [(p + i) % 12 for p in c2]
-                displacement = -1
-                while True:
-                    try:
-                        out1, displacement1 = er_vls.efficient_voice_leading(
-                            c1,
-                            c3,
-                            tet=12,
-                            displacement_more_than=displacement,
-                            exclude_motions=None,
-                        )
-                    except er_exceptions.NoMoreVoiceLeadingsError:
-                        break
-                    for vl in out1:
-                        assert set(
-                            (p + i) % 12 for (p, i) in zip(c1, vl)
-                        ) == set(c3)
-                    assert displacement1 > displacement
-                    displacement = displacement1
-    except:  # pylint: disable=bare-except
 
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        traceback.print_exception(
-            exc_type, exc_value, exc_traceback, file=sys.stdout
-        )
-        breakpoint()
+    for c1, c2 in chord_pairs:
+        for i in range(12):
+            c3 = [(p + i) % 12 for p in c2]
+            displacement = -1
+            while True:
+                try:
+                    out1, displacement1 = er_vls.efficient_voice_leading(
+                        c1,
+                        c3,
+                        tet=12,
+                        displacement_more_than=displacement,
+                        exclude_motions=None,
+                    )
+                except er_exceptions.NoMoreVoiceLeadingsError:
+                    break
+                for vl in out1:
+                    assert set((p + i) % 12 for (p, i) in zip(c1, vl)) == set(
+                        c3
+                    )
+                assert displacement1 > displacement
+                displacement = displacement1
 
 
 if __name__ == "__main__":

@@ -3,8 +3,8 @@ import warnings
 
 import numpy as np
 
-import efficient_rhythms.er_settings as er_settings
-import efficient_rhythms.er_rhythm as er_rhythm
+from efficient_rhythms import er_settings
+from efficient_rhythms import er_rhythm
 
 
 def test_pad_truncations():
@@ -123,13 +123,13 @@ def test_update_pattern_vl_order():
             voice_is = {}
             for item in er.pattern_vl_order:
                 voice_i = item.voice_i
-                rhythm = er.rhythms[voice_i]
+                rhythm = er.rhythms[voice_i]  # pylint: disable=no-member
                 assert item.start_time <= rhythm.at_or_after(item.start_i)[0]
                 assert item.end_time <= rhythm.at_or_after(item.end_i)[0]
-                pattern_len = pattern_lens[voice_i]
-                if truncate:
-                    truncate_len = max(pattern_lens)
-                    truncate_start = truncate_len // pattern_len * pattern_len
+                # pattern_len = pattern_lens[voice_i]
+                # if truncate:
+                # truncate_len = max(pattern_lens)
+                # truncate_start = truncate_len // pattern_len * pattern_len
                 if voice_i in voice_is:
                     assert (
                         item.start_i == voice_is[voice_i]
@@ -223,7 +223,6 @@ def test_get_i():
     rhythm = er_rhythm.rhythm.Rhythm.from_er_settings(
         er, 0, initial_onsets, initial_durs
     )
-    max_onset = max(rhythm.onsets)
     for i in range(50):
         time = i / 8
         before = rhythm.get_i_before(time)
@@ -235,8 +234,8 @@ def test_get_i():
         # if there is a note at time, then both comparisons should be false;
         # otherwise, they should both be true
         assert (before == at_or_before) == (at_or_after == after)
-        assert (before == at_or_before) or (at_or_before == at_or_after)
-        assert (after == at_or_after) or (at_or_before == at_or_after)
+        assert at_or_before in (before, at_or_after)
+        assert at_or_after in (after, at_or_before)
         assert rhythm.get_onset_and_dur(at_or_after) == rhythm.at_or_after(time)
 
 
@@ -279,7 +278,7 @@ def test_new_onsets():
         "obligatory_onsets_modulo": 1,
         "onset_density": 0.75,
     }
-    test2 = lambda x: len(x) == 6 and all([t in x for t in (0, 0.75, 1, 1.75)])
+    test2 = lambda x: len(x) == 6 and all(t in x for t in (0, 0.75, 1, 1.75))
 
     settingsdict3 = {
         "onset_density": 0.8,
@@ -300,8 +299,8 @@ def test_new_onsets():
         er = er_settings.get_settings(settingsdict, silent=True)
         onsets = er_rhythm.make.get_onsets(er, 0, ())
         assert test_func(onsets)
-        assert all([t for t in onsets >= 0])
-        assert all([t for t in onsets < 2])
+        assert all(t for t in onsets >= 0)
+        assert all(t for t in onsets < 2)
 
     basesettings = {
         "num_voices": 4,
@@ -422,7 +421,7 @@ def test_new_durs():
     }
     leader_onsets = np.array([0.0, 1.0, 2.25, 3.5])
     leader_durs = np.array([0.25, 0.75, 0.5, 0.5])
-    leader_density = 0.5
+    # leader_density = 0.5
     for density in (0, 0.25, 0.5, 0.75, 1.0):
         basesettings["dur_density"] = density
         er = er_settings.get_settings(basesettings, silent=True)
@@ -432,7 +431,7 @@ def test_new_durs():
         onsets = er_rhythm.make.get_onsets(er, 1, (l_rhythm,))
         iois = er_rhythm.make.get_iois_from_er(er, 1, onsets)
         durs = er_rhythm.make.get_durs(er, 1, iois, onsets, (l_rhythm,))
-        actual_density = sum(durs) / er.rhythm_len[1]
+        # actual_density = sum(durs) / er.rhythm_len[1]
         # TODO write a function to test that:
         #   - if actual_density is less than leader_density, all durations
         #       lie within leader durations
@@ -467,7 +466,7 @@ def test_hocketing_indices():
     qu_indices, constrain_indices = er_rhythm.make._quasi_unison_indices(
         er, 2, onset_positions, (empty_prev_rhythm1, empty_prev_rhythm2), ()
     )
-    assert set(hocket_indices) == {i for i in range(8)}
+    assert set(hocket_indices) == set(range(8))
     assert len(qu_indices) == 0
     assert len(constrain_indices) == 0
     # w/ empty previous rhythms, oblig onsets
@@ -708,7 +707,7 @@ def test_yield_onset_and_consecutive_release():
     out = list(er_rhythm.make._yield_onset_and_consecutive_release(rhythm1))
     assert out == [(0, 0.5), (0.75, 0.875), (1.0, 1.75)]
     out = list(er_rhythm.make._yield_onset_and_consecutive_release(rhythm2))
-    assert out == []
+    assert not out
     out = list(er_rhythm.make._yield_onset_and_consecutive_release(rhythm3))
     assert out == [(0, 2)]
 

@@ -3,15 +3,23 @@
     "voice_settings": {
         0: {
             "bracket_settings": {
-                "plen": {"y_offset": 4,},
-                "hlen": {"y_offset": 8,},
+                "plen": {
+                    "y_offset": 4,
+                },
+                "hlen": {
+                    "y_offset": 8,
+                },
             },
             "color_loop": 13,
         },
         1: {
             "bracket_settings": {
-                "plen": {"y_offset": 4,},
-                "hlen": {"y_offset": 8,},
+                "plen": {
+                    "y_offset": 4,
+                },
+                "hlen": {
+                    "y_offset": 8,
+                },
             },
             "color_loop": 11,
         },

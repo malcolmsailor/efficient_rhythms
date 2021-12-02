@@ -14,5 +14,5 @@ RNG = np.random.default_rng()
 
 
 def set_np_seed(seed):
-    global RNG
+    global RNG  # pylint: disable=global-statement
     RNG = np.random.default_rng(seed=seed)

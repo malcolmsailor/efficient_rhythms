@@ -169,7 +169,8 @@ class AttributeValidator:
                 enquoted.append(f"'{bit}'")
             joined = ", ".join(enquoted)
             listed = f"[{joined}]"
-            answer = eval(listed)
+            # TODO I suspect ast.literal_eval would be just fine here and below
+            answer = eval(listed)  # pylint: disable=eval-used
 
             return answer
 
@@ -177,7 +178,7 @@ class AttributeValidator:
             if "'" not in answer and '"' not in answer:
                 answer = str(enquote(answer, self.unique))
         try:
-            answer = eval(answer)
+            answer = eval(answer)  # pylint: disable=eval-used
         except SyntaxError:
             return None
         except NameError:

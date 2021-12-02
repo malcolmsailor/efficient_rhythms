@@ -2,10 +2,10 @@ import warnings
 
 import numpy as np
 
-import efficient_rhythms.er_settings as er_settings
-import efficient_rhythms.er_rhythm as er_rhythm
+from efficient_rhythms import er_settings
+from efficient_rhythms import er_rhythm
 
-from tests.fixtures import set_seed
+from tests.fixtures import set_seed  # pylint: disable=unused-import
 
 
 def _get_cont_base(
@@ -100,7 +100,9 @@ def _verify_onsets(
         assert y - x >= min_dur - error_tolerance
 
 
-def test_get_continuous_onsets(set_seed):
+def test_get_continuous_onsets(
+    set_seed,
+):  # pylint: disable=unused-argument, redefined-outer-name
 
     # TODO add more test cases, check that min_dur is reduced if necessary
     tests = (
@@ -178,7 +180,9 @@ def _verify_durs(
     assert np.all(durs <= rhythm_len)
 
 
-def test_fill_durs(set_seed):
+def test_fill_durs(
+    set_seed,
+):  # pylint: disable=unused-argument, redefined-outer-name
     densities = [0.625, 0.8, 0.5, 0.1, 0.4, 0.99, 1.0]
     non_defaults = (
         ("increment", 0.0),
@@ -207,7 +211,9 @@ def test_fill_durs(set_seed):
                 )
 
 
-def test_palindrome(set_seed):
+def test_palindrome(
+    set_seed,
+):  # pylint: disable=unused-argument, redefined-outer-name
     num_vars = (1, 2, 5, 10, 17, 40)
     for n in num_vars:
         cr = _get_cont_rhythm(var_palindrome=True, num_vars=n)
@@ -228,7 +234,9 @@ def test_palindrome(set_seed):
             assert np.all(cr._durs_2d[i] == cr._durs_2d[j])
 
 
-def test_grid(set_seed):
+def test_grid(
+    set_seed,
+):  # pylint: disable=unused-argument, redefined-outer-name
     def test_get_max_releases(gd, onset_indices, overlap):
         onsets = gd.onset_positions[indices]
         max_releases = gd._get_max_releases(onset_indices)
@@ -241,7 +249,7 @@ def test_grid(set_seed):
             assert abs(max_releases[i] - max_r) < 1e-7
 
         # test last release separately:
-        if not er.overlap:
+        if not overlap:
             assert abs(max_releases[-1] - gd.rhythm_len) < 1e-10
         else:
             next_onset_i = onset_indices[0] + gd.num_notes
@@ -317,7 +325,9 @@ def test_grid(set_seed):
                 )
 
 
-def test_get_onsets_from_grid(set_seed):
+def test_get_onsets_from_grid(
+    set_seed,
+):  # pylint: disable=unused-argument, redefined-outer-name
     basesettings = {
         "num_voices": 3,
         "min_dur": 0.05,
@@ -340,4 +350,4 @@ def test_get_onsets_from_grid(set_seed):
         settingsdict[kw] = val
         er, gd = _get_grid_from_er(settingsdict)
         gd.generate()
-        onsets = er_rhythm.make.get_onsets(er, 0, None)
+        er_rhythm.make.get_onsets(er, 0, None)

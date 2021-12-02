@@ -10,7 +10,9 @@
     "voice_settings": {
         0: {
             "bracket_settings": {
-                "rlen": {"color": (126, 145, 139),},
+                "rlen": {
+                    "color": (126, 145, 139),
+                },
                 "plen": {"color": (0, 0, 0)},
                 "hlen": {"color": (72, 115, 134)},
             },

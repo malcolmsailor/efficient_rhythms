@@ -4,7 +4,7 @@ import typing
 from typing import Optional, Union
 from numbers import Number
 
-from efficient_rhythms.er_types import *
+from efficient_rhythms.er_types import *  # pylint: disable=unused-wildcard-import, wildcard-import
 
 # Type checking code based on https://stackoverflow.com/a/50622643/10155119
 
@@ -98,6 +98,7 @@ def _check_type(type_hint, val):
             sub_type_hint = t_args[0]
             for sub_val in val:
                 _check_type(sub_type_hint, sub_val)
+    return None
 
 
 def test_types():

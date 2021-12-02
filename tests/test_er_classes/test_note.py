@@ -1,4 +1,4 @@
-import efficient_rhythms.er_classes as er_classes
+from efficient_rhythms import er_classes
 
 
 def test_comparisons():

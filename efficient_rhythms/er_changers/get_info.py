@@ -5,8 +5,16 @@ from . import prob_curves
 
 # Prob curves and changers will subclass this class
 class InfoGetter:
+    def __init__(self):
+        self.display_if = self.hint_dict = None
+        self.validation_dict = None
+
     def _display_if_info(self, name):
-        if name in self.display_if and self.display_if[name] is not None:
+        if (
+            name
+            in self.display_if  # pylint: disable=unsupported-membership-test
+            and self.display_if[name] is not None
+        ):
             out = []
             for k, v in self.display_if[name].items():
                 if isinstance(v, (tuple, list)):
@@ -18,8 +26,9 @@ class InfoGetter:
             return "Only has effect if " + ", ".join(out)
         return None
 
+    @staticmethod
     def _format_attr_info(
-        self, name, pretty_name, hint, display_if, default, val_info
+        name, pretty_name, hint, display_if, default, val_info
     ):
         pretty_text = (
             "Description: "
@@ -27,6 +36,7 @@ class InfoGetter:
             + "."
             + (" " + hint if hint is not None else "")
         )
+
         indented_l = [pretty_text]
         if display_if is not None:
             indented_l.append(display_if)
@@ -36,8 +46,13 @@ class InfoGetter:
         return f"### {name}\n\n" + indented_s
 
     def _get_attr_info(self, name):
-        pretty_name = self.interface_dict[name]
-        hint = self.hint_dict[name] if name in self.hint_dict else None
+        pretty_name = self.interface_dict[name]  # pylint: disable=no-member
+        hint = (
+            self.hint_dict[name]
+            if name
+            in self.hint_dict  # pylint: disable=unsupported-membership-test
+            else None
+        )
         # It seems that I was also using hints to display relevant info
         # about the current midi file in the interface. So, for example,
         # for end_time, the hint is a tuple that tells the user what the
@@ -68,10 +83,14 @@ class InfoGetter:
     def get_info(self):
         header = f"## {self.__class__.__name__}\n"
         pretty_text = (
-            f"{self.pretty_name}."
-            + (f" {self.description}." if self.description else "")
+            f"{self.pretty_name}."  # pylint: disable=no-member
+            + (
+                f" {self.description}."  # pylint: disable=no-member
+                if self.description  # pylint: disable=no-member
+                else ""
+            )
         ) + "\n"
         out = [header, pretty_text]
-        for name in self.interface_dict:
+        for name in self.interface_dict:  # pylint: disable=no-member
             out.append(self._get_attr_info(name))
         return "\n".join(out)

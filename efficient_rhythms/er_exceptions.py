@@ -3,7 +3,7 @@ import collections
 from . import er_misc_funcs
 
 
-class TimeoutError(Exception):
+class ErTimeoutError(Exception):
     pass
 
 
@@ -26,14 +26,12 @@ class UnableToChoosePitchError(ErMakeError):
         return (
             "Unable to choose from available pitches in constructing "
             "basic pattern.\n"
-            "Number of times exceeding max_alternations:   {}.\n"
-            "Number of times exceeding max_repeated_notes: {}.\n"
-            "Number of times pitch loop just one pitch:    {}."
-            "".format(
-                self.too_many_alternations,
-                self.too_many_repeated_notes,
-                self.pitch_loop_just_one_pitch,
-            )
+            "Number of times exceeding max_alternations:   "
+            f"{self.too_many_alternations}.\n"
+            "Number of times exceeding max_repeated_notes: "
+            f"{self.too_many_repeated_notes}.\n"
+            "Number of times pitch loop just one pitch:    "
+            f"{self.pitch_loop_just_one_pitch}."
         )
 
 

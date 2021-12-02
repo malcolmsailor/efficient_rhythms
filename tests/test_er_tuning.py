@@ -1,5 +1,5 @@
-import efficient_rhythms.er_tuning as er_tuning
-import efficient_rhythms.er_constants as er_constants
+from efficient_rhythms import er_tuning
+from efficient_rhythms import er_constants
 
 
 def test_approximate_just_interval():
@@ -15,6 +15,7 @@ def test_approximate_just_interval():
         assert (
             er_tuning.approximate_just_interval(item, tet) == return_value
         ), "er_tuning.approximate_just_interval(item, tet) != return_value"
+
 
 if __name__ == "__main__":
     test_approximate_just_interval()

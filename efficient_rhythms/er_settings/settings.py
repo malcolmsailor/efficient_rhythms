@@ -2849,7 +2849,11 @@ def add_metadata_docs():
     bits = re.split(r"\n {8}(\w+): ", ds)[1:]
     for setting_name, setting_doc in zip(*([iter(bits)] * 2)):
         reformatted = _reformat_setting_doc(setting_doc)
-        dataclass_field = SettingsDataclass.__dataclass_fields__[setting_name]
+        dataclass_field = (
+            SettingsDataclass.__dataclass_fields__[  # pylint: disable=no-member
+                setting_name
+            ]
+        )
         mutable_attrs = dataclass_field.metadata["mutable_attrs"]
         mutable_attrs["doc"] = reformatted
 

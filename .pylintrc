@@ -1,32 +1,15 @@
 [MASTER]
 
-# ignoring directories doesn't seem to work here, use PylintIgnorePaths below
-ignore=test_repeated_notes.py
-
 # It appears that if ignore-patterns has a trailing comma,
 #   pytest will not run pylint!
-ignore-patterns=test_settings.*\.py,
-    debug_settings.*\.py
-#    example\d+\.py,
-#    .*random_settings.*\.py,
-#    test.*settings.*\.py,
-#    .*midani_settings\.py,
-#    harmony_example.*\.py
+ignore-patterns=temp.*\.py
 
-# After updating pylint, it seems this no longer works
-# From https://github.com/PyCQA/pylint/issues/2686#issuecomment-621927895
-# init-hook=
-#    sys.path.append(os.getcwd());
-#    from efficient_rhythms.third_party.pylint_ignore import PylintIgnorePaths;
-#    PylintIgnorePaths(
-#        'favorites',
-#        'tests/test_settings',
-#        'tests/test_input',
-#        'docs/examples',
-#        'docs/resources/midani',
-#        'efficient_rhythms/third_party',
-#        'temp_tests',
-#    )
+ignore-paths=^docs/examples/.*$,
+    ^docs/resources/midani/.*$,
+    ^tests/test_settings/.*$,
+    ^tests/debug_settings/.*$,
+    ^tests/test_input/.*$,
+    ^favorites/.*$,
 
 extension-pkg-allow-list=math
 
@@ -48,9 +31,13 @@ disable=too-many-instance-attributes,
     duplicate-code,
     too-many-lines,
     fixme,
-    eval-used,
-    undefined-loop-variable,
-    no-member,
+    consider-using-f-string,
+    ; eval-used,
+    ; undefined-loop-variable,
+    ; no-member,
+    unspecified-encoding,
+    no-else-raise,
+    no-else-return,
 # Delete eventually:
     missing-class-docstring,
     missing-module-docstring,

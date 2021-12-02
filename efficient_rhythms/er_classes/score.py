@@ -4,7 +4,7 @@ import sortedcontainers
 
 import mspell
 
-from .. import er_classes
+from ..er_classes import VoiceList, Voice, DEFAULT_CHOIR, DEFAULT_VELOCITY
 
 
 class HarmonyTimes:
@@ -99,11 +99,9 @@ class Score:
         if existing_score:
             for voice in existing_score.voices:
                 self.existing_voices.append(voice)
-            self.voices = er_classes.VoiceList(
-                existing_voices=self.existing_voices
-            )
+            self.voices = VoiceList(existing_voices=self.existing_voices)
         else:
-            self.voices = er_classes.VoiceList()  # num_new_voices=num_voices)
+            self.voices = VoiceList()  # num_new_voices=num_voices)
         self.meta_messages = []
         self.n_since_chord_tone_list = []
         self.num_voices = 0
@@ -194,8 +192,7 @@ class Score:
             out = []
             to_pop = []
             onset = next_notes[0][1].onset
-            for i in range(len(next_notes)):
-                voice_i, next_note = next_notes[i]
+            for i, (voice_i, next_note) in enumerate(next_notes):
                 if next_note.onset != onset:
                     break
                 while next_note.onset == onset:
@@ -241,9 +238,7 @@ class Score:
             if voice_i is None:
                 voice_i = self.num_voices
             self.voices.append(
-                er_classes.Voice(
-                    voice_i=voice_i, tet=self.tet, voice_range=voice_range
-                )
+                Voice(voice_i=voice_i, tet=self.tet, voice_range=voice_range)
             )
         self.num_voices += 1
         return self.voices[self.num_voices - 1]
@@ -256,7 +251,7 @@ class Score:
             if voice.is_empty:
                 non_empty_voices.remove(voice_i)
 
-        new_voices = er_classes.VoiceList()
+        new_voices = VoiceList()
         for new_voice_i, non_empty_voice_i in enumerate(non_empty_voices):
             if update_indices:
                 self.voices[non_empty_voice_i] = new_voice_i
@@ -269,8 +264,8 @@ class Score:
         note_obj_or_pitch,
         onset=None,
         dur=None,
-        velocity=er_classes.DEFAULT_VELOCITY,
-        choir=er_classes.DEFAULT_CHOIR,
+        velocity=DEFAULT_VELOCITY,
+        choir=DEFAULT_CHOIR,
     ):
         """Adds a note to the specified voice."""
         self.voices[voice_i].add_note(

@@ -41,7 +41,9 @@ def get_changer_settings(args):
     for path in args.changers:
         print(f"Reading changers from {path}")
         with open(path, "r", encoding="utf-8") as inf:
-            changer_settings.extend(eval(inf.read()))
+            changer_settings.extend(
+                eval(inf.read())  # pylint: disable=eval-used
+            )
     return changer_settings
 
 

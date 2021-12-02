@@ -1,11 +1,9 @@
 import types
 import typing
 from numbers import Number
-from typing import NewType, Optional, Sequence, Tuple, TypeVar, Union
+from typing import NewType, Sequence, Tuple, TypeVar, Union
 
 import numpy as np
-
-from .. import er_misc_funcs
 
 from .type_check import _check_type
 
@@ -28,9 +26,9 @@ Interval = NewType("Interval", Union[GenericInterval, SpecificInterval])
 #     pass
 
 # class PitchSuperSeq(Sequence[PitchSeq]):
-class SuperSequence(Sequence[Sequence[T]]):
+class SuperSequence(Sequence[Sequence[T]]):  # pylint: disable=abstract-method
     @staticmethod
-    def process(x, er):
+    def process(x, er):  # pylint: disable=unused-argument
         if x is None:
             return None
         if not isinstance(x, Sequence) or isinstance(x, str):
@@ -90,21 +88,25 @@ DensityOrQuantity = NewType("DensityOrQuantity", Union[Density, Quantity])
 
 class ItemOrSeqBase:
     @staticmethod
-    def process(x, er):
+    def process(x, er):  # pylint: disable=unused-argument
         if not isinstance(x, Sequence) or isinstance(x, str):
             return [x]
         return x
 
     @staticmethod
-    def fill_none(er):
+    def fill_none(er):  # pylint: disable=unused-argument
         return ()
 
 
-class ItemOrSequence(ItemOrSeqBase, Sequence[T]):
+class ItemOrSequence(  # pylint: disable=abstract-method
+    ItemOrSeqBase, Sequence[T]
+):
     pass
 
 
-class OptItemOrSequence(ItemOrSeqBase, Sequence[T]):
+class OptItemOrSequence(  # pylint: disable=abstract-method
+    ItemOrSeqBase, Sequence[T]
+):
     pass
 
 
@@ -151,11 +153,15 @@ class PerVoiceBase:
         raise TypeError(msg)
 
 
-class PerVoiceSequence(PerVoiceBase, Sequence[T]):
+class PerVoiceSequence(  # pylint: disable=abstract-method
+    PerVoiceBase, Sequence[T]
+):
     pass
 
 
-class OptPerVoiceSequence(PerVoiceBase, Sequence[T]):
+class OptPerVoiceSequence(  # pylint: disable=abstract-method
+    PerVoiceBase, Sequence[T]
+):
     # We can't subclass typing.Union. So instead, I just create this class
     # and I'll make a special condition to type-check for it in er_web # TODO
     pass
@@ -187,11 +193,15 @@ class PerVoiceSuperBase:
         return x
 
 
-class PerVoiceSuperSequence(PerVoiceSuperBase, Sequence[Sequence[T]]):
+class PerVoiceSuperSequence(  # pylint: disable=abstract-method
+    PerVoiceSuperBase, Sequence[Sequence[T]]
+):
     pass
 
 
-class OptPerVoiceSuperSequence(PerVoiceSuperBase, Sequence[Sequence[T]]):
+class OptPerVoiceSuperSequence(  # pylint: disable=abstract-method
+    PerVoiceSuperBase, Sequence[Sequence[T]]
+):
     pass
 
 

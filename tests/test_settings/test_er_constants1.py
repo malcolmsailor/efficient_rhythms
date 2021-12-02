@@ -1,3 +1,5 @@
 {
-    "scales": [DIATONIC_SCALE,],
+    "scales": [
+        DIATONIC_SCALE,
+    ],
 }

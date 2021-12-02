@@ -1,6 +1,6 @@
-import efficient_rhythms.er_exceptions as er_exceptions
-import efficient_rhythms.er_settings as er_settings
-import efficient_rhythms.er_make_handler as er_make_handler
+from efficient_rhythms import er_exceptions
+from efficient_rhythms import er_settings
+from efficient_rhythms import er_make_handler
 
 
 def test_timeout():
@@ -13,7 +13,7 @@ def test_timeout():
     er = er_settings.get_settings(settingsdict)
     try:
         er_make_handler.make_super_pattern(er, debug=False)
-    except er_exceptions.TimeoutError:
+    except er_exceptions.ErTimeoutError:
         pass
     else:
         raise AssertionError("There should have been a timeout")

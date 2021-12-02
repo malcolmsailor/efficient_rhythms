@@ -3,8 +3,12 @@
     "voice_settings": {
         0: {
             "bracket_settings": {
-                "plen": {"y_offset": 4,},
-                "hlen": {"y_offset": 8,},
+                "plen": {
+                    "y_offset": 4,
+                },
+                "hlen": {
+                    "y_offset": 8,
+                },
             },
             "brackets": [
                 (0.0, 1.0, "rlen", "rhythm_len = 2"),
@@ -14,8 +18,12 @@
         },
         1: {
             "bracket_settings": {
-                "plen": {"y_offset": 4,},
-                "hlen": {"y_offset": 8,},
+                "plen": {
+                    "y_offset": 4,
+                },
+                "hlen": {
+                    "y_offset": 8,
+                },
             },
             "brackets": [
                 (0.0, 0.75, "rlen", "rhythm_len = 1.5"),

@@ -837,4 +837,4 @@ def input_loop(er, score, args, active_changers):
             print(current_pattern.head())
 
         elif er_globals.DEBUG and answer == "b":
-            breakpoint()
+            breakpoint()  # pylint: disable=forgotten-debug-statement

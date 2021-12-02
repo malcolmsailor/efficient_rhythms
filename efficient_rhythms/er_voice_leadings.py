@@ -234,6 +234,7 @@ class VoiceLeader:
         self.tet = er.tet
         self.src_harmony_i = src_harmony_i
         self.dest_harmony_i = dest_harmony_i
+
         self.src_pc_scale, self.src_pc_chord = er.get(
             src_harmony_i, "pc_scales", "pc_chords"
         )
@@ -263,6 +264,7 @@ class VoiceLeader:
         # self._chords_last_updated is for updating chord-tone voice leadings.
         # It should be None on initialization and True/False afterwards
         self._chords_last_updated = None
+        self.chord_intervals = self.nonchord_intervals = self.intervals = None
         self.displacement = self.c_displacement = self.nc_displacement = -1
         self._init_excluded_motions()
 
@@ -463,7 +465,7 @@ class VoiceLeader:
                 if self.parallel_voice_leading:
                     # there is only *one* parallel voice-leading, so if we are
                     # here, the voice-leading has failed
-                    raise er_exceptions.NoMoreVoiceLeadingsError
+                    raise er_exceptions.NoMoreVoiceLeadingsError  # pylint: disable=raise-missing-from
                 self._update_voice_leadings()
                 self.voice_leading_i = 0
                 voice_leading = self.intervals[self.voice_leading_i]
@@ -476,17 +478,3 @@ class VoiceLeader:
                 break
 
         return voice_leading
-
-
-# Constants for accessing voice-leadings
-INTERVALS = 0
-
-if __name__ == "__main__":
-    while True:
-        c1 = eval(input("c1: "))
-        c2 = eval(input("c2: "))
-        print(
-            efficient_voice_leading(
-                c1, c2, tet=12, displacement_more_than=-1, exclude_motions=None
-            )
-        )

@@ -1,4 +1,4 @@
-import efficient_rhythms.er_rhythm.utils as utils
+from efficient_rhythms.er_rhythm import utils
 
 
 def test_loop_seq():

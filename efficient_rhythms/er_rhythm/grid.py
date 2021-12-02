@@ -10,7 +10,7 @@ from .cont_rhythm import ContRhythm
 class Grid(ContRhythm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._releases = None
+        self._releases = self._releases_2d = None
 
     def set_onsets_and_durs(self, onsets, durs):
         super().set_onsets_and_durs(onsets, durs)
@@ -112,9 +112,7 @@ class Grid(ContRhythm):
 
         available_indices = list(range(len(onsets)))
         # map onset_indices to release indices
-        release_indices = {
-            i: k for (i, k) in zip(available_indices, onset_indices)
-        }
+        release_indices = dict(zip(available_indices, onset_indices))
         # remove any indices that are already at the maximum release
         for i, k in release_indices.items():
             if releases[k] == max_releases[i]:
@@ -131,7 +129,13 @@ class Grid(ContRhythm):
             assert release <= max_releases[i]
         return durs
 
-    def get_durs(self, er, voice_i, onsets, prev_rhythms):
+    def get_durs(
+        self,
+        er,
+        voice_i,
+        onsets,
+        prev_rhythms,  # pylint: disable=unused-argument
+    ):
         # TODO handle prev_rhythms
         onset_indices = self.onset_indices(onsets)
         # durs are initialized as the interval to the next release
@@ -150,7 +154,13 @@ class Grid(ContRhythm):
         return self._onsets_2d[0]
 
     @classmethod
-    def from_er_settings(cls, er):
+    def from_er_settings(
+        # voice_i is included to keep signature consistent with
+        # ContRhythm.from_er_settings
+        cls,
+        er,
+        voice_i=None,  # pylint: disable=unused-argument
+    ):
         return cls(
             er.dur_density[
                 0

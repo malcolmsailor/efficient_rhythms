@@ -1,5 +1,5 @@
-# import efficient_rhythms.er_interface as er_interface
-# import efficient_rhythms.er_settings as er_settings
+# from efficient_rhythms import er_interface
+# from efficient_rhythms import er_settings
 
 
 def test_build_state_printer():

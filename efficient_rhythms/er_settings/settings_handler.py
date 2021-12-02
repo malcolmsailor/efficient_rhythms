@@ -19,7 +19,9 @@ def merge_settings(settings_paths, silent=True):
         if not silent:
             print(f"Reading settings from {user_settings_path}")
         with open(user_settings_path, "r", encoding="utf-8") as inf:
-            user_settings = eval(inf.read(), vars(er_constants))
+            user_settings = eval(  # pylint: disable=eval-used
+                inf.read(), vars(er_constants)
+            )
         _merge(merged_dict, user_settings)
     return merged_dict
 

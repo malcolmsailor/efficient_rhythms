@@ -1,4 +1,3 @@
-from numbers import Number
 import typing
 
 from .. import er_constants
@@ -11,7 +10,7 @@ from .. import er_types
 
 def _process_str(pitch_str):
     pitch_str = pitch_str.replace("#", "_SHARP")
-    return eval(pitch_str, vars(er_constants))
+    return eval(pitch_str, vars(er_constants))  # pylint: disable=eval-used
 
 
 def replace_pitch_constants(pitch_material):
@@ -44,6 +43,7 @@ def get_base_type(field_type):
 
 
 class SettingsBase:
+    _silent = _randomized = None
     # when creating a dataclass that derives from another class, we still need
     # to apply the @dataclass decorator. For that reason there doesn't seem to
     # be any purpose in applying it to SettingsBase.
@@ -63,7 +63,7 @@ class SettingsBase:
         if self._timeout_event is None:
             return
         if self._timeout_event.is_set():
-            raise er_exceptions.TimeoutError
+            raise er_exceptions.ErTimeoutError
 
     def add_timeout_event(self, timeout_event):
         self._timeout_event = timeout_event
@@ -162,7 +162,7 @@ class SettingsBase:
 
     @property
     def _fields(self):
-        return self.__dataclass_fields__.items()
+        return self.__dataclass_fields__.items()  # pylint: disable=no-member
 
     def _process_per_voice_seqs(self, field_name, field_type):
         raw_val = getattr(self, field_name)

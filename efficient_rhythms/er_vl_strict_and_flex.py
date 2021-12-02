@@ -9,8 +9,7 @@ def _get_htimes_end_i(rhythm, htimes, vl_item_end_i):
     # vl_item_end_i is needed as a backup in case htimes.end_time is None
     if htimes.end_time is not None:
         return rhythm.get_i_at_or_after(htimes.end_time)
-    else:
-        return vl_item_end_i
+    return vl_item_end_i
 
 
 def flex_vl_loop(er, score, voice_lead_error, voice, vl_item):
@@ -202,10 +201,18 @@ def strict_voice_leading_loop(er, score, voice_lead_error, voice, vl_item):
 
         else:  # success == True
             new_notes.append(new_sub_notes)
-            new_note_i = new_note_j + 1
+            # new_note_j and prev_note_j can only be undefined if
+            # range(prev_note_i, prev_note_end_i) or
+            # range(new_note_i, new_htimes_end_i) is empty, which I believe
+            # should never happen.
+            new_note_i = (
+                new_note_j + 1  # pylint: disable=undefined-loop-variable
+            )
             if new_note_i == vl_item.end_i:
                 break
-            prev_note_i = prev_note_j + 1
+            prev_note_i = (
+                prev_note_j + 1  # pylint: disable=undefined-loop-variable
+            )
             prev_onset = voice.get_notes_by_i(prev_note_i)[0].onset
             new_onset, new_dur = rhythm.get_onset_and_dur(new_note_i)
             # update new harmony if necessary

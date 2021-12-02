@@ -8,6 +8,8 @@ class RhythmBase:
         self._data = None
         self._onsets = None
         self._durs = None
+        self.rhythm_len = None
+        self.total_dur = None
 
     @property
     def onsets(self):
@@ -19,7 +21,7 @@ class RhythmBase:
 
     def set_onsets_and_durs(self, onsets, durs):
         if onsets is not None and durs is not None:
-            dict_ = {o: d for (o, d) in zip(onsets, durs)}
+            dict_ = dict(zip(onsets, durs))
         else:
             dict_ = {}
         self._data = sortedcontainers.SortedDict(dict_)

@@ -1,6 +1,6 @@
-import efficient_rhythms.er_classes as er_classes
-import efficient_rhythms.er_make as er_make
-import efficient_rhythms.er_settings as er_settings
+from efficient_rhythms import er_classes
+from efficient_rhythms import er_make
+from efficient_rhythms import er_settings
 
 
 def _init_score_with_notes(notes, er):
@@ -39,7 +39,9 @@ def test_too_many_alternations():
 
 
 class BasicPossibleNote(er_make.PossibleNote):
-    def __init__(self, score, onset, dur, voice_i):
+    def __init__(  # pylint: disable=super-init-not-called
+        self, score, onset, dur, voice_i
+    ):
         self.score = score
         self.onset = onset
         self.dur = dur
@@ -63,8 +65,6 @@ def test_remove_parallels():
     available_pitches = [45, 47, 48, 50, 69, 71, 72, 74]
     er_make.remove_parallels(er, score, available_pitches, poss_note)
     assert available_pitches == [45, 47, 48, 69, 71, 72]
-
-
 
 
 if __name__ == "__main__":

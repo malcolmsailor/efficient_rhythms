@@ -7,9 +7,8 @@ import urllib
 
 import get_settings_md_and_html
 
-import efficient_rhythms.er_constants as er_constants
-import efficient_rhythms.er_preprocess as er_preprocess
-import efficient_rhythms.er_settings as er_settings
+from efficient_rhythms import er_constants
+from efficient_rhythms import er_settings
 
 SCRIPT_DIR = os.path.dirname((os.path.realpath(__file__)))
 
@@ -30,7 +29,7 @@ TEMP_OUT_HTML_PATH = os.path.join(os.environ["HOME"], "tmp/index.html")
 def _contains_quoted_constant(value):
     if isinstance(value, str):
         return value in er_constants.__dict__
-    elif isinstance(value, collections.abc.Sequence):
+    if isinstance(value, collections.abc.Sequence):
         for subvalue in value:
             if _contains_quoted_constant(subvalue):
                 return True
@@ -56,7 +55,9 @@ def _remove_quotes_around_constants(value):
 
 
 def field_priority(name):
-    return er_settings.ERSettings.__dataclass_fields__[name].metadata[
+    return er_settings.ERSettings.__dataclass_fields__[  # pylint: disable=no-member
+        name
+    ].metadata[
         "priority"
     ]
 
@@ -70,7 +71,7 @@ def er_web_query(example, er_url):
         ),
         os.path.join(SCRIPT_DIR, "../../examples", f"{example}.py"),
     )
-    merged = er_preprocess.merge_settings(settings_files)
+    merged = er_settings.merge_settings(settings_files)
 
     for name in ER_WEB_EXCLUDE:
         if name in merged:

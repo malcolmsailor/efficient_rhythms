@@ -1,6 +1,6 @@
-import efficient_rhythms.er_make2 as er_make2
-import efficient_rhythms.er_classes as er_classes
-import efficient_rhythms.er_settings as er_settings
+from efficient_rhythms import er_make2
+from efficient_rhythms import er_classes
+from efficient_rhythms import er_settings
 
 
 def test_check_harmonic_intervals():
@@ -30,8 +30,7 @@ def test_check_harmonic_intervals():
         score = er_classes.Score(num_voices=er.num_voices, tet=er.tet)
         for (v, p, a, d, b) in notes:  # pylint: disable=invalid-name
             assert (
-                er_make2.check_harmonic_intervals(er, score, p, a, d, v)
-                is b
+                er_make2.check_harmonic_intervals(er, score, p, a, d, v) is b
             ), (
                 "er_make2.check_harmonic_intervals"
                 f"(er, score, {p}, {a}, {d}, {v}) is not {b}"
@@ -56,8 +55,7 @@ def test_check_harmonic_intervals():
         score = er_classes.Score(num_voices=er.num_voices, tet=er.tet)
         for (v, p, a, d, b) in notes:  # pylint: disable=invalid-name
             assert (
-                er_make2.check_harmonic_intervals(er, score, p, a, d, v)
-                is b
+                er_make2.check_harmonic_intervals(er, score, p, a, d, v) is b
             ), (
                 "er_make2.check_harmonic_intervals"
                 f"(er, score, {p}, {a}, {d}, {v}) is not {b}"
@@ -93,7 +91,6 @@ def test_check_melodic_intervals():
                 "er_make2.check_melodic_intervals"
                 f"(er, test_ps, prev_p, max_interval, min_interval, 0) != {result_ps}"
             )
-
 
     # SPECIFIC INTERVALS
     # MAX INTERVAL

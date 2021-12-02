@@ -1,8 +1,6 @@
 import copy
-import os
-import sys
 
-import efficient_rhythms.er_classes as er_classes
+from efficient_rhythms import er_classes
 
 
 def test_dumb_sorted_list():
@@ -71,20 +69,20 @@ def test_voice():
     voice = er_classes.Voice()
     for note_obj in note_objs:
         voice.add_note(note_obj)
-    more_notes = [n for n in voice.between()]
+    more_notes = list(voice.between())
     assert note_objs == more_notes
-    more_notes = [n for n in voice.between(start_time=0.5)]
+    more_notes = list(voice.between(start_time=0.5))
     assert note_objs[1:] == more_notes
-    more_notes = [n for n in voice.between(start_time=0.25)]
+    more_notes = list(voice.between(start_time=0.25))
     assert note_objs[1:] == more_notes
-    more_notes = [n for n in voice.between(end_time=1.5)]
+    more_notes = list(voice.between(end_time=1.5))
     assert note_objs[:2] == more_notes
-    more_notes = [n for n in voice.between(end_time=1.25)]
+    more_notes = list(voice.between(end_time=1.25))
     assert note_objs[:2] == more_notes
-    more_notes = [n for n in voice.between(start_time=0.5, end_time=1.5)]
+    more_notes = list(voice.between(start_time=0.5, end_time=1.5))
     assert note_objs[1:2] == more_notes
-    more_notes = [n for n in voice.between(start_time=1.0, end_time=1.25)]
-    assert more_notes == []
+    more_notes = list(voice.between(start_time=1.0, end_time=1.25))
+    assert not more_notes
     prev = voice.get_prev_n_notes(3, 0)
     assert prev == [None, None, None], "prev != [None, None, None]"
     prev = voice.get_prev_n_notes(3, 0, include_start_time=True)
@@ -130,7 +128,7 @@ def test_voice():
     s = voice.get_sounding_pitches(1.5)
     assert s == [62, 63], "s != [62, 63]"
     s = voice.get_sounding_pitches(2.0)
-    assert s == [], "s != []"
+    assert not s
     s = voice.get_sounding_pitches(0, end_time=2, min_dur=0.5)
     assert s == [60, 62, 63], "s != [60, 62, 63]"
     s = voice.get_sounding_pitches(

@@ -1,3 +1,4 @@
+import abc
 import warnings
 
 import numpy as np
@@ -17,6 +18,8 @@ DUR_TRANCHE_SIZE = INT_MAX // 2 ** 9
 
 
 class ContRhythmBase(RhythmBase):
+    __metaclass__ = abc.ABCMeta
+
     def __repr__(self):
         return (
             f"{self.__class__.__name__}(rhythm_len={self.rhythm_len}, "
@@ -168,6 +171,14 @@ class ContRhythmBase(RhythmBase):
         onsets = onsets.reshape(-1)
         durs = durs.reshape(-1)
         super().set_onsets_and_durs(onsets, durs)
+
+    @abc.abstractmethod
+    def _init_contents(self):
+        return
+
+    @abc.abstractmethod
+    def _fill_contents(self, i):
+        return
 
     def generate(self):
         # _init_contents() and _fill_contents() are to be provided by child

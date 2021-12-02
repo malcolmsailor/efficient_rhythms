@@ -8,7 +8,7 @@ import sortedcontainers
 
 import mspell
 
-from .. import er_classes
+from ..er_classes import Note, DEFAULT_VELOCITY, DEFAULT_CHOIR
 
 
 class DumbSortedList(list):
@@ -206,15 +206,15 @@ class Voice:
         note_obj_or_pitch,
         onset=None,
         dur=None,
-        velocity=er_classes.DEFAULT_VELOCITY,
-        choir=er_classes.DEFAULT_CHOIR,
+        velocity=DEFAULT_VELOCITY,
+        choir=DEFAULT_CHOIR,
     ):
-        if isinstance(note_obj_or_pitch, er_classes.Note):
+        if isinstance(note_obj_or_pitch, Note):
             note_obj = note_obj_or_pitch
             note_obj.voice = self.voice_i
         else:
             # is it worth asserting that onset and dur are not None here?
-            note_obj = er_classes.Note(
+            note_obj = Note(
                 note_obj_or_pitch,
                 onset,
                 dur,
@@ -654,10 +654,9 @@ class VoiceList(collections.UserList):
         self.data.append(item)
         self.num_new_voices += 1
 
-    # I don't understand pylint's objection here
-    def extend(self, iterable):  # pylint: disable=arguments-differ
-        self.data.extend(iterable)
-        self.num_new_voices += len(iterable)
+    def extend(self, other):
+        self.data.extend(other)
+        self.num_new_voices += len(other)
 
     def insert(self, i, item):
         self.data.insert(i, item)

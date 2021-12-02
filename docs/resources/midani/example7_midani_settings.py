@@ -1,8 +1,18 @@
 {
     "midi_fname": "examples/midi/example7.mid",
     "voice_settings": {
-        0: {"bracket_settings": {"hlen": {"y_offset": 4},}, "color_loop": 11,},
-        1: {"bracket_settings": {"hlen": {"y_offset": 4},}, "color_loop": 11,},
+        0: {
+            "bracket_settings": {
+                "hlen": {"y_offset": 4},
+            },
+            "color_loop": 11,
+        },
+        1: {
+            "bracket_settings": {
+                "hlen": {"y_offset": 4},
+            },
+            "color_loop": 11,
+        },
     },
     "brackets": [
         (0.0, 1.0, "hlen", "harmony_len = 2"),

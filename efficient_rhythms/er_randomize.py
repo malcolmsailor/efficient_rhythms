@@ -1,6 +1,5 @@
 import numbers
 import random
-import os
 import typing
 
 from fractions import Fraction
@@ -8,7 +7,7 @@ from fractions import Fraction
 import numpy as np
 
 from . import er_constants
-from . import er_interface
+from .er_interface import cli
 
 # LONGTERM Warnings to address:
 # Notice: 'parallel_voice_leading' is not compatible with checking voice-leadings
@@ -373,7 +372,7 @@ class ERRandomize:
         print(f'"{attr}": {_format_item(val)},')
 
     def apply(self, er):
-        width = er_interface.cli.line_width()
+        width = cli.line_width()
         print("#" * width)
         print("Randomized settings:")
         exclude = (

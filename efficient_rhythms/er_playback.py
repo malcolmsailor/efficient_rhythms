@@ -3,10 +3,9 @@ import subprocess
 import sys
 import threading
 
-sys.stdout = open("/dev/null", "w")
-import pygame  # pylint: disable=wrong-import-position
+with open("/dev/null", "w") as sys.stdout:
+    import pygame  # pylint: disable=wrong-import-position
 
-sys.stdout.close()
 sys.stdout = sys.__stdout__
 
 from . import er_midi  # pylint: disable=wrong-import-position

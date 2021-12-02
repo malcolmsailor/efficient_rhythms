@@ -2,10 +2,10 @@ import os
 import sys
 import traceback
 
-import efficient_rhythms.er_choirs as er_choirs
-import efficient_rhythms.er_exceptions as er_exceptions
-import efficient_rhythms.er_make as er_make
-import efficient_rhythms.er_settings as er_settings
+from efficient_rhythms import er_choirs
+from efficient_rhythms import er_exceptions
+from efficient_rhythms import er_make
+from efficient_rhythms import er_settings
 
 
 def test_many_seeds():

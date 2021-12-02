@@ -5,8 +5,17 @@
     ],
     "color_loop": 6,
     "voice_settings": {
-        0: {"bracket_settings": {"hlen": {"y_offset": 4},},},
-        1: {"bracket_settings": {"hlen": {"y_offset": 4},}, "color_loop": 7},
+        0: {
+            "bracket_settings": {
+                "hlen": {"y_offset": 4},
+            },
+        },
+        1: {
+            "bracket_settings": {
+                "hlen": {"y_offset": 4},
+            },
+            "color_loop": 7,
+        },
     },
     "brackets": [
         (0.0, 1.0, "plen", "pattern_len = 2"),

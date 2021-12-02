@@ -2,9 +2,9 @@ import os
 import subprocess
 import tempfile
 
-import efficient_rhythms.er_output_notation as er_output_notation
-import efficient_rhythms.er_misc_funcs as er_misc_funcs
-import efficient_rhythms.er_classes as er_classes
+from efficient_rhythms import er_output_notation
+from efficient_rhythms import er_misc_funcs
+from efficient_rhythms import er_classes
 
 
 def test_get_kern():

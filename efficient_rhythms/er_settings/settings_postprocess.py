@@ -8,7 +8,7 @@ import numpy as np
 
 from .. import er_choirs
 from .. import er_constants
-from .. import er_interface
+from ..er_interface import BuildStatusPrinter
 from .. import er_midi
 from .. import er_misc_funcs
 from .. import er_tuning
@@ -91,7 +91,7 @@ class SettingsPostprocessor(SettingsDataclass):
     def build_status_printer(self):
         if self._silent:
             return None
-        return er_interface.BuildStatusPrinter(self)
+        return BuildStatusPrinter(self)
 
     @cached_property
     def len_all_harmonies(self):
