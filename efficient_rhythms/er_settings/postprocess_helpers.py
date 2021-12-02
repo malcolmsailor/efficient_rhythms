@@ -148,6 +148,7 @@ def set_to_num_harmonies(er, field_name):
     if er.num_harmonies < len(val):
         return val[: er.num_harmonies]
     else:
+        val = list(val)
         while er.num_harmonies > len(val):
             val.extend(val[: er.num_harmonies - len(val)])
         return val
