@@ -207,5 +207,6 @@ class OptPerVoiceSuperSequence(  # pylint: disable=abstract-method
 
 # TODO is there a way we can also allow np arrays of the appropriate shape?
 # TODO or maybe we should get rid of np arrays in preprocessing?
-VoiceRange = Tuple[Pitch, Pitch]
+# VoiceRange = Tuple[Pitch, Pitch]
+VoiceRange = Tuple[Union[float, int], Union[float,int]]
 VoiceRanges = Sequence[VoiceRange]

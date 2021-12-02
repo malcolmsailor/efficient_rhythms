@@ -47,6 +47,7 @@ class SettingsBase:
     # when creating a dataclass that derives from another class, we still need
     # to apply the @dataclass decorator. For that reason there doesn't seem to
     # be any purpose in applying it to SettingsBase.
+
     def __post_init__(self):
         self._set_seed()
         if self.randomized:
@@ -106,7 +107,13 @@ class SettingsBase:
             self._process_rhythm_materials(field_name, field_type)
 
     def _process_pitch_materials(self, field_name, field_type):
-        if not er_types.has_pitches(field_type):
+        # TODO the field_name not in ("voice_ranges", "hard_bounds") condition
+        # is a temporary hack because for the time being the VoiceRange
+        # type is not subscripted with the Pitch type
+        if not er_types.has_pitches(field_type) and field_name not in (
+            "voice_ranges",
+            "hard_bounds",
+        ):
             return
         raw_val = getattr(self, field_name)
         new_val = replace_pitch_constants(raw_val)
