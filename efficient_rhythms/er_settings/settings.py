@@ -3,7 +3,7 @@ import re
 
 from dataclasses import field as fld
 from numbers import Number
-from typing import Dict, Optional, Sequence, Tuple, Union
+from typing import Dict, Optional, Sequence, Tuple, Union, List
 
 from .settings_base import SettingsBase
 from .preprocess_helpers import (
@@ -2825,7 +2825,7 @@ class SettingsDataclass(SettingsBase):
 
     _randomized: bool = False
     _silent: bool = False
-    _user_settings: Optional[list[str]] = None
+    _user_settings: Optional[List[str]] = None
 
 
 heading_pattern = re.compile(r"\n {8}[^\n]+\n {8}=+\n", re.MULTILINE)
