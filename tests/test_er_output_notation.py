@@ -1,6 +1,8 @@
 import os
+import shutil
 import subprocess
 import tempfile
+import warnings
 
 from efficient_rhythms import er_output_notation
 from efficient_rhythms import er_misc_funcs
@@ -8,6 +10,9 @@ from efficient_rhythms import er_classes
 
 
 def test_get_kern():
+    if not shutil.which("verovio"):
+        warnings.warn("verovio not found in path, skipping this test")
+        return
     # A case that was failing:
     notes = (
         ((60, 0, 1.75), (61, 1.75, 1.5), (62, 3.25, 0.75), (63, 4, 1)),

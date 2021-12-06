@@ -348,7 +348,7 @@ class ERRandomize:
             # Next condition is to ensure that np floats don't print like ints,
             # because when copying the settings for reuse floats and ints have
             # different meaning as pitches
-            if isinstance(item, np.float) and item % 1 == 0:
+            if isinstance(item, (np.float32, np.float64)) and item % 1 == 0:
                 return f"{item}"
             if isinstance(item, numbers.Number):
                 return f"{item:g}"

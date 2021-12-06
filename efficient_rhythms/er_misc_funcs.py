@@ -1245,7 +1245,7 @@ def tuplify(item, max_float_p=None):
             )
             + ")"
         )
-    if max_float_p is not None and isinstance(item, (float, np.float)):
+    if max_float_p is not None and isinstance(item, float):
 
         fmt_str = "{:." + str(max_float_p) + "g}"
         return fmt_str.format(item)

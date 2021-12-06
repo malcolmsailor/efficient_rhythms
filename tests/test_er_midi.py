@@ -68,7 +68,12 @@ def test_er_midi():
             "choirs_separate_tracks": choirs_separate_tracks,
         }
         print(more_settings)
-        er = er_settings.get_settings(base_settings | more_settings)
+        # er = er_settings.get_settings(base_settings | more_settings)
+        # | is only implemented in python 3.9
+        merged_settings = base_settings.copy()
+        for k, v in more_settings.items():
+            merged_settings[k] = v
+        er = er_settings.get_settings(merged_settings)
         super_pattern = er_make.make_super_pattern(er)
         er_make.complete_pattern(er, super_pattern)
         er_choirs.assign_choirs(er, super_pattern)
