@@ -13,14 +13,10 @@ class NullProbCurve(AttributeAdder, InfoGetter):
     def __init__(self, **kwargs):  # pylint: disable=unused-argument
         super().__init__()
 
-    def _get_seg_len(
-        self, *args
-    ):  # pylint: disable=unused-argument,no-self-use
+    def _get_seg_len(self, *args):  # pylint: disable=unused-argument,no-self-use
         return 1
 
-    def calculate(
-        self, *args, **kwargs
-    ):  # pylint: disable=unused-argument,no-self-use
+    def calculate(self, *args, **kwargs):  # pylint: disable=unused-argument,no-self-use
         return True
 
 
@@ -97,9 +93,7 @@ class ProbCurve(NullProbCurve):
         return random.randrange(lower_b, upper_b + 1)
 
     def _new_grain(self, x, voice_i):
-        granularity, grain_offset = self.get(
-            voice_i, "granularity", "grain_offset"
-        )
+        granularity, grain_offset = self.get(voice_i, "granularity", "grain_offset")
 
         if granularity == 0:
             return True
@@ -133,9 +127,7 @@ class ProbCurve(NullProbCurve):
         if voice_i not in self._count_dict or not self._count_dict[voice_i]:
             self._count_dict[voice_i] = self._get_seg_len(voice_i)
             result = bool(
-                self.prob_curve(  # pylint: disable=no-member
-                    x, rand, voice_i=voice_i
-                )
+                self.prob_curve(x, rand, voice_i=voice_i)  # pylint: disable=no-member
             )
             self._on_dict[voice_i] = result
             return result
@@ -214,9 +206,7 @@ class Linear(NonStaticCurve):
         decreasing, min_prob, max_prob = self.get(
             voice_i, "decreasing", "min_prob", "max_prob"
         )
-        result = linear(
-            x, min_prob, max_prob, self.length, decreasing=decreasing
-        )
+        result = linear(x, min_prob, max_prob, self.length, decreasing=decreasing)
         if result > rand:
             return True
         return False
@@ -238,9 +228,7 @@ class Quadratic(NonStaticCurve):
         decreasing, min_prob, max_prob = self.get(
             voice_i, "decreasing", "min_prob", "max_prob"
         )
-        result = quadratic(
-            x, min_prob, max_prob, self.length, decreasing=decreasing
-        )
+        result = quadratic(x, min_prob, max_prob, self.length, decreasing=decreasing)
         if result > rand:
             return True
         return False
@@ -249,9 +237,7 @@ class Quadratic(NonStaticCurve):
 class OscCurve(NonStaticCurve):
     """Base class for oscillating non-static probability curves."""
 
-    def __init__(
-        self, min_prob=0, max_prob=1, period=4, length=0, decreasing=False
-    ):
+    def __init__(self, min_prob=0, max_prob=1, period=4, length=0, decreasing=False):
         super().__init__(
             min_prob=min_prob,
             max_prob=max_prob,
@@ -277,9 +263,7 @@ class OscCurve(NonStaticCurve):
 class LinearOsc(OscCurve):
     """Linear oscillating probability curve class."""
 
-    def __init__(
-        self, min_prob=0, max_prob=1, period=4, length=0, decreasing=False
-    ):
+    def __init__(self, min_prob=0, max_prob=1, period=4, length=0, decreasing=False):
         super().__init__(
             min_prob=min_prob,
             max_prob=max_prob,
@@ -303,9 +287,7 @@ class LinearOsc(OscCurve):
 class Saw(OscCurve):
     """Saw oscillating probability curve class."""
 
-    def __init__(
-        self, min_prob=0, max_prob=1, period=4, length=0, decreasing=False
-    ):
+    def __init__(self, min_prob=0, max_prob=1, period=4, length=0, decreasing=False):
         super().__init__(
             min_prob=min_prob,
             max_prob=max_prob,
@@ -318,9 +300,7 @@ class Saw(OscCurve):
         decreasing, min_prob, max_prob, period, offset = self.get(
             voice_i, "decreasing", "min_prob", "max_prob", "period", "offset"
         )
-        result = saw(
-            offset + x, min_prob, max_prob, period, decreasing=decreasing
-        )
+        result = saw(offset + x, min_prob, max_prob, period, decreasing=decreasing)
         if result > rand:
             return True
         return False
@@ -329,9 +309,7 @@ class Saw(OscCurve):
 class Sine(OscCurve):
     """Sine oscillating probability curve class."""
 
-    def __init__(
-        self, min_prob=0, max_prob=1, period=4, length=0, decreasing=False
-    ):
+    def __init__(self, min_prob=0, max_prob=1, period=4, length=0, decreasing=False):
         super().__init__(
             min_prob=min_prob,
             max_prob=max_prob,
@@ -344,9 +322,7 @@ class Sine(OscCurve):
         decreasing, min_prob, max_prob, period, offset = self.get(
             voice_i, "decreasing", "min_prob", "max_prob", "period", "offset"
         )
-        result = cosine(
-            offset + x, min_prob, max_prob, period, decreasing=decreasing
-        )
+        result = cosine(offset + x, min_prob, max_prob, period, decreasing=decreasing)
         if result > rand:
             return True
         return False
@@ -367,9 +343,7 @@ class Accumulating(Static):
             attr_val_kwargs={"min_value": 0, "max_value": -1},
         )
         self.decreasing = None
-        self.add_attribute(
-            "decreasing", decreasing, "Decreasing", bool, unique=True
-        )
+        self.add_attribute("decreasing", decreasing, "Decreasing", bool, unique=True)
         self.accumulated = {}
 
     def reset(self):
@@ -523,9 +497,7 @@ def linear_osc(x, min_prob, max_prob, period, decreasing=False):
             return linear(mod_x - slope_len, min_prob, max_prob, slope_len)
         return linear(mod_x, min_prob, max_prob, slope_len, decreasing=True)
     if mod_x > slope_len:
-        return linear(
-            mod_x - slope_len, min_prob, max_prob, slope_len, decreasing=True
-        )
+        return linear(mod_x - slope_len, min_prob, max_prob, slope_len, decreasing=True)
     return linear(mod_x, min_prob, max_prob, slope_len)
 
 
@@ -554,6 +526,5 @@ PROB_CURVES = tuple(
     for name, cls in locals().items()
     if inspect.isclass(cls)
     and issubclass(cls, AttributeAdder)
-    and cls
-    not in (AttributeAdder, NullProbCurve, ProbCurve, NonStaticCurve, OscCurve)
+    and cls not in (AttributeAdder, NullProbCurve, ProbCurve, NonStaticCurve, OscCurve)
 )

@@ -1,8 +1,4 @@
-from . import er_exceptions
-from . import er_classes
-from . import er_voice_leadings
-
-from . import er_apply_vl
+from . import er_apply_vl, er_classes, er_exceptions, er_voice_leadings
 
 
 def _get_htimes_end_i(rhythm, htimes, vl_item_end_i):
@@ -35,9 +31,7 @@ def flex_vl_loop(er, score, voice_lead_error, voice, vl_item):
         # update new harmony if necessary
         if new_note_i == new_htimes_end_i:
             new_htimes = score.get_harmony_times_from_onset(new_onset)
-            new_htimes_end_i = _get_htimes_end_i(
-                rhythm, new_htimes, vl_item.end_i
-            )
+            new_htimes_end_i = _get_htimes_end_i(rhythm, new_htimes, vl_item.end_i)
             update_voice_leadings = True
 
         # update prev harmony if necessary
@@ -80,9 +74,7 @@ def flex_vl_loop(er, score, voice_lead_error, voice, vl_item):
                 voice_leading = voice_leader(exclude_vl_tup=vl_motion_tup)
             except er_exceptions.NoMoreVoiceLeadingsError:
                 voice_lead_error.total_failures += 1
-                voice_lead_error.harmony_counter[
-                    (prev_htimes.i, new_htimes.i)
-                ] += 1
+                voice_lead_error.harmony_counter[(prev_htimes.i, new_htimes.i)] += 1
                 return None
 
     for note in new_notes:
@@ -115,9 +107,7 @@ def voice_lead_pattern_flexibly(er, score, vl_error, pattern_vl_i=0):
     ):
         return True
 
-    if voice_lead_pattern_flexibly(
-        er, score, vl_error, pattern_vl_i=pattern_vl_i + 1
-    ):
+    if voice_lead_pattern_flexibly(er, score, vl_error, pattern_vl_i=pattern_vl_i + 1):
         return True
 
     for note in new_notes:
@@ -139,13 +129,9 @@ def strict_voice_leading_loop(er, score, voice_lead_error, voice, vl_item):
     new_htimes = score.get_harmony_times_from_onset(new_onset)
     new_htimes_end_i = _get_htimes_end_i(rhythm, new_htimes, vl_item.end_i)
     prev_htimes = score.get_harmony_times_from_onset(prev_onset)
-    prev_htimes_end_i = _get_htimes_end_i(
-        rhythm, prev_htimes, vl_item.prev_end_i
-    )
+    prev_htimes_end_i = _get_htimes_end_i(rhythm, prev_htimes, vl_item.prev_end_i)
 
-    voice_leader = er_voice_leadings.VoiceLeader(
-        er, prev_htimes.i, new_htimes.i
-    )
+    voice_leader = er_voice_leadings.VoiceLeader(er, prev_htimes.i, new_htimes.i)
     voice_leading = voice_leader()
     prev_pc_scale = er.get(prev_htimes.i, "pc_scales")
 
@@ -167,7 +153,10 @@ def strict_voice_leading_loop(er, score, voice_lead_error, voice, vl_item):
             # like that would create a lot of overhead.
             prev_note = voice.get_notes_by_i(prev_note_j)[0]
             new_onset, new_dur = rhythm.get_onset_and_dur(new_note_j)
-            new_note, vl_motion_tup, = er_apply_vl.apply_voice_leading(
+            (
+                new_note,
+                vl_motion_tup,
+            ) = er_apply_vl.apply_voice_leading(
                 er,
                 score,
                 prev_note,
@@ -194,9 +183,7 @@ def strict_voice_leading_loop(er, score, voice_lead_error, voice, vl_item):
                 voice_leading = voice_leader(exclude_vl_tup=vl_motion_tup)
             except er_exceptions.NoMoreVoiceLeadingsError:
                 voice_lead_error.total_failures += 1
-                voice_lead_error.harmony_counter[
-                    (prev_htimes.i, new_htimes.i)
-                ] += 1
+                voice_lead_error.harmony_counter[(prev_htimes.i, new_htimes.i)] += 1
                 return None
 
         else:  # success == True
@@ -205,22 +192,16 @@ def strict_voice_leading_loop(er, score, voice_lead_error, voice, vl_item):
             # range(prev_note_i, prev_note_end_i) or
             # range(new_note_i, new_htimes_end_i) is empty, which I believe
             # should never happen.
-            new_note_i = (
-                new_note_j + 1  # pylint: disable=undefined-loop-variable
-            )
+            new_note_i = new_note_j + 1  # pylint: disable=undefined-loop-variable
             if new_note_i == vl_item.end_i:
                 break
-            prev_note_i = (
-                prev_note_j + 1  # pylint: disable=undefined-loop-variable
-            )
+            prev_note_i = prev_note_j + 1  # pylint: disable=undefined-loop-variable
             prev_onset = voice.get_notes_by_i(prev_note_i)[0].onset
             new_onset, new_dur = rhythm.get_onset_and_dur(new_note_i)
             # update new harmony if necessary
             if new_note_i == new_htimes_end_i:
                 new_htimes = score.get_harmony_times_from_onset(new_onset)
-                new_htimes_end_i = _get_htimes_end_i(
-                    rhythm, new_htimes, vl_item.end_i
-                )
+                new_htimes_end_i = _get_htimes_end_i(rhythm, new_htimes, vl_item.end_i)
 
             # update prev harmony if necessary
             if prev_note_i == prev_htimes_end_i:
@@ -251,6 +232,7 @@ def voice_lead_pattern_strictly(er, score, vl_error, pattern_vl_i=0):
 
     voice = score.voices[vl_item.voice_i]
 
+    new_notes = []
     # I think I may be removing empty voices elsewhere in which case this
     #   check could be skipped
     # In the event that the voice is empty, skip loop.
@@ -258,15 +240,11 @@ def voice_lead_pattern_strictly(er, score, vl_error, pattern_vl_i=0):
     # because we reuse them on re-generating the rhythm, after which the vl_item
     # may no longer be empty.)
     if voice and vl_item:
-        new_notes = strict_voice_leading_loop(
-            er, score, vl_error, voice, vl_item
-        )
+        new_notes = strict_voice_leading_loop(er, score, vl_error, voice, vl_item)
         if new_notes is None:
             return False
 
-    if voice_lead_pattern_strictly(
-        er, score, vl_error, pattern_vl_i=pattern_vl_i + 1
-    ):
+    if voice_lead_pattern_strictly(er, score, vl_error, pattern_vl_i=pattern_vl_i + 1):
         return True
 
     if er.allow_flexible_voice_leading and voice_lead_pattern_flexibly(

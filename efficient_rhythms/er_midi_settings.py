@@ -4,18 +4,15 @@ import numbers
 import os
 import typing
 
-from . import er_misc_funcs
-from . import er_tuning
+from . import er_misc_funcs, er_tuning
+
 
 # User probably won't need to access these settings
 @dataclasses.dataclass
 class MidiSettings:
-
     num_tracks: int = None  # Not to be set by user, will be overwritten later
     _output_path: str = None  # Not to be set by user, will be overwritten later
-    _original_path: str = (
-        None  # Not to be set by user, will be overwritten later
-    )
+    _original_path: str = None  # Not to be set by user, will be overwritten later
     output_dir: str = None  #
     tet: int = 12
     time_sig: typing.Tuple[int, int] = None
@@ -23,18 +20,20 @@ class MidiSettings:
     num_channels_pitch_bend_loop: int = 9
     pitch_bend_time_prop: numbers.Number = 0.75
 
+    _silent: bool = False
+
     def __post_init__(self):
         self.note_counter = collections.Counter()
         # If the file is in 12 tet and features no finetuning then these steps are
         # not necessary but for the moment it seems like more effort than it's
         # worth to check:
-        self.pitch_bend_time_dict = {
-            track_i: [0 for _ in range(self.num_channels_pitch_bend_loop)]
-            for track_i in range(self.num_tracks)
-        }
-        self.pitch_bend_tuple_dict = er_tuning.return_pitch_bend_tuple_dict(
-            self.tet
-        )
+        # TODO: (Malcolm 2023-12-26) This leads to a TypeError because self.num_tracks
+        #   is None on initialization
+        # self.pitch_bend_time_dict = {
+        #     track_i: [0 for _ in range(self.num_channels_pitch_bend_loop)]
+        #     for track_i in range(self.num_tracks)
+        # }
+        self.pitch_bend_tuple_dict = er_tuning.return_pitch_bend_tuple_dict(self.tet)
 
     def num_tracks_from(self, score):
         self.num_tracks = score.num_voices

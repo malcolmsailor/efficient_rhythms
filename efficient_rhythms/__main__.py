@@ -1,18 +1,22 @@
 import itertools
 import os
+import pdb
 import random
 import subprocess
 import sys
+import traceback
 
-from . import er_changers
-from . import er_exceptions
-from . import er_globals
-from . import er_interface
-from . import er_make_handler
-from . import er_midi
-from . import er_midi_settings
-from . import er_output_notation
-from . import er_settings
+from . import (
+    er_changers,
+    er_exceptions,
+    er_globals,
+    er_interface,
+    er_make_handler,
+    er_midi,
+    er_midi_settings,
+    er_output_notation,
+    er_settings,
+)
 
 MAX_RANDOM_TRIES = 10
 
@@ -41,9 +45,7 @@ def get_changer_settings(args):
     for path in args.changers:
         print(f"Reading changers from {path}")
         with open(path, "r", encoding="utf-8") as inf:
-            changer_settings.extend(
-                eval(inf.read())  # pylint: disable=eval-used
-            )
+            changer_settings.extend(eval(inf.read()))  # pylint: disable=eval-used
     return changer_settings
 
 
@@ -52,9 +54,7 @@ def save(args, settings, pattern):
         if pattern.onsets_adjusted_by != 0:
             er_midi.write_midi(pattern, settings)
     else:
-        non_empty = er_midi.write_er_midi(
-            settings, pattern, settings.output_path
-        )
+        non_empty = er_midi.write_er_midi(settings, pattern, settings.output_path)
         if not non_empty:
             print(
                 "Midi file is empty! Nothing to write. "
@@ -103,12 +103,10 @@ def build(args, seed=None, settings_dict=None):
             if not args.random:
                 er_interface.fail_and_exit(exc)
             elif try_i + 1 >= MAX_RANDOM_TRIES:
-                er_interface.fail_and_exit(
-                    exc, random_failures=MAX_RANDOM_TRIES
-                )
+                er_interface.fail_and_exit(exc, random_failures=MAX_RANDOM_TRIES)
         # we should only get here if args.random is True and er_make failed
         print("Random settings failed, trying again with another seed")
-        seed = random.randint(0, 2 ** 32)
+        seed = random.randint(0, 2**32)
 
     changer_settings = get_changer_settings(args)
     changers = get_changers(changer_settings, pattern)
@@ -147,6 +145,16 @@ def output_notation(settings, pattern, args):
 def main():
     er_interface.print_hello()
     args = er_interface.parse_cmd_line_args()
+
+    if args.debug:
+
+        def custom_excepthook(exc_type, exc_value, exc_traceback):
+            traceback.print_exception(
+                exc_type, exc_value, exc_traceback, file=sys.stdout
+            )
+            pdb.post_mortem(exc_traceback)
+
+        sys.excepthook = custom_excepthook
     settings, changers, pattern, changed_pattern = build(args)
 
     if args.no_interface:

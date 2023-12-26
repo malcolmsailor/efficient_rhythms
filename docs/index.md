@@ -71,7 +71,7 @@ settings:\[1\]
 You can also try running it with randomized settings, although be warned
 that the results are sometimes strange:
 
-`python3 -m efficient_rhythms`
+`python3 -m efficient_rhythms --random`
 
 There are many configurable settings that shape the output. Full
 documentation is available in \[`settings.html`\](docs/settings.md). But

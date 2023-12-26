@@ -7,13 +7,11 @@ import os
 import random
 import warnings
 from multiprocessing.dummy import Pool as ThreadPool
+from typing import Any
 
 import mido
 
-from . import er_choirs
-from . import er_midi_settings
-from . import er_classes
-from . import er_tuning
+from . import er_choirs, er_classes, er_midi_settings, er_tuning
 
 # midi constants
 META_TRACK = 0
@@ -41,10 +39,15 @@ def abs_to_delta_times(mf, skip=()):
         #   that happening, so we round to TIME_PRECISION when sorting here.
         track.sort(key=lambda x: round(x.time, TIME_PRECISION))
         current_tick_time = 0  # unrounded
-        for msg in track:
-            abs_tick_time = mf.ticks_per_beat * msg.time
+        for msg_i in range(len(track)):
+            abs_msg = track[msg_i]
+            abs_tick_time = mf.ticks_per_beat * abs_msg.time
             delta_tick_time = abs_tick_time - current_tick_time
-            msg.time = round(delta_tick_time)
+            if isinstance(abs_msg, (AbsoluteMetaMidiMsg, AbsoluteMidiMsg)):
+                new_msg = abs_msg.parent_msg.copy(time=round(delta_tick_time))
+            else:
+                new_msg = abs_msg.copy(time=round(delta_tick_time))
+            track[msg_i] = new_msg
             current_tick_time = abs_tick_time
 
 
@@ -214,9 +217,7 @@ def _build_track_dict(er, score_num_voices):
 
     for voice_i in range(score_num_voices):
         for choir_i in range(er.num_choir_programs):
-            er.track_dict[(voice_i, choir_i)] = _get_track_number(
-                voice_i, choir_i
-            )
+            er.track_dict[(voice_i, choir_i)] = _get_track_number(voice_i, choir_i)
 
     return num_tracks, existing_voices_offset
 
@@ -234,9 +235,7 @@ def add_note_and_pitch_bend(
                 "pitchwheel",
                 channel=channel,
                 pitch=pitch_bend_tuple[PITCH_BEND],
-                time=pitch_bend_time
-                if pitch_bend_time is not None
-                else note.onset,
+                time=pitch_bend_time if pitch_bend_time is not None else note.onset,
             )
         )
         add_note(
@@ -257,9 +256,7 @@ def humanize(er, note=None, tuning=None):
         new_note = note.copy()
         new_note.onset = max(0, note.onset - 1 + _get_value(er.humanize_onset))
         new_note.dur = note.dur - 1 + _get_value(er.humanize_dur)
-        new_note.velocity = round(
-            note.velocity * _get_value(er.humanize_velocity)
-        )
+        new_note.velocity = round(note.velocity * _get_value(er.humanize_velocity))
         return new_note
     tuning = round(
         tuning
@@ -277,9 +274,7 @@ def add_er_voice(er, voice_i, voice, mf, force_choir=None):
             choir_i = force_choir
         else:
             choir_i = note.choir
-        choir_program_i = er_choirs.get_choir_prog(
-            er.choirs, choir_i, note.pitch
-        )
+        choir_program_i = er_choirs.get_choir_prog(er.choirs, choir_i, note.pitch)
         # I used to add 1 because meta track is track 0 but now I've moved that
         # operation into the construction of er.track_dict above
         track_i = er.track_dict[(voice_i, choir_program_i)]
@@ -330,10 +325,8 @@ def add_er_voice(er, voice_i, voice, mf, force_choir=None):
             if prev_time_on_channel == 0:
                 pitch_bend_time = 0
             else:
-                pitch_bend_time = (
-                    prev_time_on_channel
-                    + er.pitch_bend_time_prop
-                    * (note.onset - prev_time_on_channel)
+                pitch_bend_time = prev_time_on_channel + er.pitch_bend_time_prop * (
+                    note.onset - prev_time_on_channel
                 )
             add_note_and_pitch_bend(
                 mf.tracks[track_i],
@@ -370,37 +363,22 @@ def write_track_names(settings_obj, mf, abbr_track_names=True):
         track_name = track_name_base + f"_existing_voice{track_i + 1}"
         _add_track_name(track_i + 1, track_name)
 
-    if (
-        settings_obj.voices_separate_tracks
-        and not settings_obj.choirs_separate_tracks
-    ):
+    if settings_obj.voices_separate_tracks and not settings_obj.choirs_separate_tracks:
         for track_i in range(settings_obj.num_new_tracks):
             track_name = track_name_base + f"_voice{track_i + 1}"
-            _add_track_name(
-                track_i + settings_obj.num_existing_tracks + 1, track_name
-            )
+            _add_track_name(track_i + settings_obj.num_existing_tracks + 1, track_name)
     elif (
-        settings_obj.choirs_separate_tracks
-        and not settings_obj.voices_separate_tracks
+        settings_obj.choirs_separate_tracks and not settings_obj.voices_separate_tracks
     ):
         for track_i in range(settings_obj.num_new_tracks):
             track_name = track_name_base + f"_choir{track_i + 1}"
-            _add_track_name(
-                track_i + settings_obj.num_existing_tracks + 1, track_name
-            )
-    elif (
-        settings_obj.voices_separate_tracks
-        and settings_obj.choirs_separate_tracks
-    ):
+            _add_track_name(track_i + settings_obj.num_existing_tracks + 1, track_name)
+    elif settings_obj.voices_separate_tracks and settings_obj.choirs_separate_tracks:
         for track_i in range(settings_obj.num_new_tracks):
             voice_i = track_i // settings_obj.num_choirs
             choir_i = track_i % settings_obj.num_choirs
-            track_name = track_name_base + (
-                f"_voice{voice_i + 1}_choir{choir_i + 1}"
-            )
-            _add_track_name(
-                track_i + settings_obj.num_existing_tracks + 1, track_name
-            )
+            track_name = track_name_base + (f"_voice{voice_i + 1}_choir{choir_i + 1}")
+            _add_track_name(track_i + settings_obj.num_existing_tracks + 1, track_name)
     else:
         _add_track_name(1, track_name_base + "_all")
 
@@ -444,9 +422,7 @@ def write_tempi(er, mf, total_len):
             # ideally I should adapt this to preprocessing
             tempo = random.randrange(*er.tempo_bounds)
         mf.tracks[META_TRACK].append(
-            mido.MetaMessage(
-                "set_tempo", tempo=mido.bpm2tempo(tempo), time=time
-            )
+            mido.MetaMessage("set_tempo", tempo=mido.bpm2tempo(tempo), time=time)
         )
         if not er.tempo_len:
             break
@@ -455,7 +431,6 @@ def write_tempi(er, mf, total_len):
 
 
 def init_midi(er, super_pattern):
-
     # LONGTERM not really crazy about these side-effects
     er.num_new_tracks, er.num_existing_tracks = _build_track_dict(
         er, super_pattern.num_voices
@@ -519,9 +494,7 @@ def write_er_midi(
     # non_empty = False
     empty_voices = []
     for voice_i, voice in enumerate(
-        super_pattern.voices
-        if not reverse_tracks
-        else reversed(super_pattern.voices)
+        super_pattern.voices if not reverse_tracks else reversed(super_pattern.voices)
     ):
         empty = add_er_voice(er, voice_i, voice, mf)
         empty_voices.append(empty)
@@ -617,9 +590,7 @@ def add_track(track_i, track, midi_settings, mf):
             )
             note_count = midi_settings.note_counter[track_i]
             midi_settings.note_counter[track_i] += 1
-            midi_num, pitch_bend = midi_settings.pitch_bend_tuple_dict[
-                note.pitch
-            ]
+            midi_num, pitch_bend = midi_settings.pitch_bend_tuple_dict[note.pitch]
             if note.finetune:
                 midi_num, pitch_bend = er_tuning.finetune_pitch_bend_tuple(
                     (midi_num, pitch_bend), note.finetune
@@ -666,13 +637,17 @@ def write_midi(super_pattern, midi_settings, abbr_track_names=True):
 
     write_meta_messages(super_pattern, mf)
     non_empty = False
-    for track_i, track in enumerate(super_pattern.voices):
+    for track_i, track in enumerate(super_pattern.voices, start=1):
         empty = add_track(track_i, track, midi_settings, mf)
         if not empty:
             non_empty = True
 
     if non_empty:
-        abs_to_delta_times(mf, skip=(META_TRACK,))
+        # TODO: (Malcolm 2023-12-26) why did we skip the META_TRACK? Today that's
+        #   causing a MIDO error. In any case, if there are tempo changes
+        #   later in the track, we definitely want to process it.
+        # abs_to_delta_times(mf, skip=(META_TRACK,))
+        abs_to_delta_times(mf)
         mf.save(filename=midi_fname)
     return non_empty
 
@@ -684,7 +659,6 @@ def _pitch_bend_handler(pitch_bend_dict, track_i, msg):
 def _note_on_handler(
     note_on_dict, pitch_bend_dict, inverse_pb_tup_dict, track_i, msg, tet=12
 ):
-
     channel = msg.channel
     midinum = msg.note
 
@@ -698,10 +672,7 @@ def _note_on_handler(
     note_on_dict[track_i][channel][midinum] = (msg, pitch)
 
 
-def _note_off_handler(
-    note_on_dict, track_i, msg, ticks_per_beat, max_denominator=8192
-):
-
+def _note_off_handler(note_on_dict, track_i, msg, ticks_per_beat, max_denominator=8192):
     channel = msg.channel
     midinum = msg.note
     tick_release = msg.time
@@ -725,55 +696,94 @@ def _note_off_handler(
     return note_object
 
 
-class AbsoluteMidiMsg(mido.Message):
-    """A child class of the Message class from the mido library. The only
-    change is that the time is specified in absolute ticks.
+# class AbsoluteMidiMsg(mido.Message):
+#     """A child class of the Message class from the mido library. The only
+#     change is that the time is specified in absolute ticks.
 
-    Call with AbsoluteMidiMsg(msg, tick_time) where "msg" is a mido Message
-    and tick_time is the time in ticks.
+#     Call with AbsoluteMidiMsg(msg, tick_time) where "msg" is a mido Message
+#     and tick_time is the time in ticks.
 
-    Use with caution since the mido methods may rely on relative tick_times.
-    """
+#     Use with caution since the mido methods may rely on relative tick_times.
+#     """
 
-    # def __init__(self, msg, tick_time):
-    #     self_vars = vars(self)
-    #     msg_vars = vars(msg)
-    #     for msg_attribute, value in msg_vars.items():
-    #         self_vars[msg_attribute] = value
-    #     self.time = tick_time
+#     # def __init__(self, msg, tick_time):
+#     #     self_vars = vars(self)
+#     #     msg_vars = vars(msg)
+#     #     for msg_attribute, value in msg_vars.items():
+#     #         self_vars[msg_attribute] = value
+#     #     self.time = tick_time
 
+#     def __init__(self, msg, tick_time):
+#         super().__init__(msg.type)
+#         self._parent_msg = msg
+#         for msg_attribute, value in vars(msg).items():
+#             if msg_attribute == "type":
+#                 continue
+#             setattr(self, msg_attribute, value)
+#         self.time = tick_time
+
+#     def parent_msg(self, delta):
+#         # Used to reconstruct the original messages on output
+#         return self._parent_msg.copy(time=delta)
+
+# def __str__(self):
+#     return (f"type: {self.type:<20} time: {float(self.time):>10}")
+#
+# def __repr__(self):
+#     return (f"type: {self.type}; time: {float(self.time)}")
+
+
+# class AbsoluteMetaMidiMsg(mido.MetaMessage):
+#     """A child class of the MetaMessage class from the mido library. The only
+#     change is that the time is specified in absolute ticks.
+
+#     Call with AbsoluteMetaMidiMsg(msg, tick_time) where "msg" is a mido
+#     MetaMessage and tick_time is the time in ticks.
+
+#     Use with caution since the mido methods may rely on relative tick_times.
+#     """
+
+#     def __init__(self, msg, tick_time):
+#         super().__init__(msg.type)
+#         for msg_attribute, value in vars(msg).items():
+#             if msg_attribute == "type":
+#                 continue
+#             setattr(self, msg_attribute, value)
+#         self.time = tick_time
+
+#     def parent_msg(self, delta):
+#         # Used to reconstruct the original messages on output
+#         return self._parent_msg.copy(time=delta)
+
+
+class AbsoluteMidiMsg:
     def __init__(self, msg, tick_time):
-        super().__init__(msg.type)
-        for msg_attribute, value in vars(msg).items():
-            if msg_attribute == "type":
-                continue
-            setattr(self, msg_attribute, value)
+        self.parent_msg = msg
         self.time = tick_time
 
-    # def __str__(self):
-    #     return (f"type: {self.type:<20} time: {float(self.time):>10}")
-    #
-    # def __repr__(self):
-    #     return (f"type: {self.type}; time: {float(self.time)}")
+    def __getattribute__(self, __name: str) -> Any:
+        if __name == "time":
+            return object.__getattribute__(self, "time")
+        else:
+            parent_msg = object.__getattribute__(self, "parent_msg")
+        if __name == "parent_msg":
+            return parent_msg
+        return getattr(parent_msg, __name)
 
 
-class AbsoluteMetaMidiMsg(mido.MetaMessage):
-    """A child class of the MetaMessage class from the mido library. The only
-    change is that the time is specified in absolute ticks.
-
-    Call with AbsoluteMetaMidiMsg(msg, tick_time) where "msg" is a mido
-    MetaMessage and tick_time is the time in ticks.
-
-    Use with caution since the mido methods may rely on relative tick_times.
-    """
-
+class AbsoluteMetaMidiMsg:
     def __init__(self, msg, tick_time):
-        super().__init__(msg.type)
-        for msg_attribute, value in vars(msg).items():
-            if msg_attribute == "type":
-                continue
-            setattr(self, msg_attribute, value)
+        self.parent_msg = msg
         self.time = tick_time
+
+    def __getattribute__(self, __name: str) -> Any:
+        if __name == "time":
+            return object.__getattribute__(self, "time")
+        else:
+            parent_msg = object.__getattribute__(self, "parent_msg")
+        if __name == "parent_msg":
+            return parent_msg
+        return getattr(parent_msg, __name)
 
 
 def _return_sorted_midi_tracks(in_mid):
@@ -798,6 +808,32 @@ def _return_sorted_midi_tracks(in_mid):
     return out
 
 
+# TODO: (Malcolm 2023-12-26) remove
+# def create_separate_global_track(mid: mido.MidiFile) -> mido.MidiFile:
+#     """In case the midi file has meta messages *and* notes on the 0th track,
+#     separate them.
+#     """
+#     meta = []
+#     notes = []
+#     keep = []
+#     keep_with_notes = {"track_name", "end_of_track"}
+#     for msg in mid.tracks[0]:
+#         if msg.type in keep_with_notes:
+#             keep.append(msg)
+#         elif isinstance(msg, mido.MetaMessage):
+#             meta.append(msg)
+#         else:
+#             notes.append(msg)
+#     if meta and notes:
+#         new_mid = mido.MidiFile()
+#         new_mid.tracks.append(mido.MidiTrack(meta))
+#         new_mid.tracks.append(mido.MidiTrack(notes))
+#         new_mid.tracks.extend(mid.tracks[1:])
+#         return new_mid
+#     else:
+#         return mid
+
+
 def read_midi_to_internal_data(
     in_midi_fname,
     tet=12,
@@ -806,7 +842,6 @@ def read_midi_to_internal_data(
     track_num_offset=0,
     max_denominator=8192,
 ):
-
     in_mid = mido.MidiFile(in_midi_fname)
     num_tracks = len(in_mid.tracks)
     if num_tracks == 1:
@@ -844,9 +879,7 @@ def read_midi_to_internal_data(
     pitch_bend_dict = {
         i: {j: {} for j in range(NUM_CHANNELS)} for i in range(num_tracks)
     }
-    note_on_dict = {
-        i: {j: {} for j in range(NUM_CHANNELS)} for i in range(num_tracks)
-    }
+    note_on_dict = {i: {j: {} for j in range(NUM_CHANNELS)} for i in range(num_tracks)}
 
     for track_i, track in enumerate(sorted_tracks):
         for msg in track:

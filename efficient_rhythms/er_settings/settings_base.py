@@ -1,11 +1,15 @@
 import typing
 
-from .. import er_constants
-from .. import er_exceptions
-from .. import er_misc_funcs
-from .. import er_randomize
-from .. import er_tuning
-from .. import er_types
+import numpy as np
+
+from .. import (
+    er_constants,
+    er_exceptions,
+    er_misc_funcs,
+    er_randomize,
+    er_tuning,
+    er_types,
+)
 
 
 def _process_str(pitch_str):
@@ -144,7 +148,10 @@ class SettingsBase:
     def _fill_none_or_falsy(self, field_name, field_args, field_type):
         raw_val = getattr(self, field_name)
         metadata = field_args.metadata
-        if not raw_val and "if_falsy" in metadata:
+        if (
+            not (raw_val.any() if isinstance(raw_val, np.ndarray) else raw_val)
+            and "if_falsy" in metadata
+        ):
             new_val = metadata["if_falsy"](self)
             setattr(self, field_name, new_val)
             return

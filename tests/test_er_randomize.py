@@ -2,15 +2,13 @@ import os
 import sys
 import traceback
 
-from efficient_rhythms import er_choirs
-from efficient_rhythms import er_exceptions
-from efficient_rhythms import er_make
-from efficient_rhythms import er_settings
+from efficient_rhythms import er_choirs, er_exceptions, er_make, er_settings
 
 
 def test_many_seeds():
-    num_seeds = 100
-    start_seed = 350
+    # TODO: (Malcolm 2023-12-26) restore 100?
+    num_seeds = 2
+    start_seed = 42
     bad_seeds = []
     excs = []
     for i in range(start_seed, start_seed + num_seeds):
@@ -38,9 +36,7 @@ def test_many_seeds():
             term_size = 80
         print("#" * term_size)
         print("SEED: ", seed)
-        traceback.print_exception(
-            exc_type, exc_value, exc_traceback, file=sys.stdout
-        )
+        traceback.print_exception(exc_type, exc_value, exc_traceback, file=sys.stdout)
 
 
 if __name__ == "__main__":

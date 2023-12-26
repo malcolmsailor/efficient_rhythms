@@ -1,6 +1,6 @@
 import argparse
-import warnings
 import sys
+import warnings
 
 
 def parse_cmd_line_args():
@@ -80,10 +80,10 @@ def parse_cmd_line_args():
         "-o",
         "--output",
         help=(
-            "path to output midi file, overriding any value specified in "
-            "settings"
+            "path to output midi file, overriding any value specified in " "settings"
         ),
     )
+    parser.add_argument("--debug", action="store_true")
     # parser.add_argument(
     #     "--debug",
     #     action="store_true",
@@ -100,9 +100,7 @@ def parse_cmd_line_args():
             "'--no-interface' is also passed"
         )
     if args.input_midi and args.no_interface:
-        print(
-            "Both '--input-midi' and '--no-interface' passed. " "Nothing to do!"
-        )
+        print("Both '--input-midi' and '--no-interface' passed. " "Nothing to do!")
         sys.exit(1)
 
     return args

@@ -1,14 +1,13 @@
 import collections
 import copy
 
+import mspell
 
 # LONGTERM how does sortedcontainers compare to just using bisect from the
 #   standard library?
 import sortedcontainers
 
-import mspell
-
-from ..er_classes import Note, DEFAULT_VELOCITY, DEFAULT_CHOIR
+from ..er_classes import DEFAULT_CHOIR, DEFAULT_VELOCITY, Note
 
 
 class DumbSortedList(list):
