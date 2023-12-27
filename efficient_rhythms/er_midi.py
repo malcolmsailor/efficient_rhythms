@@ -643,7 +643,7 @@ def write_midi(super_pattern, midi_settings, abbr_track_names=True):
             non_empty = True
 
     if non_empty:
-        # TODO: (Malcolm 2023-12-26) why did we skip the META_TRACK? Today that's
+        # (Malcolm 2023-12-26) Formerly, we skipped the META_TRACK. Why? Today that's
         #   causing a MIDO error. In any case, if there are tempo changes
         #   later in the track, we definitely want to process it.
         # abs_to_delta_times(mf, skip=(META_TRACK,))
@@ -806,32 +806,6 @@ def _return_sorted_midi_tracks(in_mid):
         out[-1].sort(key=lambda msg: msg.time)
 
     return out
-
-
-# TODO: (Malcolm 2023-12-26) remove
-# def create_separate_global_track(mid: mido.MidiFile) -> mido.MidiFile:
-#     """In case the midi file has meta messages *and* notes on the 0th track,
-#     separate them.
-#     """
-#     meta = []
-#     notes = []
-#     keep = []
-#     keep_with_notes = {"track_name", "end_of_track"}
-#     for msg in mid.tracks[0]:
-#         if msg.type in keep_with_notes:
-#             keep.append(msg)
-#         elif isinstance(msg, mido.MetaMessage):
-#             meta.append(msg)
-#         else:
-#             notes.append(msg)
-#     if meta and notes:
-#         new_mid = mido.MidiFile()
-#         new_mid.tracks.append(mido.MidiTrack(meta))
-#         new_mid.tracks.append(mido.MidiTrack(notes))
-#         new_mid.tracks.extend(mid.tracks[1:])
-#         return new_mid
-#     else:
-#         return mid
 
 
 def read_midi_to_internal_data(

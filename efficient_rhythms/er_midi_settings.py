@@ -27,7 +27,7 @@ class MidiSettings:
         # If the file is in 12 tet and features no finetuning then these steps are
         # not necessary but for the moment it seems like more effort than it's
         # worth to check:
-        # TODO: (Malcolm 2023-12-26) This leads to a TypeError because self.num_tracks
+        # (Malcolm 2023-12-26) This assignment leads to a TypeError because self.num_tracks
         #   is None on initialization
         # self.pitch_bend_time_dict = {
         #     track_i: [0 for _ in range(self.num_channels_pitch_bend_loop)]
