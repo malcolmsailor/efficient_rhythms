@@ -9,17 +9,17 @@ import subprocess
 import sys
 import traceback
 
-from .. import er_changers
-from .. import er_globals
-from .. import er_midi
-from .. import er_misc_funcs
-from .. import er_output_notation
-from .. import er_playback
-from .. import er_settings
-from .. import er_shell_constants
-
+from .. import (
+    er_changers,
+    er_globals,
+    er_midi,
+    er_misc_funcs,
+    er_output_notation,
+    er_playback,
+    er_settings,
+    er_shell_constants,
+)
 from .objects import CHANGER_DICT
-
 
 SELECT_HEADER = "Active filters and transformers"
 FILTERS_HEADER = "Filters"
@@ -68,17 +68,9 @@ def make_changer_prompt_line(i, attr_name, value, hint_name="", hint_value=""):
     def _stringify(item):
         # I don't think any other types of sequence should show up here
         if isinstance(item, tuple):
-            return (
-                "("
-                + ", ".join([_stringify(sub_item) for sub_item in item])
-                + ")"
-            )
+            return "(" + ", ".join([_stringify(sub_item) for sub_item in item]) + ")"
         if isinstance(item, list):
-            return (
-                "["
-                + ", ".join([_stringify(sub_item) for sub_item in item])
-                + "]"
-            )
+            return "[" + ", ".join([_stringify(sub_item) for sub_item in item]) + "]"
         return item.__str__()
 
     num_str = f"({i})"
@@ -94,9 +86,7 @@ def make_changer_prompt_line(i, attr_name, value, hint_name="", hint_value=""):
             )
             out = out + "\n" + hint_str_formatted
         else:
-            out = (
-                out + " " * (line_width() - len(out) - len(hint_str)) + hint_str
-            )
+            out = out + " " * (line_width() - len(out) - len(hint_str)) + hint_str
     return out
 
 
@@ -106,9 +96,7 @@ def make_prompt_line(i, line, indent=8):
     return format_str.format(num_str, line)
 
 
-def add_to_changer_attribute_dict(
-    obj, lines, attribute_dict, attribute_i, prefix=""
-):
+def add_to_changer_attribute_dict(obj, lines, attribute_dict, attribute_i, prefix=""):
     attributes = vars(obj)
     for attribute, value in attributes.items():
         if (
@@ -144,9 +132,7 @@ def add_to_changer_attribute_dict(
                     )
                 )
         else:
-            lines.append(
-                make_changer_prompt_line(attribute_i, attr_name, value)
-            )
+            lines.append(make_changer_prompt_line(attribute_i, attr_name, value))
         attribute_dict[attribute_i] = prefix + attribute
         attribute_i += 1
     return attribute_i
@@ -161,9 +147,7 @@ def possible_values_prompt(possible_values):
     )
 
 
-def print_prompt(
-    header_text, user_prompt, description=None, possible_values=None
-):
+def print_prompt(header_text, user_prompt, description=None, possible_values=None):
     # LONGTERM refactor to use this function more often
     lines = ["", er_misc_funcs.make_header(header_text)]
     if description is not None:
@@ -178,9 +162,7 @@ def print_prompt(
     if possible_values is not None:
         lines.append(possible_values)  # a str
         lines.append("")
-    lines.append(
-        er_misc_funcs.add_line_breaks(user_prompt, indent_type="hanging")
-    )
+    lines.append(er_misc_funcs.add_line_breaks(user_prompt, indent_type="hanging"))
     return input("\n".join(lines))
 
 
@@ -232,9 +214,7 @@ def update_changer_attribute(changer, attribute):
             return
         if answer != "h":
             print("Invalid input.")
-        answer = input(
-            er_misc_funcs.add_line_breaks(validator.possible_values_str())
-        )
+        answer = input(er_misc_funcs.add_line_breaks(validator.possible_values_str()))
 
 
 def update_adjust_changer_prompt(changer):
@@ -276,7 +256,6 @@ def update_adjust_changer_prompt(changer):
 
 
 def adjust_changer_prompt(active_changers, changer_i):
-
     changer = active_changers[changer_i]
 
     prompt, attribute_dict = update_adjust_changer_prompt(changer)
@@ -361,9 +340,7 @@ def add_changer_prompt():
         if i == -1:
             add_lines_to = transformer_lines
         else:
-            add_lines_to.append(
-                make_prompt_line(i, changer.pretty_name, indent=4)
-            )
+            add_lines_to.append(make_prompt_line(i, changer.pretty_name, indent=4))
     lines = ["", er_misc_funcs.make_header(FILTERS_HEADER), ""]
     lines.append(_get_table(filter_lines))
     lines += ["", er_misc_funcs.make_header(TRANSFORMERS_HEADER), ""]
@@ -386,7 +363,6 @@ def update_prob_curve(changer, prob_curve_name):
 
 
 def add_changer_loop(active_changers, score, changer_counter):
-
     answer = input(add_changer_prompt()).lower()
 
     while True:
@@ -459,9 +435,7 @@ def move_changer_loop(active_changers):
                 continue
 
     if not active_changers:
-        input(
-            "   No active filters or transformers. Press <enter> to continue."
-        )
+        input("   No active filters or transformers. Press <enter> to continue.")
         return
     if len(active_changers) == 1:
         input(
@@ -498,9 +472,7 @@ def copy_changer_loop(active_changers):
         active_changers[len(active_changers)] = new_changer
 
     if not active_changers:
-        input(
-            "   No active filters or transformers. Press <enter> to continue."
-        )
+        input("   No active filters or transformers. Press <enter> to continue.")
         return
     prompt = update_copy_changer_prompt(active_changers)
     answer = input(prompt).lower()
@@ -573,7 +545,6 @@ def select_changer_prompt(active_changers, score, changer_counter):
 
 
 def changer_interface(score, active_changers, changer_counter):
-
     first_loop = True
 
     # select changer loop:
@@ -652,11 +623,8 @@ def update_midi_type(er):
     def _update_midi_type_prompt():
         prompt_strs = [er_misc_funcs.make_header("Midi settings")]
         for param_i, (pretty_name, name) in enumerate(params):
-
             prompt_strs.append(
-                make_changer_prompt_line(
-                    param_i + 1, pretty_name, getattr(er, name)
-                )
+                make_changer_prompt_line(param_i + 1, pretty_name, getattr(er, name))
             )
 
         prompt_str = "\n".join(prompt_strs)
@@ -783,9 +751,7 @@ def input_loop(er, score, args, active_changers):
         if answer == "":
             if non_empty:
                 breaker.reset()
-                er_playback.playback_midi(
-                    midi_player, breaker, current_midi_path
-                )
+                er_playback.playback_midi(midi_player, breaker, current_midi_path)
                 playback_on = True
             else:
                 print("Midi file is empty, nothing to write or play!")
@@ -804,9 +770,7 @@ def input_loop(er, score, args, active_changers):
             if changed_pattern is not None and active_changers:
                 changer_midi_i += 1
                 if isinstance(er, er_settings.ERSettings):
-                    current_midi_path = er_misc_funcs.get_changed_midi_path(
-                        midi_path
-                    )
+                    current_midi_path = er_misc_funcs.get_changed_midi_path(midi_path)
                     non_empty = er_midi.write_er_midi(
                         er, changed_pattern, current_midi_path
                     )
@@ -821,9 +785,7 @@ def input_loop(er, score, args, active_changers):
 
         if answer == "c" and isinstance(er, er_settings.ERSettings):
             update_midi_type(er)
-            non_empty = er_midi.write_er_midi(
-                er, current_pattern, current_midi_path
-            )
+            non_empty = er_midi.write_er_midi(er, current_pattern, current_midi_path)
 
         elif answer == "o":
             mac_open(current_midi_path)

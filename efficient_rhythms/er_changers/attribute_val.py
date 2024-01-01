@@ -1,6 +1,7 @@
 import fractions
 import math
 import numbers
+from typing import Iterable
 
 from .. import er_misc_funcs
 
@@ -36,7 +37,7 @@ class AttributeValidator:
         type_,
         min_value=0,
         max_value=1,
-        possible_values=(),
+        possible_values: Iterable[str] = (),
         unique=False,
         tuple_of=0,
         iter_of_iters=False,
@@ -74,9 +75,7 @@ class AttributeValidator:
         elif self.possible_values:
             out.append(
                 "Possible values: "
-                + ", ".join(
-                    f"'{poss_val}'" for poss_val in self.possible_values
-                )
+                + ", ".join(f"'{poss_val}'" for poss_val in self.possible_values)
             )
         out.append("Unique: " + ("yes" if self.unique else "no"))
         return out
@@ -132,7 +131,7 @@ class AttributeValidator:
                     except ValueError:
                         return None
 
-            if self.possible_values and bit not in self.possible_values:
+            if self.possible_values and str(bit) not in self.possible_values:
                 return None
 
             if isinstance(bit, numbers.Number):
@@ -224,10 +223,7 @@ class AttributeValidator:
         if self.type_ in (float, int):
             if self.max_value < 0:
                 return f"Enter a number >= {self.min_value}: "
-            return (
-                f"Enter a number between {self.min_value} and "
-                f"{self.max_value}: "
-            )
+            return f"Enter a number between {self.min_value} and " f"{self.max_value}: "
         if self.type_ == str:
             return f"Possible values: {self.possible_values}: "
         if self.type_ == bool:

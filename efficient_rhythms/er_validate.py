@@ -42,9 +42,7 @@ def _misc_errors(er, errors):
             "`len_to_force_chord_tone` must be non-zero."
         )
     if len(er.voice_ranges) < er.num_voices:
-        errors.append(
-            "`voice_ranges` must be at least as long as `num_voices`."
-        )
+        errors.append("`voice_ranges` must be at least as long as `num_voices`.")
 
 
 def _choir_errors(er, errors):
@@ -80,5 +78,4 @@ def validate_settings(er):
     _choir_errors(er, validation_errors)
     _misc_errors(er, validation_errors)
     if validation_errors:
-        # breakpoint()
         raise er_exceptions.ErSettingsError("\n".join(validation_errors))
