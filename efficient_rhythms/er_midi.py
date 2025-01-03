@@ -195,9 +195,9 @@ def _build_track_dict(er, score_num_voices):
             ]
             for voice_i in range(er.existing_score.num_voices):
                 for choir_i in existing_voices_choirs:
-                    er.track_dict[
-                        (voice_i + 1 + score_num_voices, choir_i)
-                    ] = existing_voices_offset
+                    er.track_dict[(voice_i + 1 + score_num_voices, choir_i)] = (
+                        existing_voices_offset
+                    )
                     existing_voices_offset += 1
 
         else:
@@ -562,6 +562,8 @@ def add_note(mido_track, note, pitch=None, channel=None):
 
 
 def add_track(track_i, track, midi_settings, mf):
+    while track_i >= len(mf.tracks):
+        mf.tracks.append(mido.MidiTrack())
     for msg in track.other_messages:
         if msg.type in ("track_name", "end_of_track", "instrument_name"):
             continue
@@ -821,10 +823,24 @@ def read_midi_to_internal_data(
     if num_tracks == 1:
         warnings.warn(
             "Midi files of just one track exported from Logic "
-            "don't put meta messages on a separate track. Support "
-            "for these is not yet implemented and there is likely to "
-            "be a crash very soon..."
+            "don't put meta messages on a separate track. We manually separate these "
+            "to a separate track."
         )
+        new_mid = mido.MidiFile()
+
+        # We don't want to do `msg for msg in in_mid` because that converts ticks
+        # (integers) to seconds (floats)
+        meta_track = mido.MidiTrack([msg for msg in in_mid.tracks[0] if msg.is_meta])
+        note_track = mido.MidiTrack(
+            [msg for msg in in_mid.tracks[0] if not msg.is_meta]
+        )
+        note_track.append(mido.MetaMessage(type="end_of_track", time=0))
+
+        new_mid.tracks.append(meta_track)
+        new_mid.tracks.append(note_track)
+        in_mid.ticks_per_beat = new_mid.ticks_per_beat
+        in_mid = new_mid
+        num_tracks = 2
 
     ticks_per_beat = in_mid.ticks_per_beat
     # # I am leaving this unused variable here because I have the feeling

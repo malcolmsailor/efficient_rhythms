@@ -255,7 +255,7 @@ def update_adjust_changer_prompt(changer):
     return prompt, attribute_dict
 
 
-def adjust_changer_prompt(active_changers, changer_i):
+def adjust_changer_prompt(active_changers, score, changer_i):
     changer = active_changers[changer_i]
 
     prompt, attribute_dict = update_adjust_changer_prompt(changer)
@@ -271,7 +271,10 @@ def adjust_changer_prompt(active_changers, changer_i):
             answer = input("Invalid input, try again: ")
         if answer == "":
             try:
-                changer.validate()
+                if getattr(changer, "require_score", False):
+                    changer.validate(score)
+                else:
+                    changer.validate()
                 break
             except er_changers.ChangeFuncError as err:
                 print(
@@ -312,9 +315,11 @@ def add_changer_prompt():
         n_rows = math.ceil(len(changer_lines) / n_cols)
         rows = [
             [
-                changer_lines[i + j * n_rows]
-                if (i + j * n_rows) < len(changer_lines)
-                else ""
+                (
+                    changer_lines[i + j * n_rows]
+                    if (i + j * n_rows) < len(changer_lines)
+                    else ""
+                )
                 for j in range(n_cols)
             ]
             for i in range(n_rows)
@@ -383,7 +388,7 @@ def add_changer_loop(active_changers, score, changer_counter):
     changer_i = len(active_changers)
     active_changers[changer_i] = changer
 
-    adjust_changer_prompt(active_changers, changer_i)
+    adjust_changer_prompt(active_changers, score, changer_i)
 
 
 def get_changer_strings(active_changers):
@@ -540,7 +545,7 @@ def select_changer_prompt(active_changers, score, changer_counter):
         if answer not in active_changers:
             answer = input("Invalid input, try again: ")
             continue
-        adjust_changer_prompt(active_changers, answer)
+        adjust_changer_prompt(active_changers, score, answer)
         return True
 
 

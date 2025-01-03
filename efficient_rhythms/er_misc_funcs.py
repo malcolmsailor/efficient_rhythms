@@ -1,5 +1,4 @@
-"""Misc. functions for efficient_rhythms2.py.
-"""
+"""Misc. functions for efficient_rhythms2.py."""
 
 import fractions
 import itertools
@@ -11,8 +10,7 @@ import typing
 
 import numpy as np
 
-from . import er_globals
-from . import er_shell_constants
+from . import er_globals, er_shell_constants
 
 MAX_DENOMINATOR = 8192
 
@@ -143,9 +141,7 @@ def add_line_breaks(
             last_whitespace_i = char_i
         if char == "\n":
             lines.append(
-                align_line(
-                    in_str[start_line_i:char_i], current_line_width, align
-                )
+                align_line(in_str[start_line_i:char_i], current_line_width, align)
             )
             start_line_i = char_i + 1
             line_i += 1
@@ -250,12 +246,8 @@ def make_table(
         term_size = 80
     if fit_in_window:
         # Formerly, I was adding 1 to len(rows[0]) --- I have no idea why!
-        if (len(rows[0])) * (col_width + len(divider)) - len(
-            divider
-        ) > term_size:
-            col_width = (term_size + len(divider)) // (len(rows[0]) + 1) - len(
-                divider
-            )
+        if (len(rows[0])) * (col_width + len(divider)) - len(divider) > term_size:
+            col_width = (term_size + len(divider)) // (len(rows[0]) + 1) - len(divider)
     formatted_rows = [[_format(cell) for cell in row] for row in rows]
     row_strings = [divider.join(row) for row in formatted_rows]
     if row_spacing > 0:
@@ -263,9 +255,7 @@ def make_table(
         for i in range(len(row_strings)):
             for _ in range(row_spacing):
                 row_strings.insert((1 + row_spacing) * i, blank_row_string)
-    line_width = (
-        min(term_size, len(row_strings[0])) if not full_borders else term_size
-    )
+    line_width = min(term_size, len(row_strings[0])) if not full_borders else term_size
     line = "-" * line_width
     if header is not None:
         header_string = divider.join([_format(cell) for cell in header])
@@ -354,9 +344,7 @@ def make_header(
     else:
         raise ValueError("Alignment type not recognized")
     if bold:
-        return (
-            er_shell_constants.BOLD_TEXT + out + er_shell_constants.RESET_TEXT
-        )
+        return er_shell_constants.BOLD_TEXT + out + er_shell_constants.RESET_TEXT
     return out
 
 
@@ -433,9 +421,7 @@ def convert_to_fractions(item, max_denominator=MAX_DENOMINATOR):
         return out
     if isinstance(item, (np.float32, np.float64)):
         item = float(item)
-    return fractions.Fraction(item).limit_denominator(
-        max_denominator=max_denominator
-    )
+    return fractions.Fraction(item).limit_denominator(max_denominator=max_denominator)
 
 
 def flatten(item, iter_types=(list, tuple, np.ndarray)):
@@ -470,7 +456,7 @@ class LCMError(Exception):
     pass
 
 
-def lcm(numbers, max_n=2 ** 15):
+def lcm(numbers, max_n=2**15):
     """Can take any list, not necessarily a flat list.
 
     Converts all numbers to fractions.
@@ -478,7 +464,8 @@ def lcm(numbers, max_n=2 ** 15):
     Returns an error if there's no lcm smaller than max_n.
     """
 
-    # TODO There has got to be a more efficient way to find a LCM!
+    # TODO There has got to be a more efficient way to find a LCM! It doesn't matter
+    #   much though because we only use it once to find the super_pattern_len
     def _lcm_sub(num1, num2):
         i = 1
         while True:
@@ -492,9 +479,7 @@ def lcm(numbers, max_n=2 ** 15):
                 )
 
     if 0 in numbers:
-        raise LCMError(
-            "Zero does not have common multiples with any other number."
-        )
+        raise LCMError("Zero does not have common multiples with any other number.")
 
     numbers = list(flatten(numbers))
     original_numbers = numbers
@@ -519,7 +504,7 @@ def set_seed(seed, print_out=True):
     Either way, returns seed value.
     """
     if seed is None:
-        seed = random.randint(0, 2 ** 32)
+        seed = random.randint(0, 2**32)
     if print_out:
         print("Seed: ", seed)
 
@@ -676,9 +661,7 @@ def get_changed_midi_path(midi_path):
     # return os.path.join(dirname, new_basename)
 
 
-def increment_fname(
-    path, n_digits=3, overwrite=False, allow_increase_n_digits=True
-):
+def increment_fname(path, n_digits=3, overwrite=False, allow_increase_n_digits=True):
     def _sub(path, n_digits):
         def _get_int_at_end_of_string(string):
             i = 0
@@ -894,9 +877,7 @@ def same_set_class(pcset1, pcset2, tet=12):
     return False
 
 
-def pair_of_pcs_consonant(
-    pc1, pc2, consonances, tet=12, inversional_equivalence=True
-):
+def pair_of_pcs_consonant(pc1, pc2, consonances, tet=12, inversional_equivalence=True):
     """Checks if the pitch-class interval between two pitch-classes
     (or pitches) is consonant.
 
@@ -1007,9 +988,7 @@ def get_lowest_of_each_pc_in_set(pitch_set, tet=12):
                 out[pc] = min(pitches)
     else:
         for pitch in pitch_set:
-            out[pitch % tet] = min(
-                p for p in pitch_set if p % tet == pitch % tet
-            )
+            out[pitch % tet] = min(p for p in pitch_set if p % tet == pitch % tet)
     return out
 
 
@@ -1020,9 +999,7 @@ def lowest_occurrence_of_pc_in_set(pitch, pitch_set, tet=12):
     Returns True for ties.
     """
     same_pitch_classes = [
-        other_pitch
-        for other_pitch in pitch_set
-        if other_pitch % tet == pitch % tet
+        other_pitch for other_pitch in pitch_set if other_pitch % tet == pitch % tet
     ]
     if min(same_pitch_classes) == pitch:
         return True
@@ -1138,9 +1115,7 @@ def chord_in_list(
                                         ref_chord,
                                         reduced_chord[: len(ref_chord)],
                                     ).all()
-                                    and len(
-                                        set(reduced_chord[len(ref_chord) - 1 :])
-                                    )
+                                    and len(set(reduced_chord[len(ref_chord) - 1 :]))
                                     == 1
                                 ):
                                     return True
@@ -1161,9 +1136,7 @@ def remove_interval_class(interval_class, given_pitch, other_pitches, tet=12):
     return out
 
 
-def remove_octave_equivalent_interval(
-    interval, given_pitch, other_pitches, tet=12
-):
+def remove_octave_equivalent_interval(interval, given_pitch, other_pitches, tet=12):
     """Returns pitches that don't form given interval from given pitch.
 
     "Octave equivalent" means that 19 = 7 (in 12-tet), etc.
@@ -1235,18 +1208,13 @@ def nested_method(method):
 
 def tuplify(item, max_float_p=None):
     """Prints out all iterables like tuples."""
-    if isinstance(item, (typing.Sequence, np.ndarray)) and not isinstance(
-        item, str
-    ):
+    if isinstance(item, (typing.Sequence, np.ndarray)) and not isinstance(item, str):
         return (
             "("
-            + ", ".join(
-                tuplify(sub_item, max_float_p=max_float_p) for sub_item in item
-            )
+            + ", ".join(tuplify(sub_item, max_float_p=max_float_p) for sub_item in item)
             + ")"
         )
     if max_float_p is not None and isinstance(item, float):
-
         fmt_str = "{:." + str(max_float_p) + "g}"
         return fmt_str.format(item)
     return f"{item}"
